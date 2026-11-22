@@ -43,7 +43,7 @@ extension WorkbenchModel {
         let context: Set<CommandContextRequirement> = item.kind == .window ? [.window] : []
         return try HostDescriptorPolicy.authorize(
             descriptor: descriptor(for: item), availableContext: context,
-            resourceScope: .exact(namespace: "keydock.resource", identifier: fingerprint(item.payload)),
+            resourceScope: .exact(namespace: "keydock.resource", identifier: fingerprint(item.payload + (item.objectRevision.map { "|" + $0 } ?? ""))),
             caller: caller, callerInstanceID: caller == .shortcut ? "shortcut." + fingerprint(item.id) : "interactive-ui",
             sideEffectsApproved: true)
     }

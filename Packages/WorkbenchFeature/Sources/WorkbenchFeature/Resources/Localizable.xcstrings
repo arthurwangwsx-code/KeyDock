@@ -161,6 +161,22 @@
         }
       }
     },
+    "API configuration could not be saved and rollback was incomplete. Check the saved endpoint and API key before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API configuration could not be saved and rollback was incomplete. Check the saved endpoint and API key before retrying."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存 API 配置，且未能完整恢复原设置。重试前请检查已保存的端点和 API 密钥。"
+          }
+        }
+      }
+    },
     "API configuration could not be saved; active settings were preserved": {
       "localizations": {
         "en": {
@@ -449,18 +465,18 @@
         }
       }
     },
-    "Application could not be opened": {
+    "Application could not be opened. It may have moved or changed; refreshing the list.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Application could not be opened"
+            "value": "Application could not be opened. It may have moved or changed; refreshing the list."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法打开应用"
+            "value": "无法打开该应用，它可能已移动或发生变化；正在刷新应用列表。"
           }
         }
       }
@@ -477,6 +493,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "未授予辅助功能权限时仍可搜索应用。按窗口标题搜索无需屏幕录制权限。"
+          }
+        }
+      }
+    },
+    "Applications": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applications"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用列表"
           }
         }
       }
@@ -1873,6 +1905,22 @@
         }
       }
     },
+    "No shortcuts configured": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No shortcuts configured"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未设置快捷键"
+          }
+        }
+      }
+    },
     "Open": {
       "localizations": {
         "en": {
@@ -2257,6 +2305,38 @@
         }
       }
     },
+    "Refresh application list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh application list"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新应用列表"
+          }
+        }
+      }
+    },
+    "Registered with macOS": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registered with macOS"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已向 macOS 注册"
+          }
+        }
+      }
+    },
     "Remove API key": {
       "localizations": {
         "en": {
@@ -2285,6 +2365,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "取消收藏"
+          }
+        }
+      }
+    },
+    "Remove shortcut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove shortcut"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除快捷键"
           }
         }
       }
@@ -2349,6 +2445,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "结果"
+          }
+        }
+      }
+    },
+    "Retry shortcuts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry shortcuts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重试注册快捷键"
           }
         }
       }
@@ -2689,6 +2801,54 @@
         }
       }
     },
+    "Shortcut changes could not be saved and rollback was incomplete. Check the saved shortcuts before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut changes could not be saved and rollback was incomplete. Check the saved shortcuts before retrying."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存快捷键更改，且未能完整恢复原状态。重试前请先检查已保存的快捷键。"
+          }
+        }
+      }
+    },
+    "Shortcut changes could not be saved. Previous settings were kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut changes could not be saved. Previous settings were kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存快捷键更改，已保留原设置。"
+          }
+        }
+      }
+    },
+    "Shortcut could not be registered. Previous settings were kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut could not be registered. Previous settings were kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法注册此快捷键，已保留原设置。"
+          }
+        }
+      }
+    },
     "Shortcuts": {
       "localizations": {
         "en": {
@@ -2701,6 +2861,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "快捷键"
+          }
+        }
+      }
+    },
+    "Shortcuts are inactive. Choose another shortcut or retry registration.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcuts are inactive. Choose another shortcut or retry registration."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷键当前未启用。请更换快捷键或重试注册。"
           }
         }
       }
@@ -2897,6 +3073,22 @@
         }
       }
     },
+    "The application list may be out of date. Refresh it and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The application list may be out of date. Refresh it and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用列表可能已过期，请刷新后重试。"
+          }
+        }
+      }
+    },
     "The clipboard item is no longer available": {
       "localizations": {
         "en": {
@@ -2941,6 +3133,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "上一条剪贴板内容超过单条 1 MiB 的文本上限，未记录。"
+          }
+        }
+      }
+    },
+    "The local application list updates automatically. Refresh it if a newly installed application is missing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The local application list updates automatically. Refresh it if a newly installed application is missing."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本机应用列表会自动更新。若找不到刚安装的应用，请尝试手动刷新。"
           }
         }
       }
@@ -3117,6 +3325,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "试试应用名称、已保存的命令或AI动作。"
+          }
+        }
+      }
+    },
+    "Unavailable action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不可用的操作"
+          }
+        }
+      }
+    },
+    "Unavailable actions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不可用的操作"
           }
         }
       }

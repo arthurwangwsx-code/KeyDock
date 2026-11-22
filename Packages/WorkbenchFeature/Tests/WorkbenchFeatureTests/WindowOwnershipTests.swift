@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import CommandCore
 import KeyDockUI
+import MacAdapters
 @testable import WorkbenchFeature
 
 // 历史 prompt 固定为旧版本内容，不从当前 builtins 生成兼容性输入。
@@ -43,13 +44,13 @@ private let legacyCases = [
     private let languageKey: String
     private let previousLanguage: Any?
     private let previousPane: Any?
-    init(allowContextCapture: Bool = false, clipboardReader: @escaping @MainActor () -> String? = { nil }) throws {
+    init(allowContextCapture: Bool = false, clipboardReader: @escaping @MainActor () -> String? = { nil }, applicationCatalog: ApplicationCatalog? = nil) throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-WindowOwnership-" + UUID().uuidString, isDirectory: true)
         languageKey = (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true) ? "KeyDock.Smoke.Language" : "KeyDock.Language"
         previousLanguage = UserDefaults.standard.object(forKey: languageKey)
         previousPane = UserDefaults.standard.object(forKey: "KeyDock.Smoke.SettingsPane")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        do { store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: allowContextCapture, clipboardChangeCount: { 7 }, clipboardReader: clipboardReader) }
+        do { store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: allowContextCapture, clipboardChangeCount: { 7 }, clipboardReader: clipboardReader, applicationCatalog: applicationCatalog) }
         catch { try? FileManager.default.removeItem(at: directory); throw error }
     }
     func cleanup() {
@@ -62,6 +63,41 @@ private let legacyCases = [
 }
 
 @Suite(.serialized) @MainActor struct WindowOwnershipTests {
+    @Test func applicationDirectoryChangesReachAnOpenQueryWithoutResettingPreferences() async throws {
+        let parent = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-ApplicationQuery-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: parent) }
+        let root = parent.appendingPathComponent("Applications")
+        func makeApplication(_ name: String) throws -> URL {
+            let app = root.appendingPathComponent(name + ".app")
+            let contents = app.appendingPathComponent("Contents")
+            try FileManager.default.createDirectory(at: contents.appendingPathComponent("MacOS"), withIntermediateDirectories: true)
+            let info = ["CFBundlePackageType": "APPL", "CFBundleExecutable": "synthetic", "CFBundleIdentifier": "synthetic." + name, "CFBundleDisplayName": name]
+            try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0).write(to: contents.appendingPathComponent("Info.plist"))
+            let executable = contents.appendingPathComponent("MacOS/synthetic")
+            try Data("synthetic; never executed".utf8).write(to: executable)
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: executable.path)
+            return app
+        }
+        let old = try makeApplication("KeyDockSyntheticOldApp")
+        let catalog = ApplicationCatalog(roots: [root])
+        let fixture = try StoreFixture(applicationCatalog: catalog); defer { fixture.cleanup() }
+        let store = fixture.store, launcher = LauncherSession(store: fixture.store)
+        store.configuration.preferences.favorites = ["synthetic-preserved-favorite"]
+        store.setAlias("synthetic-preserved-alias", for: "synthetic-marker")
+        store.startApplicationUpdates()
+        launcher.query = "KeyDockSyntheticNewApp"
+        try await storeEventually { store.catalog.contains { $0.title == "KeyDockSyntheticOldApp" } }
+        _ = try makeApplication("KeyDockSyntheticNewApp")
+        try await storeEventually { launcher.resultBatch?.items.contains { $0.title == "KeyDockSyntheticNewApp" } == true }
+        try FileManager.default.moveItem(at: old, to: parent.appendingPathComponent("MovedOutside.app"))
+        try await storeEventually { !store.catalog.contains { $0.title == "KeyDockSyntheticOldApp" } }
+        // 目录缓存先发布，Launcher 随后完成新查询；验收已完成批次而非异步加载中的瞬间。
+        _ = try await completedBatch(launcher, text: launcher.query)
+        #expect(launcher.query == "KeyDockSyntheticNewApp" && launcher.resultBatch?.items.count == 1)
+        #expect(store.configuration.preferences.favorites == ["synthetic-preserved-favorite"])
+        #expect(store.configuration.preferences.aliases["synthetic-marker"] == "synthetic-preserved-alias")
+    }
+
     @Test(arguments: legacyCases) func oldBuiltinConfigurationGainsLocalizationIdentityWithoutChangingData(_ item: LegacyBuiltinCase) throws {
         let id = UUID()
         let configuration = try legacyConfiguration(name: item.name, prompt: item.prompt, id: id)

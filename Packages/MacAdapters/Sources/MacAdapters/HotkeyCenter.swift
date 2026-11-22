@@ -24,70 +24,135 @@ public struct HotkeyBinding: Codable, Hashable, Sendable {
     private static let names: [UInt32: String] = [0:"A",1:"S",2:"D",3:"F",4:"H",5:"G",6:"Z",7:"X",8:"C",9:"V",11:"B",12:"Q",13:"W",14:"E",15:"R",16:"Y",17:"T",18:"1",19:"2",20:"3",21:"4",22:"6",23:"5",25:"9",26:"7",28:"8",29:"0",31:"O",32:"U",34:"I",35:"P",37:"L",38:"J",40:"K",45:"N",46:"M",49:"Space",36:"↩",48:"⇥",51:"⌫",123:"←",124:"→",125:"↓",126:"↑"]
 }
 
-public struct HotkeyRegistrationError: Error, Sendable { public let status: OSStatus }
+public struct HotkeyRegistrationError: Error, Sendable {
+    public let status: OSStatus
+    public let restorationFailed: Bool
+    public init(status: OSStatus, restorationFailed: Bool = false) { self.status = status; self.restorationFailed = restorationFailed }
+}
 
+@MainActor public struct HotkeyDefinition {
+    public let id: UInt32
+    public let binding: HotkeyBinding
+    public let action: @MainActor () -> Void
+    public init(id: UInt32, binding: HotkeyBinding, action: @escaping @MainActor () -> Void) {
+        self.id = id; self.binding = binding; self.action = action
+    }
+}
+
+/// 整套配置要么生效，要么恢复旧配置；恢复失败时全停，等待用户重试。
 @MainActor public final class HotkeyCenter {
-    private var registrations: [UInt32: EventHotKeyRef] = [:]
-    private var bindings: [UInt32: HotkeyBinding] = [:]
-    private var handlers: [UInt32: @MainActor () -> Void] = [:]
-    private var eventHandler: EventHandlerRef?
-    private var installationStatus: OSStatus = noErr
-    private var suspended = false
-    public var activeIDs: Set<UInt32> { Set(registrations.keys) }
-    public var configuredIDs: Set<UInt32> { Set(bindings.keys) }
-    public init() {
-        var event = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        installationStatus = InstallEventHandler(GetApplicationEventTarget(), { _, event, context in
-            guard let event, let context else { return OSStatus(eventNotHandledErr) }
-            var id = EventHotKeyID()
-            let status = GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil, MemoryLayout<EventHotKeyID>.size, nil, &id)
-            guard status == noErr else { return status }
-            let center = Unmanaged<HotkeyCenter>.fromOpaque(context).takeUnretainedValue()
-            let keyID = id.id
-            Task { @MainActor in if !center.suspended { center.handlers[keyID]?() } }
-            return noErr
-        }, 1, &event, Unmanaged.passUnretained(self).toOpaque(), &eventHandler)
+    private enum Mode { case active, recording, unavailable, stopped }
+    private let registry: any HotkeyRegistering
+    private var definitions: [UInt32: HotkeyDefinition] = [:]
+    private var wireToLogical: [UInt32: UInt32] = [:]
+    private var nextWireID: UInt32 = 0
+    private var mode: Mode = .active
+    private var installationError: HotkeyRegistrationError?
+    public var activeIDs: Set<UInt32> { Set(wireToLogical.values) }
+    public var configuredIDs: Set<UInt32> { Set(definitions.keys) }
+    public var isUnavailable: Bool { mode == .unavailable }
+
+    public init(registry: (any HotkeyRegistering)? = nil) {
+        self.registry = registry ?? CarbonHotkeyRegistry()
+        do {
+            try installReceiver()
+        } catch { installationError = Self.registrationError(error); mode = .unavailable }
     }
+
+    /// 兼容原单项 API；生产宿主使用 replace 一次提交整套，支持交换两个绑定。
     public func set(id: UInt32, binding: HotkeyBinding?, action: @escaping @MainActor () -> Void) throws {
-        guard installationStatus == noErr, eventHandler != nil else { throw HotkeyRegistrationError(status: installationStatus == noErr ? OSStatus(paramErr) : installationStatus) }
-        let old = bindings[id]
-        if let other = bindings.first(where: { $0.key != id && $0.value == binding }) { _ = other; throw HotkeyRegistrationError(status: OSStatus(eventHotKeyExistsErr)) }
-        if let ref = registrations.removeValue(forKey: id) { UnregisterEventHotKey(ref) }
-        guard let binding else { bindings[id] = nil; handlers[id] = nil; return }
-        if suspended { bindings[id] = binding; handlers[id] = action; return }
-        var ref: EventHotKeyRef?
-        let status = RegisterEventHotKey(binding.keyCode, binding.modifiers, EventHotKeyID(signature: 0x4B444F43, id: id), GetApplicationEventTarget(), OptionBits(kEventHotKeyExclusive), &ref)
-        guard status == noErr, let ref else {
-            if let old {
-                var restored: EventHotKeyRef?
-                if RegisterEventHotKey(old.keyCode, old.modifiers, EventHotKeyID(signature: 0x4B444F43, id: id), GetApplicationEventTarget(), OptionBits(kEventHotKeyExclusive), &restored) == noErr { registrations[id] = restored }
-                else { bindings[id] = nil; handlers[id] = nil }
-            }
-            throw HotkeyRegistrationError(status: status)
-        }
-        registrations[id] = ref; bindings[id] = binding; handlers[id] = action
+        var next = definitions
+        next[id] = binding.map { HotkeyDefinition(id: id, binding: $0, action: action) }
+        try replace(Array(next.values))
     }
+
+    public func replace(_ next: [HotkeyDefinition]) throws {
+        guard mode != .stopped, mode != .recording else { throw HotkeyRegistrationError(status: OSStatus(paramErr)) }
+        guard Set(next.map(\.id)).count == next.count,
+              Set(next.map(\.binding)).count == next.count,
+              next.allSatisfy({ Self.valid($0.binding) }) else {
+            throw HotkeyRegistrationError(status: OSStatus(eventHotKeyExistsErr))
+        }
+        if !next.isEmpty { try ensureReceiver() }
+        let previous = definitions
+        clearActive()
+        do {
+            let mapping = try register(next)
+            definitions = Dictionary(uniqueKeysWithValues: next.map { ($0.id, $0) })
+            wireToLogical = mapping; mode = .active
+        } catch {
+            let failure = Self.registrationError(error)
+            do {
+                wireToLogical = try register(Array(previous.values)); mode = .active
+            } catch {
+                wireToLogical = [:]; mode = .unavailable
+                throw HotkeyRegistrationError(status: failure.status, restorationFailed: true)
+            }
+            throw failure
+        }
+    }
+
     public func suspend() {
-        guard !suspended else { return }
-        suspended = true
-        for ref in registrations.values { UnregisterEventHotKey(ref) }
-        registrations.removeAll()
+        guard mode != .stopped, mode != .recording else { return }
+        clearActive(); mode = .recording
     }
     public func resume() throws {
-        guard suspended else { return }
-        suspended = false
-        var firstFailure: OSStatus?
-        for (id, binding) in bindings {
-            var ref: EventHotKeyRef?
-            let status = RegisterEventHotKey(binding.keyCode, binding.modifiers, EventHotKeyID(signature: 0x4B444F43, id: id), GetApplicationEventTarget(), OptionBits(kEventHotKeyExclusive), &ref)
-            if status == noErr, let ref { registrations[id] = ref }
-            else if firstFailure == nil { firstFailure = status }
-        }
-        if let firstFailure { throw HotkeyRegistrationError(status: firstFailure) }
+        guard mode != .stopped else { throw HotkeyRegistrationError(status: OSStatus(paramErr)) }
+        guard mode != .active else { return }
+        if !definitions.isEmpty { try ensureReceiver() }
+        do { wireToLogical = try register(Array(definitions.values)); mode = .active }
+        catch { wireToLogical = [:]; mode = .unavailable; throw Self.registrationError(error) }
+    }
+    /// 当前保存配置无法恢复时必须禁用旧/新方案，不能让错误方案继续触发。
+    public func invalidate() {
+        guard mode != .stopped else { return }
+        clearActive(); mode = .unavailable
     }
     public func shutdown() {
-        for ref in registrations.values { UnregisterEventHotKey(ref) }
-        registrations.removeAll(); bindings.removeAll(); handlers.removeAll()
-        if let eventHandler { RemoveEventHandler(eventHandler) }; eventHandler = nil
+        guard mode != .stopped else { return }
+        clearActive(); definitions = [:]; mode = .stopped; registry.shutdown()
+    }
+
+    private func installReceiver() throws {
+        try registry.install { [weak self] event in
+            Task { @MainActor [weak self] in self?.dispatch(event) }
+        }
+    }
+    private func ensureReceiver() throws {
+        guard installationError != nil else { return }
+        do { try installReceiver(); installationError = nil }
+        catch { installationError = Self.registrationError(error); mode = .unavailable; throw error }
+    }
+    private func dispatch(_ event: HotkeyEvent) {
+        guard mode == .active, event.signature == HotkeyEvent.keyDockSignature,
+              let logicalID = wireToLogical[event.id] else { return }
+        definitions[logicalID]?.action()
+    }
+    private func register(_ entries: [HotkeyDefinition]) throws -> [UInt32: UInt32] {
+        var registered: [UInt32: UInt32] = [:]
+        do {
+            for entry in entries.sorted(by: { $0.id < $1.id }) {
+                // 不循环使用 token；排队的 OS 事件和 Swift Task 永远无法借用新 handler。
+                guard nextWireID < UInt32.max else { throw HotkeyRegistrationError(status: OSStatus(paramErr)) }
+                nextWireID += 1
+                try registry.register(id: nextWireID, binding: entry.binding)
+                registered[nextWireID] = entry.id
+            }
+            return registered
+        } catch {
+            for wireID in registered.keys { registry.unregister(id: wireID) }
+            throw error
+        }
+    }
+    private func clearActive() {
+        let old = wireToLogical; wireToLogical = [:]
+        for wireID in old.keys { registry.unregister(id: wireID) }
+    }
+    private static func valid(_ binding: HotkeyBinding) -> Bool {
+        let allowed = UInt32(controlKey | optionKey | shiftKey | cmdKey)
+        return binding.keyCode <= 127 && binding.modifiers != 0 && binding.modifiers & ~allowed == 0
+    }
+    private static func registrationError(_ error: any Error) -> HotkeyRegistrationError {
+        error as? HotkeyRegistrationError ?? HotkeyRegistrationError(status: OSStatus(paramErr))
     }
 }

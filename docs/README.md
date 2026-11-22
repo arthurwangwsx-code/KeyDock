@@ -21,6 +21,7 @@
 | [新版界面实机复查](implementation/native-ui-review-2026-11-22.md) | 三窗口、语言、外观、输入焦点和终端验收边界 |
 | [界面与任务边界复查](implementation/native-ui-hardening-2026-11-23.md) | 上轮120项测试、214条文案、全文预览与独立行控件 |
 | [日用边界复查](implementation/runtime-acceptance-2026-11-23.md) | 容量拒收与回滚、采集门槛、终端交接未知状态、原生带任务退出 |
+| [应用索引与配置事务复查](implementation/application-shortcuts-2026-11-23.md) | 后台应用更新、对象身份、快捷键/API回滚与当前验收限制 |
 | [状态总账](status.md) | PASS/PARTIAL/FAIL/BLOCKED、证据与未完成义务 |
 | [iSpec 提案](../ispec/changes/keydock-foundation/10-proposal.md) | proposal、design、四个能力规范和分阶段 tasks |
 

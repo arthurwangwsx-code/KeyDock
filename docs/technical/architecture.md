@@ -53,6 +53,10 @@ P1 CLI与AI分别使用最小InvocationStore：执行／网络前写intent，完
 
 ## 搜索与 UI 生命周期
 
+应用索引由 ApplicationCatalog／FileSystemApplicationScanner 管理：已存在的有限应用目录使用 [FSEvents](https://developer.apple.com/documentation/coreservices/file_system_events) 递归失效；缺失目录仅观察最近现存父目录的直接条目变化，不为个人 Applications 缺失而递归观察整个 Home。目录重建后重装监听，挂载通知、唤起时30秒TTL及手动刷新提供补偿。监听准备／停止和扫描均离主线程，查询只使用缓存。
+
+应用条目保持路径ID以兼容用户配置，额外携带objectRevision（设备、inode、创建时间与bundle身份）。同一物理目录经别名只出现一次，同名独立副本保留路径以区分；激活必须匹配选择时revision，并在后台重新验证目录身份。它是对象新鲜度检查，不是代码签名或OS沙箱保证。
+
 Panel 在主线程显示；应用/窗口索引更新与查询重计算离主线程。查询按 generation 并行 fan-out，各 Provider 独立限时并增量返回，结果合并使用稳定 ID。新查询取消旧任务，UI 仅接受当前 generation；慢 AI、网络或文件搜索不能阻塞本地应用结果。
 
 排序先用确定性的前缀/词匹配、别名、收藏、最近使用；保留评分解释，先测中文/拼音/英文任务集再决定引入 fuzzy/pinyin 库。当前不承诺语义搜索默认参与每次输入。

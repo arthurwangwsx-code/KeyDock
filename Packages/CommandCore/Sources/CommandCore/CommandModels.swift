@@ -16,6 +16,7 @@ public struct CommandItem: Identifiable, Codable, Hashable, Sendable {
     public var keywords: [String]
     public var kind: CommandKind
     public var payload: String
+    public var objectRevision: String?
 
     public init(
         id: String,
@@ -23,7 +24,8 @@ public struct CommandItem: Identifiable, Codable, Hashable, Sendable {
         subtitle: String = "",
         keywords: [String] = [],
         kind: CommandKind,
-        payload: String = ""
+        payload: String = "",
+        objectRevision: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -31,6 +33,7 @@ public struct CommandItem: Identifiable, Codable, Hashable, Sendable {
         self.keywords = keywords
         self.kind = kind
         self.payload = payload
+        self.objectRevision = objectRevision
     }
 }
 

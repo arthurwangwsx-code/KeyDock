@@ -11,6 +11,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
 /// 唯一业务 Store：共享服务、配置、任务与文档；窗口导航、搜索和编辑状态由各 Session 拥有。
 @MainActor public final class WorkbenchModel: ObservableObject {
     @Published public private(set) var isShuttingDown = false
+    @Published public var shortcutsUnavailable = false
     @Published public var configuration: AppConfiguration
     @Published public private(set) var catalog: [CommandItem] = []
     @Published public private(set) var clipboardRevision: UInt64 = 0
@@ -26,6 +27,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public var launcherNotice = ""
     @Published public var settingsNotice = ""
     @Published public var workspaceNotice = ""
+    @Published public private(set) var applicationIndexNotice = ""
     @Published public private(set) var drafts: [UUID: AIDraftDocument] = [:]
     public var onDismiss: ((Bool) -> Void)?
     public var onOpenSettings: ((SettingsPane?) -> Void)?
@@ -34,9 +36,10 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public var onReviewCommand: ((SavedCommand) -> Void)?
     public var onLanguageChanged: (() -> Void)?
     public var onAppearanceChanged: (() -> Void)?
-    public var onShortcutConfigurationChanged: (() -> Void)?
+    /// 同步提交候选注册；失败必须保留旧方案，已保存方案恢复失败必须停用全部并报告状态。
+    public var onShortcutConfigurationChanged: ((AppConfiguration) throws -> Void)?
     public var onShortcutRecordingChanged: ((Bool) -> Void)?
-    public let desktop = DesktopService()
+    public let desktop: DesktopService
     public var target: TargetSnapshot?
     public let clipboardStore: ClipboardStore
     private let monitor: ClipboardMonitor
@@ -56,6 +59,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     let clipboardWriter: @MainActor (String) -> Void
     let clipboardChangeCount: @MainActor () -> Int
     private let clipboardReader: @MainActor () -> String?
+    let credentialReader: @MainActor (String) throws -> String?
+    let credentialWriter: @MainActor (String, String) throws -> Void
+    let configurationWriter: @MainActor (Data, URL) throws -> Void
     // 剪贴板是全局资源；不同草稿的迟到结果也不能覆盖较新的复制请求。
     var latestAutoCopyRunID: UUID?
 
@@ -63,11 +69,19 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
                 clipboardWriter: @escaping @MainActor (String) -> Void = { ClipboardMonitor.copy($0) },
                 clipboardChangeCount: @escaping @MainActor () -> Int = { NSPasteboard.general.changeCount },
                 clipboardReader: @escaping @MainActor () -> String? = { ClipboardMonitor.explicitTextInput() },
-                terminalHandoff: TerminalHandoffAdapter = TerminalHandoffAdapter()) throws {
+                credentialReader: @escaping @MainActor (String) throws -> String? = { try CredentialStore.load(account: $0) },
+                credentialWriter: @escaping @MainActor (String, String) throws -> Void = { try CredentialStore.save($0, account: $1) },
+                configurationWriter: @escaping @MainActor (Data, URL) throws -> Void = { try PrivateFiles.write($0, to: $1) },
+                terminalHandoff: TerminalHandoffAdapter = TerminalHandoffAdapter(),
+                applicationCatalog: ApplicationCatalog? = nil) throws {
+        desktop = DesktopService(applicationCatalog: applicationCatalog ?? ApplicationCatalog())
         self.allowContextCapture = allowContextCapture
         self.clipboardWriter = clipboardWriter
         self.clipboardChangeCount = clipboardChangeCount
         self.clipboardReader = clipboardReader
+        self.credentialReader = credentialReader
+        self.credentialWriter = credentialWriter
+        self.configurationWriter = configurationWriter
         self.terminalHandoff = terminalHandoff
         directory = try dataDirectory ?? PrivateFiles.applicationDirectory()
         let url = directory.appendingPathComponent("configuration.json")
@@ -91,15 +105,22 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         monitor.onFailure = { [weak self] in self?.workspaceNotice = L("Clipboard storage failed") }
         monitor.onCaptureIssue = { [weak self] in self?.clipboardCaptureIssue = $0 }
         monitor.start()
+        desktop.applicationCatalog.onChange = { [weak self] items in
+            guard let self, !self.isShuttingDown else { return }
+            self.applicationItems = items; self.applicationIndexNotice = ""; self.rebuildCatalog()
+        }
+        desktop.applicationCatalog.onFailure = { [weak self] in self?.applicationIndexNotice = L("The application list may be out of date. Refresh it and try again.") }
+        rebuildCatalog() // 首帧先提供内置能力，不等待磁盘索引或回执恢复。
+        desktop.applicationCatalog.start(observing: false)
         Task { [weak self] in
             guard let self else { return }
             for receipt in await invocationStore.list() { restoreReceipt(receipt) }
             for receipt in await aiInvocationStore.list() { restoreAIReceipt(receipt) }
-            applicationItems = await desktop.applications(); rebuildCatalog()
+            guard !isShuttingDown else { return }; rebuildCatalog()
         }
     }
     public func shutdown() {
-        isShuttingDown = true; monitor.stop()
+        isShuttingDown = true; monitor.stop(); desktop.applicationCatalog.stop()
         // 退出围栏与现有工作的取消同步生效，不能等异步终止回调开始后才取消网络。
         for id in Array(taskHandles.keys) { cancelTask(id) }
     }
@@ -107,7 +128,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         shutdown(); let handles = taskHandles
         for handle in handles.values { await handle.value }
     }
-    public func prepareLauncher(target: TargetSnapshot?) { self.target = target; refreshWindows() }
+    public func startApplicationUpdates() { guard !isShuttingDown else { return }; desktop.applicationCatalog.start() }
+    public func refreshApplications() { guard !isShuttingDown else { return }; desktop.applicationCatalog.refresh() }
+    public func prepareLauncher(target: TargetSnapshot?) { self.target = target; desktop.applicationCatalog.refreshIfStale(); refreshWindows() }
     public func refreshWindows() {
         guard allowContextCapture else { rebuildCatalog(); return }
         windowGeneration = UUID(); let current = windowGeneration
@@ -131,8 +154,13 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         switch item.kind {
         case .application:
             do { try authorizeHostItem(item, caller: caller) } catch { showError(error); return }
-            onDismiss?(false)
-            Task { do { try await desktop.launchApplication(path: item.payload) } catch { launcherNotice = L("Application could not be opened") } }
+            Task {
+                do { try await desktop.launchApplication(item); if !isShuttingDown { onDismiss?(false) } }
+                catch {
+                    guard !isShuttingDown else { return }
+                    refreshApplications(); launcherNotice = L("Application could not be opened. It may have moved or changed; refreshing the list.")
+                }
+            }
         case .window:
             do { try authorizeHostItem(item, caller: caller); try desktop.activateWindow(item.payload); onDismiss?(false) } catch { showError(error) }
         case .command:
@@ -162,11 +190,14 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public func save() {
         do {
             let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            try PrivateFiles.write(encoder.encode(configuration), to: directory.appendingPathComponent("configuration.json"))
-            monitor.enabled = allowContextCapture && configuration.clipboardEnabled
-            monitor.excludedApplications = Set(configuration.clipboardExclusions)
-            KDLocalizer.setLanguage(configuration.language); rebuildCatalog()
+            try configurationWriter(encoder.encode(configuration), directory.appendingPathComponent("configuration.json"))
+            applyConfigurationEffects()
         } catch { settingsNotice = L("Configuration could not be saved") }
+    }
+    func applyConfigurationEffects() {
+        monitor.enabled = allowContextCapture && configuration.clipboardEnabled
+        monitor.excludedApplications = Set(configuration.clipboardExclusions)
+        KDLocalizer.setLanguage(configuration.language); rebuildCatalog()
     }
     public func setLanguage(_ language: String) { configuration.language = language; save(); onLanguageChanged?() }
     public func setAppearance(_ appearance: String) { configuration.appearance = appearance; save(); onAppearanceChanged?() }
@@ -181,23 +212,24 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         do {
             guard let url = URL(string: endpoint.trimmingCharacters(in: .whitespacesAndNewlines)) else { throw AIProviderError.invalidConfiguration }
             try AIProviderConfiguration(endpoint: url, model: modelName, allowsLocalHTTP: localHTTP).validate()
-            if allowContextCapture && !apiKey.isEmpty { try CredentialStore.save(apiKey, account: url.absoluteString) }
             var next = configuration
             next.endpoint = url.absoluteString; next.model = modelName; next.localHTTP = localHTTP; next.tokenLimitParameter = tokenParameter
-            try PrivateFiles.write(JSONEncoder().encode(next), to: directory.appendingPathComponent("configuration.json"))
+            try persistAPIConfiguration(next, apiKey: apiKey)
             configuration = next; settingsNotice = L("API configuration saved"); return true
         } catch AIProviderError.invalidConfiguration { settingsNotice = L("Configure a valid API endpoint and model in Settings") }
+        catch APIConfigurationPersistenceError.rollbackIncomplete { settingsNotice = L("API configuration could not be saved and rollback was incomplete. Check the saved endpoint and API key before retrying.") }
         catch { settingsNotice = L("API configuration could not be saved; active settings were preserved") }
         return false
     }
-    public func credentialExists() -> Bool { guard allowContextCapture else { return false }; return (try? CredentialStore.load(account: configuration.endpoint)) != nil }
-    public func removeCredential() { guard allowContextCapture else { return }; do { try CredentialStore.save("", account: configuration.endpoint) } catch { settingsNotice = L("Keychain operation failed") } }
+    public func credentialExists() -> Bool { guard allowContextCapture else { return false }; return (try? credentialReader(configuration.endpoint)) != nil }
+    public func removeCredential() { guard allowContextCapture else { return }; do { try credentialWriter("", configuration.endpoint) } catch { settingsNotice = L("Keychain operation failed") } }
     public func saveCommand(_ command: SavedCommand) {
         if let i = configuration.savedCommands.firstIndex(where: { $0.id == command.id }) { configuration.savedCommands[i] = command } else { configuration.savedCommands.append(command) }; save()
     }
-    public func saveAction(_ action: AIActionPreset) {
-        if let i = configuration.aiActions.firstIndex(where: { $0.id == action.id }) { configuration.aiActions[i] = action } else { configuration.aiActions.append(action) }
-        save(); onShortcutConfigurationChanged?()
+    @discardableResult public func saveAction(_ action: AIActionPreset) -> Bool {
+        var next = configuration
+        if let i = next.aiActions.firstIndex(where: { $0.id == action.id }) { next.aiActions[i] = action } else { next.aiActions.append(action) }
+        return commitShortcutConfiguration(next)
     }
     public func createDraft(actionID: UUID? = nil, input: String? = nil, target: TargetSnapshot? = nil, source: AIDraftSource? = nil, caller: ExecutionCaller = .user) -> AIDraftDocument {
         let action = configuration.aiActions.first { $0.id == actionID } ?? configuration.aiActions.first
@@ -277,15 +309,14 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public func shortcut(for id: String) -> HotkeyBinding? {
         if id.hasPrefix("ai."), let action = configuration.aiActions.first(where: { "ai." + $0.id.uuidString == id }) { return action.shortcut }; return configuration.commandShortcuts[id]
     }
-    public func setShortcut(_ binding: HotkeyBinding?, for id: String) {
-        if id.hasPrefix("ai."), let i = configuration.aiActions.firstIndex(where: { "ai." + $0.id.uuidString == id }) { configuration.aiActions[i].shortcut = binding; configuration.commandShortcuts[id] = nil }
-        else { configuration.commandShortcuts[id] = binding }
-        save(); onShortcutConfigurationChanged?()
+    @discardableResult public func setShortcut(_ binding: HotkeyBinding?, for id: String) -> Bool {
+        var next = configuration
+        if id.hasPrefix("ai."), let i = next.aiActions.firstIndex(where: { "ai." + $0.id.uuidString == id }) { next.aiActions[i].shortcut = binding; next.commandShortcuts[id] = nil }
+        else { next.commandShortcuts[id] = binding }
+        return commitShortcutConfiguration(next)
     }
     public var directShortcuts: [(String, HotkeyBinding)] {
-        var values = configuration.commandShortcuts.filter { !$0.key.hasPrefix("ai.") }
-        for action in configuration.aiActions { if let shortcut = action.shortcut { values["ai." + action.id.uuidString] = shortcut } }
-        return values.sorted { $0.key < $1.key }.map { ($0.key, $0.value) }
+        ShortcutPlan.entries(configuration).compactMap { entry in entry.commandID.map { ($0, entry.binding) } }
     }
     public func performCommand(id: String) { if let item = catalog.first(where: { $0.id == id }) { execute(item, caller: .shortcut) } else { launcherNotice = L("The shortcut target is no longer available") } }
 }

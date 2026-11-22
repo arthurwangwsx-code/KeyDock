@@ -50,6 +50,8 @@ public struct LauncherView: View {
                     }
                 }
             }
+            if !store.applicationIndexNotice.isEmpty { KDInlineNotice(store.applicationIndexNotice).lineLimit(2) }
+            if store.shortcutsUnavailable { KDInlineNotice(L("Shortcuts are inactive. Choose another shortcut or retry registration.")).lineLimit(2) }
             if !store.launcherNotice.isEmpty { KDInlineNotice(store.launcherNotice).lineLimit(2) }
             Divider().opacity(0.5)
             HStack(spacing: 12) {
@@ -91,7 +93,10 @@ public struct LauncherView: View {
     }
     private func primaryAction(_ kind: CommandKind) -> String { switch kind { case .command, .ai: L("Run"); case .window: L("Switch"); default: L("Open") } }
     private func subtitle(_ item: CommandItem) -> String {
-        if item.kind == .application { return L("Application") }
+        if item.kind == .application {
+            let copies = session.results.lazy.filter { $0.kind == .application && $0.title.localizedCaseInsensitiveCompare(item.title) == .orderedSame }.prefix(2).count
+            return copies > 1 ? item.subtitle : L("Application")
+        }
         if item.kind == .command { return item.subtitle.split(separator: "/").last.map(String.init) ?? item.subtitle }
         return item.subtitle
     }

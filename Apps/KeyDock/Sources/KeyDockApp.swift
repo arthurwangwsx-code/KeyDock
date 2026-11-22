@@ -86,14 +86,25 @@ import KeyDockUI
         }
         store.onLanguageChanged = { [weak self] in self?.installMenus(); self?.refreshTitles() }
         store.onAppearanceChanged = { [weak self] in self?.applyAppearance() }
-        store.onShortcutConfigurationChanged = { [weak self] in self?.installShortcuts() }
+        store.onShortcutConfigurationChanged = { [weak self] configuration in
+            guard let self else { throw HotkeyRegistrationError(status: -50) }
+            try self.installShortcuts(configuration: configuration)
+        }
         store.onShortcutRecordingChanged = { [weak self] recording in
             guard let self, !self.store.isShuttingDown else { return }
             if recording { self.hotkeys.suspend() }
-            else { do { try self.hotkeys.resume() } catch { self.shortcutError(AppL("Shortcut could not be registered. It may be used by macOS or another application.")) } }
+            else {
+                do { try self.hotkeys.resume(); try self.installShortcuts(configuration: self.store.configuration) }
+                catch { self.shortcutError(AppL("Shortcut could not be registered. It may be used by macOS or another application.")) }
+            }
         }
     }
-    func start() { applyAppearance(); installMenus(); installShortcuts(); presentLauncher() }
+    func start() {
+        store.startApplicationUpdates(); applyAppearance(); installMenus()
+        do { try installShortcuts(configuration: store.configuration) }
+        catch { shortcutError(AppL("Shortcut could not be registered. It may be used by macOS or another application.")) }
+        presentLauncher()
+    }
     private func applyAppearance() {
         switch store.configuration.appearance {
         case "light": NSApp.appearance = NSAppearance(named: .aqua)
@@ -208,27 +219,24 @@ import KeyDockUI
     @objc private func openWorkspaceAction() { openWorkspace(.tasks(nil)) }
     @objc private func closeWindowAction() { if NSApp.keyWindow === launcher { dismissLauncher(restore: true) } else { NSApp.keyWindow?.performClose(nil) } }
     @objc private func quitAction() { NSApp.terminate(nil) }
-    private func shortcutError(_ text: String) { store.settingsNotice = text; store.launcherNotice = text }
-    private func installShortcuts() {
-        guard !store.isShuttingDown else { return }
-        var next: [UInt32: (HotkeyBinding, String?)] = [:]
-        if let binding = store.configuration.launcherShortcut { next[1] = (binding, nil) }
-        for (command, binding) in store.directShortcuts {
-            var hash: UInt32 = 2166136261
-            for byte in command.utf8 { hash = (hash ^ UInt32(byte)) &* 16777619 }; hash = max(2, hash)
-            guard next[hash] == nil else { shortcutError(AppL("Shortcut identifiers conflict; choose a different shortcut")); continue }
-            next[hash] = (binding, command)
+    private func shortcutError(_ text: String) { store.shortcutsUnavailable = true; store.settingsNotice = text; store.launcherNotice = text }
+    private func installShortcuts(configuration: AppConfiguration) throws {
+        guard !store.isShuttingDown else { throw HotkeyRegistrationError(status: -50) }
+        let entries = ShortcutPlan.entries(configuration)
+        let definitions = entries.map { entry in
+            HotkeyDefinition(id: entry.id, binding: entry.binding) { [weak self] in
+                guard let self else { return }
+                if let command = entry.commandID { self.presentLauncher(commandID: command) }
+                else if self.launcher?.isKeyWindow == true { self.dismissLauncher(restore: true) }
+                else { self.presentLauncher() }
+            }
         }
-        for id in hotkeys.configuredIDs.subtracting(next.keys) { try? hotkeys.set(id: id, binding: nil, action: {}) }
-        for (id, entry) in next {
-            do {
-                try hotkeys.set(id: id, binding: entry.0) { [weak self] in
-                    guard let self else { return }
-                    if let command = entry.1 { self.presentLauncher(commandID: command) }
-                    else if self.launcher?.isKeyWindow == true { self.dismissLauncher(restore: true) }
-                    else { self.presentLauncher() }
-                }
-            } catch { shortcutError(AppL("Shortcut could not be registered. It may be used by macOS or another application.")) }
+        do { try hotkeys.replace(definitions); store.shortcutsUnavailable = false }
+        catch {
+            // 恢复已提交配置失败时，不能把刚刚注册的新配置继续留在 OS 中。
+            if entries == ShortcutPlan.entries(store.configuration) { hotkeys.invalidate() }
+            store.shortcutsUnavailable = hotkeys.isUnavailable
+            throw error
         }
     }
     func deactivate() { if launcher?.isVisible == true { dismissLauncher(restore: false) } }

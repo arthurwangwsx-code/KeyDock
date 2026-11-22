@@ -15,18 +15,18 @@
   "verified": {
     "swiftTests": {
       "state": "PASS",
-      "total": 142,
-      "commandCore": 14,
+      "total": 187,
+      "commandCore": 15,
       "executionCore": 22,
-      "macAdapters": 21,
+      "macAdapters": 50,
       "aiAndAgentCoreIncludingHTTP": 23,
-      "workbenchWindowOwnership": 15,
-      "log": ".local/p1-runtime-tests.log",
+      "workbenchWindowOwnership": 16,
+      "log": ".local/p1-index-shortcut-tests.log",
       "workbenchStoreHTTP": 8,
-      "workbenchTotal": 62,
-      "measurementID": "51d4f86e-e658-44d5-9c05-a6a1a096a79a",
+      "workbenchTotal": 77,
+      "measurementID": "035781d2-260b-45e5-8183-37675153096a",
       "workbenchBreakdown": {
-        "windowOwnership": 15,
+        "windowOwnership": 16,
         "storeHTTP": 8,
         "aiLimits": 11,
         "hostDescriptorPolicy": 8,
@@ -34,26 +34,27 @@
         "clipboardMutationDisconnect": 1,
         "aiReceipts": 6,
         "lifecycle": 3,
-        "terminalLifecycle": 4
+        "terminalLifecycle": 4,
+        "apiConfiguration": 8,
+        "shortcutConfiguration": 6
       },
       "macAdaptersBreakdown": {
         "existingStorePolicyAndPreview": 4,
         "clipboardCapacity": 6,
         "clipboardMonitor": 6,
-        "terminalHandoffAdapter": 5
-      },
-      "followup": {
-        "scope": "final launcher pointer/scroll change; WindowOwnershipTests",
-        "tests": 15,
-        "log": ".local/p1-launcher-hover-tests.log",
-        "measurementID": "00b5bc78-11f8-4a20-9d8c-acd19a3650e7"
+        "terminalHandoffAdapter": 5,
+        "applicationScanner": 5,
+        "applicationCatalog": 7,
+        "applicationDirectoryObserver": 6,
+        "applicationParentObserver": 4,
+        "hotkeyCenter": 7
       }
     },
     "nativeBuild": {
       "state": "PASS",
       "configuration": "Debug local ad-hoc signature, not notarized",
-      "log": ".local/p1-runtime-native-build.log",
-      "measurementID": "dd4b1d23-d7c4-42e2-99aa-14bbb481421f"
+      "log": ".local/p1-index-shortcut-native-build.log",
+      "measurementID": "1a5b7f0f-f9b6-4f5a-8f30-664d423d7313"
     },
     "uiSmoke": {
       "state": "PASS",
@@ -84,14 +85,19 @@
       "items": 2000,
       "samples": 100,
       "warmups": 10,
-      "p50Milliseconds": 19.041458,
-      "p95Milliseconds": 21.838625,
+      "p50Milliseconds": 17.325,
+      "p95Milliseconds": 20.47325,
       "targetMilliseconds": 50,
-      "pipelineP50Milliseconds": 20.957833,
-      "pipelineP95Milliseconds": 23.364167,
-      "pipelineMaxMilliseconds": 31.817416,
-      "log": ".local/query-pipeline-benchmark.log",
-      "measurementID": "af1bbedb-8342-4ed0-be76-933b75aceb97"
+      "pipelineP50Milliseconds": 18.443042,
+      "pipelineP95Milliseconds": 20.851291,
+      "pipelineMaxMilliseconds": 21.326125,
+      "log": ".local/p1-index-shortcut-benchmark.log",
+      "measurementID": "d80b0bc6-75d5-4f33-84fa-89850bcc9dcc",
+      "priorFailure": {
+        "rankingP95Milliseconds": 50.366875,
+        "measurementID": "317f8d68-8782-43f3-b143-f9ab9de0522e",
+        "log": ".local/p1-index-shortcut-benchmark-first-failure.log"
+      }
     },
     "liveHTTPTransport": {
       "state": "PASS",
@@ -101,9 +107,9 @@
     "localization": {
       "state": "PASS",
       "scope": "English and Simplified Chinese source-key coverage in App and Feature catalogs",
-      "log": ".local/p1-runtime-localizations.log",
-      "keys": 220,
-      "measurementID": "1d425f50-434a-44e7-89ce-9f539b4eb1c8"
+      "log": ".local/p1-index-shortcut-localizations.log",
+      "keys": 234,
+      "measurementID": "f47032ab-9c12-451f-ad0f-7c8384be8b89"
     },
     "storeHTTPIntegration": {
       "state": "PASS",
@@ -155,7 +161,9 @@
     "External model API, real Keychain credential flow and readonly tool roundtrip",
     "20-case real model quality review",
     "Minimum macOS and Intel compatibility",
-    "Signed/notarized distribution and remote publication"
+    "Signed/notarized distribution and remote publication",
+    "Live application install/move/duplicate updates in current native UI",
+    "P1 total task/draft retention and usage clear controls; unknown usage UI"
   ],
   "constraints": [
     "No existing AiBox or Ashot source/configuration/credentials/media copied",
@@ -192,5 +200,34 @@
     "action": "CUA native alt+space from Settings",
     "observedTransition": false,
     "meaning": "injection limitation versus registration behavior unresolved; no physical-shortcut PASS claimed"
+  },
+  "applicationCatalog": {
+    "state": "PARTIAL",
+    "syntheticState": "PASS",
+    "tests": 22,
+    "storeQueryTests": 1,
+    "roots": [
+      "/Applications",
+      "/System/Applications",
+      "~/Applications"
+    ],
+    "offMainScanAndObserverSetup": true,
+    "oldObjectRevisionRejected": true,
+    "liveUI": "BLOCKED: Mac locked; generated sample bundles remain staged only"
+  },
+  "configurationTransactions": {
+    "state": "PARTIAL",
+    "syntheticState": "PASS",
+    "apiTests": 8,
+    "shortcutPersistenceTests": 6,
+    "hotkeyCenterTests": 7,
+    "realKeychainAndPhysicalShortcuts": "NOT_RUN",
+    "crossStoreCrashAtomicity": false
+  },
+  "currentNativeVerification": {
+    "state": "BLOCKED",
+    "reason": "Mac is locked; CUA automatic unlock unavailable",
+    "permissionBypassAttempted": false,
+    "review": "docs/implementation/application-shortcuts-2026-11-23.md"
   }
 }

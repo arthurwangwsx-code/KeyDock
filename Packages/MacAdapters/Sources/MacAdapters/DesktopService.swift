@@ -128,9 +128,10 @@ enum AX {
 }
 
 @MainActor public final class DesktopService {
+    public let applicationCatalog: ApplicationCatalog
     private var scanGeneration = UUID()
     private var windowMap: [String: WindowReference] = [:]
-    public init() {}
+    public init(applicationCatalog: ApplicationCatalog = ApplicationCatalog()) { self.applicationCatalog = applicationCatalog }
     public var accessibilityGranted: Bool { AXIsProcessTrusted() }
     public func requestAccessibility() {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
@@ -173,23 +174,6 @@ enum AX {
             _ = AXUIElementSetAttributeValue(ax, kAXFocusedWindowAttribute as CFString, window)
         }
         app.activate()
-    }
-
-    public func applications() async -> [CommandItem] {
-        await Task.detached(priority: .utility) { Self.indexApplications() }.value
-    }
-    nonisolated private static func indexApplications() -> [CommandItem] {
-        let roots = ["/Applications", "/System/Applications", NSHomeDirectory() + "/Applications"]
-        var paths = Set<String>()
-        for root in roots {
-            guard let e = FileManager.default.enumerator(at: URL(fileURLWithPath: root), includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { continue }
-            for case let url as URL in e where url.pathExtension == "app" { paths.insert(url.path) }
-        }
-        return paths.sorted().map { path in
-            let url = URL(fileURLWithPath: path)
-            let name = (Bundle(url: url)?.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String) ?? url.deletingPathExtension().lastPathComponent
-            return CommandItem(id: "app." + path, title: name, subtitle: path, keywords: [url.lastPathComponent], kind: .application, payload: path)
-        }
     }
 
     public func windows() async -> [CommandItem] {
@@ -240,9 +224,10 @@ enum AX {
         _ = AXUIElementSetAttributeValue(AX.application(ref.pid), kAXFocusedWindowAttribute as CFString, ref.element)
     }
 
-    public func launchApplication(path: String) async throws {
+    public func launchApplication(_ item: CommandItem) async throws {
+        let url = try await applicationCatalog.validatedURL(for: item)
         let config = NSWorkspace.OpenConfiguration(); config.activates = true
-        _ = try await NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: path), configuration: config)
+        _ = try await NSWorkspace.shared.openApplication(at: url, configuration: config)
     }
 
     public func replaceSelection(_ text: String, target: TargetSnapshot) throws {

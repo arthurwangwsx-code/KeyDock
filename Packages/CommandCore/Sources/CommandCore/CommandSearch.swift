@@ -1,6 +1,7 @@
 import Foundation
 
 public enum CommandSearch {
+    private static let normalizationLocale = Locale(identifier: "en_US_POSIX")
     /// 纯排序不依赖当前时钟；相同输入始终得到相同结果。
     public static func rank(
         query: String,
@@ -62,9 +63,10 @@ public enum CommandSearch {
     }
 
     private static func normalize(_ value: String) -> String {
-        value.folding(
+        guard !value.isEmpty else { return "" }
+        return value.folding(
             options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
-            locale: Locale(identifier: "en_US_POSIX")
+            locale: normalizationLocale
         ).lowercased().split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
     }
 

@@ -1,6 +1,6 @@
 # 当前状态总账
 
-更新：2026-11-23。当前范围为第一阶段 P0+P1 实现，目标保持“首个可日用 macOS 内测版”。整体状态 **PARTIAL**：已有可构建、可运行预览，完整日用验收尚未完成。最新增量见[日用边界复查](implementation/runtime-acceptance-2026-11-23.md)。
+更新：2026-11-23。当前范围为第一阶段 P0+P1 实现，目标保持“首个可日用 macOS 内测版”。整体状态 **PARTIAL**：已有可构建、可运行预览，完整日用验收尚未完成。最新增量见[应用索引与配置事务复查](implementation/application-shortcuts-2026-11-23.md)。
 
 | 范围 | 状态 | 当前证据与限制 |
 |---|---|---|
@@ -14,11 +14,11 @@
 | AI API/动作/Agent基础 | PARTIAL | Provider和真实URLSession loopback通过；新增Store全链路覆盖任务／用量／取消／建议不执行／过期隔离／只读工具两轮／脱敏；输入/输出预算、空响应与取消、过期复制围栏通过；外部API按用户决定稍后配置 |
 | AI质量 | PARTIAL | 20条合成质量样本已准备，全部NOT_RUN；未进行真实模型调用与人工质量验收 |
 | 最小任务与回执 | PARTIAL | CLI/AI网络前intent、终态元数据与退出围栏通过；三个AI入口的专用子进程SIGKILL+Store恢复通过且不重放；当前新版原生App带sleep退出已验证；Terminal交接有界/unknown/迟到隔离的合成测试通过，完整GUI崩溃和真实Terminal仍待验收 |
-| 性能 | PARTIAL | 2000条合成命令100次采样，Release排序p95 21.84ms、生产缓存查询链路p95 23.36ms；Panel热唤起150ms和长期耗电尚未证明 |
+| 性能 | PARTIAL | 2000条合成命令100次采样，Release排序p95 20.47ms、生产缓存查询链路p95 20.85ms；Panel热唤起150ms和长期耗电尚未证明 |
 | 公开托管/发行 | PARTIAL | 未创建GitHub远端、未推送、未公证；当前仅本地ad-hoc Debug构建 |
 
 详见 [第一阶段进度](implementation/phase-one-progress.md)、[验收方案](technical/validation.md) 和 [iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选任务表示对应实现/定向验证完成，不替代本表更广范围的真实验收。
 
 canonical checkout 仍唯一，开发分支 feature/phase-one 从master创建，主Agent串行写入，子Agent只提供/tmp独立补丁和只读评审；未创建worktree、未改旧AiBox/Ashot工程。支持/隐私联系 arthur.wang.wsx@gmail.com。
 
-当前142项测试通过；220条UI key中英文静态覆盖通过。查询合同进入生产Launcher与QueryCoordinator，迟到请求不能取消新请求，Return不能执行旧批次。最新实际检查与边界记录见[界面与任务复查](implementation/native-ui-hardening-2026-11-23.md)，早前画面和查询记录保留。终端UI由工具明确禁止访问，旧适配路径未产生合成marker；新的有界回调适配器已编译并通过合成验证，真实交接不计通过。CUA注入alt+space未触发可观察切换，物理快捷键仍未验收。
+当前187项测试通过；234条UI key中英文静态覆盖通过。查询合同进入生产Launcher与QueryCoordinator，迟到请求不能取消新请求，Return不能执行旧批次。最新实际检查与边界记录见[界面与任务复查](implementation/native-ui-hardening-2026-11-23.md)，早前画面和查询记录保留。终端UI由工具明确禁止访问，旧适配路径未产生合成marker；新的有界回调适配器已编译并通过合成验证，真实交接不计通过。CUA注入alt+space未触发可观察切换，物理快捷键仍未验收。

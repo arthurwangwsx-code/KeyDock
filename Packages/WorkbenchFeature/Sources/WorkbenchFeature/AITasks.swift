@@ -25,7 +25,7 @@ extension WorkbenchModel {
         let selectedModel = override.isEmpty ? configuration.model : override
         let config = AIProviderConfiguration(endpoint: url, model: selectedModel, allowsLocalHTTP: configuration.localHTTP, tokenLimitParameter: TokenLimitParameter(rawValue: configuration.tokenLimitParameter) ?? .maxCompletionTokens)
         try config.validate()
-        let key = allowContextCapture ? (try CredentialStore.load(account: configuration.endpoint) ?? "") : ""
+        let key = allowContextCapture ? (try credentialReader(configuration.endpoint) ?? "") : ""
         return ChatCompletionsProvider(configuration: config, apiKey: key)
     }
     @discardableResult public func runAI(action: AIActionPreset, draft: AIDraftDocument, caller: ExecutionCaller = .user) -> UUID? {

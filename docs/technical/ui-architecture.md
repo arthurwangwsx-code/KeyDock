@@ -38,6 +38,8 @@ flowchart TD
 
 ## 本地化约定
 
+快捷键配置由同一ShortcutPlan投影：Carbon注册层整组替换，传输token与持久动作ID分离，每次注册使用新token。设置先验证系统注册再写私有配置，失败分别补偿文件与OS，无法完整恢复时明确告警；注册恢复失败停用并提供重试。录制结束后才提交候选，保存失败保留AI动作草稿。已绑定动作始终可见，不可用目标保留清理入口；“已向macOS注册”仅表示系统接受注册，不等同物理按键、IME和全屏验收。
+
 Feature 与 App 各自处理 xcstrings，调用 L／AppL；KeyDockUI 不保存业务文案。`scripts/update-localizations.py --check` 验证两个 bundle 的英中 key 覆盖。设置保存语言后更新 Store、菜单标题和环境 locale，原生 NSTextField 同步更新 placeholder 与 accessibility label。任务状态与内置动作按 key 运行时翻译；用户数据不作为文案 key。
 
 ## 继续拆分边界

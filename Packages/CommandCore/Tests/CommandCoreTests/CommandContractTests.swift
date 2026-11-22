@@ -4,6 +4,17 @@ import CommandCore
 
 @Suite("版本化命令合同")
 struct CommandContractTests {
+    @Test("对象修订随查询结果传递，旧缓存可缺省此字段")
+    func objectRevisionSurvivesCodingWithoutBreakingLegacyItems() throws {
+        let original = CommandItem(id: "app.synthetic", title: "Synthetic", kind: .application, payload: "/tmp/Synthetic.app", objectRevision: "synthetic-revision")
+        let data = try JSONEncoder().encode(original)
+        #expect(try JSONDecoder().decode(CommandItem.self, from: data) == original)
+        var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object["objectRevision"] = nil
+        let legacy = try JSONDecoder().decode(CommandItem.self, from: JSONSerialization.data(withJSONObject: object))
+        #expect(legacy.id == original.id && legacy.objectRevision == nil)
+    }
+
     private func action(id: String = "keydock.command.run") throws -> ActionDescriptor {
         try ActionDescriptor(
             id: id, version: 2, title: "Run", inputType: .structuredData, outputType: .text,

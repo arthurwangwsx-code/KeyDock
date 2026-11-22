@@ -1,5 +1,7 @@
 import AppKit
 import SwiftUI
+import Combine
+import KeyDockUI
 import ExecutionCore
 import MacAdapters
 
@@ -48,7 +50,9 @@ struct AIActionEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State var action: AIActionPreset
     var onRecording: (Bool) -> Void = { _ in }
-    let onSave: (AIActionPreset) -> Void
+    var failureText: () -> String = { "" }
+    let onSave: (AIActionPreset) -> Bool
+    @State private var saveError = ""
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L("AI action")).font(.title2.bold())
@@ -67,7 +71,10 @@ struct AIActionEditor: View {
             TextEditor(text: $action.prompt).frame(height: 160).border(.quaternary)
             HStack { Text(L("Shortcut")); HotkeyRecorder(binding: $action.shortcut, onRecording: onRecording); Spacer() }
             Text(L("This shortcut sends only the configured input to your selected API. Replacement is a separate action.")).font(.caption).foregroundStyle(.secondary)
-            HStack { Button(L("Cancel")) { dismiss() }; Spacer(); Button(L("Save action")) { onSave(action); dismiss() }.buttonStyle(.borderedProminent).disabled(action.name.isEmpty || action.prompt.isEmpty) }
+            if !saveError.isEmpty { KDInlineNotice(saveError) }
+            HStack { Button(L("Cancel")) { dismiss() }; Spacer(); Button(L("Save action")) {
+                if onSave(action) { dismiss() } else { saveError = failureText() }
+            }.buttonStyle(.borderedProminent).disabled(action.name.isEmpty || action.prompt.isEmpty) }
         }.padding(24).frame(width: 560)
     }
 }
@@ -91,11 +98,26 @@ struct HotkeyRecorder: NSViewRepresentable {
     var onChange: ((HotkeyBinding?) -> Void)?
     var onRecording: (Bool) -> Void = { _ in }
     private var currentBinding: HotkeyBinding?
+    private var windowFocusObserver: AnyCancellable?
     override var acceptsFirstResponder: Bool { true }
     override init(frame frameRect: NSRect) { super.init(frame: frameRect); target = self; action = #selector(startRecording); setAccessibilityLabel(L("Record shortcut")) }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     func update(_ binding: HotkeyBinding?) { currentBinding = binding; title = binding?.display ?? L("Record shortcut"); setAccessibilityLabel(L("Record shortcut")) }
-    @objc private func startRecording() { recording = true; onRecording(true); title = L("Press shortcut · Esc cancel · Delete clear"); window?.makeFirstResponder(self) }
+    @objc private func startRecording() {
+        guard !recording, let window, window.makeFirstResponder(self) else { return }
+        recording = true; onRecording(true); title = L("Press shortcut · Esc cancel · Delete clear")
+    }
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow(); windowFocusObserver = nil
+        guard let observedWindow = window else { return }
+        windowFocusObserver = NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification, object: observedWindow)
+            .sink { [weak self, weak observedWindow] _ in
+                Task { @MainActor [weak self, weak observedWindow] in
+                    guard let self, let observedWindow, self.window === observedWindow, !observedWindow.isKeyWindow else { return }
+                    self.finishRecording()
+                }
+            }
+    }
     override func performKeyEquivalent(with event: NSEvent) -> Bool { if recording { keyDown(with: event); return true }; return super.performKeyEquivalent(with: event) }
     private func finishRecording() {
         guard recording else { return }
@@ -106,9 +128,10 @@ struct HotkeyRecorder: NSViewRepresentable {
     override func keyDown(with event: NSEvent) {
         guard recording else { super.keyDown(with: event); return }
         if event.keyCode == 53 { finishRecording(); return }
-        if event.keyCode == 51 { currentBinding = nil; onChange?(nil); finishRecording(); return }
+        if event.keyCode == 51 { finishRecording(); onChange?(nil); return }
         let next = HotkeyBinding.from(event)
         guard next.modifiers != 0 else { NSSound.beep(); return }
-        currentBinding = next; onChange?(next); finishRecording()
+        // 先恢复旧方案，再提交候选；失败时按钮继续显示实际保留的旧绑定。
+        finishRecording(); onChange?(next)
     }
 }

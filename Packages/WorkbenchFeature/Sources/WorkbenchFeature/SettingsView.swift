@@ -19,6 +19,12 @@ public struct SettingsRootView: View {
         } detail: {
             Form {
                 if !store.settingsNotice.isEmpty { Section { KDInlineNotice(store.settingsNotice) } }
+                if store.shortcutsUnavailable {
+                    Section {
+                        Text(L("Shortcuts are inactive. Choose another shortcut or retry registration."))
+                        Button(L("Retry shortcuts")) { store.retryShortcuts() }
+                    }
+                }
                 if !session.pendingCommands.isEmpty { Section { HStack { Text(L("Command draft ready for review")); Spacer(); Button(L("Review")) { session.editedCommand = session.pendingCommands.removeFirst() }.disabled(session.editedCommand != nil || session.editedAction != nil) } } }
                 content
             }.formStyle(.grouped).navigationTitle(session.pane.title)
@@ -28,7 +34,7 @@ public struct SettingsRootView: View {
                 }
         }.frame(minWidth: 740, minHeight: 530).environment(\.locale, KDLocalizer.locale)
             .sheet(item: $session.editedCommand) { command in CommandEditor(command: command) { store.saveCommand($0) } }
-            .sheet(item: $session.editedAction) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }) { store.saveAction($0) } }
+            .sheet(item: $session.editedAction) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureText: { store.settingsNotice }) { store.saveAction($0) } }
             .onAppear { exclusions = store.configuration.clipboardExclusions.joined(separator: "\n"); session.keyStored = store.credentialExists() }
     }
     @ViewBuilder private var content: some View {
@@ -43,17 +49,39 @@ public struct SettingsRootView: View {
                     Text(L("Follow System")).tag("system"); Text(L("Light")).tag("light"); Text(L("Dark")).tag("dark")
                 }
             }
-            Section(L("Launcher")) { HStack { Text(L("Global shortcut")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.configuration.launcherShortcut = $0; store.save(); store.onShortcutConfigurationChanged?() })) } }
+            Section(L("Launcher")) {
+                HStack { Text(L("Global shortcut")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.setLauncherShortcut($0) })) }
+                if !store.shortcutsUnavailable {
+                    Label(ShortcutPlan.entries(store.configuration).isEmpty ? L("No shortcuts configured") : L("Registered with macOS"), systemImage: ShortcutPlan.entries(store.configuration).isEmpty ? "keyboard" : "checkmark.circle").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Section(L("Applications")) {
+                Text(L("The local application list updates automatically. Refresh it if a newly installed application is missing.")).font(.caption).foregroundStyle(.secondary)
+                Button(L("Refresh application list")) { store.refreshApplications() }
+                if !store.applicationIndexNotice.isEmpty { KDInlineNotice(store.applicationIndexNotice) }
+            }
             Section { Text(L("Search and quick actions live in the launcher. Configuration stays here, while long tasks continue in Workspace.")).font(.caption).foregroundStyle(.secondary) }
         case .shortcuts:
             Section { TextField(L("Find an action to customize"), text: $shortcutQuery) }
-            Section(L("Global shortcut")) { HStack { Text(L("Open KeyDock")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.configuration.launcherShortcut = $0; store.save(); store.onShortcutConfigurationChanged?() })) } }
+            Section(L("Global shortcut")) { HStack { Text(L("Open KeyDock")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.setLauncherShortcut($0) })) } }
             Section(L("Actions & aliases")) {
                 ForEach(shortcutItems) { item in
                     VStack(alignment: .leading, spacing: 10) {
                         HStack { Text(item.title).fontWeight(.medium); Spacer(); recorder(Binding(get: { store.shortcut(for: item.id) }, set: { store.setShortcut($0, for: item.id) })) }
                         HStack { TextField(L("Search alias"), text: Binding(get: { aliases[item.id] ?? store.configuration.preferences.aliases[item.id] ?? "" }, set: { aliases[item.id] = $0 })); Button(L("Save alias")) { store.setAlias(aliases[item.id] ?? store.configuration.preferences.aliases[item.id] ?? "", for: item.id) } }.controlSize(.small)
                     }.padding(.vertical, 5)
+                }
+            }
+            if !unavailableShortcutIDs.isEmpty {
+                Section(L("Unavailable actions")) {
+                    ForEach(unavailableShortcutIDs, id: \.self) { id in
+                        if let binding = store.configuration.commandShortcuts[id] {
+                            HStack {
+                                Text(unavailableActionName(id)); KDKeycap(binding.display); Spacer()
+                                Button(L("Remove shortcut")) { store.setShortcut(nil, for: id) }
+                            }
+                        }
+                    }
                 }
             }
         case .aiService:
@@ -129,7 +157,18 @@ public struct SettingsRootView: View {
     }
     private var shortcutItems: [CommandItem] {
         if !shortcutQuery.isEmpty { return Array(CommandSearch.rank(query: shortcutQuery, items: store.catalog, preferences: store.configuration.preferences).prefix(20)) }
-        return store.catalog.filter { $0.kind == .ai || $0.kind == .command || store.configuration.preferences.favorites.contains($0.id) }
+        return store.catalog.filter { $0.kind == .ai || $0.kind == .command || store.configuration.preferences.favorites.contains($0.id) || store.shortcut(for: $0.id) != nil }
+    }
+    private var unavailableShortcutIDs: [String] {
+        let current = Set(store.catalog.map(\.id))
+        return store.configuration.commandShortcuts.keys.filter { !current.contains($0) }.sorted()
+    }
+    private func unavailableActionName(_ id: String) -> String {
+        if id.hasPrefix("app.") {
+            let name = URL(fileURLWithPath: String(id.dropFirst(4))).deletingPathExtension().lastPathComponent
+            if !name.isEmpty { return name }
+        }
+        return L("Unavailable action")
     }
     private func recorder(_ binding: Binding<HotkeyBinding?>) -> some View { HotkeyRecorder(binding: binding, onRecording: { store.onShortcutRecordingChanged?($0) }).fixedSize() }
 }

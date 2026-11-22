@@ -209,22 +209,6 @@
         }
       }
     },
-    "Shortcut identifiers conflict; choose a different shortcut": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shortcut identifiers conflict; choose a different shortcut"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "快捷键标识发生冲突，请选择其他快捷键"
-          }
-        }
-      }
-    },
     "Undo": {
       "localizations": {
         "en": {
