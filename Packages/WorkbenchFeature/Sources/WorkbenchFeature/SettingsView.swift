@@ -8,7 +8,6 @@ public struct SettingsRootView: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: SettingsSession
     @State private var exclusions = ""
-    @State private var shortcutQuery = ""
     @State private var aliases: [String: String] = [:]
     @State private var confirmTaskClear = false
     @State private var confirmUsageClear = false
@@ -35,8 +34,8 @@ public struct SettingsRootView: View {
                     if session.pane == .aiActions { ToolbarItem { Button { session.editedAction = AIActionPreset(name: "", prompt: "") } label: { Label(L("New action"), systemImage: "plus") } } }
                 }
         }.frame(minWidth: 740, minHeight: 530).environment(\.locale, KDLocalizer.locale)
-            .sheet(item: $session.editedCommand, onDismiss: { session.editedCommandSourceRunID = nil }) { command in CommandEditor(command: command) { store.saveCommand($0) } }
-            .sheet(item: $session.editedAction) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureText: { store.settingsNotice }) { store.saveAction($0) } }
+            .sheet(item: $session.editedCommand, onDismiss: { session.editedCommandSourceRunID = nil }) { command in CommandEditor(command: command, failureMessage: { store.settingsNoticeMessage }) { store.saveCommand($0) } }
+            .sheet(item: $session.editedAction) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureMessage: { store.settingsNoticeMessage }) { store.saveAction($0) } }
             .onAppear { exclusions = store.configuration.clipboardExclusions.joined(separator: "\n"); session.keyStored = store.credentialExists() }
             .confirmationDialog(L("Clear finished tasks and idle drafts?"), isPresented: $confirmTaskClear) {
                 Button(L("Clear finished history"), role: .destructive) { Task { await store.clearFinishedHistory() } }
@@ -74,7 +73,7 @@ public struct SettingsRootView: View {
             }
             Section { Text(L("Search and quick actions live in the launcher. Configuration stays here, while long tasks continue in Workspace.")).font(.caption).foregroundStyle(.secondary) }
         case .shortcuts:
-            Section { TextField(L("Find an action to customize"), text: $shortcutQuery) }
+            Section { TextField(L("Find an action to customize"), text: Binding(get: { session.shortcutQuery }, set: { session.editShortcutQuery($0) })) }
             Section(L("Global shortcut")) { HStack { Text(L("Open KeyDock")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.setLauncherShortcut($0) })) } }
             Section(L("Actions & aliases")) {
                 ForEach(shortcutItems) { item in
@@ -139,13 +138,13 @@ public struct SettingsRootView: View {
             }
         case .clipboard:
             Section(L("Clipboard history")) {
-                Toggle(L("Record clipboard"), isOn: Binding(get: { store.allowContextCapture && store.configuration.clipboardEnabled }, set: { store.configuration.clipboardEnabled = $0; store.save() })).disabled(!store.allowContextCapture)
+                Toggle(L("Record clipboard"), isOn: Binding(get: { store.allowContextCapture && store.configuration.clipboardEnabled }, set: { store.setClipboardRecording($0) })).disabled(!store.allowContextCapture)
                 Text(L("Text only · 24 hours · 500 items · 1 MiB per item · 32 MiB of text. Pinned items count toward capacity and stay until removed. When they leave too little room, new items are skipped without deleting existing history. Concealed and transient types are skipped; some applications do not mark secrets.")).font(.caption).foregroundStyle(.secondary)
                 if !store.clipboardCaptureNotice.isEmpty { KDInlineNotice(store.clipboardCaptureNotice) }
             }
             Section(L("Excluded applications")) {
                 TextEditor(text: $exclusions).font(.system(size: 11, design: .monospaced)).frame(height: 110)
-                Button(L("Save exclusions")) { store.configuration.clipboardExclusions = exclusions.split(whereSeparator: \.isNewline).map(String.init); store.save() }
+                Button(L("Save exclusions")) { store.saveClipboardExclusions(exclusions.split(whereSeparator: \.isNewline).map(String.init)) }
             }
         case .privacy:
             Section(L("Accessibility")) {
@@ -179,8 +178,7 @@ public struct SettingsRootView: View {
         }
     }
     private var shortcutItems: [CommandItem] {
-        if !shortcutQuery.isEmpty { return Array(CommandSearch.rank(query: shortcutQuery, items: store.catalog, preferences: store.configuration.preferences).prefix(20)) }
-        return store.catalog.filter { $0.kind == .ai || $0.kind == .command || store.configuration.preferences.favorites.contains($0.id) || store.shortcut(for: $0.id) != nil }
+        session.shortcutItems(in: store.catalog, preferences: store.configuration.preferences)
     }
     private var unavailableShortcutIDs: [String] {
         let current = Set(store.catalog.map(\.id))

@@ -16,13 +16,13 @@
 
 ## 已取得的证据
 
-- 主仓 `xcrun swift test` 最新233项通过：CommandCore 15、ExecutionCore 33、MacAdapters 50、AI/Agent 23、WorkbenchFeature 112。覆盖生产查询、声明授权、共享CLI校验、窗口/剪贴板会话、AI真实loopback、输入输出预算、空响应/复制围栏、退出和最小回执恢复。含三个AI入口真实专用子进程SIGKILL；不等于完整GUI崩溃验收。262条UI key英中覆盖通过。
+- 主仓 `xcrun swift test` 最新248项通过：CommandCore 15、ExecutionCore 33、MacAdapters 54、AI/Agent 23、WorkbenchFeature 123。覆盖生产查询、声明授权、共享CLI校验、窗口/剪贴板会话、AI真实loopback、输入输出预算、空响应/复制围栏、退出和最小回执恢复。含三个AI入口真实专用子进程SIGKILL；不等于完整GUI崩溃验收。270条UI key英中覆盖通过。
 - 真实 URLSession loopback HTTP suite 已通过，覆盖分片UTF-8/SSE/usage、401/429、拒绝重定向、截断、取消及幂等清理。首次暴露的夹具退出等待已用有界POSIX回收修复，失败测量和栈证据保留；未调用云服务。
 - Debug macOS App 已通过 Xcode 27.2/Xcode Swift 6.4.2 编译及本地 ad-hoc 签名；部署目标14，运行主机27.2/arm64，最低系统/Intel未经验证。
 - CUA 隔离模式实际检查了中文界面、应用搜索与启动、命令保存/执行/输出/取消、CLI 输出进入 AI 输入，以及未配置 API 的明确提示。新版原生App带sleep按CmdQ退出后，独立子进程消失且durable回执为cancelled；物理快捷键仍未证明。未读取个人截图/剪贴板或使用真实凭据。
 - 2,000条合成命令、预热10次后采样100次，Release 排序p95 20.47ms；生产缓存查询链路p95 20.85ms，满足该范围50ms目标；不包含Panel/AX/索引/绘制，热唤起150ms目标仍未证明。
 
-轻量回执见 [phase-one-validation.json](phase-one-validation.json)，本轮详见[会话保留与清除复查](retention-acceptance-2026-11-23.md)。详细日志、iSpec metrics 和测试数据位于忽略的 .local；不上传私人内容。
+轻量回执见 [phase-one-validation.json](phase-one-validation.json)，本轮详见[玻璃界面与双语复查](interface-refinement-2026-11-23.md)。详细日志、iSpec metrics 和测试数据位于忽略的 .local；不上传私人内容。
 
 ## 继续推进
 
@@ -36,3 +36,5 @@
 初版大面板视觉未被接受，不算产品视觉验收通过。新要求是轻量启动台、独立设置窗口、菜单栏设置入口、独立任务/结果工作区、原生macOS27 Liquid Glass、可复用UI库及完整中英文。后续截图必须分别检查三种窗口、深浅色、语言及窗口状态隔离。
 
 当前采用SwiftUI原生glassEffect（26+，当前27主机），固定hosting动态响应透明度／动态效果环境；旧系统保留NSVisualEffectView回退。Settings使用独立侧栏表单，Workspace承载任务／AI／剪贴板。唯一Store持有业务任务，三个Session隔离窗口状态；AI草稿按文档引用共享，运行时模型与来源固定。菜单提供设置及标准编辑快捷键。已实际检查基本深浅色、双语同步、长标签、AI自动输入焦点、共享草稿、最终查询→printf→工作区输出；详见[早前实机复查](native-ui-review-2026-11-22.md)和[最新界面与任务边界复查](native-ui-hardening-2026-11-23.md)。完整系统矩阵与真实模型仍未验收。
+
+本轮进一步统一材料角色、高对比度边界与图标命中区；修复工作区菜单重置、快捷键上下文丢失和新建草稿不可返回。已有提示以语义key动态翻译，语言／外观／命令保存失败保留旧状态；剪贴板设置写入失败也停止正文读取。CLI／只读Agent同步导航回调退出围栏与窗口激活返回值已补回归。新视觉矩阵仍因Mac锁屏未执行。

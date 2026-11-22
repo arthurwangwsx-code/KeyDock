@@ -1,6 +1,6 @@
 # 当前状态总账
 
-更新：2026-11-23。当前范围为第一阶段 P0+P1 实现，目标保持“首个可日用 macOS 内测版”。整体状态 **PARTIAL**：已有可构建、可运行预览，完整日用验收尚未完成。最新增量见[会话保留与清除复查](implementation/retention-acceptance-2026-11-23.md)。
+更新：2026-11-23。当前范围为第一阶段 P0+P1 实现，目标保持“首个可日用 macOS 内测版”。整体状态 **PARTIAL**：已有可构建、可运行预览，完整日用验收尚未完成。最新增量见[玻璃界面与双语复查](implementation/interface-refinement-2026-11-23.md)。
 
 | 范围 | 状态 | 当前证据与限制 |
 |---|---|---|
@@ -21,6 +21,8 @@
 
 canonical checkout 仍唯一，开发分支 feature/phase-one 从master创建，主Agent串行写入，子Agent只提供/tmp独立补丁和只读评审；未创建worktree、未改旧AiBox/Ashot工程。支持/隐私联系 arthur.wang.wsx@gmail.com。
 
-当前233项测试通过；262条UI key中英文静态覆盖通过。查询合同进入生产Launcher与QueryCoordinator，迟到请求不能取消新请求，Return不能执行旧批次。最新实际检查与边界记录见[界面与任务复查](implementation/native-ui-hardening-2026-11-23.md)，早前画面和查询记录保留。终端UI由工具明确禁止访问，旧适配路径未产生合成marker；新的有界回调适配器已编译并通过合成验证，真实交接不计通过。CUA注入alt+space未触发可观察切换，物理快捷键仍未验收。
+当前248项测试通过；270条UI key中英文静态覆盖通过。查询合同进入生产Launcher与QueryCoordinator，迟到请求不能取消新请求，Return不能执行旧批次。最新实际检查与边界记录见[界面与任务复查](implementation/native-ui-hardening-2026-11-23.md)，早前画面和查询记录保留。终端UI由工具明确禁止访问，旧适配路径未产生合成marker；新的有界回调适配器已编译并通过合成验证，真实交接不计通过。CUA注入alt+space未触发可观察切换，物理快捷键仍未验收。
 
 本轮GUI复验因Mac锁屏未执行；应用目录更新、快捷键事务、迟到启动回调与用量状态的最新合成证据见[本轮复查](implementation/application-shortcuts-2026-11-23.md)。本轮已实现任务/草稿总预算、90天元数据维护与两类独立清除，合成验证通过；原生清除交互与长期驻留仍待验收，32MiB为逻辑文本预算而非进程RSS承诺。
+
+本轮细化玻璃／控件／正文分层与高对比度、共享按钮、快捷键精确深链接和可返回AI草稿；语言／外观／命令候选保存失败回滚，应用提示运行时双语解析，剪贴板写入失败保持本次暂停。代码与合成验证通过；本轮Mac仍锁屏，当前视觉调整未获得实机通过证据。

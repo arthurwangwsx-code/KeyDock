@@ -24,6 +24,7 @@
 | [日用边界复查](implementation/runtime-acceptance-2026-11-23.md) | 容量拒收与回滚、采集门槛、终端交接未知状态、原生带任务退出 |
 | [启动台与AI状态复查](implementation/application-shortcuts-2026-11-23.md) | 应用更新、快捷键/API回滚、迟到交互隔离与用量未知状态 |
 | [会话保留与清除复查](implementation/retention-acceptance-2026-11-23.md) | 8任务/200历史/32草稿/32MiB、90天维护、清除与失败回归 |
+| [玻璃界面与双语复查](implementation/interface-refinement-2026-11-23.md) | 组件分层、导航上下文、可返回草稿、动态提示与设置失败边界 |
 | [状态总账](status.md) | PASS/PARTIAL/FAIL/BLOCKED、证据与未完成义务 |
 | [iSpec 提案](../ispec/changes/keydock-foundation/10-proposal.md) | proposal、design、四个能力规范和分阶段 tasks |
 

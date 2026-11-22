@@ -15,16 +15,16 @@
   "verified": {
     "swiftTests": {
       "state": "PASS",
-      "total": 233,
+      "total": 248,
       "commandCore": 15,
       "executionCore": 33,
-      "macAdapters": 50,
+      "macAdapters": 54,
       "aiAndAgentCoreIncludingHTTP": 23,
       "workbenchWindowOwnership": 20,
-      "log": ".local/p1-retention-serial-tests.log",
+      "log": ".local/p1-interface-final-tests.log",
       "workbenchStoreHTTP": 8,
-      "workbenchTotal": 112,
-      "measurementID": "9c7f0bf3-fa31-444f-870e-ef3906ae6ef3",
+      "workbenchTotal": 123,
+      "measurementID": "bcd48803-0052-4451-b16f-d738b854b63d",
       "workbenchBreakdown": {
         "windowOwnership": 20,
         "storeHTTP": 8,
@@ -33,14 +33,16 @@
         "clipboardSession": 6,
         "clipboardMutationDisconnect": 1,
         "aiReceipts": 6,
-        "lifecycle": 3,
+        "lifecycle": 4,
         "terminalLifecycle": 4,
         "apiConfiguration": 8,
         "shortcutConfiguration": 6,
         "aiUsagePresentation": 6,
         "sessionRetention": 10,
         "historyManagement": 8,
-        "aiUsageMetadataStore": 7
+        "aiUsageMetadataStore": 7,
+        "interfaceBehavior": 8,
+        "clipboardPreferences": 2
       },
       "macAdaptersBreakdown": {
         "existingStorePolicyAndPreview": 4,
@@ -51,7 +53,8 @@
         "applicationCatalog": 7,
         "applicationDirectoryObserver": 6,
         "applicationParentObserver": 4,
-        "hotkeyCenter": 7
+        "hotkeyCenter": 7,
+        "windowActivationSteps": 4
       },
       "executionCoreBreakdown": {
         "existingExecutionAndRecovery": 22,
@@ -62,8 +65,8 @@
     "nativeBuild": {
       "state": "PASS",
       "configuration": "Debug local ad-hoc signature, not notarized",
-      "log": ".local/p1-retention-serial-build.log",
-      "measurementID": "c7cce4ca-faf1-4e2b-be5e-09b7285a837a"
+      "log": ".local/p1-interface-final-build.log",
+      "measurementID": "4153c4f9-74fe-46f4-ba7c-3c718865b66b"
     },
     "uiSmoke": {
       "state": "PASS",
@@ -85,7 +88,7 @@
         "relaunch task UI shows cancelled exit143 without retained output",
         "final hover/keyboard scroll separation; first result and seventh result verified"
       ],
-      "scope": "Redesigned safe-smoke app, synthetic input and commands; basic flow only",
+      "scope": "Earlier redesigned safe-smoke app; basic flow only. Current interface refinement not rechecked because Mac is locked.",
       "latestEvidence": ".local/p1-launcher-hover-native.json"
     },
     "searchBenchmark": {
@@ -115,10 +118,10 @@
     },
     "localization": {
       "state": "PASS",
-      "scope": "English and Simplified Chinese source-key coverage in App and Feature catalogs",
-      "log": ".local/p1-retention-serial-localizations.log",
-      "keys": 262,
-      "measurementID": "d087b2bc-8e03-4034-bdd2-7c4eb443a224"
+      "scope": "Translated English and Simplified Chinese source keys in App/Feature; typed notices, suffix extraction and both InfoPlist permission resources",
+      "log": ".local/p1-interface-final-localizations.log",
+      "keys": 270,
+      "measurementID": "740207ec-f4c3-4bd5-ba0f-9728aa951ef2"
     },
     "storeHTTPIntegration": {
       "state": "PASS",
@@ -184,8 +187,8 @@
   "visualAcceptance": {
     "state": "PARTIAL",
     "previousUI": "FAIL: user rejected initial dashboard-like design",
-    "currentEvidence": "Live CUA screenshots and AX state of native glass launcher, separate Settings/Workspace, both languages, basic app light/dark and AI focus; findings fixed and rechecked",
-    "review": "docs/implementation/runtime-acceptance-2026-11-23.md",
+    "currentEvidence": "Earlier native inspection verified basic separate windows, glass, languages and focus. Current refined material/control/notice iteration has no native visual evidence: Mac locked.",
+    "review": "docs/implementation/interface-refinement-2026-11-23.md",
     "remaining": [
       "user visual review",
       "live reduce-transparency/reduce-motion",
@@ -231,13 +234,15 @@
     "shortcutPersistenceTests": 6,
     "hotkeyCenterTests": 7,
     "realKeychainAndPhysicalShortcuts": "NOT_RUN",
-    "crossStoreCrashAtomicity": false
+    "crossStoreCrashAtomicity": false,
+    "interfaceBehaviorTests": 8,
+    "clipboardPreferenceFailureTests": 2
   },
   "currentNativeVerification": {
     "state": "BLOCKED",
     "reason": "Mac is still locked; CUA automatic unlock unavailable",
     "permissionBypassAttempted": false,
-    "review": "docs/implementation/retention-acceptance-2026-11-23.md"
+    "review": "docs/implementation/interface-refinement-2026-11-23.md"
   },
   "visibleAIUsage": {
     "state": "PARTIAL",
@@ -325,5 +330,21 @@
     "historyReconstructed": false,
     "oldSnapshot": ".local/p1-usage-launcher-metrics.json",
     "businessAcceptance": "not granted by command receipts"
+  },
+  "interfaceRefinement": {
+    "state": "PARTIAL",
+    "implementationAndSyntheticState": "PASS",
+    "review": "docs/implementation/interface-refinement-2026-11-23.md",
+    "roleAwareNativeGlass": true,
+    "sharedContrastAndReadingSurfaces": true,
+    "shortcutStableIDDeepLink": true,
+    "workspaceRevealKeepsRoute": true,
+    "recoverableSessionDraftMenu": true,
+    "typedRuntimeNotices": true,
+    "appearanceLanguageCommandCandidateCommit": true,
+    "clipboardWriteFailurePausesCurrentSession": true,
+    "windowActivationSyntheticTests": 4,
+    "synchronousNavigationShutdownTestFunctions": 1,
+    "realVisualAndAXAcceptance": "NOT_RUN: Mac locked"
   }
 }

@@ -22,7 +22,7 @@ for name, folders in targets.items():
     for folder in folders:
         for path in (root / folder).rglob('*.swift'):
             text = path.read_text()
-            keys.update(re.findall(r'\b(?:L|AppL)\("([^"\\]*(?:\\.[^"\\]*)*)"\)', text))
+            keys.update(re.findall(r'\b(?:L|AppL|noticeKey)\("([^"\\]*(?:\\.[^"\\]*)*)"', text))
             keys.update(re.findall(r'String\(localized: "([^"\\]*(?:\\.[^"\\]*)*)"\)', text))
             keys.update(re.findall(r'(?:builtinKey|titleKey): "([^"\\]+)"', text))
     keys.discard('')
@@ -32,14 +32,22 @@ for name, folders in targets.items():
     for key in keys:
         if args.check and key not in catalog['strings']:
             errors.append(f'{name}: missing source key: {key}')
-        item = catalog['strings'].setdefault(key, {'localizations': {}})
-        item['localizations'].setdefault('en', {'stringUnit': {'state': 'translated', 'value': key}})
-        if not item['localizations'].get('zh-Hans', {}).get('stringUnit', {}).get('value'):
-            errors.append(f'{name}: missing zh-Hans: {key}')
-            missing.add(key)
+        item = catalog['strings'].get(key, {'localizations': {}})
+        if not args.check:
+            catalog['strings'][key] = item
+            item['localizations'].setdefault('en', {'stringUnit': {'state': 'translated', 'value': key}})
+        for language in ('en', 'zh-Hans'):
+            unit = item.get('localizations', {}).get(language, {}).get('stringUnit', {})
+            if not unit.get('value') or unit.get('state') != 'translated':
+                errors.append(f'{name}: missing translated {language}: {key}')
+                missing.add(key)
     if not args.check:
         catalog['strings'] = {key: catalog['strings'][key] for key in sorted(keys)}
         path.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n')
+for language in ('en', 'zh-Hans'):
+    path = root / 'Apps/KeyDock/Resources' / f'{language}.lproj/InfoPlist.strings'
+    if not path.exists() or not re.search(r'"NSAppleEventsUsageDescription"\s*=\s*"[^"\n]+";', path.read_text()):
+        errors.append(f'{path.relative_to(root)}: missing permission explanation')
 if errors:
     print('\n'.join(errors), file=sys.stderr)
     if not args.check:

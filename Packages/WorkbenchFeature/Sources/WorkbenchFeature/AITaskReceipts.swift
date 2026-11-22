@@ -33,11 +33,11 @@ extension WorkbenchModel {
         do { try await aiInvocationStore.finish(id: id, result: .init(state: state, message: message)) }
         catch {
             // 实际模型结果不因落盘失败被改写；旧 intent 仍是重启时的保守 unknown 围栏。
-            let notice = L("AI finished, but its task receipt could not be saved. Do not retry automatically.")
+            let notice = noticeKey("AI finished, but its task receipt could not be saved. Do not retry automatically.")
             if let index = tasks.firstIndex(where: { $0.id == id }) {
-                tasks[index].notice += (tasks[index].notice.isEmpty ? "" : "\n") + notice
+                tasks[index].noticeMessage = tasks[index].noticeMessage.appending(notice)
             }
-            workspaceNotice = notice
+            workspaceNoticeMessage = notice
         }
     }
 
@@ -53,7 +53,7 @@ extension WorkbenchModel {
         task.restoredFromReceipt = true
         task.aiUsageSummary = .unknown
         task.outputIsIncomplete = status == .interrupted
-        if status == .interrupted { task.notice = L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
+        if status == .interrupted { task.noticeMessage = noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
         // 没有 draft、Task、resultTarget 或 callback；恢复只展示，不重发、不复制、不审阅。
         tasks.append(task)
         loadRestoredAIUsage(receipt.id, interrupted: status == .interrupted)

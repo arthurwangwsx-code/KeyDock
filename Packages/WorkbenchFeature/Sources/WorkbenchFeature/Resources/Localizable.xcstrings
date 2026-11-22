@@ -81,6 +81,22 @@
         }
       }
     },
+    "AI drafts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI drafts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 草稿"
+          }
+        }
+      }
+    },
     "AI finished, but its task receipt could not be saved. Do not retry automatically.": {
       "localizations": {
         "en": {
@@ -93,6 +109,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "AI 已结束，但无法保存任务回执。请勿自动重试。"
+          }
+        }
+      }
+    },
+    "AI input": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI input"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 输入"
           }
         }
       }
@@ -833,6 +865,22 @@
         }
       }
     },
+    "Clipboard recording is paused for this session because settings could not be saved. The previous recording setting may return after restarting. Save settings again before restarting.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clipboard recording is paused for this session because settings could not be saved. The previous recording setting may return after restarting. Save settings again before restarting."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存设置，本次运行已暂停剪贴板采集。重新启动后可能恢复之前的采集设置，请在重启前重新保存设置。"
+          }
+        }
+      }
+    },
     "Clipboard storage failed": {
       "localizations": {
         "en": {
@@ -1261,6 +1309,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "草稿已生成 · 尚未执行"
+          }
+        }
+      }
+    },
+    "Drafts kept for this session": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drafts kept for this session"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本次运行中保留的草稿"
           }
         }
       }
@@ -3041,6 +3105,22 @@
         }
       }
     },
+    "Settings could not be saved and the previous file could not be restored. Check settings before restarting.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings could not be saved and the previous file could not be restored. Check settings before restarting."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存设置，也未能恢复原配置文件。请在重新启动前检查设置。"
+          }
+        }
+      }
+    },
     "Shortcut": {
       "localizations": {
         "en": {
@@ -3085,6 +3165,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法保存快捷键更改，已保留原设置。"
+          }
+        }
+      }
+    },
+    "Shortcut could not be registered. It may be used by macOS or another application.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut could not be registered. It may be used by macOS or another application."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法注册快捷键，可能已被 macOS 或其他应用占用。"
           }
         }
       }
@@ -3761,6 +3857,22 @@
         }
       }
     },
+    "Untitled draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untitled draft"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未命名草稿"
+          }
+        }
+      }
+    },
     "Usage metadata could not be saved": {
       "localizations": {
         "en": {
@@ -3949,6 +4061,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "你的任务都在这里"
+          }
+        }
+      }
+    },
+    "macOS could not bring this window to the front. Try selecting it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS could not bring this window to the front. Try selecting it again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 未能将此窗口切换到前台，请重新选择。"
           }
         }
       }

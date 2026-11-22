@@ -99,6 +99,17 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var modelName = ""
     @Published public var localHTTP = false
     @Published public var tokenParameter = "max_completion_tokens"
+    @Published public var shortcutQuery = ""
+    @Published public private(set) var shortcutTargetID: String?
+    public func focusShortcut(_ item: CommandItem) {
+        shortcutQuery = item.title; shortcutTargetID = item.id; pane = .shortcuts
+    }
+    public func editShortcutQuery(_ query: String) { shortcutTargetID = nil; shortcutQuery = query }
+    public func shortcutItems(in catalog: [CommandItem], preferences: CommandPreferences) -> [CommandItem] {
+        if let shortcutTargetID, let target = catalog.first(where: { $0.id == shortcutTargetID }) { return [target] }
+        if !shortcutQuery.isEmpty { return Array(CommandSearch.rank(query: shortcutQuery, items: catalog, preferences: preferences).prefix(20)) }
+        return catalog.filter { $0.kind == .ai || $0.kind == .command || preferences.favorites.contains($0.id) || store?.shortcut(for: $0.id) != nil }
+    }
     public init(store: WorkbenchModel) {
         self.store = store
         panePreferenceKey = store.allowContextCapture ? "KeyDock.SettingsPane" : "KeyDock.Smoke.SettingsPane"
@@ -150,5 +161,13 @@ private struct LauncherCatalogProvider: CommandProviding {
         case .ai(let id): page = .ai; draft = store.drafts[id]
         case .clipboard: page = .clipboard
         }
+    }
+    public func createDraft(in store: WorkbenchModel) {
+        let next = store.createDraft()
+        guard store.ownsDraft(next) else { return }
+        draft = next; page = .ai
+    }
+    public func availableDrafts(in store: WorkbenchModel) -> [AIDraftDocument] {
+        store.draftOrder.reversed().compactMap { store.drafts[$0] }.filter { store.ownsDraft($0) }
     }
 }

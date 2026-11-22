@@ -5,6 +5,28 @@ import ExecutionCore
 @testable import WorkbenchFeature
 
 @Suite(.serialized) @MainActor struct WorkbenchLifecycleTests {
+    @Test(arguments: [true, false]) func navigationCallbackCanQuitBeforeAnyAgentRequestOrCommandStarts(agent: Bool) async throws {
+        try await withStoreHTTPFixture(path: "agent") { fixture in
+            let store = fixture.store
+            store.onOpenWorkspace = { [weak store] _ in store?.shutdown() }
+            let marker = fixture.directory.appendingPathComponent("navigation-must-not-run")
+            let id: UUID
+            if agent {
+                let draft = store.createDraft(input: "Synthetic shutdown from navigation callback")
+                store.runReadOnlyAgent(draft: draft)
+                id = try #require(store.tasks.first?.id)
+            } else {
+                id = try #require(store.runCommand(.init(name: "Synthetic blocked marker", executable: "/usr/bin/touch", arguments: [marker.path], workingDirectory: fixture.directory.path)))
+            }
+            try await fixture.drain(id)
+            #expect(store.tasks.first { $0.id == id }?.status == .cancelled)
+            #expect(!FileManager.default.fileExists(atPath: marker.path))
+            #expect(try await fixture.server.stats()["post_requests"] == 0)
+            let receipts = agent ? await store.aiInvocationStore.list() : await store.invocationStore.list()
+            #expect(receipts.first { $0.id == id }?.state == .cancelled)
+        }
+    }
+
     @Test(arguments: AIReceiptProbeMode.allCases) func synchronousShutdownCancelsQueuedAIWorkBeforeItsFirstRequest(_ mode: AIReceiptProbeMode) async throws {
         let route: String = switch mode { case .text: "stream"; case .proposal: "proposal"; case .agent: "agent" }
         var copies = 0, reviews = 0

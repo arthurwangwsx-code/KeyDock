@@ -52,7 +52,8 @@ import AppKit
     }
     func suspendCapture() { suspended = true }
     func resumeCapture() { suspended = false; lastChange = source.changeCount }
-    func poll() async {
+    /// 定时器与宿主显式刷新共用同一路径，所有门槛在正文读取前重新检查。
+    public func poll() async {
         guard isRunning, !capturing else { return }
         capturing = true; defer { capturing = false }
         if Date().timeIntervalSince(lastPrune) > 60 {

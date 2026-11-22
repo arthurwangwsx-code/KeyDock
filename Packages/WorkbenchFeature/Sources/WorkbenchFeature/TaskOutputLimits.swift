@@ -32,10 +32,10 @@ extension WorkbenchModel {
         guard appendOutput(id, text: text) else { throw AIProviderError.outputLimit }
     }
 
-    func markIncompleteOutput(_ id: UUID, notice: String? = nil) {
+    func markIncompleteOutput(_ id: UUID, notice: LocalizedNotice? = nil) {
         guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
         tasks[index].outputIsIncomplete = true
-        if let notice { tasks[index].notice = notice }
+        if let notice { tasks[index].noticeMessage = notice }
     }
 
     func markIncompleteAIError(_ error: Error, id: UUID) {

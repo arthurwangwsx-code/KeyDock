@@ -10,8 +10,8 @@ extension WorkbenchModel {
         tasks.append(RunningTaskItem(id: receipt.id, title: receipt.name, state: receipt.message == "terminal.handedOff" ? .handedOff : stateLabel(receipt.state), output: "", exitCode: receipt.exitCode, startedAt: receipt.startedAt, finishedAt: receipt.finishedAt))
         tasks[tasks.count - 1].restoredFromReceipt = true
         if receipt.message == "terminal.handoffUnknown" {
-            tasks[tasks.count - 1].notice = L("Terminal did not confirm opening the command. It may already be running. Check Terminal before retrying.")
-        } else if receipt.state == .interrupted { tasks[tasks.count - 1].notice = L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
+            tasks[tasks.count - 1].noticeMessage = noticeKey("Terminal did not confirm opening the command. It may already be running. Check Terminal before retrying.")
+        } else if receipt.state == .interrupted { tasks[tasks.count - 1].noticeMessage = noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
     }
     @discardableResult public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user, showWorkspace: Bool = true) -> UUID? {
         guard !isShuttingDown else { return nil }
@@ -23,17 +23,17 @@ extension WorkbenchModel {
             configFingerprint = try fingerprint(command)
             authorization = try authorizeHostAction(id: "command." + command.id.uuidString, operation: .runCommand, resource: configFingerprint, availableContext: [.workingDirectory], caller: caller, invocation: id)
         } catch is SavedCommandValidationError {
-            let notice = L("Check name, absolute paths, arguments, environment and timeout")
-            if showWorkspace { settingsNotice = notice } else { launcherNotice = notice }; return nil
+            let notice = noticeKey("Check name, absolute paths, arguments, environment and timeout")
+            if showWorkspace { settingsNoticeMessage = notice } else { launcherNoticeMessage = notice }; return nil
         } catch { showError(error); return nil }
         guard reserveExecution(id) else { return nil }
         tasks.insert(RunningTaskItem(id: id, title: command.name, state: .queued), at: 0)
-        if showWorkspace { onOpenWorkspace?(.tasks(id)) }
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
             do {
                 try await invocationStore.begin(id: id, name: command.name, commandID: authorization.commandID, commandVersion: authorization.commandVersion, configurationFingerprint: configFingerprint, caller: authorization.caller.rawValue, initialMessage: command.interactive ? "terminal.handoffIntent" : "")
                 try Task.checkCancellation()
+                guard !isShuttingDown else { throw CancellationError() }
                 if cancelledTaskIDs.contains(id) { throw CancellationError() }
                 if command.interactive {
                     let outcome = try await openInTerminal(command, id: id)
@@ -47,12 +47,14 @@ extension WorkbenchModel {
                         case let .output(text, isError):
                             _ = isError
                             let upstreamTruncated = text.contains("[process.outputTruncated]")
-                            let accepted = appendOutput(id, text: text.replacingOccurrences(of: "[process.outputTruncated]", with: L("Output limit reached; remaining output was discarded")))
-                            if upstreamTruncated || !accepted { markIncompleteOutput(id, notice: L("Output limit reached; remaining output was discarded")) }
+                            let accepted = appendOutput(id, text: text.replacingOccurrences(of: "[process.outputTruncated]", with: ""))
+                            if upstreamTruncated || !accepted { markIncompleteOutput(id, notice: noticeKey("Output limit reached; remaining output was discarded")) }
                         case let .finished(result):
                             await persistResult(id, result: result)
                             updateTask(id, state: stateLabel(result.state), finished: true, exitCode: result.exitCode)
-                            if result.state == .failed { appendOutput(id, text: "\n" + L("Command failed. Check executable, arguments and directory.")) }
+                            if result.state == .failed, let index = tasks.firstIndex(where: { $0.id == id }) {
+                                tasks[index].noticeMessage = tasks[index].noticeMessage.appending(noticeKey("Command failed. Check executable, arguments and directory."))
+                            }
                         }
                     }
                 }
@@ -60,17 +62,23 @@ extension WorkbenchModel {
                 let cancelled = error is CancellationError || cancelledTaskIDs.contains(id)
                 let result = ProcessResult(state: cancelled ? .cancelled : .failed, exitCode: nil, message: cancelled ? "host.cancelled" : "host.executionFailed")
                 try? await invocationStore.finish(id: id, result: result)
-                updateTask(id, state: stateLabel(result.state), output: cancelled ? L("Cancelled before execution") : L("Command could not be started or its receipt could not be saved."), finished: true)
+                updateTask(id, state: stateLabel(result.state), finished: true)
+                if let index = tasks.firstIndex(where: { $0.id == id }) {
+                    tasks[index].noticeMessage = cancelled ? noticeKey("Cancelled before execution") : noticeKey("Command could not be started or its receipt could not be saved.")
+                }
             }
             finishExecutionReservation(id)
         }
+        if showWorkspace { onOpenWorkspace?(.tasks(id)) }
         return id
     }
     private func persistResult(_ id: UUID, result: ProcessResult) async {
         do { try await invocationStore.finish(id: id, result: result) }
         catch {
-            workspaceNotice = L("Execution finished, but its receipt could not be saved. Do not rerun automatically.")
-            appendOutput(id, text: "\n" + L("Receipt unavailable; outcome after restart may be unknown."))
+            workspaceNoticeMessage = noticeKey("Execution finished, but its receipt could not be saved. Do not rerun automatically.")
+            if let index = tasks.firstIndex(where: { $0.id == id }) {
+                tasks[index].noticeMessage = tasks[index].noticeMessage.appending(noticeKey("Receipt unavailable; outcome after restart may be unknown."))
+            }
         }
     }
     public func cancelTask(_ id: UUID) {
@@ -104,7 +112,7 @@ extension WorkbenchModel {
             !self.isShuttingDown && !self.cancelledTaskIDs.contains(id) && !Task.isCancelled
         }, onSubmission: {
             self.updateTask(id, state: .handoffPending)
-            self.setTerminalNotice(id, L("Terminal handoff requested. Manage execution in Terminal; this request cannot be recalled."))
+            self.setTerminalNotice(id, noticeKey("Terminal handoff requested. Manage execution in Terminal; this request cannot be recalled."))
         })
         // unknown 的脚本仍可能被 OS 打开，不能把停止等待伪装成撤回请求。
         if outcome == .notSubmitted || outcome == .rejected { try? FileManager.default.removeItem(at: file) }
@@ -117,25 +125,25 @@ extension WorkbenchModel {
         case .notSubmitted:
             result = .init(state: .cancelled, message: "host.cancelled")
             state = .cancelled
-            setTerminalNotice(id, L("Cancelled before execution"))
+            setTerminalNotice(id, noticeKey("Cancelled before execution"))
         case .acknowledged:
             result = .init(state: .succeeded, message: "terminal.handedOff")
             state = .handedOff
-            setTerminalNotice(id, L("Interactive execution is managed by Terminal; output and cancellation remain there."))
+            setTerminalNotice(id, noticeKey("Interactive execution is managed by Terminal; output and cancellation remain there."))
         case .rejected:
             result = .init(state: .failed, message: "terminal.handoffFailed")
             state = .failed
-            setTerminalNotice(id, L("Terminal could not open this command. Check Terminal before retrying."))
+            setTerminalNotice(id, noticeKey("Terminal could not open this command. Check Terminal before retrying."))
         case .unknown:
             result = .init(state: .interrupted, message: "terminal.handoffUnknown")
             state = .interrupted
-            setTerminalNotice(id, L("Terminal did not confirm opening the command. It may already be running. Check Terminal before retrying."))
+            setTerminalNotice(id, noticeKey("Terminal did not confirm opening the command. It may already be running. Check Terminal before retrying."))
         }
         await persistResult(id, result: result)
         updateTask(id, state: state, finished: true)
     }
-    private func setTerminalNotice(_ id: UUID, _ text: String) {
+    private func setTerminalNotice(_ id: UUID, _ text: LocalizedNotice) {
         guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
-        tasks[index].notice = text
+        tasks[index].noticeMessage = text
     }
 }

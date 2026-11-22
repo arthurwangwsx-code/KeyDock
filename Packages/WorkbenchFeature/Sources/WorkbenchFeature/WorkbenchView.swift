@@ -24,16 +24,31 @@ public struct WorkspaceView: View {
                 case .ai:
                     if let draft = session.draft { AIContentView(store: store, draft: draft) }
                     else {
-                        VStack { KDEmptyState(symbol: "sparkles", title: L("Ready when you are"), detail: L("Choose an action and add text. Only this input is sent to your model.")); Button(L("New AI task")) { let draft = store.createDraft(); if store.ownsDraft(draft) { session.draft = draft } }.buttonStyle(.borderedProminent).padding(.bottom, 60) }
+                        VStack { KDEmptyState(symbol: "sparkles", title: L("Ready when you are"), detail: L("Choose an action and add text. Only this input is sent to your model.")); Button(L("New AI task"), action: newAI).buttonStyle(.borderedProminent).padding(.bottom, 60) }
                     }
                 case .clipboard: clipboardContent
                 }
                 }
             }.navigationTitle(pageTitle)
-                .toolbar { ToolbarItem { Button { store.onOpenSettings?(nil) } label: { Image(systemName: "gearshape") }.help(L("Settings")) } }
+                .toolbar {
+                    if session.page == .ai {
+                        ToolbarItem { Button(action: newAI) { Label(L("New AI task"), systemImage: "square.and.pencil") }.keyboardShortcut("n", modifiers: .command) }
+                        ToolbarItem {
+                            Menu {
+                                ForEach(session.availableDrafts(in: store)) { draft in
+                                    Button { session.navigate(.ai(draft.id), store: store) } label: { AIDraftMenuLabel(draft: draft, selected: session.draft?.id == draft.id) }
+                                }
+                            } label: { Label(L("AI drafts"), systemImage: "clock") }
+                                .help(L("Drafts kept for this session"))
+                                .disabled(session.availableDrafts(in: store).isEmpty)
+                        }
+                    }
+                    ToolbarItem { KDIconButton("gearshape", label: L("Settings"), style: .toolbar) { store.onOpenSettings?(nil) } }
+                }
         }.frame(minWidth: 820, minHeight: 560).environment(\.locale, KDLocalizer.locale)
     }
     private var pageTitle: String { switch session.page { case .tasks: L("Tasks"); case .ai: L("AI workspace"); case .clipboard: L("Clipboard history") } }
+    private func newAI() { session.createDraft(in: store) }
     private var taskContent: some View {
         HSplitView {
             List(selection: $session.selectedTaskID) {
@@ -58,7 +73,7 @@ public struct WorkspaceView: View {
                     if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary) }
                     if let code = task.exitCode { Text(L("Exit code") + ": \(code)").font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary) }
                     ScrollView { Text(task.output.isEmpty ? (task.restoredFromReceipt ? L("Output is not retained after restarting KeyDock.") : L("No output")) : task.output).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(16) }
-                        .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+                        .modifier(KDReadingSurface())
                     HStack {
                         Button(L("Explain with AI")) {
                             let action = store.configuration.aiActions.first { $0.builtinKey == "Explain command output" } ?? store.configuration.aiActions.last
@@ -80,7 +95,7 @@ public struct WorkspaceView: View {
                 if session.clipboard.isSearching { ProgressView().controlSize(.small) }
                 Spacer()
                 Button(L("Clear all"), role: .destructive) { confirmClear = true }
-                Button { store.onOpenSettings?(.clipboard) } label: { Image(systemName: "slider.horizontal.3") }.help(L("Clipboard privacy"))
+                KDIconButton("slider.horizontal.3", label: L("Clipboard privacy")) { store.onOpenSettings?(.clipboard) }
             }.padding(20)
             if !store.clipboardCaptureNotice.isEmpty { KDInlineNotice(store.clipboardCaptureNotice) }
             if !session.clipboard.notice.isEmpty { KDInlineNotice(session.clipboard.notice) }
@@ -113,10 +128,19 @@ public struct WorkspaceView: View {
             VStack(alignment: .leading, spacing: 8) { Text(entry.preview).font(.system(size: 12)).lineLimit(4).textSelection(.enabled); Text(entry.createdAt, style: .time).font(.system(size: 10)).foregroundStyle(.tertiary) }
             Spacer()
             Button(L("Preview")) { session.clipboard.preview(entry) }
-            Button { Task { await session.clipboard.pin(entry) } } label: { Image(systemName: entry.pinned ? "pin.slash" : "pin") }.help(entry.pinned ? L("Unpin item") : L("Pin item")).accessibilityLabel(entry.pinned ? L("Unpin item") : L("Pin item"))
+            KDIconButton(entry.pinned ? "pin.slash" : "pin", label: entry.pinned ? L("Unpin item") : L("Pin item")) { Task { await session.clipboard.pin(entry) } }
             Button(L("Copy")) { Task { await session.clipboard.copy(entry, perform: store.copyClipboardText) } }
-            Button { Task { await session.clipboard.delete(entry) } } label: { Image(systemName: "trash") }.help(L("Delete"))
+            KDIconButton("trash", label: L("Delete"), role: .destructive) { Task { await session.clipboard.delete(entry) } }
         }.padding(.horizontal, 20).padding(.vertical, 10).accessibilityElement(children: .contain)
     }
 
+}
+
+private struct AIDraftMenuLabel: View {
+    @ObservedObject var draft: AIDraftDocument
+    let selected: Bool
+    var body: some View {
+        let title = draft.input.split(whereSeparator: \.isNewline).first.map { String($0.prefix(50)) } ?? L("Untitled draft")
+        Label(title, systemImage: selected ? "checkmark" : "doc.text")
+    }
 }

@@ -10,8 +10,9 @@ struct CommandEditor: View {
     @State var command: SavedCommand
     @State private var arguments = "[]"
     @State private var environment = "{}"
-    @State private var error = ""
-    let onSave: (SavedCommand) -> Void
+    @State private var errorMessage: LocalizedNotice = .none
+    var failureMessage: () -> LocalizedNotice = { .none }
+    let onSave: (SavedCommand) -> Bool
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L("Review command")).font(.title2.bold())
@@ -26,8 +27,8 @@ struct CommandEditor: View {
                 Toggle(L("Explicit shell mode"), isOn: $command.shellMode)
             }
             Text(L("Arguments are passed individually. For shell pipelines, explicitly choose an interpreter and its arguments. Environment values are saved locally; avoid putting secrets here.")).font(.caption).foregroundStyle(.secondary)
-            if !error.isEmpty { Text(error).foregroundStyle(.red) }
-            HStack { Button(L("Cancel")) { dismiss() }; Spacer(); Button(L("Save command")) { save() }.buttonStyle(.borderedProminent) }
+            if !errorMessage.rendered().isEmpty { Text(errorMessage.rendered()).foregroundStyle(.red) }
+            HStack { Button(L("Cancel")) { dismiss() }.keyboardShortcut(.cancelAction); Spacer(); Button(L("Save command")) { save() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent) }
         }.padding(24).frame(width: 600)
         .onAppear {
             let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
@@ -40,9 +41,9 @@ struct CommandEditor: View {
             command.arguments = try JSONDecoder().decode([String].self, from: Data(arguments.utf8))
             command.environment = try JSONDecoder().decode([String: String].self, from: Data(environment.utf8))
             try command.validate()
-            onSave(command); dismiss()
-        } catch is SavedCommandValidationError { self.error = L("Check name, absolute paths, arguments, environment and timeout") }
-        catch { self.error = L("Arguments and environment must be valid JSON") }
+            if onSave(command) { dismiss() } else { errorMessage = failureMessage() }
+        } catch is SavedCommandValidationError { errorMessage = noticeKey("Check name, absolute paths, arguments, environment and timeout") }
+        catch { errorMessage = noticeKey("Arguments and environment must be valid JSON") }
     }
 }
 
@@ -50,9 +51,9 @@ struct AIActionEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State var action: AIActionPreset
     var onRecording: (Bool) -> Void = { _ in }
-    var failureText: () -> String = { "" }
+    var failureMessage: () -> LocalizedNotice = { .none }
     let onSave: (AIActionPreset) -> Bool
-    @State private var saveError = ""
+    @State private var saveError: LocalizedNotice = .none
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L("AI action")).font(.title2.bold())
@@ -71,10 +72,10 @@ struct AIActionEditor: View {
             TextEditor(text: $action.prompt).frame(height: 160).border(.quaternary)
             HStack { Text(L("Shortcut")); HotkeyRecorder(binding: $action.shortcut, onRecording: onRecording); Spacer() }
             Text(L("This shortcut sends only the configured input to your selected API. Replacement is a separate action.")).font(.caption).foregroundStyle(.secondary)
-            if !saveError.isEmpty { KDInlineNotice(saveError) }
-            HStack { Button(L("Cancel")) { dismiss() }; Spacer(); Button(L("Save action")) {
-                if onSave(action) { dismiss() } else { saveError = failureText() }
-            }.buttonStyle(.borderedProminent).disabled(action.name.isEmpty || action.prompt.isEmpty) }
+            if !saveError.rendered().isEmpty { KDInlineNotice(saveError.rendered()) }
+            HStack { Button(L("Cancel")) { dismiss() }.keyboardShortcut(.cancelAction); Spacer(); Button(L("Save action")) {
+                if onSave(action) { dismiss() } else { saveError = failureMessage() }
+            }.keyboardShortcut(.return, modifiers: .command).buttonStyle(.borderedProminent).disabled(action.name.isEmpty || action.prompt.isEmpty) }
         }.padding(24).frame(width: 560)
     }
 }

@@ -3,7 +3,7 @@ import AppKit
 import CommandCore
 
 public enum DesktopError: Error, Sendable {
-    case accessibilityRequired, targetExpired, selectionUnavailable, replacementUnsupported
+    case accessibilityRequired, targetExpired, selectionUnavailable, replacementUnsupported, windowActivationFailed
 }
 
 /// 应用已经后台打开；只有发起动作的界面仍有效时，宿主才提交前台激活。
@@ -235,9 +235,16 @@ enum AX {
         if (AX.read(ref.element, kAXMinimizedAttribute) as? Bool) == true {
             guard AXUIElementSetAttributeValue(AX.bounded(ref.element), kAXMinimizedAttribute as CFString, kCFBooleanFalse) == .success else { throw DesktopError.targetExpired }
         }
-        app.activate()
-        guard AXUIElementPerformAction(AX.bounded(ref.element), kAXRaiseAction as CFString) == .success else { throw DesktopError.targetExpired }
-        _ = AXUIElementSetAttributeValue(AX.application(ref.pid), kAXFocusedWindowAttribute as CFString, ref.element)
+        let applicationElement = AX.application(ref.pid)
+        try WindowActivationSteps.perform(
+            activateApplication: { app.activate() },
+            raiseWindow: { AXUIElementPerformAction(AX.bounded(ref.element), kAXRaiseAction as CFString) == .success },
+            setFocusedWindow: { AXUIElementSetAttributeValue(applicationElement, kAXFocusedWindowAttribute as CFString, ref.element) == .success },
+            isTargetFocused: {
+                guard let focused = AX.element(applicationElement, kAXFocusedWindowAttribute) else { return false }
+                return CFEqual(focused, ref.element)
+            }
+        )
     }
 
     public func launchApplication(_ item: CommandItem) async throws -> PreparedApplicationLaunch {

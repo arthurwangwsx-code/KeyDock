@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "About KeyDock": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About KeyDock"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关于 KeyDock"
+          }
+        }
+      }
+    },
     "Close Window": {
       "localizations": {
         "en": {
@@ -189,22 +205,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "设置…"
-          }
-        }
-      }
-    },
-    "Shortcut could not be registered. It may be used by macOS or another application.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shortcut could not be registered. It may be used by macOS or another application."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无法注册快捷键，可能已被 macOS 或其他应用占用。"
           }
         }
       }

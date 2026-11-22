@@ -62,8 +62,8 @@ extension WorkbenchModel {
         }
     }
     func admissionNotice(_ draft: AIDraftDocument? = nil) {
-        let message = isClearingHistory ? L("History is being cleared. Try again when it finishes.") : L("KeyDock is at its task or text limit. Finish a task or clear older history, then try again.")
-        draft?.notice = message; launcherNotice = message; workspaceNotice = message
+        let message = isClearingHistory ? noticeKey("History is being cleared. Try again when it finishes.") : noticeKey("KeyDock is at its task or text limit. Finish a task or clear older history, then try again.")
+        draft?.noticeMessage = message; launcherNoticeMessage = message; workspaceNoticeMessage = message
     }
 
     /// 返回完整逐出计划后才修改会话，拒收时不先删除一部分历史。
@@ -99,7 +99,7 @@ extension WorkbenchModel {
         var bytes = TaskTextLimits.inputBytes + 1_024, snapshots: [ObjectIdentifier: TargetSnapshot] = [:]
         func include(_ snapshot: TargetSnapshot?) { if let snapshot { snapshots[ObjectIdentifier(snapshot)] = snapshot } }
         for task in tasks where !taskIDs.contains(task.id) {
-            let metadata = task.title.utf8.count + task.notice.utf8.count + (task.modelName?.utf8.count ?? 0) + (task.sourceApplication?.utf8.count ?? 0)
+            let metadata = task.title.utf8.count + task.noticeMessage.retainedByteCount + (task.modelName?.utf8.count ?? 0) + (task.sourceApplication?.utf8.count ?? 0)
             bytes += task.output.utf8.count + metadata
             if executionReservations.contains(task.id) {
                 bytes += max(0, TaskTextLimits.outputBytes - task.output.utf8.count) + max(0, 16_384 - metadata) + TaskTextLimits.inputBytes

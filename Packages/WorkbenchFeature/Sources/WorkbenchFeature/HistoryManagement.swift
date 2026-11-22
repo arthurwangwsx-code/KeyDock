@@ -33,7 +33,7 @@ extension WorkbenchModel {
         let ai = await aiInvocationStore.maintain(protecting: protected)
         guard !isShuttingDown, !isClearingHistory else { return }
         if cli.failure != nil || ai.failure != nil || !cli.limitsSatisfied || !ai.limitsSatisfied {
-            workspaceNotice = L("Some task records could not be maintained. Running and unconfirmed tasks were kept.")
+            workspaceNoticeMessage = noticeKey("Some task records could not be maintained. Running and unconfirmed tasks were kept.")
         }
     }
 
@@ -66,10 +66,10 @@ extension WorkbenchModel {
             ai: aiSnapshot.filter { ai.remainingIDs.contains($0.id) }, generation: generation)
         let remainingCandidates = cliIDs.intersection(cli.remainingIDs).union(aiIDs.intersection(ai.remainingIDs))
         if cli.failure != nil || ai.failure != nil || !remainingCandidates.isEmpty {
-            settingsNotice = L("History was only partly cleared. Some tasks are still finishing or records could not be removed. Try again later.")
+            settingsNoticeMessage = noticeKey("History was only partly cleared. Some tasks are still finishing or records could not be removed. Try again later.")
         } else if editedDrafts > 0 {
-            settingsNotice = L("Finished history cleared. Drafts edited while clearing were kept.")
-        } else { settingsNotice = L("Finished tasks and idle AI drafts cleared. Running tasks were kept.") }
+            settingsNoticeMessage = noticeKey("Finished history cleared. Drafts edited while clearing were kept.")
+        } else { settingsNoticeMessage = noticeKey("Finished tasks and idle AI drafts cleared. Running tasks were kept.") }
     }
 
     @discardableResult func applyConfirmedHistoryClear(taskIDs: Set<UUID>, draftRevisions: [UUID: UUID]) -> Int {
@@ -85,7 +85,7 @@ extension WorkbenchModel {
             let id = tasks[index].id
             invalidatedUsageRuns.insert(id); tasks[index].aiUsageSummary = .unknown
         }
-        if !report.isComplete { workspaceNotice = L("Some AI usage records could not be maintained. Review or clear usage history in Privacy settings.") }
+        if !report.isComplete { workspaceNoticeMessage = noticeKey("Some AI usage records could not be maintained. Review or clear usage history in Privacy settings.") }
     }
 
     public func clearAIUsageHistory() async {
@@ -105,8 +105,8 @@ extension WorkbenchModel {
                 invalidatedUsageRuns.insert(id)
             }
         }
-        settingsNotice = report.isComplete
-            ? L("AI usage history cleared. Running requests may create new records when they finish.")
-            : L("AI usage history was only partly cleared. Some records remain; check permissions and try again.")
+        settingsNoticeMessage = report.isComplete
+            ? noticeKey("AI usage history cleared. Running requests may create new records when they finish.")
+            : noticeKey("AI usage history was only partly cleared. Some records remain; check permissions and try again.")
     }
 }

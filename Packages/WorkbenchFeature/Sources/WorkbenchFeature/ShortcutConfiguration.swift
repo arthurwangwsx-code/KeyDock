@@ -31,7 +31,7 @@ extension WorkbenchModel {
         return commitShortcutConfiguration(next)
     }
     @discardableResult func commitShortcutConfiguration(_ next: AppConfiguration) -> Bool {
-        guard !isShuttingDown else { settingsNotice = L("KeyDock is quitting. No new action was started."); return false }
+        guard !isShuttingDown else { settingsNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return false }
         let previous = configuration
         let changed = ShortcutPlan.entries(previous) != ShortcutPlan.entries(next)
         let url = directory.appendingPathComponent("configuration.json")
@@ -43,7 +43,7 @@ extension WorkbenchModel {
             // 保存原始字节/不存在状态；快照失败时不能先改变 OS 注册。
             previousFile = FileManager.default.fileExists(atPath: url.path) ? .bytes(try Data(contentsOf: url)) : .absent
         } catch {
-            settingsNotice = L("Shortcut changes could not be saved. Previous settings were kept.")
+            settingsNoticeMessage = noticeKey("Shortcut changes could not be saved. Previous settings were kept.")
             return false
         }
         var registeredCandidate = false, attemptedStorage = false
@@ -54,7 +54,7 @@ extension WorkbenchModel {
             }
             attemptedStorage = true
             try configurationWriter(bytes, url)
-            configuration = next; applyConfigurationEffects(); settingsNotice = ""
+            configuration = next; applyConfigurationEffects(); settingsNoticeMessage = .none
             return true
         } catch {
             var rollbackIncomplete = (error as? HotkeyRegistrationError)?.restorationFailed == true
@@ -70,11 +70,11 @@ extension WorkbenchModel {
                 } catch { shortcutsUnavailable = true; rollbackIncomplete = true }
             }
             if rollbackIncomplete {
-                settingsNotice = L("Shortcut changes could not be saved and rollback was incomplete. Check the saved shortcuts before retrying.")
+                settingsNoticeMessage = noticeKey("Shortcut changes could not be saved and rollback was incomplete. Check the saved shortcuts before retrying.")
             } else {
-                settingsNotice = attemptedStorage
-                    ? L("Shortcut changes could not be saved. Previous settings were kept.")
-                    : L("Shortcut could not be registered. Previous settings were kept.")
+                settingsNoticeMessage = attemptedStorage
+                    ? noticeKey("Shortcut changes could not be saved. Previous settings were kept.")
+                    : noticeKey("Shortcut could not be registered. Previous settings were kept.")
             }
             return false
         }
@@ -84,10 +84,10 @@ extension WorkbenchModel {
         do {
             guard let onShortcutConfigurationChanged else { throw ShortcutConfigurationError.runtimeUnavailable }
             try onShortcutConfigurationChanged(configuration)
-            shortcutsUnavailable = false; settingsNotice = ""
+            shortcutsUnavailable = false; settingsNoticeMessage = .none
         } catch {
             shortcutsUnavailable = true
-            settingsNotice = L("Shortcuts are inactive. Choose another shortcut or retry registration.")
+            settingsNoticeMessage = noticeKey("Shortcuts are inactive. Choose another shortcut or retry registration.")
         }
     }
 }

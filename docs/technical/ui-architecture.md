@@ -30,9 +30,9 @@ flowchart TD
 
 ## KeyDockUI
 
-独立 SwiftPM library，依赖 AppKit／SwiftUI，不依赖业务模块。包含 KDTokens、KDLauncherSurface、KDSearchField、KDCommandRow、KDKeycap、KDIconButton、KDEmptyState、KDInlineNotice 与跨 bundle 的 KDLocalizer。可复用组件只接受展示数据和回调，文案与业务动作由 Feature 提供。
+独立 SwiftPM library，依赖 AppKit／SwiftUI，不依赖业务模块。包含 KDTokens、KDLauncherSurface、KDSearchField、KDCommandRow、KDKeycap、KDIconButton、KDEmptyState、KDInlineNotice、KDKeyboardHint、KDResultSectionHeader、KDReadingSurface 与跨 bundle 的 KDLocalizer。可复用组件只接受展示数据和回调，文案与业务动作由 Feature 提供。
 
-材质选择集中在 KDLauncherSurface：26+原生SwiftUI glassEffect regular／interactive，减少透明度动态切换identity与系统实色；旧系统使用NSVisualEffectView。hosting和输入前景保持身份，背景参数变化不重建焦点树；减少动态效果关闭交互和动画。应用外观可跟随系统或选择浅／深色，由NSApp.appearance统一应用。标准侧栏／工具栏／表单由当前SDK与系统绘制。Launcher通过CatalogProvider→QueryCoordinator actor接收携带完整QueryRequest的ResultBatch，排序离主线程；慢网络、AX与进程流不在View body运行。
+材质选择集中在 KDLauncherSurface：26+原生SwiftUI glassEffect regular，减少透明度动态切换identity与系统实色；旧系统使用NSVisualEffectView。hosting和输入前景保持身份，背景参数变化不重建焦点树；容器不设interactive，不叠加玻璃；KDIconButton区分玻璃内部、正文浮动控件与系统toolbar角色。减少动态效果关闭自定义动画，高对比度提高自绘边界。应用外观可跟随系统或选择浅／深色，由NSApp.appearance统一应用。标准侧栏／工具栏／表单由当前SDK与系统绘制。Launcher通过CatalogProvider→QueryCoordinator actor接收携带完整QueryRequest的ResultBatch，排序离主线程；慢网络、AX与进程流不在View body运行。
 
 剪贴板全文搜索在数据库 actor 运行，列表只接收受字节数和字符数限制的预览；明确预览／复制时才读取单项正文。行使用独立可访问按钮，查询和单项预览分别以 generation 拒绝迟到结果，数据库变更不重置窗口查询。
 
@@ -46,7 +46,7 @@ AIUsageStatusView由AI结果和任务详情复用；事实聚合继续使用AICo
 
 ## 本地化约定
 
-Feature 与 App 各自处理 xcstrings，调用 L／AppL；KeyDockUI 不保存业务文案。`scripts/update-localizations.py --check` 验证两个 bundle 的英中 key 覆盖。设置保存语言后更新 Store、菜单标题和环境 locale，原生 NSTextField 同步更新 placeholder 与 accessibility label。任务状态与内置动作按 key 运行时翻译；用户数据不作为文案 key。
+Feature 与 App 各自处理 xcstrings，调用 L／AppL；KeyDockUI 不保存业务文案。`scripts/update-localizations.py --check` 验证两个 bundle 的英中 key 覆盖。语言／外观候选先持久化再publish，失败补偿原始文件，保持界面选择和活动外观。KDLocalizer集中解析system／en／zh-Hans，系统语言取本次进程快照，下次启动重新解析。设置保存语言后更新 Store、菜单标题和环境 locale，原生 NSTextField 同步更新 placeholder 与 accessibility label。任务状态、内置动作、应用提示按key运行时翻译；LocalizedNotice明确区分key、原文suffix与verbatim，不反向猜测用户文本。Task／Draft提示实际保留和渲染均限8KiB；CLI宿主错误进入提示域，stdout／stderr保持原文。key在所属Feature bundle构造和解析，App通过Feature错误入口报告注册失败。测试可注入languageApplier，避免异步合成采集测试更改全局语言偏好。权限InfoPlist.strings由系统决定弹窗语言。
 
 ## 继续拆分边界
 
@@ -55,3 +55,5 @@ Feature 与 App 各自处理 xcstrings，调用 L／AppL；KeyDockUI 不保存�
 验证包含纯模型／配置迁移、窗口会话隔离、草稿版本、键盘导航和实际系统截图。编译成功仅证明 API／类型兼容，不证明材质、布局或系统焦点通过验收。
 
 提案队列由Store持有runID与预算，待审和正在审阅合计最多10份，进入设置表单后仍保留源数据记账。窗口通过可见引用保护草稿和当前结果；清除成功联动移除窗口引用、复制标记与来源。新编辑用revision保留，历史和用量各用generation拒绝迟到恢复；定时维护不依赖恢复快照是否过时。
+
+快捷键深链接把CommandItem稳定ID送入SettingsSession，按ID显示精确目标；修改查询才解除定位。菜单栏reveal工作区不发送新route。AI工具栏提供可返回的会话草稿列表，空白新草稿请求输入焦点；界面关闭仍不取消任务。

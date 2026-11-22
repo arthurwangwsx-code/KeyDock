@@ -74,6 +74,9 @@ import KeyDockUI
         }
         store.onDismiss = { [weak self] in self?.dismissLauncher(restore: $0) }
         store.onOpenSettings = { [weak self] in self?.openSettings($0) }
+        store.onOpenShortcutSettings = { [weak self] item in
+            self?.settingsSession.focusShortcut(item); self?.openSettings(.shortcuts)
+        }
         store.onOpenWorkspace = { [weak self] in self?.openWorkspace($0) }
         store.onAIAction = { [weak self] draft, caller in
             guard let self, store.ownsDraft(draft) else { return }
@@ -97,14 +100,14 @@ import KeyDockUI
             if recording { self.hotkeys.suspend() }
             else {
                 do { try self.hotkeys.resume(); try self.installShortcuts(configuration: self.store.configuration) }
-                catch { self.shortcutError(AppL("Shortcut could not be registered. It may be used by macOS or another application.")) }
+                catch { self.store.reportShortcutRegistrationFailure() }
             }
         }
     }
     func start() {
         store.startApplicationUpdates(); applyAppearance(); installMenus()
         do { try installShortcuts(configuration: store.configuration) }
-        catch { shortcutError(AppL("Shortcut could not be registered. It may be used by macOS or another application.")) }
+        catch { store.reportShortcutRegistrationFailure() }
         presentLauncher()
     }
     private func applyAppearance() {
@@ -188,10 +191,11 @@ import KeyDockUI
         }
         refreshTitles(); NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
     }
-    func openWorkspace(_ route: WorkspaceRoute) {
+    func openWorkspace(_ route: WorkspaceRoute? = nil) {
         guard !store.isShuttingDown else { return }
         workspaceSession.setVisible(true, in: store)
-        dismissLauncher(restore: false); workspaceSession.navigate(route, store: store)
+        dismissLauncher(restore: false)
+        if let route { workspaceSession.navigate(route, store: store) }
         if workspace == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 680), styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
             window.minSize = NSSize(width: 820, height: 560); window.isReleasedWhenClosed = false; window.delegate = self
@@ -212,7 +216,13 @@ import KeyDockUI
         let quit = NSMenuItem(title: AppL("Quit KeyDock"), action: #selector(quitAction), keyEquivalent: "q"); quit.target = self; menu.addItem(quit)
         item.menu = menu; statusItem = item
         let main = NSMenu(); let appItem = NSMenuItem(title: "KeyDock", action: nil, keyEquivalent: "")
-        appItem.submenu = menu.copy() as? NSMenu; main.addItem(appItem)
+        let appMenu = NSMenu(title: "KeyDock")
+        let about = NSMenuItem(title: AppL("About KeyDock"), action: #selector(openAboutAction), keyEquivalent: ""); about.target = self; appMenu.addItem(about)
+        appMenu.addItem(.separator())
+        let preferences = NSMenuItem(title: AppL("Settings…"), action: #selector(openSettingsAction), keyEquivalent: ","); preferences.target = self; appMenu.addItem(preferences)
+        appMenu.addItem(.separator())
+        let appQuit = NSMenuItem(title: AppL("Quit KeyDock"), action: #selector(quitAction), keyEquivalent: "q"); appQuit.target = self; appMenu.addItem(appQuit)
+        appItem.submenu = appMenu; main.addItem(appItem)
         let fileMenu = NSMenu(title: AppL("File"))
         let close = NSMenuItem(title: AppL("Close Window"), action: #selector(closeWindowAction), keyEquivalent: "w"); close.target = self; fileMenu.addItem(close)
         let fileItem = NSMenuItem(); fileItem.submenu = fileMenu; main.addItem(fileItem)
@@ -225,10 +235,10 @@ import KeyDockUI
     }
     @objc private func openLauncherAction() { presentLauncher() }
     @objc private func openSettingsAction() { openSettings(settingsSession.pane) }
-    @objc private func openWorkspaceAction() { openWorkspace(.tasks(nil)) }
+    @objc private func openWorkspaceAction() { openWorkspace() }
+    @objc private func openAboutAction() { openSettings(.about) }
     @objc private func closeWindowAction() { if NSApp.keyWindow === launcher { dismissLauncher(restore: true) } else { NSApp.keyWindow?.performClose(nil) } }
     @objc private func quitAction() { NSApp.terminate(nil) }
-    private func shortcutError(_ text: String) { store.shortcutsUnavailable = true; store.settingsNotice = text; store.launcherNotice = text }
     private func installShortcuts(configuration: AppConfiguration) throws {
         guard !store.isShuttingDown else { throw HotkeyRegistrationError(status: -50) }
         let entries = ShortcutPlan.entries(configuration)

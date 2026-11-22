@@ -91,7 +91,14 @@ public struct RunningTaskItem: Identifiable {
     public var modelName: String?
     public var source: AIDraftSource?
     public var sourceApplication: String?
-    public var notice = "" { didSet { if notice.utf8.count > 8_192 { notice = TaskTextLimits.prefix(notice, maximumBytes: 8_192) } } }
+    public var noticeMessage: LocalizedNotice = .none {
+        didSet { noticeMessage = noticeMessage.bounded(maximumBytes: 8_192) }
+    }
+    /// 兼容既有调用方；字符串赋值明确视为原文，应用提示应写 noticeMessage。
+    public var notice: String {
+        get { noticeMessage.rendered(maximumBytes: 8_192) }
+        set { noticeMessage = .verbatim(newValue) }
+    }
     public var restoredFromReceipt = false
     public var isRunning: Bool { finishedAt == nil }
     public var canCancel: Bool { isRunning && status != .handoffPending }
@@ -106,8 +113,15 @@ public struct RunningTaskItem: Identifiable {
     @Published public private(set) var input: String
     @Published public private(set) var actionID: UUID?
     @Published public var latestRunID: UUID?
-    @Published private var retainedNotice = ""
-    public var notice: String { get { retainedNotice } set { retainedNotice = TaskTextLimits.prefix(newValue, maximumBytes: 8_192) } }
+    @Published private var retainedNotice: LocalizedNotice = .none
+    public var noticeMessage: LocalizedNotice {
+        get { retainedNotice }
+        set { retainedNotice = newValue.bounded(maximumBytes: 8_192) }
+    }
+    public var notice: String {
+        get { retainedNotice.rendered(maximumBytes: 8_192) }
+        set { noticeMessage = .verbatim(newValue) }
+    }
     @Published public private(set) var isDiscarded = false
     @Published public private(set) var source: AIDraftSource
     public private(set) var sourceTarget: TargetSnapshot?
@@ -115,16 +129,16 @@ public struct RunningTaskItem: Identifiable {
     init(input: String, actionID: UUID?, target: TargetSnapshot?, source: AIDraftSource = .manual) {
         self.input = input.utf8.count <= TaskTextLimits.inputBytes ? input : ""
         self.actionID = actionID; sourceTarget = target; self.source = source
-        if input.utf8.count > TaskTextLimits.inputBytes { discard(); notice = L("Input is too long. Split it into smaller parts; nothing was sent.") }
+        if input.utf8.count > TaskTextLimits.inputBytes { discard(); noticeMessage = noticeKey("Input is too long. Split it into smaller parts; nothing was sent.") }
     }
     private func accepts(_ text: String) -> Bool {
         guard !isDiscarded else { return false }
-        guard text.utf8.count <= TaskTextLimits.inputBytes else { notice = L("Input is too long. Split it into smaller parts; nothing was sent."); return false }
+        guard text.utf8.count <= TaskTextLimits.inputBytes else { noticeMessage = noticeKey("Input is too long. Split it into smaller parts; nothing was sent."); return false }
         return true
     }
-    public func editInput(_ text: String) { guard accepts(text), input != text else { return }; input = text; sourceTarget = nil; source = .manual; revision = UUID(); notice = "" }
-    public func useClipboard(_ text: String) { guard accepts(text), input != text || source != .clipboard else { return }; input = text; sourceTarget = nil; source = .clipboard; revision = UUID(); notice = "" }
-    public func selectAction(_ id: UUID?) { guard !isDiscarded, actionID != id else { return }; actionID = id; latestRunID = nil; revision = UUID(); notice = "" }
+    public func editInput(_ text: String) { guard accepts(text), input != text else { return }; input = text; sourceTarget = nil; source = .manual; revision = UUID(); noticeMessage = .none }
+    public func useClipboard(_ text: String) { guard accepts(text), input != text || source != .clipboard else { return }; input = text; sourceTarget = nil; source = .clipboard; revision = UUID(); noticeMessage = .none }
+    public func selectAction(_ id: UUID?) { guard !isDiscarded, actionID != id else { return }; actionID = id; latestRunID = nil; revision = UUID(); noticeMessage = .none }
     func discard() { isDiscarded = true; input = ""; sourceTarget = nil; latestRunID = nil; source = .manual; revision = UUID() }
 }
 

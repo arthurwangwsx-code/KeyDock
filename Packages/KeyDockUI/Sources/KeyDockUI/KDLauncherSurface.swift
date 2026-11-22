@@ -16,11 +16,11 @@ import SwiftUI
 
     @ViewBuilder func body(content: Content) -> some View {
         if #available(macOS 26, *) {
-            content
+            content.environment(\.kdOnGlassSurface, true)
                 // 保留动态 NSColor，由 SwiftUI 随有效外观重新解析；不冻结成 CGColor。
                 .background(reduceTransparency ? Color(nsColor: .windowBackgroundColor) : .clear)
                 .glassEffect(
-                    reduceTransparency ? .identity : .regular.interactive(!reduceMotion),
+                    reduceTransparency ? .identity : .regular,
                     in: .rect(cornerRadius: KDTokens.corner)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: KDTokens.corner, style: .continuous))
@@ -28,7 +28,7 @@ import SwiftUI
                     if reduceMotion { transaction.animation = nil; transaction.disablesAnimations = true }
                 }
         } else {
-            content
+            content.environment(\.kdOnGlassSurface, true)
                 .background {
                     if reduceTransparency {
                         Color(nsColor: .windowBackgroundColor)

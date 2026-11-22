@@ -25,13 +25,9 @@ public struct LauncherView: View {
                 }).frame(height: 34)
                 if session.contextCapturePending { ProgressView().controlSize(.small) }
                 KDKeycap("esc")
-            }.padding(.horizontal, 24).frame(height: 72)
+            }.padding(.horizontal, KDTokens.contentInset).frame(height: KDTokens.searchHeight)
             Divider().opacity(0.55)
-            HStack {
-                Text(session.query.isEmpty ? L("Suggestions") : L("Results")).font(.system(size: 10, weight: .semibold)).foregroundStyle(.tertiary).tracking(0.7)
-                Spacer()
-                if !session.query.isEmpty { Text("\(session.results.count)").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary) }
-            }.padding(.horizontal, 25).frame(height: 25)
+            KDResultSectionHeader(session.query.isEmpty ? L("Suggestions") : L("Results"), count: session.query.isEmpty ? nil : session.results.count)
             if session.results.isEmpty {
                 KDEmptyState(symbol: "magnifyingglass", title: L("No matching actions"), detail: L("Try an application name, a saved command, or an AI action."))
             } else {
@@ -54,17 +50,19 @@ public struct LauncherView: View {
             if store.shortcutsUnavailable { KDInlineNotice(L("Shortcuts are inactive. Choose another shortcut or retry registration.")).lineLimit(2) }
             if !store.launcherNotice.isEmpty { KDInlineNotice(store.launcherNotice).lineLimit(2) }
             Divider().opacity(0.5)
-            HStack(spacing: 12) {
-                Button { store.onOpenSettings?(nil) } label: { Image(systemName: "gearshape").font(.system(size: 13)) }.buttonStyle(.plain).help(L("Settings")).keyboardShortcut(",", modifiers: .command)
-                Button { store.onOpenWorkspace?(.tasks(nil)) } label: {
-                    HStack(spacing: 5) { Image(systemName: "rectangle.stack"); if store.tasks.contains(where: \.isRunning) { Text("\(store.tasks.filter(\.isRunning).count)").font(.system(size: 10, design: .monospaced)) } }
-                }.buttonStyle(.plain).help(L("Running tasks"))
+            HStack(spacing: 10) {
+                KDIconButton("gearshape", label: L("Settings")) { store.onOpenSettings?(nil) }.keyboardShortcut(",", modifiers: .command)
+                KDIconButton("rectangle.stack", label: L("Running tasks")) { store.onOpenWorkspace?(.tasks(nil)) }
+                if store.tasks.contains(where: \.isRunning) {
+                    Text("\(store.tasks.filter(\.isRunning).count)").font(KDTokens.Typography.detail).monospacedDigit()
+                }
                 Spacer()
-                KDKeycap("↑↓"); Text(L("Select")).font(.system(size: 10)).foregroundStyle(.secondary)
-                KDKeycap("↩"); Text(session.selection.map { primaryAction($0.kind) } ?? L("Open")).font(.system(size: 10)).foregroundStyle(.secondary)
-                Button { session.actionsVisible.toggle() } label: { HStack(spacing: 5) { Text(L("Actions")).font(.system(size: 10)); KDKeycap("⌘K") } }.buttonStyle(.plain).keyboardShortcut("k", modifiers: .command)
+                KDKeyboardHint("↑↓", label: L("Select"))
+                KDKeyboardHint("↩", label: session.selection.map { primaryAction($0.kind) } ?? L("Open"))
+                Button { session.actionsVisible.toggle() } label: { KDKeyboardHint("⌘K", label: L("Actions")).padding(.vertical, 7).contentShape(Rectangle()) }.buttonStyle(.plain).keyboardShortcut("k", modifiers: .command)
+                    .disabled(session.selection == nil)
                     .popover(isPresented: $session.actionsVisible, arrowEdge: .bottom) { actionMenu }
-            }.foregroundStyle(.secondary).padding(.horizontal, 22).frame(height: 36)
+            }.foregroundStyle(.secondary).padding(.horizontal, 18).frame(height: KDTokens.footerHeight)
         }
     }
     private func resultRow(_ item: CommandItem) -> some View {
@@ -87,7 +85,7 @@ public struct LauncherView: View {
                 Button(primaryAction(item.kind)) { session.actionsVisible = false; session.execute() }
                 Button(store.configuration.preferences.favorites.contains(item.id) ? L("Remove favorite") : L("Add favorite")) { store.toggleFavorite(item); session.actionsVisible = false }
                 Divider()
-                Button(L("Edit shortcuts and aliases")) { session.actionsVisible = false; store.onOpenSettings?(.shortcuts) }
+                Button(L("Edit shortcuts and aliases")) { session.actionsVisible = false; store.onOpenShortcutSettings?(item) }
             }
         }.buttonStyle(.borderless).padding(16).frame(width: 245, alignment: .leading)
     }

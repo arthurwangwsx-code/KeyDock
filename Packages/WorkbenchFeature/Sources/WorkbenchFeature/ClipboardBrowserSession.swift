@@ -19,7 +19,8 @@ extension ClipboardStore: ClipboardAccess {}
     }
     @Published public private(set) var results: [ClipboardPreview] = []
     @Published public private(set) var isSearching = false
-    @Published public private(set) var notice = ""
+    @Published public private(set) var noticeMessage: LocalizedNotice = .none
+    public var notice: String { noticeMessage.rendered() }
     @Published public private(set) var previewedID: String?
     @Published public private(set) var previewText: String?
     @Published public private(set) var isPreviewLoading = false
@@ -45,7 +46,7 @@ extension ClipboardStore: ClipboardAccess {}
 
     public func refresh() {
         generation = UUID(); let requestID = generation, requestQuery = query
-        searchTask?.cancel(); results = []; notice = ""
+        searchTask?.cancel(); results = []; noticeMessage = .none
         guard let access else { isSearching = false; return }
         isSearching = true
         searchTask = Task { [weak self] in
@@ -56,7 +57,7 @@ extension ClipboardStore: ClipboardAccess {}
                 self.results = values; self.isSearching = false
             } catch {
                 guard let self, !Task.isCancelled, self.generation == requestID else { return }
-                self.isSearching = false; self.notice = L("Clipboard storage failed")
+                self.isSearching = false; self.noticeMessage = noticeKey("Clipboard storage failed")
             }
         }
         // 已打开详情按 ID 重新校验；删除或过期后不能继续显示旧正文。
@@ -67,7 +68,7 @@ extension ClipboardStore: ClipboardAccess {}
 
     private func loadPreview(id: String) {
         previewGeneration = UUID(); let requestID = previewGeneration
-        previewTask?.cancel(); previewedID = id; previewText = nil; notice = ""
+        previewTask?.cancel(); previewedID = id; previewText = nil; noticeMessage = .none
         guard let access else { isPreviewLoading = false; return }
         isPreviewLoading = true
         previewTask = Task { [weak self] in
@@ -77,13 +78,13 @@ extension ClipboardStore: ClipboardAccess {}
                 guard let self, !Task.isCancelled, self.previewGeneration == requestID, self.previewedID == id else { return }
                 self.isPreviewLoading = false
                 guard let body else {
-                    self.previewedID = nil; self.notice = L("The clipboard item is no longer available")
+                    self.previewedID = nil; self.noticeMessage = noticeKey("The clipboard item is no longer available")
                     return
                 }
                 self.previewText = body
             } catch {
                 guard let self, !Task.isCancelled, self.previewGeneration == requestID else { return }
-                self.isPreviewLoading = false; self.notice = L("Clipboard storage failed")
+                self.isPreviewLoading = false; self.noticeMessage = noticeKey("Clipboard storage failed")
             }
         }
     }
@@ -97,7 +98,7 @@ extension ClipboardStore: ClipboardAccess {}
         guard let access else { return }
         let notify = didMutate
         do { try await access.setPinned(id: entry.id, pinned: !entry.pinned); mutationCompleted(notify: notify) }
-        catch { notice = L("Clipboard storage failed") }
+        catch { noticeMessage = noticeKey("Clipboard storage failed") }
     }
 
     public func delete(_ entry: ClipboardPreview) async {
@@ -105,7 +106,7 @@ extension ClipboardStore: ClipboardAccess {}
         let notify = didMutate
         if previewedID == entry.id { closePreview() }
         do { try await access.delete(id: entry.id); mutationCompleted(notify: notify) }
-        catch { notice = L("Clipboard storage failed") }
+        catch { noticeMessage = noticeKey("Clipboard storage failed") }
     }
 
     public func clear() async {
@@ -113,7 +114,7 @@ extension ClipboardStore: ClipboardAccess {}
         let notify = didMutate
         closePreview()
         do { try await access.clear(); mutationCompleted(notify: notify) }
-        catch { notice = L("Clipboard storage failed") }
+        catch { noticeMessage = noticeKey("Clipboard storage failed") }
     }
 
     private func mutationCompleted(notify: @MainActor () -> Void) {
@@ -136,11 +137,11 @@ extension ClipboardStore: ClipboardAccess {}
         do {
             let body = try await access.text(id: id)
             guard !Task.isCancelled, requestID == generation else { return }
-            guard let body else { notice = L("The clipboard item is no longer available"); return }
+            guard let body else { noticeMessage = noticeKey("The clipboard item is no longer available"); return }
             perform(body)
         } catch {
             guard !Task.isCancelled, requestID == generation else { return }
-            notice = L("Clipboard storage failed")
+            noticeMessage = noticeKey("Clipboard storage failed")
         }
     }
 }
