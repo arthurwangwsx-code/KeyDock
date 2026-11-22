@@ -59,7 +59,7 @@ public actor InvocationStore {
                     receipt.state = .interrupted
                     receipt.finishedAt = Date()
                     receipt.exitCode = nil
-                    receipt.message = "process.interrupted.unknown"
+                    receipt.message = receipt.message == "terminal.handoffIntent" ? "terminal.handoffUnknown" : "process.interrupted.unknown"
                 }
                 values[receipt.id] = receipt
             }
@@ -69,10 +69,10 @@ public actor InvocationStore {
         try Self.persist(values, to: target)
     }
 
-    public func begin(id: UUID, name: String, commandID: String? = nil, commandVersion: Int? = nil, configurationFingerprint: String? = nil, caller: String? = nil) throws {
+    public func begin(id: UUID, name: String, commandID: String? = nil, commandVersion: Int? = nil, configurationFingerprint: String? = nil, caller: String? = nil, initialMessage: String = "") throws {
         guard receipts[id] == nil else { throw InvocationStoreError.duplicateInvocation }
         var next = receipts
-        next[id] = .init(id: id, name: String(name.prefix(256)), state: .running, commandID: commandID, commandVersion: commandVersion, configurationFingerprint: configurationFingerprint, caller: caller)
+        next[id] = .init(id: id, name: String(name.prefix(256)), state: .running, message: initialMessage, commandID: commandID, commandVersion: commandVersion, configurationFingerprint: configurationFingerprint, caller: caller)
         try Self.persist(next, to: fileURL)
         receipts = next
     }

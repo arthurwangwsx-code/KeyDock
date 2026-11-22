@@ -18,6 +18,7 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var query = "" { didSet { search() } }
     @Published public var results: [CommandItem] = []
     @Published public var selectedID: String?
+    @Published public private(set) var selectionScrollRequest = UUID()
     @Published public var focusRequest = UUID()
     @Published public var actionsVisible = false
     @Published public var contextCapturePending = false
@@ -52,7 +53,9 @@ private struct LauncherCatalogProvider: CommandProviding {
                 // 初始空批次只是等待状态，不闪出“无结果”，也不使旧结果变成可执行的新结果。
                 guard !batch.items.isEmpty || batch.isComplete else { continue }
                 results = batch.items; resultBatch = batch
-                if !results.contains(where: { $0.id == selectedID }) { selectedID = results.first?.id }
+                if !results.contains(where: { $0.id == selectedID }) {
+                    selectedID = results.first?.id; selectionScrollRequest = UUID()
+                }
             }
         }
     }
@@ -60,6 +63,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         let visible = results; guard !visible.isEmpty else { return }
         let index = visible.firstIndex { $0.id == selectedID } ?? 0
         selectedID = visible[max(0, min(visible.count - 1, index + delta))].id
+        selectionScrollRequest = UUID()
     }
     public func execute() {
         guard let request = queryRequest, let batch = resultBatch,

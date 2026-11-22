@@ -1937,6 +1937,22 @@
         }
       }
     },
+    "Opening in Terminal…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening in Terminal…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在交接给 Terminal…"
+          }
+        }
+      }
+    },
     "Operation failed": {
       "localizations": {
         "en": {
@@ -2817,18 +2833,66 @@
         }
       }
     },
-    "Text only · 24 hours · 500 items · 32 MiB total. Pinned items stay until removed. Concealed and transient types are skipped; some applications do not mark secrets.": {
+    "Terminal could not open this command. Check Terminal before retrying.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Text only · 24 hours · 500 items · 32 MiB total. Pinned items stay until removed. Concealed and transient types are skipped; some applications do not mark secrets."
+            "value": "Terminal could not open this command. Check Terminal before retrying."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "仅记录文本 · 保留 24 小时 · 最多 500 条 · 总容量 32 MiB。固定条目会保留至手动删除。跳过 Concealed、Transient 标记的内容；部分应用不会标记敏感信息。"
+            "value": "Terminal 未能打开此命令。重试前请先检查 Terminal。"
+          }
+        }
+      }
+    },
+    "Terminal did not confirm opening the command. It may already be running. Check Terminal before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal did not confirm opening the command. It may already be running. Check Terminal before retrying."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未收到 Terminal 打开命令的确认，命令可能已经在运行。重试前请先检查 Terminal。"
+          }
+        }
+      }
+    },
+    "Terminal handoff requested. Manage execution in Terminal; this request cannot be recalled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal handoff requested. Manage execution in Terminal; this request cannot be recalled."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已请求交接，请在 Terminal 中管理运行；KeyDock 无法撤回这次请求。"
+          }
+        }
+      }
+    },
+    "Text only · 24 hours · 500 items · 1 MiB per item · 32 MiB of text. Pinned items count toward capacity and stay until removed. When they leave too little room, new items are skipped without deleting existing history. Concealed and transient types are skipped; some applications do not mark secrets.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text only · 24 hours · 500 items · 1 MiB per item · 32 MiB of text. Pinned items count toward capacity and stay until removed. When they leave too little room, new items are skipped without deleting existing history. Concealed and transient types are skipped; some applications do not mark secrets."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅记录文本 · 保留 24 小时 · 最多 500 条 · 单条 1 MiB · 文本总量 32 MiB。固定条目计入容量并保留至手动删除；剩余空间不足时不接纳新条目，也不删除原有历史。跳过带隐藏或临时标记的内容；部分应用不会标记敏感信息。"
           }
         }
       }
@@ -2845,6 +2909,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "此剪贴板记录已不可用"
+          }
+        }
+      }
+    },
+    "The last clipboard item was not recorded: history is full. Delete or unpin some items to make room.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The last clipboard item was not recorded: history is full. Delete or unpin some items to make room."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "历史空间不足，上一条剪贴板内容未记录。请删除部分条目或取消固定以腾出空间。"
+          }
+        }
+      }
+    },
+    "The last clipboard item was not recorded: it exceeds the 1 MiB text limit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The last clipboard item was not recorded: it exceeds the 1 MiB text limit."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一条剪贴板内容超过单条 1 MiB 的文本上限，未记录。"
           }
         }
       }

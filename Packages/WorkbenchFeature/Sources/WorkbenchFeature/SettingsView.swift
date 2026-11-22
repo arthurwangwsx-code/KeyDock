@@ -100,7 +100,8 @@ public struct SettingsRootView: View {
         case .clipboard:
             Section(L("Clipboard history")) {
                 Toggle(L("Record clipboard"), isOn: Binding(get: { store.allowContextCapture && store.configuration.clipboardEnabled }, set: { store.configuration.clipboardEnabled = $0; store.save() })).disabled(!store.allowContextCapture)
-                Text(L("Text only · 24 hours · 500 items · 32 MiB total. Pinned items stay until removed. Concealed and transient types are skipped; some applications do not mark secrets.")).font(.caption).foregroundStyle(.secondary)
+                Text(L("Text only · 24 hours · 500 items · 1 MiB per item · 32 MiB of text. Pinned items count toward capacity and stay until removed. When they leave too little room, new items are skipped without deleting existing history. Concealed and transient types are skipped; some applications do not mark secrets.")).font(.caption).foregroundStyle(.secondary)
+                if !store.clipboardCaptureNotice.isEmpty { KDInlineNotice(store.clipboardCaptureNotice) }
             }
             Section(L("Excluded applications")) {
                 TextEditor(text: $exclusions).font(.system(size: 11, design: .monospaced)).frame(height: 110)

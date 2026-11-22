@@ -213,9 +213,13 @@ private let legacyCases = [
         let launcher = LauncherSession(store: fixture.store)
         // 同步 MainActor 测试不会让后台目录发布覆盖这组合成结果。
         let results = (0..<10).map { CommandItem(id: "synthetic-\($0)", title: "Synthetic \($0)", kind: .utility) }
-        launcher.results = results; launcher.selectedID = results[0].id
+        launcher.results = results
+        let initialScroll = launcher.selectionScrollRequest
+        launcher.selectedID = results[3].id
+        #expect(launcher.selectionScrollRequest == initialScroll) // 指针悬停选择不能驱动列表滚动。
+        launcher.selectedID = results[0].id
         for _ in 0..<6 { launcher.move(1) }
-        #expect(launcher.selectedID == results[6].id)
+        #expect(launcher.selectedID == results[6].id && launcher.selectionScrollRequest != initialScroll)
         launcher.move(100)
         #expect(launcher.selectedID == results[9].id)
         launcher.move(-100)

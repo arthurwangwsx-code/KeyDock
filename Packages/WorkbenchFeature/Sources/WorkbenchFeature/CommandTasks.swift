@@ -5,9 +5,12 @@ import MacAdapters
 
 extension WorkbenchModel {
     func restoreReceipt(_ receipt: InvocationReceipt) {
+        guard !tasks.contains(where: { $0.id == receipt.id }) else { return }
         tasks.append(RunningTaskItem(id: receipt.id, title: receipt.name, state: receipt.message == "terminal.handedOff" ? .handedOff : stateLabel(receipt.state), output: "", exitCode: receipt.exitCode, startedAt: receipt.startedAt, finishedAt: receipt.finishedAt))
         tasks[tasks.count - 1].restoredFromReceipt = true
-        if receipt.state == .interrupted { tasks[tasks.count - 1].notice = L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
+        if receipt.message == "terminal.handoffUnknown" {
+            tasks[tasks.count - 1].notice = L("Terminal did not confirm opening the command. It may already be running. Check Terminal before retrying.")
+        } else if receipt.state == .interrupted { tasks[tasks.count - 1].notice = L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
     }
     public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user, showWorkspace: Bool = true) {
         guard !isShuttingDown else { return }
@@ -27,14 +30,12 @@ extension WorkbenchModel {
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
             do {
-                try await invocationStore.begin(id: id, name: command.name, commandID: authorization.commandID, commandVersion: authorization.commandVersion, configurationFingerprint: configFingerprint, caller: authorization.caller.rawValue)
+                try await invocationStore.begin(id: id, name: command.name, commandID: authorization.commandID, commandVersion: authorization.commandVersion, configurationFingerprint: configFingerprint, caller: authorization.caller.rawValue, initialMessage: command.interactive ? "terminal.handoffIntent" : "")
                 try Task.checkCancellation()
                 if cancelledTaskIDs.contains(id) { throw CancellationError() }
                 if command.interactive {
-                    try await openInTerminal(command)
-                    let result = ProcessResult(state: .succeeded, exitCode: nil, message: "terminal.handedOff")
-                    await persistResult(id, result: result)
-                    updateTask(id, state: .handedOff, output: L("Interactive execution is managed by Terminal; output and cancellation remain there."), finished: true)
+                    let outcome = try await openInTerminal(command, id: id)
+                    await completeTerminalHandoff(id, outcome: outcome)
                 } else {
                     let events = await processRunner.run(command, id: id)
                     if cancelledTaskIDs.contains(id) || Task.isCancelled { await processRunner.cancel(id) }
@@ -70,7 +71,7 @@ extension WorkbenchModel {
         }
     }
     public func cancelTask(_ id: UUID) {
-        guard tasks.first(where: { $0.id == id })?.isRunning == true else { return }
+        guard tasks.first(where: { $0.id == id })?.canCancel == true else { return }
         // CLI 消费任务继续等待 finished 回执；AI 则通过取消网络任务终止。
         cancelledTaskIDs.insert(id)
         if aiTaskIDs.contains(id) { taskHandles[id]?.cancel() }
@@ -85,22 +86,53 @@ extension WorkbenchModel {
     func stateLabel(_ state: ExecutionState) -> TaskStatus {
         switch state { case .queued: .queued; case .running: .running; case .succeeded: .completed; case .failed: .failed; case .cancelled: .cancelled; case .timedOut: .timedOut; case .interrupted: .interrupted }
     }
-    private func openInTerminal(_ command: SavedCommand) async throws {
+    private func openInTerminal(_ command: SavedCommand, id: UUID) async throws -> TerminalHandoffOutcome {
         let folder = directory.appendingPathComponent("terminal-launches", isDirectory: true)
         let file = folder.appendingPathComponent(UUID().uuidString + ".command")
         let script = try TerminalLaunchScript.make(command: command, launchFile: file)
-        try PrivateFiles.write(Data(script.utf8), to: file)
-        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: file.path)
         do {
-            let workspace = NSWorkspace.shared
-            // 显式选择 Terminal，不依赖用户对 .command 文件的默认编辑器关联。
-            guard let terminal = workspace.urlForApplication(withBundleIdentifier: "com.apple.Terminal") else { throw CocoaError(.executableLoad) }
-            let configuration = NSWorkspace.OpenConfiguration()
-            configuration.activates = true
-            _ = try await workspace.open([file], withApplicationAt: terminal, configuration: configuration)
+            try PrivateFiles.write(Data(script.utf8), to: file)
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: file.path)
         } catch {
             try? FileManager.default.removeItem(at: file)
             throw error
         }
+        let outcome = await terminalHandoff.open(file: file, beforeSubmission: {
+            !self.isShuttingDown && !self.cancelledTaskIDs.contains(id) && !Task.isCancelled
+        }, onSubmission: {
+            self.updateTask(id, state: .handoffPending)
+            self.setTerminalNotice(id, L("Terminal handoff requested. Manage execution in Terminal; this request cannot be recalled."))
+        })
+        // unknown 的脚本仍可能被 OS 打开，不能把停止等待伪装成撤回请求。
+        if outcome == .notSubmitted || outcome == .rejected { try? FileManager.default.removeItem(at: file) }
+        return outcome
+    }
+    private func completeTerminalHandoff(_ id: UUID, outcome: TerminalHandoffOutcome) async {
+        let result: ProcessResult
+        let state: TaskStatus
+        switch outcome {
+        case .notSubmitted:
+            result = .init(state: .cancelled, message: "host.cancelled")
+            state = .cancelled
+            setTerminalNotice(id, L("Cancelled before execution"))
+        case .acknowledged:
+            result = .init(state: .succeeded, message: "terminal.handedOff")
+            state = .handedOff
+            setTerminalNotice(id, L("Interactive execution is managed by Terminal; output and cancellation remain there."))
+        case .rejected:
+            result = .init(state: .failed, message: "terminal.handoffFailed")
+            state = .failed
+            setTerminalNotice(id, L("Terminal could not open this command. Check Terminal before retrying."))
+        case .unknown:
+            result = .init(state: .interrupted, message: "terminal.handoffUnknown")
+            state = .interrupted
+            setTerminalNotice(id, L("Terminal did not confirm opening the command. It may already be running. Check Terminal before retrying."))
+        }
+        await persistResult(id, result: result)
+        updateTask(id, state: state, finished: true)
+    }
+    private func setTerminalNotice(_ id: UUID, _ text: String) {
+        guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
+        tasks[index].notice = text
     }
 }

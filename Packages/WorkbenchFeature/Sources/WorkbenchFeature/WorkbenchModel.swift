@@ -14,6 +14,14 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public var configuration: AppConfiguration
     @Published public private(set) var catalog: [CommandItem] = []
     @Published public private(set) var clipboardRevision: UInt64 = 0
+    @Published private var clipboardCaptureIssue: ClipboardRejection?
+    public var clipboardCaptureNotice: String {
+        switch clipboardCaptureIssue {
+        case .capacity: L("The last clipboard item was not recorded: history is full. Delete or unpin some items to make room.")
+        case .itemTooLarge: L("The last clipboard item was not recorded: it exceeds the 1 MiB text limit.")
+        case nil: ""
+        }
+    }
     @Published public var tasks: [RunningTaskItem] = []
     @Published public var launcherNotice = ""
     @Published public var settingsNotice = ""
@@ -33,6 +41,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public let clipboardStore: ClipboardStore
     private let monitor: ClipboardMonitor
     let processRunner = ProcessRunner()
+    let terminalHandoff: TerminalHandoffAdapter
     let invocationStore: InvocationStore
     let aiInvocationStore: InvocationStore
     let directory: URL
@@ -53,11 +62,13 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public init(dataDirectory: URL? = nil, allowContextCapture: Bool = true,
                 clipboardWriter: @escaping @MainActor (String) -> Void = { ClipboardMonitor.copy($0) },
                 clipboardChangeCount: @escaping @MainActor () -> Int = { NSPasteboard.general.changeCount },
-                clipboardReader: @escaping @MainActor () -> String? = { ClipboardMonitor.explicitTextInput() }) throws {
+                clipboardReader: @escaping @MainActor () -> String? = { ClipboardMonitor.explicitTextInput() },
+                terminalHandoff: TerminalHandoffAdapter = TerminalHandoffAdapter()) throws {
         self.allowContextCapture = allowContextCapture
         self.clipboardWriter = clipboardWriter
         self.clipboardChangeCount = clipboardChangeCount
         self.clipboardReader = clipboardReader
+        self.terminalHandoff = terminalHandoff
         directory = try dataDirectory ?? PrivateFiles.applicationDirectory()
         let url = directory.appendingPathComponent("configuration.json")
         if FileManager.default.fileExists(atPath: url.path) {
@@ -78,6 +89,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         monitor.excludedApplications = Set(configuration.clipboardExclusions)
         monitor.onChange = { [weak self] in self?.refreshClipboard() }
         monitor.onFailure = { [weak self] in self?.workspaceNotice = L("Clipboard storage failed") }
+        monitor.onCaptureIssue = { [weak self] in self?.clipboardCaptureIssue = $0 }
         monitor.start()
         Task { [weak self] in
             guard let self else { return }

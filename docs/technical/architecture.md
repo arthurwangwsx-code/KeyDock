@@ -65,7 +65,7 @@ ToolBroker 按参数 schema、调用者、resource scope、OS permission、用�
 
 窗口使用 application/process/window 的复合 identity 与生命周期校验，PID 不作为唯一窗口 ID。可选 window number/AX 引用只在可获得且新鲜时使用，失效即重新解析；不持久化可复用 PID 作为授权。几何使用每屏 visible frame、坐标变换和窗口 min/max constraints；恢复按窗口保存，屏幕改变后 clamp。只用公开 API，跨 Space/fullscreen 行为逐系统实测，不能承诺系统不支持的强制移动。
 
-CLI 分成一次性 Process、终端打开、后续 PTY 三种 adapter。argv 不拼 shell 字符串；用户明确 shell mode 时才交解释器。输出双流读取消除阻塞，有上限与截断标记；取消管理子进程生命周期，不能只取消 Swift Task。配置 PATH 显式，不默认读取/执行用户 login profile。
+CLI 分成一次性 Process、终端打开、后续 PTY 三种 adapter。argv 不拼 shell 字符串；用户明确 shell mode 时才交解释器。输出双流读取消除阻塞，有上限与截断标记；取消管理子进程生命周期，不能只取消 Swift Task。配置 PATH 显式，不默认读取/执行用户 login profile。Terminal打开请求提交后不可撤回；适配器有界等待确认，超时保存handoffUnknown且不重放，不把OS确认当命令执行成功。
 
 ## 架构决策记录
 

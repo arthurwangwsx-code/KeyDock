@@ -14,7 +14,7 @@
 ## 2. P0 原生闭环与风险验证
 
 - [ ] 2.1 实现 AppKit Panel、菜单栏入口与原目标快照，验证多屏/全屏/Esc 焦点恢复。
-- [ ] 2.2 评估并锁定快捷键实现，提供录制、冲突提示、持久化与禁用，实测 IME。
+- [ ] 2.2 评估并锁定快捷键实现，提供录制、冲突提示、持久化与禁用，实测 IME；CUA注入alt+space未观察到切换，仍须区分真实按键与注册行为。
 - [ ] 2.3 实现 ApplicationProvider 索引与启动，处理应用变化/重复/外置盘失效。
 - [ ] 2.4 建立参数表单、动作/详情/结果公共 UI 与 String Catalog、VoiceOver 基线。
 - [ ] 2.5 对 AX 窗口身份/选区读取、Process 取消、真实模型 stream 风险分别做 spike，并重估 P1。
@@ -29,7 +29,7 @@
 - [ ] 3.1 实现 WindowCatalog/ActivationService，验证同 App 多窗口、关闭/PID 重用/权限撤销。
 - [x] 3.2 建立 SavedCommand 参数/cwd/envRef 表单和 executable+argv runner，shell mode 显式隔离。
 - [x] 3.3 实现 stdout/stderr 有界输出、超时/进程组取消和退出状态，验证满管/派生进程。
-- [ ] 3.4 提供交互 CLI 的用户终端打开 adapter，不伪装 Process 支持 PTY。
+- [ ] 3.4 提供交互 CLI 的用户终端打开 adapter，不伪装 Process 支持 PTY；有界确认／unknown／不可撤回的10项合成回归通过，实际Terminal GUI仍待验收。
 - [x] 3.5 实现最小运行列表/输出详情/取消入口和CLI／AI最小durable invocation intent/result，重启仅展示 interrupted/unknown，不重放。
 - [x] 3.6 实现读取正文前的 clipboard 类型过滤、暂停/排除/TTL/容量/清空与合成验证。
 - [ ] 3.7 实现纯文本 clipboard 搜索/复制，自动粘贴单独校验权限与目标。

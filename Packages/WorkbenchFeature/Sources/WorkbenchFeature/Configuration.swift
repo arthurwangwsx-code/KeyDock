@@ -71,8 +71,8 @@ public struct AppConfiguration: Codable, Sendable {
     }
 }
 
-public enum TaskStatus: String { case queued, running, completed, failed, cancelled, timedOut, interrupted, handedOff, draftReady
-    var title: String { switch self { case .queued: L("Queued"); case .running: L("Running"); case .completed: L("Completed"); case .failed: L("Failed"); case .cancelled: L("Cancelled"); case .timedOut: L("Timed out"); case .interrupted: L("Interrupted / unknown outcome"); case .handedOff: L("Opened in Terminal"); case .draftReady: L("Draft ready · not executed") } }
+public enum TaskStatus: String { case queued, running, handoffPending, completed, failed, cancelled, timedOut, interrupted, handedOff, draftReady
+    var title: String { switch self { case .queued: L("Queued"); case .running: L("Running"); case .handoffPending: L("Opening in Terminal…"); case .completed: L("Completed"); case .failed: L("Failed"); case .cancelled: L("Cancelled"); case .timedOut: L("Timed out"); case .interrupted: L("Interrupted / unknown outcome"); case .handedOff: L("Opened in Terminal"); case .draftReady: L("Draft ready · not executed") } }
 }
 public struct RunningTaskItem: Identifiable {
     public let id: UUID
@@ -93,6 +93,7 @@ public struct RunningTaskItem: Identifiable {
     public var notice = ""
     public var restoredFromReceipt = false
     public var isRunning: Bool { finishedAt == nil }
+    public var canCancel: Bool { isRunning && status != .handoffPending }
     public init(id: UUID, title: String, state: TaskStatus, output: String = "", exitCode: Int32? = nil, startedAt: Date = Date(), finishedAt: Date? = nil, draftID: UUID? = nil, titleKey: String? = nil, modelName: String? = nil) {
         self.id = id; self.title = title; status = state; self.output = output; self.exitCode = exitCode
         self.startedAt = startedAt; self.finishedAt = finishedAt; self.draftID = draftID; self.titleKey = titleKey; self.modelName = modelName

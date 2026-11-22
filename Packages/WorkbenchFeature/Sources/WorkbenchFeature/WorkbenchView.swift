@@ -51,7 +51,7 @@ public struct WorkspaceView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 7) { Text(task.displayTitle).font(.system(size: 20, weight: .semibold)); Text(task.state).font(.system(size: 12)).foregroundStyle(.secondary) }
                         Spacer()
-                        if task.isRunning { Button(L("Stop")) { store.cancelTask(task.id) }.keyboardShortcut(".", modifiers: .command) }
+                        if task.canCancel { Button(L("Stop")) { store.cancelTask(task.id) }.keyboardShortcut(".", modifiers: .command) }
                         KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }.disabled(task.output.isEmpty)
                     }
                     if !task.notice.isEmpty { KDInlineNotice(task.notice) }
@@ -80,6 +80,7 @@ public struct WorkspaceView: View {
                 Button(L("Clear all"), role: .destructive) { confirmClear = true }
                 Button { store.onOpenSettings?(.clipboard) } label: { Image(systemName: "slider.horizontal.3") }.help(L("Clipboard privacy"))
             }.padding(20)
+            if !store.clipboardCaptureNotice.isEmpty { KDInlineNotice(store.clipboardCaptureNotice) }
             if !session.clipboard.notice.isEmpty { KDInlineNotice(session.clipboard.notice) }
             if session.clipboard.results.isEmpty && !session.clipboard.isSearching {
                 KDEmptyState(symbol: "clipboard", title: L("No clipboard items"), detail: L("Recording is optional. Sensitive marked content is skipped."))

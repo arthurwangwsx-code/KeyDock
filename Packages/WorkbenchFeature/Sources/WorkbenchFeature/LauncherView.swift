@@ -6,6 +6,7 @@ import KeyDockUI
 public struct LauncherView: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: LauncherSession
+    @State private var pointerPosition = NSEvent.mouseLocation
     public init(store: WorkbenchModel, session: LauncherSession) { self.store = store; self.session = session }
     public var body: some View {
         Group {
@@ -13,6 +14,7 @@ public struct LauncherView: View {
             else { search }
         }.frame(width: KDTokens.launcherWidth, height: KDTokens.launcherHeight)
             .environment(\.locale, KDLocalizer.locale)
+            .onAppear { pointerPosition = NSEvent.mouseLocation }
     }
     private var search: some View {
         VStack(spacing: 0) {
@@ -40,7 +42,12 @@ public struct LauncherView: View {
                                 resultRow(item)
                             }
                         }.padding(.horizontal, 12).padding(.bottom, 5)
-                    }.scrollIndicators(.hidden).onChange(of: session.selectedID) { _, id in if let id { proxy.scrollTo(id, anchor: .center) } }
+                    // 悬停只改变选择；若它也触发滚动，静止鼠标会不断命中新行并造成连续跳动。
+                    }.scrollIndicators(.hidden).onChange(of: session.selectionScrollRequest) { _, _ in
+                        // 滚动造成的 mouse-enter 不能覆盖刚发生的键盘选择。
+                        pointerPosition = NSEvent.mouseLocation
+                        if let id = session.selectedID { proxy.scrollTo(id, anchor: .center) }
+                    }
                 }
             }
             if !store.launcherNotice.isEmpty { KDInlineNotice(store.launcherNotice).lineLimit(2) }
@@ -64,7 +71,10 @@ public struct LauncherView: View {
         return Button { session.selectedID = item.id; session.execute() } label: {
             KDCommandRow(icon: icon, symbol: symbol(item.kind), title: item.title, subtitle: subtitle(item), category: category(item.kind), selected: item.id == session.selectedID)
         }.buttonStyle(.plain).id(item.id)
-            .onHover { hovering in if hovering { session.selectedID = item.id } }
+            .onHover { hovering in
+                let position = NSEvent.mouseLocation
+                if hovering, position != pointerPosition { pointerPosition = position; session.selectedID = item.id }
+            }
             .accessibilityLabel(Text(spoken))
             .accessibilityAddTraits(item.id == session.selectedID ? .isSelected : [])
     }

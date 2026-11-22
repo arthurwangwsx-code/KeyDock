@@ -15,16 +15,16 @@
   "verified": {
     "swiftTests": {
       "state": "PASS",
-      "total": 120,
+      "total": 142,
       "commandCore": 14,
-      "executionCore": 21,
-      "macAdapters": 4,
+      "executionCore": 22,
+      "macAdapters": 21,
       "aiAndAgentCoreIncludingHTTP": 23,
       "workbenchWindowOwnership": 15,
-      "log": ".local/foundation-hardening-tests.log",
+      "log": ".local/p1-runtime-tests.log",
       "workbenchStoreHTTP": 8,
-      "workbenchTotal": 58,
-      "measurementID": "21dd576c-40a6-42d4-81ee-4e50c53eb745",
+      "workbenchTotal": 62,
+      "measurementID": "51d4f86e-e658-44d5-9c05-a6a1a096a79a",
       "workbenchBreakdown": {
         "windowOwnership": 15,
         "storeHTTP": 8,
@@ -33,14 +33,27 @@
         "clipboardSession": 6,
         "clipboardMutationDisconnect": 1,
         "aiReceipts": 6,
-        "lifecycle": 3
+        "lifecycle": 3,
+        "terminalLifecycle": 4
+      },
+      "macAdaptersBreakdown": {
+        "existingStorePolicyAndPreview": 4,
+        "clipboardCapacity": 6,
+        "clipboardMonitor": 6,
+        "terminalHandoffAdapter": 5
+      },
+      "followup": {
+        "scope": "final launcher pointer/scroll change; WindowOwnershipTests",
+        "tests": 15,
+        "log": ".local/p1-launcher-hover-tests.log",
+        "measurementID": "00b5bc78-11f8-4a20-9d8c-acd19a3650e7"
       }
     },
     "nativeBuild": {
       "state": "PASS",
       "configuration": "Debug local ad-hoc signature, not notarized",
-      "log": ".local/foundation-hardening-native-build.log",
-      "measurementID": "140b734e-4b45-451a-ad9f-06bbc416b698"
+      "log": ".local/p1-runtime-native-build.log",
+      "measurementID": "dd4b1d23-d7c4-42e2-99aa-14bbb481421f"
     },
     "uiSmoke": {
       "state": "PASS",
@@ -56,10 +69,14 @@
         "typed query -> background printf -> output and default task selection",
         "independent AX clipboard row buttons; preview and pin clicked",
         "full text tail search and native readonly full preview",
-        "existing workspace switches English live; query preserved"
+        "existing workspace switches English live; query preserved",
+        "new Chinese clipboard capacity guidance",
+        "native CmdQ stops owned managed sleep; durable cancelled receipt",
+        "relaunch task UI shows cancelled exit143 without retained output",
+        "final hover/keyboard scroll separation; first result and seventh result verified"
       ],
       "scope": "Redesigned safe-smoke app, synthetic input and commands; basic flow only",
-      "latestEvidence": ".local/native-ui-hardening-2026-11-23.json"
+      "latestEvidence": ".local/p1-launcher-hover-native.json"
     },
     "searchBenchmark": {
       "state": "PASS",
@@ -84,9 +101,9 @@
     "localization": {
       "state": "PASS",
       "scope": "English and Simplified Chinese source-key coverage in App and Feature catalogs",
-      "log": ".local/foundation-hardening-localization.log",
-      "keys": 214,
-      "measurementID": "a704fb05-5647-4350-8649-33887ebb69c1"
+      "log": ".local/p1-runtime-localizations.log",
+      "keys": 220,
+      "measurementID": "1d425f50-434a-44e7-89ce-9f539b4eb1c8"
     },
     "storeHTTPIntegration": {
       "state": "PASS",
@@ -107,6 +124,25 @@
       "realSIGKILLWhileLoopbackRequestActive": true,
       "relaunchState": "interrupted/unknown; empty output; no replay, copy or review",
       "bodyOrCredentialPersisted": false
+    },
+    "clipboardAdmission": {
+      "state": "PASS",
+      "scope": "synthetic input through production SQLite and lazy-source monitor; not personal pasteboard",
+      "capacityTests": 6,
+      "monitorTests": 6,
+      "rejectedEntryPreservesOldHistory": true,
+      "writeOrPruneFailureRollsBack": true,
+      "metadataCheckedBeforeBodyRead": true,
+      "pauseResumeDoesNotBackfill": true,
+      "stopPreventsQueuedBodyReads": true
+    },
+    "nativeQuit": {
+      "state": "PASS",
+      "scope": "current safe-preview app, native CmdQ while owned /bin/sleep 30 was alive",
+      "appAndOwnedChildExited": true,
+      "receipt": "cancelled, exit143, approximately17 seconds of a30-second command",
+      "relaunchUI": "cancelled, output not retained, copy/explain disabled",
+      "evidence": ".local/p1-native-quit-smoke.json"
     }
   },
   "unverified": [
@@ -115,7 +151,7 @@
     "Multiple screens, fullscreen and p95 hot panel presentation <=150ms",
     "Real AX permission grant/revocation, window identity/activation and selection replacement",
     "Live user-enabled clipboard capture and sensitive-source behavior",
-    "Terminal GUI handoff and complete installed-GUI crash/quit acceptance; synthetic child AI SIGKILL recovery passed",
+    "Terminal GUI handoff, complete installed-GUI crash and all managed-process quit cases; current safe-preview CmdQ with sleep and synthetic AI SIGKILL recovery passed",
     "External model API, real Keychain credential flow and readonly tool roundtrip",
     "20-case real model quality review",
     "Minimum macOS and Intel compatibility",
@@ -132,7 +168,7 @@
     "state": "PARTIAL",
     "previousUI": "FAIL: user rejected initial dashboard-like design",
     "currentEvidence": "Live CUA screenshots and AX state of native glass launcher, separate Settings/Workspace, both languages, basic app light/dark and AI focus; findings fixed and rechecked",
-    "review": "docs/implementation/native-ui-hardening-2026-11-23.md",
+    "review": "docs/implementation/runtime-acceptance-2026-11-23.md",
     "remaining": [
       "user visual review",
       "live reduce-transparency/reduce-motion",
@@ -143,9 +179,18 @@
   },
   "terminalHandoff": {
     "state": "PARTIAL",
-    "scope": "Legacy default association returned open acceptance; synthetic marker absent",
+    "scope": "production adapter and Store acknowledgement boundaries with synthetic opener; actual Terminal GUI delivery unverified",
     "blocker": "Computer Use denied Terminal application access",
-    "fix": "Explicit Terminal bundle URL and async acknowledgment compiled; not physically rerun",
-    "evidence": ".local/terminal-handoff-smoke.json"
+    "fix": "handoffPending without false cancellation; default3-second acknowledgement budget, hard maximum5; timeout preserves unknown without retry; late callbacks cannot overwrite outcome",
+    "evidence": ".local/terminal-handoff-smoke.json",
+    "syntheticTests": 10,
+    "syntheticState": "PASS",
+    "syntheticLog": ".local/terminal-handoff-lifecycle-tests.log"
+  },
+  "shortcutInjection": {
+    "state": "PARTIAL",
+    "action": "CUA native alt+space from Settings",
+    "observedTransition": false,
+    "meaning": "injection limitation versus registration behavior unresolved; no physical-shortcut PASS claimed"
   }
 }

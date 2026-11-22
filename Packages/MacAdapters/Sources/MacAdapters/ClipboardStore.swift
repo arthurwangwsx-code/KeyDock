@@ -39,7 +39,13 @@ public enum ClipboardPolicy {
     }
 }
 
-public enum ClipboardDatabaseError: Error { case open, statement, incompatibleVersion }
+public enum ClipboardRejection: Sendable, Equatable { case itemTooLarge, capacity }
+public enum ClipboardInsertion: Sendable, Equatable {
+    case stored, refreshed, ignoredEmpty
+    case rejected(ClipboardRejection)
+}
+
+public enum ClipboardDatabaseError: Error { case open, statement, incompatibleVersion, invalidLimits }
 private final class ClipboardConnection: @unchecked Sendable {
     let db: OpaquePointer
     init(url: URL) throws {
@@ -54,6 +60,8 @@ public actor ClipboardStore {
     private let connection: ClipboardConnection
     private let limits: ClipboardLimits
     public init(url: URL, limits: ClipboardLimits = ClipboardLimits()) throws {
+        guard limits.retention.isFinite, limits.retention > 0, limits.maxEntries > 0,
+              limits.maxItemBytes > 0, limits.maxTotalBytes > 0 else { throw ClipboardDatabaseError.invalidLimits }
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         connection = try ClipboardConnection(url: url); self.limits = limits
         let db = connection.db
@@ -72,23 +80,56 @@ public actor ClipboardStore {
     private func bind(_ value: String, _ index: Int32, _ statement: OpaquePointer) {
         _ = value.withCString { sqlite3_bind_text(statement, index, $0, Int32(value.utf8.count), unsafeBitCast(-1, to: sqlite3_destructor_type.self)) }
     }
-    public func insert(text: String, source: String, now: Date = Date()) throws {
-        guard !text.isEmpty, text.utf8.count <= limits.maxItemBytes else { return }
-        let s = try prepare("SELECT id FROM clips WHERE body=? LIMIT 1"); bind(text, 1, s)
-        var existing: String?
-        if sqlite3_step(s) == SQLITE_ROW { existing = String(cString: sqlite3_column_text(s, 0)) }; sqlite3_finalize(s)
-        if let existing {
-            let u = try prepare("UPDATE clips SET created=? WHERE id=?"); defer { sqlite3_finalize(u) }
-            sqlite3_bind_double(u, 1, now.timeIntervalSince1970); bind(existing, 2, u)
-            guard sqlite3_step(u) == SQLITE_DONE else { throw ClipboardDatabaseError.statement }
-        } else {
-            let q = try prepare("INSERT INTO clips(id,body,created,source,bytes) VALUES(?,?,?,?,?)"); defer { sqlite3_finalize(q) }
-            bind(UUID().uuidString, 1, q); bind(text, 2, q); sqlite3_bind_double(q, 3, now.timeIntervalSince1970); bind(source, 4, q); sqlite3_bind_int64(q, 5, Int64(text.utf8.count))
+    private func transaction<T>(_ body: () throws -> T) throws -> T {
+        let db = connection.db
+        guard sqlite3_exec(db, "BEGIN IMMEDIATE", nil, nil, nil) == SQLITE_OK else { throw ClipboardDatabaseError.statement }
+        var committed = false
+        defer { if !committed { sqlite3_exec(db, "ROLLBACK", nil, nil, nil) } }
+        let result = try body()
+        guard sqlite3_exec(db, "COMMIT", nil, nil, nil) == SQLITE_OK else { throw ClipboardDatabaseError.statement }
+        committed = true
+        return result
+    }
+    @discardableResult public func insert(text: String, source: String, now: Date = Date()) throws -> ClipboardInsertion {
+        guard !text.isEmpty else { return .ignoredEmpty }
+        let bytes = text.utf8.count
+        guard bytes <= limits.maxItemBytes else { return .rejected(.itemTooLarge) }
+        return try transaction {
+            let s = try prepare("SELECT id FROM clips WHERE body=? LIMIT 1"); bind(text, 1, s)
+            let status = sqlite3_step(s)
+            let existing = status == SQLITE_ROW ? String(cString: sqlite3_column_text(s, 0)) : nil
+            sqlite3_finalize(s)
+            guard status == SQLITE_ROW || status == SQLITE_DONE else { throw ClipboardDatabaseError.statement }
+            // 满额时仍允许刷新已有条目；重复正文不消耗新预算。
+            if let existing {
+                let u = try prepare("UPDATE clips SET created=? WHERE id=?")
+                defer { sqlite3_finalize(u) }
+                sqlite3_bind_double(u, 1, now.timeIntervalSince1970); bind(existing, 2, u)
+                guard sqlite3_step(u) == SQLITE_DONE else { throw ClipboardDatabaseError.statement }
+                try pruneRows(now: now, preserving: existing)
+                return .refreshed
+            }
+            let pinned = try prepare("SELECT count(*),coalesce(sum(bytes),0) FROM clips WHERE pinned=1")
+            guard sqlite3_step(pinned) == SQLITE_ROW else { sqlite3_finalize(pinned); throw ClipboardDatabaseError.statement }
+            let pinnedCount = sqlite3_column_int64(pinned, 0), pinnedBytes = sqlite3_column_int64(pinned, 1)
+            sqlite3_finalize(pinned)
+            // 无法保留固定项和新正文时拒收，不以逐出旧历史的方式试探预算。
+            guard bytes <= limits.maxTotalBytes, pinnedCount < limits.maxEntries,
+                  pinnedBytes <= limits.maxTotalBytes - bytes else { return .rejected(.capacity) }
+            let id = UUID().uuidString
+            let q = try prepare("INSERT INTO clips(id,body,created,source,bytes) VALUES(?,?,?,?,?)")
+            defer { sqlite3_finalize(q) }
+            bind(id, 1, q); bind(text, 2, q); sqlite3_bind_double(q, 3, now.timeIntervalSince1970)
+            bind(source, 4, q); sqlite3_bind_int64(q, 5, Int64(bytes))
             guard sqlite3_step(q) == SQLITE_DONE else { throw ClipboardDatabaseError.statement }
+            try pruneRows(now: now, preserving: id)
+            return .stored
         }
-        try prune(now: now)
     }
     public func prune(now: Date = Date()) throws {
+        try transaction { try pruneRows(now: now) }
+    }
+    private func pruneRows(now: Date, preserving id: String = "") throws {
         let s = try prepare("DELETE FROM clips WHERE pinned=0 AND created<?"); sqlite3_bind_double(s, 1, now.timeIntervalSince1970 - limits.retention)
         let result = sqlite3_step(s); sqlite3_finalize(s); guard result == SQLITE_DONE else { throw ClipboardDatabaseError.statement }
         while true {
@@ -96,7 +137,8 @@ public actor ClipboardStore {
             guard sqlite3_step(count) == SQLITE_ROW else { sqlite3_finalize(count); throw ClipboardDatabaseError.statement }
             let over = sqlite3_column_int64(count, 0) > limits.maxEntries || sqlite3_column_int64(count, 1) > limits.maxTotalBytes
             sqlite3_finalize(count); if !over { break }
-            let del = try prepare("DELETE FROM clips WHERE id=(SELECT id FROM clips WHERE pinned=0 ORDER BY created ASC LIMIT 1)")
+            let del = try prepare("DELETE FROM clips WHERE id=(SELECT id FROM clips WHERE pinned=0 AND id<>? ORDER BY created ASC,id ASC LIMIT 1)")
+            bind(id, 1, del)
             let result = sqlite3_step(del); sqlite3_finalize(del)
             guard result == SQLITE_DONE else { throw ClipboardDatabaseError.statement }
             if sqlite3_changes(connection.db) == 0 { break }
