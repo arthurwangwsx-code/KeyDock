@@ -17,6 +17,38 @@
         }
       }
     },
+    "AI Actions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI Actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI动作"
+          }
+        }
+      }
+    },
+    "AI Service": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI Service"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI服务"
+          }
+        }
+      }
+    },
     "AI action": {
       "localizations": {
         "en": {
@@ -161,18 +193,34 @@
         }
       }
     },
-    "About KeyDock": {
+    "About": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "About KeyDock"
+            "value": "About"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "关于 KeyDock"
+            "value": "关于"
+          }
+        }
+      }
+    },
+    "Accessibility": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accessibility"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "辅助功能"
           }
         }
       }
@@ -225,6 +273,38 @@
         }
       }
     },
+    "Actions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "动作"
+          }
+        }
+      }
+    },
+    "Actions & aliases": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actions & aliases"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "动作与别名"
+          }
+        }
+      }
+    },
     "Add favorite": {
       "localizations": {
         "en": {
@@ -253,6 +333,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "仅允许 localhost 使用 HTTP"
+          }
+        }
+      }
+    },
+    "App": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外观"
+          }
+        }
+      }
+    },
+    "Appearance & language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance & language"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外观与语言"
+          }
+        }
+      }
+    },
+    "Application": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用"
           }
         }
       }
@@ -337,6 +481,22 @@
         }
       }
     },
+    "Back": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "返回"
+          }
+        }
+      }
+    },
     "Cancel": {
       "localizations": {
         "en": {
@@ -401,18 +561,18 @@
         }
       }
     },
-    "Choose action": {
+    "Choose an action and add text. Only this input is sent to your model.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose action"
+            "value": "Choose an action and add text. Only this input is sent to your model."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择动作"
+            "value": "选择动作并输入文本。仅将这些内容发送至所选模型。"
           }
         }
       }
@@ -513,6 +673,22 @@
         }
       }
     },
+    "Command": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令"
+          }
+        }
+      }
+    },
     "Command could not be started or its receipt could not be saved.": {
       "localizations": {
         "en": {
@@ -529,6 +705,22 @@
         }
       }
     },
+    "Command draft ready for review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command draft ready for review"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令草稿待审阅"
+          }
+        }
+      }
+    },
     "Command failed. Check executable, arguments and directory.": {
       "localizations": {
         "en": {
@@ -541,6 +733,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "命令执行失败，请检查可执行文件、参数和目录。"
+          }
+        }
+      }
+    },
+    "Command output": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command output"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令输出"
           }
         }
       }
@@ -609,6 +817,22 @@
         }
       }
     },
+    "Configure AI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure AI"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配置AI"
+          }
+        }
+      }
+    },
     "Configure a valid API endpoint and model in Settings": {
       "localizations": {
         "en": {
@@ -621,6 +845,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "请在设置中配置有效的 API 端点和模型"
+          }
+        }
+      }
+    },
+    "Connection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接"
+          }
+        }
+      }
+    },
+    "Context capture is disabled in isolated smoke mode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context capture is disabled in isolated smoke mode"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔离冒烟测试模式已禁用上下文采集"
           }
         }
       }
@@ -673,6 +929,22 @@
         }
       }
     },
+    "Create a translation, summary or custom prompt, then assign its own shortcut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a translation, summary or custom prompt, then assign its own shortcut."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "创建翻译、总结或自定义提示词，并设置独立快捷键。"
+          }
+        }
+      }
+    },
     "Current clipboard": {
       "localizations": {
         "en": {
@@ -689,18 +961,18 @@
         }
       }
     },
-    "Custom compatible AI API": {
+    "Default model": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Custom compatible AI API"
+            "value": "Default model"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "自定义兼容 AI API"
+            "value": "默认模型"
           }
         }
       }
@@ -769,6 +1041,22 @@
         }
       }
     },
+    "Edit shortcuts and aliases": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit shortcuts and aliases"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑快捷键与别名"
+          }
+        }
+      }
+    },
     "Enable Accessibility": {
       "localizations": {
         "en": {
@@ -817,18 +1105,18 @@
         }
       }
     },
-    "Excluded application bundle IDs (one per line)": {
+    "Excluded applications": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Excluded application bundle IDs (one per line)"
+            "value": "Excluded applications"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "排除的应用 Bundle ID（每行一个）"
+            "value": "排除的应用"
           }
         }
       }
@@ -861,6 +1149,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "执行已结束，但无法保存执行回执。请勿自动重新运行。"
+          }
+        }
+      }
+    },
+    "Exit code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit code"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出码"
           }
         }
       }
@@ -929,6 +1233,54 @@
         }
       }
     },
+    "Find an action to customize": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find an action to customize"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查找要自定义的动作"
+          }
+        }
+      }
+    },
+    "Follow System": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow System"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随系统"
+          }
+        }
+      }
+    },
+    "Follows system appearance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follows system appearance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外观跟随系统"
+          }
+        }
+      }
+    },
     "Full chat completions endpoint": {
       "localizations": {
         "en": {
@@ -945,6 +1297,22 @@
         }
       }
     },
+    "General": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通用"
+          }
+        }
+      }
+    },
     "Global shortcut": {
       "localizations": {
         "en": {
@@ -957,22 +1325,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "全局快捷键"
-          }
-        }
-      }
-    },
-    "Input": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Input"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "输入"
           }
         }
       }
@@ -1041,18 +1393,18 @@
         }
       }
     },
-    "Internal preview · macOS 14+ · Local data, no product telemetry": {
+    "Internal Preview": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Internal preview · macOS 14+ · Local data, no product telemetry"
+            "value": "Internal Preview"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "内部预览版 · macOS 14+ · 数据保存在本机，无产品遥测"
+            "value": "内部预览版"
           }
         }
       }
@@ -1105,50 +1457,50 @@
         }
       }
     },
-    "Launcher & permissions": {
+    "Language": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Launcher & permissions"
+            "value": "Language"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "启动器与权限"
+            "value": "语言"
           }
         }
       }
     },
-    "Local data could not be opened. Existing files were preserved.": {
+    "Launcher": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Local data could not be opened. Existing files were preserved."
+            "value": "Launcher"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法打开本地数据，现有文件已保留。"
+            "value": "启动台"
           }
         }
       }
     },
-    "Local tools · Explicit AI context": {
+    "Local data, no product telemetry. AI actions send only their chosen input to your configured service.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Local tools · Explicit AI context"
+            "value": "Local data, no product telemetry. AI actions send only their chosen input to your configured service."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "本地工具 · 自主选择 AI 上下文"
+            "value": "数据保存在本机，无产品遥测。AI动作仅将所选输入发送至你配置的服务。"
           }
         }
       }
@@ -1249,6 +1601,22 @@
         }
       }
     },
+    "New AI task": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New AI task"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建AI任务"
+          }
+        }
+      }
+    },
     "New action": {
       "localizations": {
         "en": {
@@ -1297,6 +1665,70 @@
         }
       }
     },
+    "No matching actions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有匹配的动作"
+          }
+        }
+      }
+    },
+    "No model configured": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No model configured"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未配置模型"
+          }
+        }
+      }
+    },
+    "No output": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No output"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无输出"
+          }
+        }
+      }
+    },
+    "No selected text. Enter text to begin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No selected text. Enter text to begin."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未读取到选中文本，请输入内容后开始。"
+          }
+        }
+      }
+    },
     "Open": {
       "localizations": {
         "en": {
@@ -1325,6 +1757,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "打开 KeyDock"
+          }
+        }
+      }
+    },
+    "Open in Workspace": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in Workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在工作区打开"
           }
         }
       }
@@ -1473,6 +1921,22 @@
         }
       }
     },
+    "Privacy & Permissions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy & Permissions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐私与权限"
+          }
+        }
+      }
+    },
     "Prompt": {
       "localizations": {
         "en": {
@@ -1505,22 +1969,6 @@
         }
       }
     },
-    "Quit KeyDock": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quit KeyDock"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "退出 KeyDock"
-          }
-        }
-      }
-    },
     "Read-only agent": {
       "localizations": {
         "en": {
@@ -1533,6 +1981,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "只读 Agent"
+          }
+        }
+      }
+    },
+    "Ready when you are": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready when you are"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "随时开始"
           }
         }
       }
@@ -1665,12 +2129,12 @@
         }
       }
     },
-    "Result": {
+    "Results": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Result"
+            "value": "Results"
           }
         },
         "zh-Hans": {
@@ -1681,34 +2145,34 @@
         }
       }
     },
-    "Results appear here. No input is sent until you run an action.": {
+    "Reusable AI actions": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Results appear here. No input is sent until you run an action."
+            "value": "Reusable AI actions"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "结果将显示在这里。运行动作前不会发送输入内容。"
+            "value": "可复用的AI动作"
           }
         }
       }
     },
-    "Review & Run": {
+    "Review": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Review & Run"
+            "value": "Review"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "检查并运行"
+            "value": "审阅"
           }
         }
       }
@@ -1857,22 +2321,6 @@
         }
       }
     },
-    "Save executable, arguments and working directory. Shell mode is explicit.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save executable, arguments and working directory. Shell mode is explicit."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保存可执行文件、参数和工作目录。shell 模式需明确启用。"
-          }
-        }
-      }
-    },
     "Saved commands": {
       "localizations": {
         "en": {
@@ -1885,22 +2333,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "已保存的命令"
-          }
-        }
-      }
-    },
-    "Search": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "搜索"
           }
         }
       }
@@ -1921,18 +2353,34 @@
         }
       }
     },
-    "Search applications, windows and actions…": {
+    "Search and quick actions live in the launcher. Configuration stays here, while long tasks continue in Workspace.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search applications, windows and actions…"
+            "value": "Search and quick actions live in the launcher. Configuration stays here, while long tasks continue in Workspace."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "搜索应用、窗口和动作…"
+            "value": "搜索和快捷操作位于启动台；在此管理设置，长任务在工作区继续运行。"
+          }
+        }
+      }
+    },
+    "Search apps, windows, or actions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search apps, windows, or actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索应用、窗口或动作"
           }
         }
       }
@@ -1949,6 +2397,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "搜索剪贴板历史"
+          }
+        }
+      }
+    },
+    "Select": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择"
           }
         }
       }
@@ -2017,34 +2481,18 @@
         }
       }
     },
-    "Shortcut could not be registered. It may be used by macOS or another application.": {
+    "Shortcuts": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shortcut could not be registered. It may be used by macOS or another application."
+            "value": "Shortcuts"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法注册快捷键，可能已被 macOS 或其他应用占用。"
-          }
-        }
-      }
-    },
-    "Shortcut identifiers conflict; choose a different shortcut": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shortcut identifiers conflict; choose a different shortcut"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "快捷键标识发生冲突，请选择其他快捷键"
+            "value": "快捷键"
           }
         }
       }
@@ -2065,6 +2513,22 @@
         }
       }
     },
+    "Stop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止"
+          }
+        }
+      }
+    },
     "Suggest CLI": {
       "localizations": {
         "en": {
@@ -2077,6 +2541,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "生成 CLI 命令草稿"
+          }
+        }
+      }
+    },
+    "Suggestions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建议"
           }
         }
       }
@@ -2109,6 +2589,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "技术支持、反馈与隐私请求"
+          }
+        }
+      }
+    },
+    "Switch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切换"
           }
         }
       }
@@ -2289,18 +2785,18 @@
         }
       }
     },
-    "Type to find your next action": {
+    "Try an application name, a saved command, or an AI action.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Type to find your next action"
+            "value": "Try an application name, a saved command, or an AI action."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "输入关键词，找到下一步操作"
+            "value": "试试应用名称、已保存的命令或AI动作。"
           }
         }
       }
@@ -2337,18 +2833,34 @@
         }
       }
     },
-    "Use current selection": {
+    "Waiting for response…": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use current selection"
+            "value": "Waiting for response…"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用当前选区"
+            "value": "正在等待响应…"
+          }
+        }
+      }
+    },
+    "Window": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口"
           }
         }
       }
@@ -2365,6 +2877,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "工作目录"
+          }
+        }
+      }
+    },
+    "Your data": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your data"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的数据"
           }
         }
       }
@@ -2397,38 +2925,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "你的任务都在这里"
-          }
-        }
-      }
-    },
-    "↑↓ Select    ↩ Open    Esc Close": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "↑↓ Select    ↩ Open    Esc Close"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "↑↓ 选择    ↩ 打开    Esc 关闭"
-          }
-        }
-      }
-    },
-    "Context capture is disabled in isolated smoke mode": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Context capture is disabled in isolated smoke mode"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "隔离冒烟测试模式已禁用上下文采集"
           }
         }
       }

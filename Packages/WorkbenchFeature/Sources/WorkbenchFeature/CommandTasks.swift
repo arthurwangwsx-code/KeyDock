@@ -5,9 +5,9 @@ import MacAdapters
 
 extension WorkbenchModel {
     func restoreReceipt(_ receipt: InvocationReceipt) {
-        tasks.append(RunningTaskItem(id: receipt.id, title: receipt.name, state: receipt.message == "terminal.handedOff" ? L("Opened in Terminal") : stateLabel(receipt.state), output: receipt.state == .interrupted ? L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") : "", exitCode: receipt.exitCode, startedAt: receipt.startedAt, finishedAt: receipt.finishedAt))
+        tasks.append(RunningTaskItem(id: receipt.id, title: receipt.name, state: receipt.message == "terminal.handedOff" ? .handedOff : stateLabel(receipt.state), output: receipt.state == .interrupted ? L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") : "", exitCode: receipt.exitCode, startedAt: receipt.startedAt, finishedAt: receipt.finishedAt))
     }
-    public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user) {
+    public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user, showWorkspace: Bool = true) {
         let id = UUID()
         let authorization: ExecutionRequest
         let configFingerprint: String
@@ -15,9 +15,9 @@ extension WorkbenchModel {
             configFingerprint = try fingerprint(command)
             authorization = try authorizeHostAction(id: "command." + command.id.uuidString, effect: .executeProcess, resource: configFingerprint, caller: caller, invocation: id)
         } catch { showError(error); return }
-        guard !command.executable.isEmpty, !command.name.isEmpty else { message = L("Name and executable are required"); return }
-        tasks.insert(RunningTaskItem(id: id, title: command.name, state: L("Queued")), at: 0)
-        selectedTaskID = id; section = .tasks
+        guard !command.executable.isEmpty, !command.name.isEmpty else { workspaceNotice = L("Name and executable are required"); return }
+        tasks.insert(RunningTaskItem(id: id, title: command.name, state: .queued), at: 0)
+        if showWorkspace { onOpenWorkspace?(.tasks(id)) }
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
             do {
@@ -28,13 +28,13 @@ extension WorkbenchModel {
                     try openInTerminal(command)
                     let result = ProcessResult(state: .succeeded, exitCode: nil, message: "terminal.handedOff")
                     await persistResult(id, result: result)
-                    updateTask(id, state: L("Opened in Terminal"), output: L("Interactive execution is managed by Terminal; output and cancellation remain there."), finished: true)
+                    updateTask(id, state: .handedOff, output: L("Interactive execution is managed by Terminal; output and cancellation remain there."), finished: true)
                 } else {
                     let events = await processRunner.run(command, id: id)
                     if cancelledTaskIDs.contains(id) || Task.isCancelled { await processRunner.cancel(id) }
                     for await event in events {
                         switch event {
-                        case .started: updateTask(id, state: L("Running"))
+                        case .started: updateTask(id, state: .running)
                         case let .output(text, isError):
                             _ = isError; appendOutput(id, text: text.replacingOccurrences(of: "[process.outputTruncated]", with: L("Output limit reached; remaining output was discarded")))
                         case let .finished(result):
@@ -56,7 +56,7 @@ extension WorkbenchModel {
     private func persistResult(_ id: UUID, result: ProcessResult) async {
         do { try await invocationStore.finish(id: id, result: result) }
         catch {
-            message = L("Execution finished, but its receipt could not be saved. Do not rerun automatically.")
+            workspaceNotice = L("Execution finished, but its receipt could not be saved. Do not rerun automatically.")
             appendOutput(id, text: "\n" + L("Receipt unavailable; outcome after restart may be unknown."))
         }
     }
@@ -72,14 +72,14 @@ extension WorkbenchModel {
         let limit = 1_048_576
         if tasks[i].output.utf8.count < limit { tasks[i].output += text }
     }
-    func updateTask(_ id: UUID, state: String, output: String? = nil, finished: Bool = false, exitCode: Int32? = nil) {
+    func updateTask(_ id: UUID, state: TaskStatus, output: String? = nil, finished: Bool = false, exitCode: Int32? = nil) {
         guard let i = tasks.firstIndex(where: { $0.id == id }) else { return }
-        tasks[i].state = state
+        tasks[i].status = state
         if let output { tasks[i].output = output }
         if finished { tasks[i].finishedAt = Date(); tasks[i].exitCode = exitCode }
     }
-    func stateLabel(_ state: ExecutionState) -> String {
-        switch state { case .queued: L("Queued"); case .running: L("Running"); case .succeeded: L("Completed"); case .failed: L("Failed"); case .cancelled: L("Cancelled"); case .timedOut: L("Timed out"); case .interrupted: L("Interrupted / unknown outcome") }
+    func stateLabel(_ state: ExecutionState) -> TaskStatus {
+        switch state { case .queued: .queued; case .running: .running; case .succeeded: .completed; case .failed: .failed; case .cancelled: .cancelled; case .timedOut: .timedOut; case .interrupted: .interrupted }
     }
     private func openInTerminal(_ command: SavedCommand) throws {
         let folder = directory.appendingPathComponent("terminal-launches", isDirectory: true)

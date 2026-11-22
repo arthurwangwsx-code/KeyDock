@@ -16,7 +16,7 @@
 
 ## 已取得的证据
 
-- 主仓 `xcrun swift test` 最新54项通过：CommandCore 11、ExecutionCore 17、MacAdapters 3、AI/Agent 23（含6项真实 loopback HTTP 测试）。
+- 主仓 `xcrun swift test` 最新64项通过：CommandCore 11、ExecutionCore 17、MacAdapters 3、AI/Agent 23（含6项真实 loopback HTTP 测试）、WorkbenchFeature 10。新测试覆盖内置动作迁移、自定义数据保护、草稿revision、共享文档与独立导航、设置草稿保留和第7条结果键盘可达。
 - 真实 URLSession loopback HTTP suite 已通过，覆盖分片UTF-8/SSE/usage、401/429、拒绝重定向、截断、取消及幂等清理。首次暴露的夹具退出等待已用有界POSIX回收修复，失败测量和栈证据保留；未调用云服务。
 - Debug macOS App 已通过 Xcode 27.2/Xcode Swift 6.4.2 编译及本地 ad-hoc 签名；部署目标14，运行主机27.2/arm64，最低系统/Intel未经验证。
 - CUA 隔离模式实际检查了中文界面、应用搜索与启动、命令保存/执行/输出/取消、CLI 输出进入 AI 输入，以及未配置 API 的明确提示。未读取个人截图/剪贴板或使用真实凭据。
@@ -26,7 +26,7 @@
 
 ## 继续推进
 
-1. 按用户最新反馈重构三个独立窗口与原生Liquid Glass组件库，保留已通过的执行与网络测试。
+1. 三个独立窗口、原生Liquid Glass组件库和中英即时切换已实现并构建；新版视觉实测被Mac锁屏阻挡，等待手动解锁后检查。
 2. 补完 UI/快捷键/焦点/窗口/剪贴板的实际系统边界与退出清理验收。
 3. 用户配置真实 API 后，用 [20条合成质量样本](../../Tests/Fixtures/ai-quality-cases.json)完成真实翻译/总结、工具调用、外部错误/取消和人工评阅。
 4. 完成全部第一阶段验收后才考虑晋升 master 和宣称可日用。GitHub、公开发布与P2–P4为独立事项。
@@ -34,3 +34,5 @@
 ## 用户视觉评审修正
 
 初版大面板视觉未被接受，不算产品视觉验收通过。新要求是轻量启动台、独立设置窗口、菜单栏设置入口、独立任务/结果工作区、原生macOS27 Liquid Glass、可复用UI库及完整中英文。后续截图必须分别检查三种窗口、深浅色、语言及窗口状态隔离。
+
+当前实现已采用NSGlassEffectView（26+）和27交互效果；Settings使用独立原生侧栏表单，Workspace承载任务／AI／剪贴板。唯一Store持有业务任务，三个Session隔离窗口状态；AI草稿通过文档引用共享，运行时模型与来源固定，旧请求不因配置切换误标。菜单提供设置及标准编辑快捷键。编译与文案覆盖通过，新版截图和实际交互仍未执行。参见[界面规范](../product/interface-design.md)及[组件库架构](../technical/ui-architecture.md)。

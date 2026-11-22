@@ -1,57 +1,130 @@
 import SwiftUI
+import CommandCore
+import ExecutionCore
 import MacAdapters
+import KeyDockUI
 
-struct SettingsView: View {
-    @ObservedObject var model: WorkbenchModel
+public struct SettingsRootView: View {
+    @ObservedObject var store: WorkbenchModel
+    @ObservedObject var session: SettingsSession
     @State private var exclusions = ""
-    @State private var endpoint = ""
-    @State private var modelName = ""
-    @State private var localHTTP = false
-    @State private var tokenParameter = "max_completion_tokens"
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                GroupBox(L("Launcher & permissions")) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack { Text(L("Global shortcut")); HotkeyRecorder(binding: Binding(get: { model.configuration.launcherShortcut }, set: { model.configuration.launcherShortcut = $0; model.save(); model.onShortcutConfigurationChanged?() }), onRecording: { model.onShortcutRecordingChanged?($0) }); Spacer() }
-                        HStack { Image(systemName: model.desktop.accessibilityGranted ? "checkmark.circle.fill" : "lock"); Text(model.desktop.accessibilityGranted ? L("Accessibility enabled") : L("Accessibility required for windows and selected text")); Spacer(); Button(L("Enable Accessibility")) { model.requestAccessibility() } }
-                        Text(L("Application search works without Accessibility. Screen recording is not required for window-title search.")).font(.caption).foregroundStyle(.secondary)
-                    }.padding(8)
+    @State private var shortcutQuery = ""
+    @State private var aliases: [String: String] = [:]
+    public init(store: WorkbenchModel, session: SettingsSession) { self.store = store; self.session = session }
+    public var body: some View {
+        NavigationSplitView {
+            List(SettingsPane.allCases, id: \.self, selection: Binding<SettingsPane?>(get: { session.pane }, set: { if let value = $0 { session.pane = value } })) { pane in Label(pane.title, systemImage: pane.icon).tag(pane) }
+                .listStyle(.sidebar).navigationSplitViewColumnWidth(min: 175, ideal: 190, max: 220)
+        } detail: {
+            Form {
+                if !store.settingsNotice.isEmpty { Section { KDInlineNotice(store.settingsNotice) } }
+                if !session.pendingCommands.isEmpty { Section { HStack { Text(L("Command draft ready for review")); Spacer(); Button(L("Review")) { session.editedCommand = session.pendingCommands.removeFirst() }.disabled(session.editedCommand != nil || session.editedAction != nil) } } }
+                content
+            }.formStyle(.grouped).navigationTitle(session.pane.title)
+                .toolbar {
+                    if session.pane == .commands { ToolbarItem { Button { session.editedCommand = SavedCommand(name: "", executable: "/usr/bin/printf") } label: { Label(L("New command"), systemImage: "plus") } } }
+                    if session.pane == .aiActions { ToolbarItem { Button { session.editedAction = AIActionPreset(name: "", prompt: "") } label: { Label(L("New action"), systemImage: "plus") } } }
                 }
-                GroupBox(L("Custom compatible AI API")) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        TextField(L("Full chat completions endpoint"), text: $endpoint).textFieldStyle(.roundedBorder)
-                        TextField(L("Model name"), text: $modelName).textFieldStyle(.roundedBorder)
-                        SecureField(model.hasStoredKey ? L("Key stored · leave blank to keep") : L("API key"), text: $model.apiKeyDraft).textFieldStyle(.roundedBorder)
-                        Picker(L("Token limit parameter"), selection: $tokenParameter) {
-                            Text("max_completion_tokens").tag("max_completion_tokens")
-                            Text("max_tokens").tag("max_tokens")
-                        }
-                        Toggle(L("Allow HTTP for localhost only"), isOn: $localHTTP)
-                        Text(L("Requests go directly to this endpoint. Input is sent only when an AI action runs. Keys are stored in Keychain, never in configuration or logs.")).font(.caption).foregroundStyle(.secondary)
-                        HStack { Button(L("Save API configuration")) { model.saveAPIConfiguration(endpoint: endpoint, modelName: modelName, localHTTP: localHTTP, tokenParameter: tokenParameter) }; Button(L("Remove API key"), role: .destructive) { model.removeCredential() } }
-                    }.padding(8)
-                }
-                GroupBox(L("Clipboard privacy")) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Toggle(L("Record clipboard"), isOn: $model.configuration.clipboardEnabled).onChange(of: model.configuration.clipboardEnabled) { _, _ in model.save() }
-                        Text(L("Text only · 24 hours · 500 items · 32 MiB total. Pinned items stay until removed. Concealed and transient types are skipped; some applications do not mark secrets.")).font(.caption).foregroundStyle(.secondary)
-                        Text(L("Excluded application bundle IDs (one per line)"))
-                        TextEditor(text: $exclusions).font(.system(.caption, design: .monospaced)).frame(height: 75).border(.quaternary)
-                        Button(L("Save exclusions")) { model.configuration.clipboardExclusions = exclusions.split(whereSeparator: \.isNewline).map(String.init); model.save() }
-                    }.padding(8)
-                }
-                GroupBox(L("About KeyDock")) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(L("Internal preview · macOS 14+ · Local data, no product telemetry"))
-                        Link("arthur.wang.wsx@gmail.com", destination: URL(string: "mailto:arthur.wang.wsx@gmail.com")!)
-                        Text(L("Support, feedback and privacy requests")).font(.caption).foregroundStyle(.secondary)
-                    }.padding(8).frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }.padding(20)
-        }.onAppear {
-            endpoint = model.configuration.endpoint; modelName = model.configuration.model
-            localHTTP = model.configuration.localHTTP; tokenParameter = model.configuration.tokenLimitParameter
-            exclusions = model.configuration.clipboardExclusions.joined(separator: "\n"); model.checkCredential() }
+        }.frame(minWidth: 740, minHeight: 530).environment(\.locale, KDLocalizer.locale)
+            .sheet(item: $session.editedCommand) { command in CommandEditor(command: command) { store.saveCommand($0) } }
+            .sheet(item: $session.editedAction) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }) { store.saveAction($0) } }
+            .onAppear { exclusions = store.configuration.clipboardExclusions.joined(separator: "\n"); session.keyStored = store.credentialExists() }
     }
+    @ViewBuilder private var content: some View {
+        switch session.pane {
+        case .general:
+            Section(L("Appearance & language")) {
+                Picker(L("Language"), selection: Binding(get: { store.configuration.language }, set: { store.setLanguage($0) })) {
+                    Text(L("Follow System")).tag("system"); Text("English").tag("en"); Text("简体中文").tag("zh-Hans")
+                }
+                LabeledContent(L("Appearance"), value: L("Follows system appearance"))
+            }
+            Section(L("Launcher")) { HStack { Text(L("Global shortcut")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.configuration.launcherShortcut = $0; store.save(); store.onShortcutConfigurationChanged?() })) } }
+            Section { Text(L("Search and quick actions live in the launcher. Configuration stays here, while long tasks continue in Workspace.")).font(.caption).foregroundStyle(.secondary) }
+        case .shortcuts:
+            Section { TextField(L("Find an action to customize"), text: $shortcutQuery) }
+            Section(L("Global shortcut")) { HStack { Text(L("Open KeyDock")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.configuration.launcherShortcut = $0; store.save(); store.onShortcutConfigurationChanged?() })) } }
+            Section(L("Actions & aliases")) {
+                ForEach(shortcutItems) { item in
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack { Text(item.title).fontWeight(.medium); Spacer(); recorder(Binding(get: { store.shortcut(for: item.id) }, set: { store.setShortcut($0, for: item.id) })) }
+                        HStack { TextField(L("Search alias"), text: Binding(get: { aliases[item.id] ?? store.configuration.preferences.aliases[item.id] ?? "" }, set: { aliases[item.id] = $0 })); Button(L("Save alias")) { store.setAlias(aliases[item.id] ?? store.configuration.preferences.aliases[item.id] ?? "", for: item.id) } }.controlSize(.small)
+                    }.padding(.vertical, 5)
+                }
+            }
+        case .aiService:
+            Section(L("Connection")) {
+                TextField(L("Full chat completions endpoint"), text: $session.endpoint)
+                TextField(L("Model name"), text: $session.modelName)
+                SecureField(session.keyStored && session.endpoint == store.configuration.endpoint ? L("Key stored · leave blank to keep") : L("API key"), text: $session.apiKey)
+                Picker(L("Token limit parameter"), selection: $session.tokenParameter) { Text("max_completion_tokens").tag("max_completion_tokens"); Text("max_tokens").tag("max_tokens") }
+                Toggle(L("Allow HTTP for localhost only"), isOn: $session.localHTTP)
+            }
+            Section {
+                Text(L("Requests go directly to this endpoint. Input is sent only when an AI action runs. Keys are stored in Keychain, never in configuration or logs.")).font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    Button(L("Save API configuration")) {
+                        if store.saveAPIConfiguration(endpoint: session.endpoint, modelName: session.modelName, localHTTP: session.localHTTP, tokenParameter: session.tokenParameter, apiKey: session.apiKey) { session.apiKey = ""; session.keyStored = store.credentialExists() }
+                    }.buttonStyle(.borderedProminent)
+                    Spacer()
+                    Button(L("Remove API key"), role: .destructive) { store.removeCredential(); session.keyStored = store.credentialExists() }.disabled(session.endpoint != store.configuration.endpoint || !session.keyStored)
+                }
+            }
+        case .aiActions:
+            Section(L("Reusable AI actions")) {
+                ForEach(store.configuration.aiActions) { action in
+                    HStack(spacing: 12) {
+                        Image(systemName: "sparkles").foregroundStyle(.tint)
+                        VStack(alignment: .leading, spacing: 4) { Text(action.displayName).fontWeight(.medium); Text(action.modelOverride.isEmpty ? L("Default model") : action.modelOverride).font(.caption).foregroundStyle(.secondary) }
+                        Spacer(); if let key = action.shortcut { KDKeycap(key.display) }
+                        Button(L("Edit")) { session.editedAction = action }
+                    }.padding(.vertical, 7)
+                }
+            }
+            Section { Text(L("Create a translation, summary or custom prompt, then assign its own shortcut.")).font(.caption).foregroundStyle(.secondary) }
+        case .commands:
+            Section(L("Saved commands")) {
+                if store.configuration.savedCommands.isEmpty { Text(L("Create a reusable command")).foregroundStyle(.secondary) }
+                ForEach(store.configuration.savedCommands) { command in
+                    HStack(spacing: 12) {
+                        Image(systemName: "terminal").foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 4) { Text(command.name).fontWeight(.medium); Text(command.executable).font(.caption.monospaced()).foregroundStyle(.secondary) }
+                        Spacer(); Button(L("Edit")) { session.editedCommand = command }; Button(L("Run")) { store.runCommand(command) }
+                    }.padding(.vertical, 7)
+                }
+            }
+        case .clipboard:
+            Section(L("Clipboard history")) {
+                Toggle(L("Record clipboard"), isOn: Binding(get: { store.configuration.clipboardEnabled }, set: { store.configuration.clipboardEnabled = $0; store.save() }))
+                Text(L("Text only · 24 hours · 500 items · 32 MiB total. Pinned items stay until removed. Concealed and transient types are skipped; some applications do not mark secrets.")).font(.caption).foregroundStyle(.secondary)
+            }
+            Section(L("Excluded applications")) {
+                TextEditor(text: $exclusions).font(.system(size: 11, design: .monospaced)).frame(height: 110)
+                Button(L("Save exclusions")) { store.configuration.clipboardExclusions = exclusions.split(whereSeparator: \.isNewline).map(String.init); store.save() }
+            }
+        case .privacy:
+            Section(L("Accessibility")) {
+                Label(store.desktop.accessibilityGranted ? L("Accessibility enabled") : L("Accessibility required for windows and selected text"), systemImage: store.desktop.accessibilityGranted ? "checkmark.circle" : "lock")
+                Button(L("Enable Accessibility")) { store.requestAccessibility() }
+                Text(L("Application search works without Accessibility. Screen recording is not required for window-title search.")).font(.caption).foregroundStyle(.secondary)
+            }
+            Section(L("Your data")) { Text(L("Local data, no product telemetry. AI actions send only their chosen input to your configured service.")).font(.callout).foregroundStyle(.secondary) }
+        case .about:
+            Section {
+                VStack(spacing: 12) {
+                    Image(systemName: "command.square.fill").font(.system(size: 54, weight: .light)).foregroundStyle(.tint)
+                    Text("KeyDock").font(.system(size: 26, weight: .semibold))
+                    Text(L("Your keyboard workspace")).font(.subheadline).foregroundStyle(.secondary)
+                    Text("0.1.0 · " + L("Internal Preview")).font(.caption).foregroundStyle(.tertiary)
+                    Link("arthur.wang.wsx@gmail.com", destination: URL(string: "mailto:arthur.wang.wsx@gmail.com")!)
+                    Text(L("Support, feedback and privacy requests")).font(.caption).foregroundStyle(.secondary)
+                }.frame(maxWidth: .infinity).padding(.vertical, 30)
+            }
+        }
+    }
+    private var shortcutItems: [CommandItem] {
+        if !shortcutQuery.isEmpty { return Array(CommandSearch.rank(query: shortcutQuery, items: store.catalog, preferences: store.configuration.preferences).prefix(20)) }
+        return store.catalog.filter { $0.kind == .ai || $0.kind == .command || store.configuration.preferences.favorites.contains($0.id) }
+    }
+    private func recorder(_ binding: Binding<HotkeyBinding?>) -> some View { HotkeyRecorder(binding: binding, onRecording: { store.onShortcutRecordingChanged?($0) }).frame(minWidth: 115) }
 }

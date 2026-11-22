@@ -19,6 +19,10 @@
 - [ ] 2.4 建立参数表单、动作/详情/结果公共 UI 与 String Catalog、VoiceOver 基线。
 - [ ] 2.5 对 AX 窗口身份/选区读取、Process 取消、真实模型 stream 风险分别做 spike，并重估 P1。
 - [ ] 2.6 建立性能采样与 P0 实机证据；记录热唤起/本地查询/CPU/内存/耗电基线。
+- [x] 2.7 按视觉评审重构独立Launcher／Settings／Workspace和菜单栏设置、标准编辑菜单；原生App构建通过。
+- [x] 2.8 建立KeyDockUI、系统Liquid Glass与availability回退、中英语言切换、分bundle String Catalog静态覆盖和旧内置动作迁移。
+- [x] 2.9 分离三个窗口Session，AI共享文档按revision／runID固定输出元数据；配置／草稿／导航与完整结果键盘可达的10项定向测试通过。
+- [ ] 2.10 完成新版三窗口深浅色、中英、辅助功能、IME、焦点与截图视觉验收；当前Mac锁屏无法观察新版UI。
 
 ## 3. P1 桌面工具
 

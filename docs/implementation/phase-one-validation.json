@@ -15,15 +15,18 @@
   "verified": {
     "swiftTests": {
       "state": "PASS",
-      "total": 54,
+      "total": 64,
       "commandCore": 11,
       "executionCore": 17,
       "macAdapters": 3,
-      "aiAndAgentCoreIncludingHTTP": 23
+      "aiAndAgentCoreIncludingHTTP": 23,
+      "workbenchWindowOwnership": 10,
+      "log": ".local/ui-redesign-verified-tests.log"
     },
     "nativeBuild": {
       "state": "PASS",
-      "configuration": "Debug local ad-hoc signature, not notarized"
+      "configuration": "Debug local ad-hoc signature, not notarized",
+      "log": ".local/ui-redesign-app-final.log"
     },
     "uiSmoke": {
       "state": "PASS",
@@ -35,7 +38,8 @@
         "cancel a running sleep task",
         "CLI output to AI input",
         "missing API configuration message"
-      ]
+      ],
+      "scope": "Initial UI before user-rejected design; does not qualify redesigned windows"
     },
     "searchBenchmark": {
       "state": "PASS",
@@ -51,15 +55,21 @@
       "state": "PASS",
       "scope": "synthetic loopback server with real URLSession; not external AI",
       "fixtureCleanup": "bounded POSIX reap; first failed wait measurement retained"
+    },
+    "localization": {
+      "state": "PASS",
+      "scope": "English and Simplified Chinese source-key coverage in App and Feature catalogs",
+      "log": ".local/ui-redesign-localizations.log"
     }
   },
   "unverified": [
     "Complete daily-use acceptance",
+    "Redesigned native UI visual and interaction acceptance; Mac locked",
     "Physical global shortcut, conflict/recording, IME composition",
     "Multiple screens, fullscreen and p95 hot panel presentation <=150ms",
     "Real AX permission grant/revocation, window identity/activation and selection replacement",
     "Live user-enabled clipboard capture and sensitive-source behavior",
-    "Terminal handoff and app quit with managed subprocesses",
+    "Terminal handoff and crash recovery; normal quit with synthetic managed sleep verified on initial UI",
     "External model API, real Keychain credential flow and readonly tool roundtrip",
     "20-case real model quality review",
     "Minimum macOS and Intel compatibility",
@@ -73,7 +83,10 @@
     "Generated build products, private logs and test data remain ignored"
   ],
   "visualAcceptance": {
-    "state": "FAIL",
-    "reason": "User rejected initial dashboard-like UI; native Liquid Glass and independent Launcher/Settings/Workspace redesign in progress"
+    "state": "BLOCKED",
+    "previousUI": "FAIL: user rejected dashboard-like design",
+    "implementation": "Native Liquid Glass launcher, separate settings and workspace, KeyDockUI, per-window sessions and bilingual UI built successfully",
+    "currentEvidence": "CUA getApp reported Mac locked and unable to unlock automatically; no redesigned UI screenshot or interaction observation",
+    "required": "Manual unlock then inspect launcher/settings/workspace, light/dark, both languages, accessibility and focus"
   }
 }

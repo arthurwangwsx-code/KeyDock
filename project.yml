@@ -22,6 +22,8 @@ targets:
         product: WorkbenchFeature
       - package: KeyDockModules
         product: MacAdapters
+      - package: KeyDockModules
+        product: KeyDockUI
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.arthurwangwsx.KeyDock

@@ -2,149 +2,234 @@ import AppKit
 import SwiftUI
 import WorkbenchFeature
 import MacAdapters
+import KeyDockUI
 
-@main
-@MainActor enum KeyDockApp {
+@main @MainActor enum KeyDockApp {
     static func main() {
-        let application = NSApplication.shared
-        let delegate = AppDelegate()
-        application.delegate = delegate
-        application.setActivationPolicy(.accessory)
-        withExtendedLifetime(delegate) { application.run() }
+        let app = NSApplication.shared
+        let delegate = AppDelegate(); app.delegate = delegate
+        app.setActivationPolicy(.accessory)
+        withExtendedLifetime(delegate) { app.run() }
     }
+}
+
+@MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var coordinator: WindowCoordinator?
+    private var terminating = false
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        do {
+            let smoke = (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true) || ProcessInfo.processInfo.arguments.contains("--safe-smoke")
+            let store = try WorkbenchModel(dataDirectory: smoke ? FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Smoke") : nil, allowContextCapture: !smoke)
+            coordinator = WindowCoordinator(store: store, safeSmoke: smoke)
+            coordinator?.start()
+        } catch {
+            let alert = NSAlert(); alert.messageText = "KeyDock"; alert.informativeText = AppL("Local data could not be opened. Existing files were preserved."); alert.runModal(); NSApp.terminate(nil)
+        }
+    }
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { coordinator?.presentLauncher(); return true }
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard !terminating else { return .terminateLater }; terminating = true
+        Task { await coordinator?.prepareForQuit(); sender.reply(toApplicationShouldTerminate: true) }
+        return .terminateLater
+    }
+    func applicationDidResignActive(_ notification: Notification) { coordinator?.deactivate() }
+    func applicationWillTerminate(_ notification: Notification) { coordinator?.shutdown() }
 }
 
 @MainActor final class LauncherPanel: NSPanel {
     override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { true }
+    override var canBecomeMain: Bool { false }
     var onEscape: (() -> Void)?
     override func cancelOperation(_ sender: Any?) { onEscape?() }
 }
 
-@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
-    private var model: WorkbenchModel?
-    private var panel: LauncherPanel?
-    private var statusItem: NSStatusItem?
+/// 只负责窗口生命周期、路由、系统菜单与全局触发；业务服务只有一个 Store。
+@MainActor final class WindowCoordinator: NSObject, NSWindowDelegate {
+    let store: WorkbenchModel
+    let launcherSession: LauncherSession
+    let settingsSession: SettingsSession
+    let workspaceSession = WorkspaceSession()
     private let hotkeys = HotkeyCenter()
-    private var terminating = false
-    private var presentationGeneration = UUID()
+    private let safeSmoke: Bool
+    private var launcher: LauncherPanel?
+    private var settings: NSWindow?
+    private var workspace: NSWindow?
+    private var statusItem: NSStatusItem?
+    private var generation = UUID()
     private var captureTask: Task<Void, Never>?
     private var originalIdentity: TargetIdentity?
-    private let safeSmoke = ProcessInfo.processInfo.arguments.contains("--safe-smoke") || (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true)
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        do {
-            let model = try WorkbenchModel(dataDirectory: safeSmoke ? FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Smoke") : nil, allowContextCapture: !safeSmoke); self.model = model
-            let panel = LauncherPanel(contentRect: NSRect(x: 0, y: 0, width: 920, height: 650), styleMask: [.titled, .closable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
-            panel.title = "KeyDock"; panel.titleVisibility = .hidden; panel.titlebarAppearsTransparent = true
-            panel.isReleasedWhenClosed = false; panel.hidesOnDeactivate = false; panel.isFloatingPanel = true
-            panel.level = .floating; panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-            panel.minSize = NSSize(width: 800, height: 600); panel.delegate = self
-            panel.contentView = NSHostingView(rootView: WorkbenchView(model: model))
-            panel.onEscape = { [weak self] in self?.dismiss(restore: true) }
-            self.panel = panel
-            model.onDismiss = { [weak self] in self?.dismiss(restore: $0) }
-            model.onShortcutConfigurationChanged = { [weak self] in self?.installShortcuts() }
-            model.onShortcutRecordingChanged = { [weak self] recording in
-                guard let self else { return }
-                if recording { self.hotkeys.suspend() }
-                else {
-                    do { try self.hotkeys.resume() }
-                    catch { model.message = String(localized: "Shortcut could not be registered. It may be used by macOS or another application.") }
-                }
-            }
-            createStatusItem(); installShortcuts(); present()
-        } catch {
-            let alert = NSAlert(); alert.messageText = "KeyDock"; alert.informativeText = String(localized: "Local data could not be opened. Existing files were preserved."); alert.runModal(); NSApp.terminate(nil)
+    private var pendingCommandID: String?
+    private var capturePending = false
+    init(store: WorkbenchModel, safeSmoke: Bool) {
+        self.store = store; self.safeSmoke = safeSmoke
+        launcherSession = LauncherSession(store: store); settingsSession = SettingsSession(store: store)
+        super.init()
+        settingsSession.onPaneChanged = { [weak self] in self?.refreshTitles() }
+        launcherSession.onExecute = { [weak self] item in
+            guard let self else { return }
+            if self.capturePending && item.kind == .ai { self.pendingCommandID = item.id }
+            else { store.execute(item) }
+        }
+        store.onDismiss = { [weak self] in self?.dismissLauncher(restore: $0) }
+        store.onOpenSettings = { [weak self] in self?.openSettings($0) }
+        store.onOpenWorkspace = { [weak self] in self?.openWorkspace($0) }
+        store.onAIAction = { [weak self] draft, caller in
+            guard let self else { return }
+            self.launcherSession.draft = draft
+            if !draft.input.isEmpty, let action = store.configuration.aiActions.first(where: { $0.id == draft.actionID }) { store.runAI(action: action, draft: draft, caller: caller) }
+        }
+        store.onReviewCommand = { [weak self] command in
+            guard let self else { return }
+            // 草稿回调不抢焦点，不覆盖用户正在编辑的表单。
+            self.settingsSession.pendingCommands.append(command)
+        }
+        store.onLanguageChanged = { [weak self] in self?.installMenus(); self?.refreshTitles() }
+        store.onShortcutConfigurationChanged = { [weak self] in self?.installShortcuts() }
+        store.onShortcutRecordingChanged = { [weak self] recording in
+            guard let self else { return }
+            if recording { self.hotkeys.suspend() }
+            else { do { try self.hotkeys.resume() } catch { self.shortcutError(AppL("Shortcut could not be registered. It may be used by macOS or another application.")) } }
         }
     }
-    private func createStatusItem() {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "command.square", accessibilityDescription: "KeyDock")
-        let menu = NSMenu()
-        let open = NSMenuItem(title: String(localized: "Open KeyDock"), action: #selector(openLauncher), keyEquivalent: ""); open.target = self; menu.addItem(open)
-        let tasks = NSMenuItem(title: String(localized: "Running tasks"), action: #selector(openTasks), keyEquivalent: ""); tasks.target = self; menu.addItem(tasks)
-        let settings = NSMenuItem(title: String(localized: "Settings"), action: #selector(openSettings), keyEquivalent: ","); settings.target = self; menu.addItem(settings)
-        menu.addItem(.separator())
-        let quit = NSMenuItem(title: String(localized: "Quit KeyDock"), action: #selector(quitApplication), keyEquivalent: "q"); quit.target = self; menu.addItem(quit)
-        item.menu = menu; statusItem = item
-        let main = NSMenu()
-        let applicationItem = NSMenuItem(title: "KeyDock", action: nil, keyEquivalent: "")
-        applicationItem.submenu = menu.copy() as? NSMenu
-        main.addItem(applicationItem); NSApp.mainMenu = main
+    func start() { installMenus(); installShortcuts(); presentLauncher() }
+    private func buildLauncher() -> LauncherPanel {
+        let panel = LauncherPanel(contentRect: NSRect(x: 0, y: 0, width: KDTokens.launcherWidth, height: KDTokens.launcherHeight), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        panel.title = "KeyDock"; panel.backgroundColor = .clear; panel.isOpaque = false; panel.hasShadow = true
+        panel.isReleasedWhenClosed = false; panel.hidesOnDeactivate = false; panel.isFloatingPanel = true
+        panel.level = .floating; panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.isMovableByWindowBackground = true; panel.delegate = self
+        panel.contentView = KDLauncherSurface.make(root: LauncherView(store: store, session: launcherSession))
+        panel.onEscape = { [weak self] in
+            if self?.launcherSession.actionsVisible == true { self?.launcherSession.actionsVisible = false }
+            else { self?.dismissLauncher(restore: true) }
+        }
+        return panel
     }
-    @objc private func openLauncher() { present() }
-    @objc private func openTasks() { present(); model?.section = .tasks }
-    @objc private func openSettings() { present(); model?.section = .settings }
-    @objc private func quitApplication() { NSApp.terminate(nil) }
-    private func present(commandID: String? = nil) {
-        guard let panel, let model else { return }
-        presentationGeneration = UUID(); let generation = presentationGeneration
-        captureTask?.cancel()
-        let identity = safeSmoke ? nil : model.desktop.frontmostTarget()
-        originalIdentity = identity
-        model.show(target: nil)
-        if !panel.isVisible {
-            let location = NSEvent.mouseLocation
-            let screen = NSScreen.screens.first(where: { $0.frame.contains(location) }) ?? NSScreen.main
-            if let screen {
-                var frame = panel.frame
-                frame.origin.x = screen.visibleFrame.midX - frame.width / 2
-                frame.origin.y = screen.visibleFrame.midY - frame.height / 2 + 55
-                panel.setFrame(frame, display: false)
+    func presentLauncher(commandID: String? = nil) {
+        if launcher == nil { launcher = buildLauncher() }
+        guard let launcher else { return }
+        if launcher.isKeyWindow {
+            if let commandID {
+                if capturePending { pendingCommandID = commandID } else { store.performCommand(id: commandID) }
+            }
+            return
+        }
+        generation = UUID(); let current = generation
+        captureTask?.cancel(); originalIdentity = safeSmoke ? nil : store.desktop.frontmostTarget()
+        let identity = originalIdentity
+        capturePending = identity != nil; launcherSession.contextCapturePending = capturePending; pendingCommandID = commandID
+        launcherSession.reset(); store.launcherNotice = ""; store.prepareLauncher(target: nil)
+        if !launcher.isVisible {
+            let point = NSEvent.mouseLocation
+            if let screen = NSScreen.screens.first(where: { $0.frame.contains(point) }) ?? NSScreen.main {
+                var frame = launcher.frame; let visible = screen.visibleFrame
+                frame.origin.x = visible.midX - frame.width / 2
+                frame.origin.y = visible.maxY - visible.height * 0.22 - frame.height
+                frame.origin.y = max(visible.minY + 24, frame.origin.y)
+                launcher.setFrame(frame, display: false)
             }
         }
-        NSApp.activate(ignoringOtherApps: true); panel.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true); launcher.makeKeyAndOrderFront(nil)
         if let identity {
             captureTask = Task { [weak self] in
                 guard let self else { return }
-                let snapshot = await model.desktop.captureTarget(identity)
-                guard !Task.isCancelled, self.presentationGeneration == generation, panel.isVisible else { return }
-                model.target = snapshot
-                if let commandID { model.performCommand(id: commandID) }
+                let snapshot = await store.desktop.captureTarget(identity)
+                guard !Task.isCancelled, self.generation == current, launcher.isVisible else { return }
+                store.target = snapshot; capturePending = false; launcherSession.contextCapturePending = false
+                if let command = pendingCommandID { pendingCommandID = nil; store.performCommand(id: command) }
             }
-        } else if let commandID { model.performCommand(id: commandID) }
+        } else if let command = pendingCommandID { pendingCommandID = nil; store.performCommand(id: command) }
     }
-    private func dismiss(restore: Bool) {
-        presentationGeneration = UUID(); captureTask?.cancel()
-        panel?.orderOut(nil)
+    func dismissLauncher(restore: Bool) {
+        generation = UUID(); captureTask?.cancel(); capturePending = false; launcherSession.contextCapturePending = false; pendingCommandID = nil; launcherSession.actionsVisible = false; launcher?.orderOut(nil)
         if restore {
-            if let target = model?.target { model?.desktop.restore(target) }
-            else if let originalIdentity { model?.desktop.restore(identity: originalIdentity) }
+            if let target = store.target { store.desktop.restore(target) }
+            else if let originalIdentity { store.desktop.restore(identity: originalIdentity) }
         }
     }
+    func openSettings(_ pane: SettingsPane? = nil) {
+        dismissLauncher(restore: false); if let pane { settingsSession.pane = pane }
+        if settings == nil {
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 840, height: 620), styleMask: [.titled, .closable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
+            window.minSize = NSSize(width: 740, height: 530); window.isReleasedWhenClosed = false; window.delegate = self
+            window.toolbarStyle = .unified; window.standardWindowButton(.zoomButton)?.isHidden = true
+            window.contentViewController = NSHostingController(rootView: SettingsRootView(store: store, session: settingsSession))
+            window.setFrameAutosaveName("KeyDock.Settings"); window.center(); settings = window
+        }
+        refreshTitles(); NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
+    }
+    func openWorkspace(_ route: WorkspaceRoute) {
+        dismissLauncher(restore: false); workspaceSession.navigate(route, store: store)
+        if workspace == nil {
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 680), styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
+            window.minSize = NSSize(width: 820, height: 560); window.isReleasedWhenClosed = false; window.delegate = self
+            window.toolbarStyle = .unified; window.contentViewController = NSHostingController(rootView: WorkspaceView(store: store, session: workspaceSession))
+            window.setFrameAutosaveName("KeyDock.Workspace"); window.center(); workspace = window
+        }
+        refreshTitles(); NSApp.activate(ignoringOtherApps: true); workspace?.makeKeyAndOrderFront(nil)
+    }
+    private func refreshTitles() { settings?.title = settingsSession.pane.title + " — KeyDock"; workspace?.title = AppL("Workspace") + " — KeyDock" }
+    private func installMenus() {
+        let item = statusItem ?? NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        item.button?.image = NSImage(systemSymbolName: "command.square", accessibilityDescription: "KeyDock")
+        let menu = NSMenu()
+        for (title, action, key) in [(AppL("Open KeyDock"), #selector(openLauncherAction), ""), (AppL("Workspace"), #selector(openWorkspaceAction), ""), (AppL("Settings…"), #selector(openSettingsAction), ",")] {
+            let entry = NSMenuItem(title: title, action: action, keyEquivalent: key); entry.target = self; menu.addItem(entry)
+        }
+        menu.addItem(.separator())
+        let quit = NSMenuItem(title: AppL("Quit KeyDock"), action: #selector(quitAction), keyEquivalent: "q"); quit.target = self; menu.addItem(quit)
+        item.menu = menu; statusItem = item
+        let main = NSMenu(); let appItem = NSMenuItem(title: "KeyDock", action: nil, keyEquivalent: "")
+        appItem.submenu = menu.copy() as? NSMenu; main.addItem(appItem)
+        let fileMenu = NSMenu(title: AppL("File"))
+        let close = NSMenuItem(title: AppL("Close Window"), action: #selector(closeWindowAction), keyEquivalent: "w"); close.target = self; fileMenu.addItem(close)
+        let fileItem = NSMenuItem(); fileItem.submenu = fileMenu; main.addItem(fileItem)
+        let editMenu = NSMenu(title: AppL("Edit"))
+        for (title, selector, key) in [(AppL("Undo"), Selector(("undo:")), "z"), (AppL("Redo"), Selector(("redo:")), "Z"), (AppL("Cut"), #selector(NSText.cut(_:)), "x"), (AppL("Copy"), #selector(NSText.copy(_:)), "c"), (AppL("Paste"), #selector(NSText.paste(_:)), "v"), (AppL("Select All"), #selector(NSText.selectAll(_:)), "a")] {
+            editMenu.addItem(NSMenuItem(title: title, action: selector, keyEquivalent: key))
+        }
+        let editItem = NSMenuItem(); editItem.submenu = editMenu; main.addItem(editItem)
+        NSApp.mainMenu = main
+    }
+    @objc private func openLauncherAction() { presentLauncher() }
+    @objc private func openSettingsAction() { openSettings(settingsSession.pane) }
+    @objc private func openWorkspaceAction() { openWorkspace(.tasks(nil)) }
+    @objc private func closeWindowAction() { if NSApp.keyWindow === launcher { dismissLauncher(restore: true) } else { NSApp.keyWindow?.performClose(nil) } }
+    @objc private func quitAction() { NSApp.terminate(nil) }
+    private func shortcutError(_ text: String) { store.settingsNotice = text; store.launcherNotice = text }
     private func installShortcuts() {
-        guard let model else { return }
         var next: [UInt32: (HotkeyBinding, String?)] = [:]
-        if let binding = model.configuration.launcherShortcut { next[1] = (binding, nil) }
-        for (commandID, binding) in model.directShortcuts {
+        if let binding = store.configuration.launcherShortcut { next[1] = (binding, nil) }
+        for (command, binding) in store.directShortcuts {
             var hash: UInt32 = 2166136261
-            for byte in commandID.utf8 { hash = (hash ^ UInt32(byte)) &* 16777619 }
-            hash = max(2, hash)
-            guard next[hash] == nil else { model.message = String(localized: "Shortcut identifiers conflict; choose a different shortcut"); continue }
-            next[hash] = (binding, commandID)
+            for byte in command.utf8 { hash = (hash ^ UInt32(byte)) &* 16777619 }; hash = max(2, hash)
+            guard next[hash] == nil else { shortcutError(AppL("Shortcut identifiers conflict; choose a different shortcut")); continue }
+            next[hash] = (binding, command)
         }
         for id in hotkeys.configuredIDs.subtracting(next.keys) { try? hotkeys.set(id: id, binding: nil, action: {}) }
         for (id, entry) in next {
             do {
                 try hotkeys.set(id: id, binding: entry.0) { [weak self] in
                     guard let self else { return }
-                    if let command = entry.1 { self.present(commandID: command) }
-                    else if self.panel?.isVisible == true, NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier { self.dismiss(restore: true) }
-                    else { self.present() }
+                    if let command = entry.1 { self.presentLauncher(commandID: command) }
+                    else if self.launcher?.isKeyWindow == true { self.dismissLauncher(restore: true) }
+                    else { self.presentLauncher() }
                 }
-            } catch { model.message = String(localized: "Shortcut could not be registered. It may be used by macOS or another application.") }
+            } catch { shortcutError(AppL("Shortcut could not be registered. It may be used by macOS or another application.")) }
         }
     }
-    func windowShouldClose(_ sender: NSWindow) -> Bool { dismiss(restore: true); return false }
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        present()
+    func deactivate() { if launcher?.isVisible == true { dismissLauncher(restore: false) } }
+    func windowDidResignKey(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow, window === launcher, !launcherSession.actionsVisible else { return }
+        dismissLauncher(restore: false)
+    }
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        if sender === launcher { dismissLauncher(restore: true); return false }
+        if sender === settings { settingsSession.apiKey = "" }
         return true
     }
-    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard !terminating else { return .terminateLater }
-        terminating = true
-        Task { await model?.shutdownAndWait(); sender.reply(toApplicationShouldTerminate: true) }
-        return .terminateLater
-    }
-    func applicationWillTerminate(_ notification: Notification) { hotkeys.shutdown(); model?.shutdown() }
+    func prepareForQuit() async { await store.shutdownAndWait() }
+    func shutdown() { hotkeys.shutdown(); store.shutdown(); settingsSession.apiKey = "" }
 }
+
+private func AppL(_ key: String) -> String { KDLocalizer.string(key, bundle: .main) }

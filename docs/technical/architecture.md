@@ -31,7 +31,7 @@ App 是组合根，持有服务生命周期和依赖注入；上图是运行链�
 | T3 功能 | LauncherFeature、ClipboardFeature、CLIWorkbench、AIActionFeature、AgentWorkspace | 使用公开协议，UI 与业务可分别测试 |
 | T4 壳 | KeyDockApp | AppKit Panel、菜单栏、设置和组合根，不承载业务实现 |
 
-当前根 Package.swift 定义 CommandCore、ExecutionCore、AICore、MacAdapters、WorkbenchFeature 多个 target，源代码位于 Packages/<Module>；App 薄壳位于 Apps/KeyDock，XcodeGen 生成原生 App 工程。Storage 已在 MacAdapters 内先实现 SQLite 剪贴板和私有文件适配；纯核心没有反向依赖 App。统一的命令 effects/执行策略仍需进一步贯通，不能把当前只读 AI Broker 等同所有桌面操作的完整 Broker。
+当前根 Package.swift 定义 CommandCore、ExecutionCore、AICore、AgentCore、MacAdapters、KeyDockUI、WorkbenchFeature 多个 target，源代码位于 Packages/<Module>；App 薄壳位于 Apps/KeyDock，XcodeGen 生成原生 App 工程。Storage 已在 MacAdapters 内先实现 SQLite 剪贴板和私有文件适配；纯核心没有反向依赖 App。桌面启动、窗口切换、网络、命令执行和结果操作已接入共用 ExecutionPolicy，按 caller、版本、资源、effects、有效期做边界检查；只读 ToolBroker 使用同一策略，仍不等同 OS sandbox。三窗口和共享文档／会话状态详见 [UI架构](ui-architecture.md)。
 
 ## 核心契约
 

@@ -51,7 +51,7 @@ struct AIActionEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L("AI action")).font(.title2.bold())
-            TextField(L("Name"), text: $action.name)
+            TextField(L("Name"), text: Binding(get: { action.displayName }, set: { if $0 != action.displayName { action.name = $0; action.builtinKey = nil } }))
             Picker(L("Input source"), selection: $action.input) {
                 Text(L("Selected text")).tag(AIInputSource.selection)
                 Text(L("Current clipboard")).tag(AIInputSource.clipboard)
