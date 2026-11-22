@@ -50,9 +50,11 @@ extension WorkbenchModel {
             output: "",
             startedAt: receipt.startedAt, finishedAt: receipt.finishedAt, titleKey: kind.rawValue)
         task.restoredFromReceipt = true
+        task.aiUsageSummary = .unknown
         task.outputIsIncomplete = status == .interrupted
         if status == .interrupted { task.notice = L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
         // 没有 draft、Task、resultTarget 或 callback；恢复只展示，不重发、不复制、不审阅。
         tasks.append(task)
+        loadRestoredAIUsage(receipt.id, interrupted: status == .interrupted)
     }
 }

@@ -1025,6 +1025,22 @@
         }
       }
     },
+    "Cost unknown (no rate configured)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cost unknown (no rate configured)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "费用未知（未配置费率）"
+          }
+        }
+      }
+    },
     "Create a reusable command": {
       "localizations": {
         "en": {
@@ -1453,6 +1469,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "输入来源"
+          }
+        }
+      }
+    },
+    "Input tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Input tokens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入用量（token）"
           }
         }
       }
@@ -2097,6 +2129,22 @@
         }
       }
     },
+    "Output tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output tokens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输出用量（token）"
+          }
+        }
+      }
+    },
     "Pin item": {
       "localizations": {
         "en": {
@@ -2397,6 +2445,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "替换原选区"
+          }
+        }
+      }
+    },
+    "Reported counts may be incomplete. Missing values are not zero.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported counts may be incomplete. Missing values are not zero."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已报告数值可能不完整，缺失值不代表零。"
           }
         }
       }
@@ -3089,6 +3153,22 @@
         }
       }
     },
+    "The application opened, but macOS could not bring it to the front.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The application opened, but macOS could not bring it to the front."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用已打开，但 macOS 未能将它切到前台。"
+          }
+        }
+      }
+    },
     "The clipboard item is no longer available": {
       "localizations": {
         "en": {
@@ -3361,6 +3441,22 @@
         }
       }
     },
+    "Unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未知"
+          }
+        }
+      }
+    },
     "Unpin item": {
       "localizations": {
         "en": {
@@ -3389,6 +3485,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法保存用量元数据"
+          }
+        }
+      }
+    },
+    "Usage partly reported": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage partly reported"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用量仅报告部分"
+          }
+        }
+      }
+    },
+    "Usage pending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage pending"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用量待报告"
+          }
+        }
+      }
+    },
+    "Usage reported": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage reported"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用量已报告"
+          }
+        }
+      }
+    },
+    "Usage unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage unknown"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用量未知"
           }
         }
       }

@@ -15,7 +15,7 @@ private struct LauncherCatalogProvider: CommandProviding {
 }
 
 @MainActor public final class LauncherSession: ObservableObject {
-    @Published public var query = "" { didSet { search() } }
+    @Published public var query = "" { didSet { if query != oldValue { store.invalidateLauncherReplies() }; search() } }
     @Published public var results: [CommandItem] = []
     @Published public var selectedID: String?
     @Published public private(set) var selectionScrollRequest = UUID()

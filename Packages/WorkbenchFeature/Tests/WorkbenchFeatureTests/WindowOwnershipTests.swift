@@ -44,13 +44,13 @@ private let legacyCases = [
     private let languageKey: String
     private let previousLanguage: Any?
     private let previousPane: Any?
-    init(allowContextCapture: Bool = false, clipboardReader: @escaping @MainActor () -> String? = { nil }, applicationCatalog: ApplicationCatalog? = nil) throws {
+    init(allowContextCapture: Bool = false, clipboardReader: @escaping @MainActor () -> String? = { nil }, applicationCatalog: ApplicationCatalog? = nil, applicationLauncher: (@MainActor (CommandItem) async throws -> PreparedApplicationLaunch)? = nil) throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-WindowOwnership-" + UUID().uuidString, isDirectory: true)
         languageKey = (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true) ? "KeyDock.Smoke.Language" : "KeyDock.Language"
         previousLanguage = UserDefaults.standard.object(forKey: languageKey)
         previousPane = UserDefaults.standard.object(forKey: "KeyDock.Smoke.SettingsPane")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        do { store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: allowContextCapture, clipboardChangeCount: { 7 }, clipboardReader: clipboardReader, applicationCatalog: applicationCatalog) }
+        do { store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: allowContextCapture, clipboardChangeCount: { 7 }, clipboardReader: clipboardReader, applicationCatalog: applicationCatalog, applicationLauncher: applicationLauncher) }
         catch { try? FileManager.default.removeItem(at: directory); throw error }
     }
     func cleanup() {
@@ -62,7 +62,108 @@ private let legacyCases = [
     }
 }
 
+@MainActor private final class ApplicationOpenGate {
+    private var continuation: CheckedContinuation<Void, any Error>?
+    var entered = false
+    var finished = false
+    var activations = 0
+    var activationSucceeds = true
+    func open(_ item: CommandItem) async throws -> PreparedApplicationLaunch {
+        entered = true
+        defer { finished = true }
+        try await withCheckedThrowingContinuation { continuation = $0 }
+        return PreparedApplicationLaunch { self.activations += 1; return self.activationSucceeds }
+    }
+    func finish(failing: Bool) {
+        let pending = continuation; continuation = nil
+        if failing { pending?.resume(throwing: CocoaError(.fileNoSuchFile)) }
+        else { pending?.resume() }
+    }
+}
+
 @Suite(.serialized) @MainActor struct WindowOwnershipTests {
+    @Test(arguments: ["presentation", "query", "dismiss", "action"], [false, true])
+    func oldApplicationReplyCannotDismissOrWarnANewPresentation(change: String, failing: Bool) async throws {
+        let gate = ApplicationOpenGate()
+        let fixture = try StoreFixture(applicationLauncher: gate.open); defer { fixture.cleanup() }
+        let store = fixture.store
+        let launcher = LauncherSession(store: store)
+        var dismissals = 0
+        store.onDismiss = { _ in dismissals += 1 }
+        store.prepareLauncher(target: nil)
+        store.execute(.init(id: "synthetic.application", title: "Synthetic", kind: .application, payload: "/synthetic/never-executed.app"))
+        try await storeEventually { gate.entered }
+        switch change {
+        case "query": launcher.query = "Synthetic revised query"
+        case "dismiss": store.invalidateLauncherReplies()
+        case "action":
+            var changedToAI = false
+            store.onAIAction = { _, _ in changedToAI = true }
+            store.execute(try #require(store.catalog.first { $0.kind == .ai }))
+            #expect(changedToAI)
+        default: store.prepareLauncher(target: nil)
+        }
+        store.launcherNotice = "Synthetic new presentation"
+        gate.finish(failing: failing)
+        try await storeEventually { gate.finished }
+        #expect(dismissals == 0)
+        #expect(gate.activations == 0)
+        #expect(store.launcherNotice == "Synthetic new presentation")
+    }
+
+    @Test(arguments: [false, true])
+    func currentApplicationReplyStillDismissesOrShowsItsFailure(failing: Bool) async throws {
+        let gate = ApplicationOpenGate()
+        let fixture = try StoreFixture(applicationLauncher: gate.open); defer { fixture.cleanup() }
+        let store = fixture.store
+        let launcher = LauncherSession(store: store)
+        var dismissals = 0
+        store.onDismiss = { restore in #expect(!restore); dismissals += 1 }
+        store.prepareLauncher(target: nil)
+        store.execute(.init(id: "synthetic.application", title: "Synthetic", kind: .application, payload: "/synthetic/never-executed.app"))
+        try await storeEventually { gate.entered }
+        // 配置/目录重搜不得被当作用户切换输入，导致有效启动被误弃。
+        launcher.search()
+        gate.finish(failing: failing)
+        try await storeEventually { gate.finished }
+        #expect(dismissals == (failing ? 0 : 1))
+        #expect(gate.activations == (failing ? 0 : 1))
+        #expect(store.launcherNotice.isEmpty == !failing)
+    }
+
+    @Test func aNewApplicationLaunchSupersedesThePreviousActivation() async throws {
+        let first = ApplicationOpenGate(), second = ApplicationOpenGate()
+        let fixture = try StoreFixture(applicationLauncher: { item in
+            try await (item.id == "synthetic.first" ? first : second).open(item)
+        }); defer { fixture.cleanup() }
+        let store = fixture.store
+        var dismissals = 0
+        store.onDismiss = { _ in dismissals += 1 }
+        store.prepareLauncher(target: nil)
+        store.execute(.init(id: "synthetic.first", title: "Synthetic first", kind: .application, payload: "/synthetic/first.app"))
+        try await storeEventually { first.entered }
+        store.execute(.init(id: "synthetic.second", title: "Synthetic second", kind: .application, payload: "/synthetic/second.app"))
+        try await storeEventually { second.entered }
+        second.finish(failing: false)
+        try await storeEventually { second.finished }
+        first.finish(failing: false)
+        try await storeEventually { first.finished }
+        #expect(first.activations == 0 && second.activations == 1 && dismissals == 1)
+    }
+
+    @Test func anActivationFailureKeepsTheLauncherAndReportsThatOpeningSucceeded() async throws {
+        let gate = ApplicationOpenGate(); gate.activationSucceeds = false
+        let fixture = try StoreFixture(applicationLauncher: gate.open); defer { fixture.cleanup() }
+        var dismissals = 0
+        fixture.store.onDismiss = { _ in dismissals += 1 }
+        fixture.store.execute(.init(id: "synthetic.application", title: "Synthetic", kind: .application, payload: "/synthetic/never-executed.app"))
+        try await storeEventually { gate.entered }
+        gate.finish(failing: false)
+        try await storeEventually { gate.finished }
+        #expect(dismissals == 0 && gate.activations == 1)
+        #expect(fixture.store.launcherNotice == L("The application opened, but macOS could not bring it to the front."))
+    }
+
     @Test func applicationDirectoryChangesReachAnOpenQueryWithoutResettingPreferences() async throws {
         let parent = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-ApplicationQuery-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: parent) }

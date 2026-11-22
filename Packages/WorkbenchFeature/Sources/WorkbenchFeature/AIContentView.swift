@@ -33,6 +33,7 @@ struct AIContentView: View {
             if compact && draft.input.isEmpty && task == nil { Text(L("No selected text. Enter text to begin.")).font(.caption).foregroundStyle(.secondary) }
             if let task {
                 HStack { Text(task.state).font(.caption).foregroundStyle(.secondary); Spacer() }
+                if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary, compact: compact) }
                 ScrollView {
                     Text(task.output.isEmpty && task.isRunning ? L("Waiting for response…") : task.output)
                         .font(.system(size: compact ? 13 : 14)).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)

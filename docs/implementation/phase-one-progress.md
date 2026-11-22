@@ -10,13 +10,13 @@
 | 应用/窗口 | 应用索引与 NSWorkspace 启动；AX 窗口 identity、失效校验、异步选区快照 | CUA 已实际搜索并启动计算器；AX 权限/多窗口切换与替换仍待实机授权后验收 |
 | CLI | 保存 argv/cwd/env/timeout，双流有界读取，独立进程组，超时/取消；终端 handoff | 单测覆盖参数、双流、环境/目录、超时、派生进程取消；CUA 已验证保存→搜索→运行→输出和 sleep 任务取消。新增所有执行模式共享参数校验和Terminal脚本语义测试；终端回调有界/unknown/迟到围栏合成测试通过；真实Terminal仍待实测。最新原生App带sleep正常退出已核验子进程和取消回执 |
 | 剪贴板 | 默认关闭；SQLite、敏感类型预过滤/变化复核、暂停/排除、24h/容量清理、固定/删除；actor全文查询、轻量预览和单项正文 | 存储/容量/采集与会话回归通过；合成数据的全文搜索、预览、复制、固定实查；未启用真实剪贴板采集，不能据此宣称真实采集已验收 |
-| AI 快捷动作 | 自定义 endpoint/model/兼容参数、Keychain、提示词/输入/输出/快捷键、流式任务、复制/原目标替换 | 用户选择稍后配置真实 API；实际模型翻译/总结、Keychain 联调及外部取消/限流待验收 |
+| AI 快捷动作 | 自定义 endpoint/model/兼容参数、Keychain、提示词/输入/输出/快捷键、流式任务、复制/原目标替换 | 已增加结果/任务用量的部分/未知展示与重启恢复，累计快照不重复计数；用户选择稍后配置真实 API，实际模型翻译/总结、Keychain 联调及外部取消/限流待验收 |
 | 命令建议/Agent | AI 结构化草稿进入检查表单、未知 cwd 不默认填充；只读 ToolBroker/有预算 runner | 模型建议不会自动执行；合成工具回路通过；真实外部模型工具调用待配置后验证。宿主动作授权已消费声明；OS权限与动态扩展边界仍需继续验证 |
 | 最小任务管理 | 输出/状态/取消；CLI与AI的0600原子intent/result元数据，旧任务重启标interrupted/unknown、不重放；退出同步围栏 | 三个AI入口专用子进程真实SIGKILL后恢复测试通过；完整安装GUI崩溃/带任务退出与重试交互仍需验收 |
 
 ## 已取得的证据
 
-- 主仓 `xcrun swift test` 最新187项通过：CommandCore 15、ExecutionCore 22、MacAdapters 50、AI/Agent 23、WorkbenchFeature 77。覆盖生产查询、声明授权、共享CLI校验、窗口/剪贴板会话、AI真实loopback、输入输出预算、空响应/复制围栏、退出和最小回执恢复。含三个AI入口真实专用子进程SIGKILL；不等于完整GUI崩溃验收。234条UI key英中覆盖通过。
+- 主仓 `xcrun swift test` 最新197项通过：CommandCore 15、ExecutionCore 22、MacAdapters 50、AI/Agent 23、WorkbenchFeature 87。覆盖生产查询、声明授权、共享CLI校验、窗口/剪贴板会话、AI真实loopback、输入输出预算、空响应/复制围栏、退出和最小回执恢复。含三个AI入口真实专用子进程SIGKILL；不等于完整GUI崩溃验收。244条UI key英中覆盖通过。
 - 真实 URLSession loopback HTTP suite 已通过，覆盖分片UTF-8/SSE/usage、401/429、拒绝重定向、截断、取消及幂等清理。首次暴露的夹具退出等待已用有界POSIX回收修复，失败测量和栈证据保留；未调用云服务。
 - Debug macOS App 已通过 Xcode 27.2/Xcode Swift 6.4.2 编译及本地 ad-hoc 签名；部署目标14，运行主机27.2/arm64，最低系统/Intel未经验证。
 - CUA 隔离模式实际检查了中文界面、应用搜索与启动、命令保存/执行/输出/取消、CLI 输出进入 AI 输入，以及未配置 API 的明确提示。新版原生App带sleep按CmdQ退出后，独立子进程消失且durable回执为cancelled；物理快捷键仍未证明。未读取个人截图/剪贴板或使用真实凭据。

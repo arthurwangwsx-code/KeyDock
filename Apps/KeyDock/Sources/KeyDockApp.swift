@@ -68,6 +68,7 @@ import KeyDockUI
         settingsSession.onPaneChanged = { [weak self] in self?.refreshTitles() }
         launcherSession.onExecute = { [weak self] item in
             guard let self else { return }
+            store.invalidateLauncherReplies()
             if self.capturePending && item.kind == .ai { self.pendingCommandID = item.id }
             else { store.execute(item) }
         }
@@ -131,6 +132,7 @@ import KeyDockUI
         guard let launcher else { return }
         if launcher.isKeyWindow {
             if let commandID {
+                store.invalidateLauncherReplies()
                 if capturePending { pendingCommandID = commandID } else { store.performCommand(id: commandID) }
             }
             return
@@ -162,6 +164,7 @@ import KeyDockUI
         } else if let command = pendingCommandID { pendingCommandID = nil; store.performCommand(id: command) }
     }
     func dismissLauncher(restore: Bool) {
+        store.invalidateLauncherReplies()
         generation = UUID(); captureTask?.cancel(); capturePending = false; launcherSession.contextCapturePending = false; pendingCommandID = nil; launcherSession.actionsVisible = false; launcher?.orderOut(nil)
         if restore {
             if let target = store.target { store.desktop.restore(target) }

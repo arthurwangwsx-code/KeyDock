@@ -7,6 +7,8 @@ public enum AgentEvent: Sendable {
     case toolStarted(AIToolCall)
     case toolFinished(id: String, result: String)
     case usage(AIUsage)
+    /// 宿主标记一次成功但未报告用量的请求；不是提供商上报的计费观察。
+    case usageUnknown(attemptID: UUID)
     case completed
 }
 
@@ -55,6 +57,8 @@ public struct BoundedAgentRunner: Sendable {
             var text = ""
             var calls: [AIToolCall] = []
             var completed = false
+            let unreportedAttemptID = UUID()
+            var receivedUsage = false
             let stream = provider.stream(.init(messages: history, tools: definitions))
             for try await event in stream {
                 try Task.checkCancellation()
@@ -62,11 +66,12 @@ public struct BoundedAgentRunner: Sendable {
                 switch event {
                 case .text(let delta): text += delta; continuation.yield(.text(delta))
                 case .toolCall(let call): calls.append(call)
-                case .usage(let usage): continuation.yield(.usage(usage))
+                case .usage(let usage): receivedUsage = true; continuation.yield(.usage(usage))
                 case .completed: completed = true
                 }
             }
             guard completed else { throw AIProviderError.truncatedStream }
+            if !receivedUsage { continuation.yield(.usageUnknown(attemptID: unreportedAttemptID)) }
             if calls.isEmpty { return }
             toolCount += calls.count
             guard toolCount <= maxToolCalls, Set(calls.map(\.id)).count == calls.count else {

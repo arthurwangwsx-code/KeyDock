@@ -54,11 +54,13 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     var resultTargets: [UUID: TargetSnapshot] = [:]
     var proposalRequests: [UUID: UUID] = [:]
     private var windowGeneration = UUID()
+    private var launcherReplyGeneration = UUID()
     private var applicationItems: [CommandItem] = []
     public let allowContextCapture: Bool
     let clipboardWriter: @MainActor (String) -> Void
     let clipboardChangeCount: @MainActor () -> Int
     private let clipboardReader: @MainActor () -> String?
+    private let applicationLauncher: @MainActor (CommandItem) async throws -> PreparedApplicationLaunch
     let credentialReader: @MainActor (String) throws -> String?
     let credentialWriter: @MainActor (String, String) throws -> Void
     let configurationWriter: @MainActor (Data, URL) throws -> Void
@@ -73,8 +75,11 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
                 credentialWriter: @escaping @MainActor (String, String) throws -> Void = { try CredentialStore.save($0, account: $1) },
                 configurationWriter: @escaping @MainActor (Data, URL) throws -> Void = { try PrivateFiles.write($0, to: $1) },
                 terminalHandoff: TerminalHandoffAdapter = TerminalHandoffAdapter(),
-                applicationCatalog: ApplicationCatalog? = nil) throws {
-        desktop = DesktopService(applicationCatalog: applicationCatalog ?? ApplicationCatalog())
+                applicationCatalog: ApplicationCatalog? = nil,
+                applicationLauncher: (@MainActor (CommandItem) async throws -> PreparedApplicationLaunch)? = nil) throws {
+        let desktop = DesktopService(applicationCatalog: applicationCatalog ?? ApplicationCatalog())
+        self.desktop = desktop
+        self.applicationLauncher = applicationLauncher ?? { try await desktop.launchApplication($0) }
         self.allowContextCapture = allowContextCapture
         self.clipboardWriter = clipboardWriter
         self.clipboardChangeCount = clipboardChangeCount
@@ -130,7 +135,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     }
     public func startApplicationUpdates() { guard !isShuttingDown else { return }; desktop.applicationCatalog.start() }
     public func refreshApplications() { guard !isShuttingDown else { return }; desktop.applicationCatalog.refresh() }
-    public func prepareLauncher(target: TargetSnapshot?) { self.target = target; desktop.applicationCatalog.refreshIfStale(); refreshWindows() }
+    public func invalidateLauncherReplies() { launcherReplyGeneration = UUID() }
+    public func prepareLauncher(target: TargetSnapshot?) { invalidateLauncherReplies(); self.target = target; desktop.applicationCatalog.refreshIfStale(); refreshWindows() }
     public func refreshWindows() {
         guard allowContextCapture else { rebuildCatalog(); return }
         windowGeneration = UUID(); let current = windowGeneration
@@ -150,15 +156,27 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     private func rebuildCatalog() { catalog = catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
     public func execute(_ item: CommandItem, caller: ExecutionCaller = .user) {
         guard !isShuttingDown else { launcherNotice = L("KeyDock is quitting. No new action was started."); return }
+        invalidateLauncherReplies()
         configuration.preferences.recent[item.id] = Date(); save()
         switch item.kind {
         case .application:
             do { try authorizeHostItem(item, caller: caller) } catch { showError(error); return }
+            let replyGeneration = launcherReplyGeneration
             Task {
-                do { try await desktop.launchApplication(item); if !isShuttingDown { onDismiss?(false) } }
+                do {
+                    let launch = try await applicationLauncher(item)
+                    guard !isShuttingDown, launcherReplyGeneration == replyGeneration else { return }
+                    guard launch.activate() else {
+                        launcherNotice = L("The application opened, but macOS could not bring it to the front.")
+                        return
+                    }
+                    onDismiss?(false)
+                }
                 catch {
                     guard !isShuttingDown else { return }
-                    refreshApplications(); launcherNotice = L("Application could not be opened. It may have moved or changed; refreshing the list.")
+                    refreshApplications()
+                    guard launcherReplyGeneration == replyGeneration else { return }
+                    launcherNotice = L("Application could not be opened. It may have moved or changed; refreshing the list.")
                 }
             }
         case .window:

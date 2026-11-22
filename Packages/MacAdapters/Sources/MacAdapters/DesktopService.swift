@@ -6,6 +6,13 @@ public enum DesktopError: Error, Sendable {
     case accessibilityRequired, targetExpired, selectionUnavailable, replacementUnsupported
 }
 
+/// 应用已经后台打开；只有发起动作的界面仍有效时，宿主才提交前台激活。
+@MainActor public struct PreparedApplicationLaunch {
+    private let activation: @MainActor () -> Bool
+    public init(activation: @escaping @MainActor () -> Bool) { self.activation = activation }
+    public func activate() -> Bool { activation() }
+}
+
 /// 只含本地进程身份，不发送 AX 消息，可在 Panel 显示前快速捕获。
 public struct TargetIdentity: Sendable, Equatable {
     public let pid: pid_t
@@ -224,10 +231,11 @@ enum AX {
         _ = AXUIElementSetAttributeValue(AX.application(ref.pid), kAXFocusedWindowAttribute as CFString, ref.element)
     }
 
-    public func launchApplication(_ item: CommandItem) async throws {
+    public func launchApplication(_ item: CommandItem) async throws -> PreparedApplicationLaunch {
         let url = try await applicationCatalog.validatedURL(for: item)
-        let config = NSWorkspace.OpenConfiguration(); config.activates = true
-        _ = try await NSWorkspace.shared.openApplication(at: url, configuration: config)
+        let config = NSWorkspace.OpenConfiguration(); config.activates = false
+        let application = try await NSWorkspace.shared.openApplication(at: url, configuration: config)
+        return PreparedApplicationLaunch { application.activate(options: []) }
     }
 
     public func replaceSelection(_ text: String, target: TargetSnapshot) throws {

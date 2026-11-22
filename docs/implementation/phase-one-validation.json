@@ -15,18 +15,18 @@
   "verified": {
     "swiftTests": {
       "state": "PASS",
-      "total": 187,
+      "total": 197,
       "commandCore": 15,
       "executionCore": 22,
       "macAdapters": 50,
       "aiAndAgentCoreIncludingHTTP": 23,
-      "workbenchWindowOwnership": 16,
-      "log": ".local/p1-index-shortcut-tests.log",
+      "workbenchWindowOwnership": 20,
+      "log": ".local/p1-usage-launcher-final-tests.log",
       "workbenchStoreHTTP": 8,
-      "workbenchTotal": 77,
-      "measurementID": "035781d2-260b-45e5-8183-37675153096a",
+      "workbenchTotal": 87,
+      "measurementID": "f19904a6-daba-4e95-b860-444bc7a8655c",
       "workbenchBreakdown": {
-        "windowOwnership": 16,
+        "windowOwnership": 20,
         "storeHTTP": 8,
         "aiLimits": 11,
         "hostDescriptorPolicy": 8,
@@ -36,7 +36,8 @@
         "lifecycle": 3,
         "terminalLifecycle": 4,
         "apiConfiguration": 8,
-        "shortcutConfiguration": 6
+        "shortcutConfiguration": 6,
+        "aiUsagePresentation": 6
       },
       "macAdaptersBreakdown": {
         "existingStorePolicyAndPreview": 4,
@@ -53,8 +54,8 @@
     "nativeBuild": {
       "state": "PASS",
       "configuration": "Debug local ad-hoc signature, not notarized",
-      "log": ".local/p1-index-shortcut-native-build.log",
-      "measurementID": "1a5b7f0f-f9b6-4f5a-8f30-664d423d7313"
+      "log": ".local/p1-usage-launcher-final-native-build.log",
+      "measurementID": "dbcf9305-3637-4767-b9a1-fa439f8ac3e9"
     },
     "uiSmoke": {
       "state": "PASS",
@@ -107,9 +108,9 @@
     "localization": {
       "state": "PASS",
       "scope": "English and Simplified Chinese source-key coverage in App and Feature catalogs",
-      "log": ".local/p1-index-shortcut-localizations.log",
-      "keys": 234,
-      "measurementID": "f47032ab-9c12-451f-ad0f-7c8384be8b89"
+      "log": ".local/p1-usage-launcher-localizations.log",
+      "keys": 244,
+      "measurementID": "1588cd1c-6be3-49cd-9afc-fa7f0a62268e"
     },
     "storeHTTPIntegration": {
       "state": "PASS",
@@ -163,7 +164,7 @@
     "Minimum macOS and Intel compatibility",
     "Signed/notarized distribution and remote publication",
     "Live application install/move/duplicate updates in current native UI",
-    "P1 total task/draft retention and usage clear controls; unknown usage UI"
+    "P1 total task/draft retention, 90-day metadata maintenance and clear controls"
   ],
   "constraints": [
     "No existing AiBox or Ashot source/configuration/credentials/media copied",
@@ -229,5 +230,41 @@
     "reason": "Mac is locked; CUA automatic unlock unavailable",
     "permissionBypassAttempted": false,
     "review": "docs/implementation/application-shortcuts-2026-11-23.md"
+  },
+  "visibleAIUsage": {
+    "state": "PARTIAL",
+    "syntheticState": "PASS",
+    "tests": 6,
+    "states": [
+      "pending",
+      "reported",
+      "partial",
+      "unknown"
+    ],
+    "missingValuesAreZero": false,
+    "costBasis": "unknown; no rate configured",
+    "ledgerAndUIShareFacts": true,
+    "successfulAgentMissingTurnIsPartial": true,
+    "restoresMetadataOnlyWithoutReplay": true,
+    "liveUI": "NOT_RUN: Mac locked",
+    "failedMeasurementRetained": "1465c3b8-ee6b-4826-b09b-861c0de4964d"
+  },
+  "applicationLaunchReply": {
+    "state": "PARTIAL",
+    "syntheticState": "PASS",
+    "testFunctions": 4,
+    "testCases": 12,
+    "foregroundActivationDeferred": true,
+    "invalidatedBy": [
+      "presentation",
+      "actual input change",
+      "dismiss",
+      "new action",
+      "deferred context action",
+      "new app launch"
+    ],
+    "liveActivation": "NOT_RUN: Mac locked",
+    "failedMeasurementRetained": "c5b3e391-cb52-4d03-ab51-cc6577377fb6",
+    "catalogOrConfigurationRefreshDoesNotInvalidate": true
   }
 }

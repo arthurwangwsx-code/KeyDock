@@ -83,6 +83,7 @@ public struct RunningTaskItem: Identifiable {
     public var displayTitle: String { titleKey.map(L) ?? title }
     public var output = ""
     public var outputIsIncomplete = false
+    public var aiUsageSummary: AIUsageSummary?
     public var exitCode: Int32?
     public var startedAt = Date()
     public var finishedAt: Date?

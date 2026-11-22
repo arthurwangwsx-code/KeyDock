@@ -1,4 +1,4 @@
-# 应用索引与配置事务复查
+# 应用索引、快捷键与 AI 状态复查
 
 日期：2026-11-23。基于 feature/phase-one 的本轮增量；P0+P1 整体仍为 PARTIAL。本轮不替代用户视觉评审或物理快捷键验收。
 
@@ -16,18 +16,26 @@
 
 API 配置保存前记录目标 endpoint 的原凭据及配置文件原始字节/不存在状态；写入前后抛错均分别尝试补偿。只在成功后发布新配置；不完整回滚有专门提示。8 项 API 配置、6 项快捷键配置与 7 项 HotkeyCenter 合成回归通过。未使用真实钥匙串，不承诺钥匙串与普通文件跨进程崩溃原子性。
 
+## 异步交互与 AI 用量
+
+合成 RED 实际复现了旧应用启动晚成功关闭新启动台、晚失败覆盖新提示。现在后台打开应用，把前台激活留到当前交互有效时提交；重新唤起、真实查询编辑、关闭、选择新动作（包含等待选区捕获）或再次启动都会使旧回调失效。配置/目录更新触发的重搜不会误弃有效启动。打开成功但不能切到前台有独立提示，避免误报应用移走。
+
+AI 结果与任务详情共用小型用量组件，显示待报告、已报告、部分及未知。真实零与缺失值分开；费用显示未知（未配置费率），不估算实际账单。界面与既有账本共用 accumulator 事实，重启只读有界元数据，无正文、无请求重放。缺报的成功 Agent 轮次也必须显式保留未知标记，不能因另一轮已报数值而当作完整用量。
+
+4 项应用回调测试覆盖 12 个用例；6 项用量回归覆盖真实 URLSession loopback、部分/未知/零、累计去重与恢复。新增“工具轮已报 10/4、最终轮成功但未报用量”测试先复现错误的完整用量（measurement `1465c3b8-ee6b-4826-b09b-861c0de4964d`），修复后运行时、账本和重启均为部分，重启无额外请求或复制。Runner 用独立 `usageUnknown` 事件表达宿主已知的缺报，不伪造提供商 usage；旧应用回调 RED measurement `c5b3e391-cb52-4d03-ab51-cc6577377fb6` 也保留。
+
 ## 当前测量与限制
 
 | 检查 | 结果 | 证据 |
 |---|---|---|
-| 全量 Swift 测试 | PASS，187 项 | CommandCore 15、ExecutionCore 22、MacAdapters 50、AI/Agent 23、WorkbenchFeature 77；measurement `035781d2-260b-45e5-8183-37675153096a` |
-| 原生 safe-smoke App | PASS，Debug/ad-hoc | measurement `1a5b7f0f-f9b6-4f5a-8f30-664d423d7313` |
-| 英中 String Catalog | PASS，234 key | measurement `f47032ab-9c12-451f-ad0f-7c8384be8b89` |
+| 全量 Swift 测试 | PASS，197 项 | CommandCore 15、ExecutionCore 22、MacAdapters 50、AI/Agent 23、WorkbenchFeature 87；measurement `f19904a6-daba-4e95-b860-444bc7a8655c` |
+| 原生 safe-smoke App | PASS，Debug/ad-hoc | measurement `dbcf9305-3637-4767-b9a1-fa439f8ac3e9` |
+| 英中 String Catalog | PASS，244 key | measurement `1588cd1c-6be3-49cd-9afc-fa7f0a62268e` |
 | Release 搜索 | PASS，排序 p95 20.47ms，生产查询链路 p95 20.85ms | 2,000 条、预热 10 次、采样 100 次、低电量关闭；measurement `d80b0bc6-75d5-4f33-84fa-89850bcc9dcc` |
 | 本轮原生 UI | BLOCKED，Mac 锁屏 | CUA 明确返回无法自动解锁，未尝试绕过；合成应用样本只在临时目录准备，未安装/执行 |
 
 本轮首个排序测量 p95 50.37ms 超过 50ms，失败日志 `.local/p1-index-shortcut-benchmark-first-failure.log` 与 measurement `317f8d68-8782-43f3-b143-f9ab9de0522e` 保留。随后复用 normalization locale 并跳过空字符串归一化，正确性回归通过后重新测量。不同采样的波动不能全部归因于该优化；性能范围仍不包含 Panel、绘制、AX、索引，也未证明热唤起 p95≤150ms。
 
-待继续：解锁后的实际应用目录变化与录制/清除/恢复界面；完整深浅色/双语/辅助功能/IME/多屏矩阵；真实 AX 和用户配置的外部 API；20 条质量样本人工评阅；P1 任务、草稿与用量的保留总量及清除入口。AI 未知用量可见状态仍需补齐。真实 Terminal GUI 仍受工具访问限制，不计验收通过。
+待继续：解锁后的实际应用目录变化与录制/清除/恢复界面；完整深浅色/双语/辅助功能/IME/多屏矩阵；真实 AX 和用户配置的外部 API；20 条质量样本人工评阅；P1 任务、草稿与用量的[保留总量及清除入口](../technical/session-retention.md)。真实 Terminal GUI 仍受工具访问限制，不计验收通过。
 
 唯一 checkout、feature 分支与 master 均保留；未 push、未创建远端，未迁移 AiBox/Ashot 内容。普通记录不保存个人正文或凭据。

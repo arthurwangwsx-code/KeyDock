@@ -55,6 +55,7 @@ public struct WorkspaceView: View {
                         KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }.disabled(task.output.isEmpty)
                     }
                     if !task.notice.isEmpty { KDInlineNotice(task.notice) }
+                    if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary) }
                     if let code = task.exitCode { Text(L("Exit code") + ": \(code)").font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary) }
                     ScrollView { Text(task.output.isEmpty ? (task.restoredFromReceipt ? L("Output is not retained after restarting KeyDock.") : L("No output")) : task.output).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(16) }
                         .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 12))

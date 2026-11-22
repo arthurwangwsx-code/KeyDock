@@ -92,6 +92,11 @@ class Handler(BaseHTTPRequestHandler):
                 self.stream()
             elif path == "/empty":
                 self.complete_text("", "synthetic-empty-response")
+            elif path == "/no-usage":
+                self.start_sse()
+                self.wfile.write(event(chunk(text="Synthetic no-usage result")) +
+                                 event(chunk(finish="stop")) + b"data: [DONE]\r\n\r\n")
+                self.wfile.flush()
             elif path == "/truncated":
                 self.start_sse()
                 self.wfile.write(event(chunk(text="Synthetic partial")) + event(chunk(finish="stop")))
@@ -108,14 +113,14 @@ class Handler(BaseHTTPRequestHandler):
                     self.complete_text("Synthetic held result", "synthetic-held-text")
                 else:
                     self.large_response(path, request)
-            elif path in ("/proposal", "/proposal-held", "/agent", "/unexpected-tool"):
+            elif path in ("/proposal", "/proposal-held", "/agent", "/agent-no-final-usage", "/unexpected-tool"):
                 request = json.loads(body)
                 if not isinstance(request, dict):
                     raise ValueError("synthetic request shape")
                 if path in ("/proposal", "/proposal-held"):
                     self.proposal(request, held=path == "/proposal-held")
-                elif path == "/agent":
-                    self.agent(request)
+                elif path in ("/agent", "/agent-no-final-usage"):
+                    self.agent(request, report_final_usage=path == "/agent")
                 else:
                     self.server.increment("ordinary_tools_advertised", len(request.get("tools", [])))
                     self.tool_response("synthetic-unexpected-tool")
@@ -269,7 +274,7 @@ class Handler(BaseHTTPRequestHandler):
                          b"data: [DONE]\r\n\r\n")
         self.wfile.flush()
 
-    def agent(self, request):
+    def agent(self, request, report_final_usage=True):
         self.server.increment("agent_requests")
         tools = request.get("tools", [])
         names = [t.get("function", {}).get("name") for t in tools]
@@ -298,7 +303,17 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(422, {"error": MARKER})
             return
         self.server.increment("agent_tool_messages")
-        self.complete_text("Synthetic read-only tool round-trip complete", "synthetic-agent-2", 20, 6)
+        if report_final_usage:
+            self.complete_text("Synthetic read-only tool round-trip complete", "synthetic-agent-2", 20, 6)
+        else:
+            # 最终轮完整成功，但提供商不附 usage；不能误报整次 Agent 用量完整。
+            self.start_sse()
+            content = chunk(text="Synthetic read-only tool round-trip complete")
+            content["id"] = "synthetic-agent-2"
+            finish = chunk(finish="stop")
+            finish["id"] = "synthetic-agent-2"
+            self.wfile.write(event(content) + event(finish) + b"data: [DONE]\r\n\r\n")
+            self.wfile.flush()
 
     def slow_stream(self):
         self.start_sse()

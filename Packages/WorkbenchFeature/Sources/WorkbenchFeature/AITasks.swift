@@ -41,6 +41,7 @@ extension WorkbenchModel {
         if let original = draft.sourceTarget { resultTargets[id] = original }
         tasks.insert(RunningTaskItem(id: id, title: action.displayName, state: .running, draftID: draft.id, titleKey: action.builtinKey, modelName: service.configuration.model), at: 0)
         tasks[0].source = draft.source; tasks[0].sourceApplication = draft.sourceTarget?.applicationName
+        tasks[0].aiUsageSummary = .pending
         aiTaskIDs.insert(id)
         let request = AIRequest(messages: [.init(role: "system", content: action.prompt), .init(role: "user", content: input)], tools: [])
         taskHandles[id] = Task { [weak self] in
@@ -56,7 +57,7 @@ extension WorkbenchModel {
                     switch event {
                     case .text(let delta):
                         try appendAIOutput(id, text: delta)
-                    case .usage(let usage): mergeUsage(usage, into: &observations)
+                    case .usage(let usage): mergeUsage(usage, into: &observations, id: id)
                     case .toolCall: throw AIProviderError.unexpectedToolCall
                     case .completed: break
                     }
@@ -98,6 +99,7 @@ extension WorkbenchModel {
         do { service = try provider(); authorization = try authorizeHostAction(id: "ai.manual", operation: .proposeCommand, resource: service.configuration.endpoint.absoluteString + "|" + service.configuration.model + "|" + prompt + "|" + input, availableContext: [.explicitInput], invocation: id) } catch { draft.notice = aiError(error); return }
         let revision = draft.revision; proposalRequests[draft.id] = id
         tasks.insert(RunningTaskItem(id: id, title: L("Command proposal"), state: .running, draftID: draft.id, titleKey: "Command proposal"), at: 0)
+        tasks[0].aiUsageSummary = .pending
         aiTaskIDs.insert(id)
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
@@ -110,7 +112,7 @@ extension WorkbenchModel {
                     try Task.checkCancellation()
                     switch event {
                     case .text(let delta): try appendAIOutput(id, text: delta)
-                    case .usage(let usage): mergeUsage(usage, into: &observations)
+                    case .usage(let usage): mergeUsage(usage, into: &observations, id: id)
                     case .toolCall: throw AIProviderError.unexpectedToolCall
                     case .completed: break
                     }
@@ -143,6 +145,7 @@ extension WorkbenchModel {
         let id = UUID(), revision = draft.revision
         do { service = try provider(); authorization = try authorizeHostAction(id: "ai.manual", operation: .runReadOnlyAgent, resource: service.configuration.endpoint.absoluteString + "|" + service.configuration.model + "|" + input, availableContext: [.explicitInput], invocation: id) } catch { draft.notice = aiError(error); return }
         tasks.insert(RunningTaskItem(id: id, title: L("Read-only agent"), state: .running, draftID: draft.id, titleKey: "Read-only agent"), at: 0)
+        tasks[0].aiUsageSummary = .pending
         onOpenWorkspace?(.tasks(id)); aiTaskIDs.insert(id)
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
@@ -160,7 +163,10 @@ extension WorkbenchModel {
                     case .text(let delta): try appendAIOutput(id, text: delta)
                     case .toolStarted(let call): try appendAIOutput(id, text: "\n" + L("Tool") + ": " + call.name + "\n")
                     case .toolFinished(_, let result): try appendAIOutput(id, text: result + "\n")
-                    case .usage(let u): mergeUsage(u, into: &usage)
+                    case .usage(let u): mergeUsage(u, into: &usage, id: id)
+                    case .usageUnknown(let attemptID):
+                        usage.markUnknown(attemptID: attemptID)
+                        publishAIUsage(id, facts: AIUsageFacts(accumulator: usage, outcome: "running"))
                     case .completed: break
                     }
                 }
@@ -184,12 +190,15 @@ extension WorkbenchModel {
         if let index = tasks.firstIndex(where: { $0.id == id }) { tasks[index].notice = text }
         if draft.revision == revision && (draft.latestRunID == id || proposalRequests[draft.id] == id) { draft.notice = text }
     }
-    private func mergeUsage(_ usage: AIUsage, into accumulator: inout AIUsageAccumulator) {
+    private func mergeUsage(_ usage: AIUsage, into accumulator: inout AIUsageAccumulator, id: UUID) {
         do { try accumulator.observe(usage) }
         catch { accumulator.markUnknown(attemptID: usage.attemptID) }
+        publishAIUsage(id, facts: AIUsageFacts(accumulator: accumulator, outcome: "running"))
     }
     private func recordUsage(id: UUID, endpoint: URL, model: String, purpose: String, observations: AIUsageAccumulator, outcome: String) {
-        let receipt = UsageReceipt(runID: id, endpointHost: endpoint.host ?? "", model: model, purpose: purpose, recordedAt: Date(), observations: observations.observations, unknownAttempts: observations.unknownAttempts, hasUnknownUsage: outcome != "succeeded" || observations.hasUnknownUsage || observations.observations.isEmpty, outcome: outcome, costBasis: "unknown")
+        let facts = AIUsageFacts(accumulator: observations, outcome: outcome)
+        publishAIUsage(id, facts: facts)
+        let receipt = UsageReceipt(runID: id, endpointHost: endpoint.host ?? "", model: model, purpose: purpose, recordedAt: Date(), observations: facts.observations, unknownAttempts: facts.unknownAttempts, hasUnknownUsage: facts.hasUnknownUsage, outcome: outcome, costBasis: "unknown")
         do { try PrivateFiles.write(JSONEncoder().encode(receipt), to: directory.appendingPathComponent("usage/" + id.uuidString + ".json")) }
         catch { workspaceNotice = L("Usage metadata could not be saved") }
     }

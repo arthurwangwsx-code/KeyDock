@@ -11,7 +11,7 @@
 | 原生界面与CLI | PARTIAL | CUA已验证搜索启动计算器、保存命令、搜索执行、输出、取消及输出进入AI；全局物理快捷键、IME/多屏/全屏仍待验收 |
 | 窗口与选区 | PARTIAL | AX异步快照/身份/失效/替换/精确窗口恢复代码已实现；真实辅助功能授权后验收尚未执行 |
 | 剪贴板 | PARTIAL | SQLite与敏感类型过滤、稳定快照、暂停/排除/过期/固定/清除及合成测试；actor全文搜索、单项预览/复制、独立行按钮已用合成数据实查；新增容量预检/事务回滚与生产采集惰性读取门槛回归；未启用个人采集 |
-| AI API/动作/Agent基础 | PARTIAL | Provider和真实URLSession loopback通过；新增Store全链路覆盖任务／用量／取消／建议不执行／过期隔离／只读工具两轮／脱敏；输入/输出预算、空响应与取消、过期复制围栏通过；外部API按用户决定稍后配置 |
+| AI API/动作/Agent基础 | PARTIAL | Provider和真实URLSession loopback通过；新增Store全链路覆盖任务／用量／取消／建议不执行／过期隔离／只读工具两轮／脱敏；输入/输出预算、空响应与取消、过期复制围栏通过；结果与任务详情展示待报告/已报告/部分/未知用量，缺报Agent轮次保留unknown；外部API按用户决定稍后配置 |
 | AI质量 | PARTIAL | 20条合成质量样本已准备，全部NOT_RUN；未进行真实模型调用与人工质量验收 |
 | 最小任务与回执 | PARTIAL | CLI/AI网络前intent、终态元数据与退出围栏通过；三个AI入口的专用子进程SIGKILL+Store恢复通过且不重放；当前新版原生App带sleep退出已验证；Terminal交接有界/unknown/迟到隔离的合成测试通过，完整GUI崩溃和真实Terminal仍待验收 |
 | 性能 | PARTIAL | 2000条合成命令100次采样，Release排序p95 20.47ms、生产缓存查询链路p95 20.85ms；Panel热唤起150ms和长期耗电尚未证明 |
@@ -21,4 +21,6 @@
 
 canonical checkout 仍唯一，开发分支 feature/phase-one 从master创建，主Agent串行写入，子Agent只提供/tmp独立补丁和只读评审；未创建worktree、未改旧AiBox/Ashot工程。支持/隐私联系 arthur.wang.wsx@gmail.com。
 
-当前187项测试通过；234条UI key中英文静态覆盖通过。查询合同进入生产Launcher与QueryCoordinator，迟到请求不能取消新请求，Return不能执行旧批次。最新实际检查与边界记录见[界面与任务复查](implementation/native-ui-hardening-2026-11-23.md)，早前画面和查询记录保留。终端UI由工具明确禁止访问，旧适配路径未产生合成marker；新的有界回调适配器已编译并通过合成验证，真实交接不计通过。CUA注入alt+space未触发可观察切换，物理快捷键仍未验收。
+当前197项测试通过；244条UI key中英文静态覆盖通过。查询合同进入生产Launcher与QueryCoordinator，迟到请求不能取消新请求，Return不能执行旧批次。最新实际检查与边界记录见[界面与任务复查](implementation/native-ui-hardening-2026-11-23.md)，早前画面和查询记录保留。终端UI由工具明确禁止访问，旧适配路径未产生合成marker；新的有界回调适配器已编译并通过合成验证，真实交接不计通过。CUA注入alt+space未触发可观察切换，物理快捷键仍未验收。
+
+本轮GUI复验因Mac锁屏未执行；应用目录更新、快捷键事务、迟到启动回调与用量状态的最新合成证据见[本轮复查](implementation/application-shortcuts-2026-11-23.md)。任务/草稿会话总预算及90天元数据维护仍待P1实现，不能由当前单次文本上限推定长期内存有界。
