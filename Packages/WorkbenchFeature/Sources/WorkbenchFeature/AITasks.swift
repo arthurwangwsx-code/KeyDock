@@ -34,13 +34,14 @@ extension WorkbenchModel {
         let authorization: ExecutionRequest
         let id = UUID()
         do { service = try provider(override: action.modelOverride); authorization = try authorizeHostAction(id: "ai." + action.id.uuidString, operation: .generateText, resource: service.configuration.endpoint.absoluteString + "|" + service.configuration.model + "|" + action.prompt + "|" + input, availableContext: [.explicitInput], modelOverride: action.modelOverride, caller: caller, invocation: id) } catch { draft.notice = aiError(error); return nil }
+        guard reserveExecution(id, draft: draft) else { return nil }
         draft.notice = ""
         draft.latestRunID = id; let revision = draft.revision
         if action.output == .copy { latestAutoCopyRunID = id }
         let copyChangeCount = action.output == .copy ? clipboardChangeCount() : nil
         if let original = draft.sourceTarget { resultTargets[id] = original }
         tasks.insert(RunningTaskItem(id: id, title: action.displayName, state: .running, draftID: draft.id, titleKey: action.builtinKey, modelName: service.configuration.model), at: 0)
-        tasks[0].source = draft.source; tasks[0].sourceApplication = draft.sourceTarget?.applicationName
+        tasks[0].source = draft.source; tasks[0].sourceApplication = draft.sourceTarget.map { TaskTextLimits.prefix($0.applicationName, maximumBytes: 1_024) }
         tasks[0].aiUsageSummary = .pending
         aiTaskIDs.insert(id)
         let request = AIRequest(messages: [.init(role: "system", content: action.prompt), .init(role: "user", content: input)], tools: [])
@@ -84,9 +85,9 @@ extension WorkbenchModel {
                 updateTask(id, state: cancelled ? .cancelled : .failed, finished: true)
                 if !cancelled { taskError(error, id: id, draft: draft, revision: revision) }
             }
-            recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: action.id.uuidString, observations: observations, outcome: outcome)
+            await recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: action.id.uuidString, observations: observations, outcome: outcome)
             if receiptStarted { await finishAIReceipt(id) }
-            taskHandles[id] = nil; aiTaskIDs.remove(id); cancelledTaskIDs.remove(id)
+            finishExecutionReservation(id)
         }
         return id
     }
@@ -97,6 +98,7 @@ extension WorkbenchModel {
         let authorization: ExecutionRequest
         let id = UUID()
         do { service = try provider(); authorization = try authorizeHostAction(id: "ai.manual", operation: .proposeCommand, resource: service.configuration.endpoint.absoluteString + "|" + service.configuration.model + "|" + prompt + "|" + input, availableContext: [.explicitInput], invocation: id) } catch { draft.notice = aiError(error); return }
+        guard reserveExecution(id, draft: draft) else { return }
         let revision = draft.revision; proposalRequests[draft.id] = id
         tasks.insert(RunningTaskItem(id: id, title: L("Command proposal"), state: .running, draftID: draft.id, titleKey: "Command proposal"), at: 0)
         tasks[0].aiUsageSummary = .pending
@@ -123,7 +125,7 @@ extension WorkbenchModel {
                 let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "```json", with: "").replacingOccurrences(of: "```", with: "")
                 let proposal = try JSONDecoder().decode(Proposal.self, from: Data(cleaned.utf8))
                 if proposalRequests[draft.id] == id && draft.revision == revision {
-                    onReviewCommand?(SavedCommand(name: proposal.name, executable: proposal.executable, arguments: proposal.arguments, workingDirectory: proposal.cwd))
+                    try enqueueCommandReview(SavedCommand(name: proposal.name, executable: proposal.executable, arguments: proposal.arguments, workingDirectory: proposal.cwd), runID: id)
                 }
                 if proposalRequests[draft.id] == id && draft.revision == revision { draft.notice = L("AI draft only. Review command, directory and effects before saving or running.") + " " + proposal.explanation }
                 try Task.checkCancellation()
@@ -133,9 +135,9 @@ extension WorkbenchModel {
                 outcome = Task.isCancelled ? "cancelled" : "failed"
                 updateTask(id, state: Task.isCancelled ? .cancelled : .failed, finished: true); if !Task.isCancelled { taskError(error, id: id, draft: draft, revision: revision) }
             }
-            recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: "command-proposal", observations: observations, outcome: outcome)
+            await recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: "command-proposal", observations: observations, outcome: outcome)
             if receiptStarted { await finishAIReceipt(id) }
-            taskHandles[id] = nil; aiTaskIDs.remove(id); cancelledTaskIDs.remove(id)
+            finishExecutionReservation(id)
         }
     }
     public func runReadOnlyAgent(draft: AIDraftDocument) {
@@ -144,6 +146,7 @@ extension WorkbenchModel {
         let authorization: ExecutionRequest
         let id = UUID(), revision = draft.revision
         do { service = try provider(); authorization = try authorizeHostAction(id: "ai.manual", operation: .runReadOnlyAgent, resource: service.configuration.endpoint.absoluteString + "|" + service.configuration.model + "|" + input, availableContext: [.explicitInput], invocation: id) } catch { draft.notice = aiError(error); return }
+        guard reserveExecution(id, draft: draft) else { return }
         tasks.insert(RunningTaskItem(id: id, title: L("Read-only agent"), state: .running, draftID: draft.id, titleKey: "Read-only agent"), at: 0)
         tasks[0].aiUsageSummary = .pending
         onOpenWorkspace?(.tasks(id)); aiTaskIDs.insert(id)
@@ -173,12 +176,13 @@ extension WorkbenchModel {
                 try Task.checkCancellation()
                 outcome = "succeeded"; updateTask(id, state: .completed, finished: true)
             } catch { markIncompleteAIError(error, id: id); outcome = Task.isCancelled ? "cancelled" : "failed"; updateTask(id, state: Task.isCancelled ? .cancelled : .failed, finished: true); if !Task.isCancelled { taskError(error, id: id, draft: draft, revision: revision) } }
-            recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: "readonly-agent", observations: usage, outcome: outcome)
+            await recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: "readonly-agent", observations: usage, outcome: outcome)
             if receiptStarted { await finishAIReceipt(id) }
-            taskHandles[id] = nil; aiTaskIDs.remove(id); cancelledTaskIDs.remove(id)
+            finishExecutionReservation(id)
         }
     }
     private func validatedAIInput(_ draft: AIDraftDocument) -> String? {
+        guard ownsDraft(draft) else { if draft.notice.isEmpty { draft.notice = L("This draft is no longer available. Create a new draft to continue.") }; return nil }
         guard !isShuttingDown else { draft.notice = L("KeyDock is quitting. No new action was started."); return nil }
         let input = draft.input
         guard !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { draft.notice = L("Select text or enter input; context was not expanded"); return nil }
@@ -195,15 +199,18 @@ extension WorkbenchModel {
         catch { accumulator.markUnknown(attemptID: usage.attemptID) }
         publishAIUsage(id, facts: AIUsageFacts(accumulator: accumulator, outcome: "running"))
     }
-    private func recordUsage(id: UUID, endpoint: URL, model: String, purpose: String, observations: AIUsageAccumulator, outcome: String) {
+    private func recordUsage(id: UUID, endpoint: URL, model: String, purpose: String, observations: AIUsageAccumulator, outcome: String) async {
         let facts = AIUsageFacts(accumulator: observations, outcome: outcome)
         publishAIUsage(id, facts: facts)
         let receipt = UsageReceipt(runID: id, endpointHost: endpoint.host ?? "", model: model, purpose: purpose, recordedAt: Date(), observations: facts.observations, unknownAttempts: facts.unknownAttempts, hasUnknownUsage: facts.hasUnknownUsage, outcome: outcome, costBasis: "unknown")
-        do { try PrivateFiles.write(JSONEncoder().encode(receipt), to: directory.appendingPathComponent("usage/" + id.uuidString + ".json")) }
-        catch { workspaceNotice = L("Usage metadata could not be saved") }
+        do {
+            let result = await usageMetadataStore.save(id: id, data: try JSONEncoder().encode(receipt))
+            if !result.stored { workspaceNotice = L("Usage metadata could not be saved") }
+        } catch { workspaceNotice = L("Usage metadata could not be saved") }
     }
     private func aiError(_ error: Error) -> String {
         switch error {
+        case SessionAdmissionError.capacity: L("KeyDock is at its task or text limit. Finish a task or clear older history, then try again.")
         case AITextResultError.empty: L("The model returned no output. Nothing was copied or replaced.")
         case AITaskReceiptError.intentUnavailable: L("AI request was not sent because its task receipt could not be saved.")
         case HostDescriptorPolicyError.unavailable(let reasonKey): L(reasonKey)

@@ -19,7 +19,14 @@ public struct TargetIdentity: Sendable, Equatable {
     public let launchDate: Date?
     public let name: String
     public init(pid: pid_t, launchDate: Date?, name: String) {
-        self.pid = pid; self.launchDate = launchDate; self.name = name
+        self.pid = pid; self.launchDate = launchDate
+        let bytes = name.utf8
+        if bytes.count <= 1_024 { self.name = name }
+        else {
+            var end = bytes.index(bytes.startIndex, offsetBy: 1_024)
+            while end != bytes.startIndex && bytes[end] & 0xc0 == 0x80 { end = bytes.index(before: end) }
+            self.name = String(decoding: bytes[..<end], as: UTF8.self)
+        }
     }
 }
 
@@ -43,6 +50,7 @@ public final class TargetSnapshot: @unchecked Sendable {
     public let launchDate: Date?
     public let applicationName: String
     public let selectedText: String?
+    public let selectedTextExceedsLimit: Bool
     let window: AXUIElement?
     let focused: AXUIElement?
     let selectedRange: CFRange?
@@ -55,7 +63,7 @@ public final class TargetSnapshot: @unchecked Sendable {
         window = initialWindow
 
         guard !Task.isCancelled, let initialFocused, !AX.isSecure(initialFocused) else {
-            focused = nil; selectedText = nil; selectedRange = nil
+            focused = nil; selectedText = nil; selectedTextExceedsLimit = false; selectedRange = nil
             return
         }
         let rangeBefore = AX.range(initialFocused, kAXSelectedTextRangeAttribute)
@@ -67,10 +75,11 @@ public final class TargetSnapshot: @unchecked Sendable {
         guard !Task.isCancelled,
               AX.equal(initialFocused, finalFocused), AX.equal(initialWindow, finalWindow),
               AX.equal(rangeBefore, rangeAfter) else {
-            focused = nil; selectedText = nil; selectedRange = nil
+            focused = nil; selectedText = nil; selectedTextExceedsLimit = false; selectedRange = nil
             return
         }
-        focused = initialFocused; selectedText = text; selectedRange = rangeAfter
+        selectedTextExceedsLimit = (text?.utf8.count ?? 0) > 131_072
+        focused = initialFocused; selectedText = selectedTextExceedsLimit ? nil : text; selectedRange = rangeAfter
     }
 }
 

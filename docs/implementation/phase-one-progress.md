@@ -16,13 +16,13 @@
 
 ## 已取得的证据
 
-- 主仓 `xcrun swift test` 最新197项通过：CommandCore 15、ExecutionCore 22、MacAdapters 50、AI/Agent 23、WorkbenchFeature 87。覆盖生产查询、声明授权、共享CLI校验、窗口/剪贴板会话、AI真实loopback、输入输出预算、空响应/复制围栏、退出和最小回执恢复。含三个AI入口真实专用子进程SIGKILL；不等于完整GUI崩溃验收。244条UI key英中覆盖通过。
+- 主仓 `xcrun swift test` 最新233项通过：CommandCore 15、ExecutionCore 33、MacAdapters 50、AI/Agent 23、WorkbenchFeature 112。覆盖生产查询、声明授权、共享CLI校验、窗口/剪贴板会话、AI真实loopback、输入输出预算、空响应/复制围栏、退出和最小回执恢复。含三个AI入口真实专用子进程SIGKILL；不等于完整GUI崩溃验收。262条UI key英中覆盖通过。
 - 真实 URLSession loopback HTTP suite 已通过，覆盖分片UTF-8/SSE/usage、401/429、拒绝重定向、截断、取消及幂等清理。首次暴露的夹具退出等待已用有界POSIX回收修复，失败测量和栈证据保留；未调用云服务。
 - Debug macOS App 已通过 Xcode 27.2/Xcode Swift 6.4.2 编译及本地 ad-hoc 签名；部署目标14，运行主机27.2/arm64，最低系统/Intel未经验证。
 - CUA 隔离模式实际检查了中文界面、应用搜索与启动、命令保存/执行/输出/取消、CLI 输出进入 AI 输入，以及未配置 API 的明确提示。新版原生App带sleep按CmdQ退出后，独立子进程消失且durable回执为cancelled；物理快捷键仍未证明。未读取个人截图/剪贴板或使用真实凭据。
 - 2,000条合成命令、预热10次后采样100次，Release 排序p95 20.47ms；生产缓存查询链路p95 20.85ms，满足该范围50ms目标；不包含Panel/AX/索引/绘制，热唤起150ms目标仍未证明。
 
-轻量回执见 [phase-one-validation.json](phase-one-validation.json)，本轮详见[应用索引与配置事务复查](application-shortcuts-2026-11-23.md)。详细日志、iSpec metrics 和测试数据位于忽略的 .local；不上传私人内容。
+轻量回执见 [phase-one-validation.json](phase-one-validation.json)，本轮详见[会话保留与清除复查](retention-acceptance-2026-11-23.md)。详细日志、iSpec metrics 和测试数据位于忽略的 .local；不上传私人内容。
 
 ## 继续推进
 

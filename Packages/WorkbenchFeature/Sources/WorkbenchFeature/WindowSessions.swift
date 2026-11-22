@@ -25,7 +25,9 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public private(set) var queryRequest: QueryRequest?
     @Published public private(set) var resultBatch: ResultBatch?
     public var onExecute: ((CommandItem) -> Void)?
-    @Published public var draft: AIDraftDocument?
+    @Published public var draft: AIDraftDocument? { didSet { updateVisibleReferences() } }
+    private let visibilityOwner = UUID()
+    private var visible = false
     private let store: WorkbenchModel
     private let coordinator = QueryCoordinator()
     private var generation: UInt64 = 0
@@ -37,6 +39,12 @@ private struct LauncherCatalogProvider: CommandProviding {
         store.$configuration.sink { [weak self] _ in Task { @MainActor in self?.search() } }.store(in: &subscriptions)
     }
     public var selection: CommandItem? { results.first { $0.id == selectedID } }
+    public func setVisible(_ value: Bool) { visible = value; updateVisibleReferences() }
+    private func updateVisibleReferences() {
+        if visible { store.setVisibleReferences(owner: visibilityOwner, draftID: draft?.id, taskID: nil) }
+        else { store.releaseVisibleReferences(owner: visibilityOwner) }
+    }
+    public func removeHistory(draftIDs: Set<UUID>) { if let draft, draftIDs.contains(draft.id) { self.draft = nil } }
     public func reset() { draft = nil; query = ""; selectedID = nil; actionsVisible = false; focusRequest = UUID(); search() }
     public func search() {
         searchTask?.cancel(); generation &+= 1
@@ -77,7 +85,12 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var pane: SettingsPane = .general { didSet { UserDefaults.standard.set(pane.rawValue, forKey: panePreferenceKey); onPaneChanged?() } }
     private var panePreferenceKey = "KeyDock.SettingsPane"
     public var onPaneChanged: (() -> Void)?
-    @Published public var pendingCommands: [SavedCommand] = []
+    @Published public var editedCommandSourceRunID: UUID? {
+        didSet { if let oldValue, oldValue != editedCommandSourceRunID { store?.finishCommandReview(oldValue) }; updateVisibleReferences() }
+    }
+    private weak var store: WorkbenchModel?
+    private let visibilityOwner = UUID()
+    private var visible = false
     @Published public var editedCommand: SavedCommand?
     @Published public var editedAction: AIActionPreset?
     @Published public var apiKey = ""
@@ -87,18 +100,31 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var localHTTP = false
     @Published public var tokenParameter = "max_completion_tokens"
     public init(store: WorkbenchModel) {
+        self.store = store
         panePreferenceKey = store.allowContextCapture ? "KeyDock.SettingsPane" : "KeyDock.Smoke.SettingsPane"
         pane = UserDefaults.standard.string(forKey: panePreferenceKey).flatMap(SettingsPane.init(rawValue:)) ?? .general
         endpoint = store.configuration.endpoint; modelName = store.configuration.model
         localHTTP = store.configuration.localHTTP; tokenParameter = store.configuration.tokenLimitParameter
+    }
+    public func setVisible(_ value: Bool) { visible = value; updateVisibleReferences() }
+    private func updateVisibleReferences() {
+        guard let store else { return }
+        if visible { store.setVisibleReferences(owner: visibilityOwner, draftID: nil, taskID: editedCommandSourceRunID) }
+        else { store.releaseVisibleReferences(owner: visibilityOwner) }
+    }
+    public func removeHistory(taskIDs: Set<UUID>) {
+        if editedCommandSourceRunID.map(taskIDs.contains) == true { editedCommand = nil; editedCommandSourceRunID = nil }
     }
 }
 
 @MainActor public final class WorkspaceSession: ObservableObject {
     public enum Page: String, CaseIterable { case tasks, ai, clipboard }
     @Published public var page: Page = .tasks
-    @Published public var selectedTaskID: UUID?
-    @Published public var draft: AIDraftDocument?
+    @Published public var selectedTaskID: UUID? { didSet { updateVisibleReferences() } }
+    @Published public var draft: AIDraftDocument? { didSet { updateVisibleReferences() } }
+    private weak var store: WorkbenchModel?
+    private let visibilityOwner = UUID()
+    private var visible = false
     public let clipboard = ClipboardBrowserSession()
     public var clipboardQuery: String {
         get { clipboard.query }
@@ -107,6 +133,16 @@ private struct LauncherCatalogProvider: CommandProviding {
     private var clipboardChanges: AnyCancellable?
     public init() {
         clipboardChanges = clipboard.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
+    }
+    public func setVisible(_ value: Bool, in store: WorkbenchModel) { self.store = store; visible = value; updateVisibleReferences() }
+    private func updateVisibleReferences() {
+        guard let store else { return }
+        if visible { store.setVisibleReferences(owner: visibilityOwner, draftID: draft?.id, taskID: selectedTaskID) }
+        else { store.releaseVisibleReferences(owner: visibilityOwner) }
+    }
+    public func removeHistory(taskIDs: Set<UUID>, draftIDs: Set<UUID>, in store: WorkbenchModel) {
+        if let draft, draftIDs.contains(draft.id) { self.draft = nil }
+        if selectedTaskID.map(taskIDs.contains) == true { selectedTaskID = store.tasks.first?.id }
     }
     public func navigate(_ route: WorkspaceRoute, store: WorkbenchModel) {
         switch route {

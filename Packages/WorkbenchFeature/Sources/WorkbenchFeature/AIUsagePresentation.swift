@@ -66,40 +66,45 @@ enum AIUsageLedgerReader {
         let hasUnknownUsage: Bool
         let outcome: String
     }
-    static func summary(at url: URL, runID: UUID, interrupted: Bool) async -> AIUsageSummary {
-        await Task.detached(priority: .utility) { () -> AIUsageSummary in
-            do {
-                let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
-                guard attributes[.type] as? FileAttributeType == .typeRegular else { return .unknown }
-                let file = try FileHandle(forReadingFrom: url); defer { try? file.close() }
-                guard let bytes = try file.read(upToCount: 1_048_577), bytes.count <= 1_048_576 else { return .unknown }
-                let snapshot = try JSONDecoder().decode(Snapshot.self, from: bytes)
-                guard snapshot.runID == runID, snapshot.observations.count <= 128 else { return .unknown }
-                var accumulator = AIUsageAccumulator()
-                for observation in snapshot.observations {
-                    do { try accumulator.observe(observation) }
-                    catch { accumulator.markUnknown(attemptID: observation.attemptID) }
-                }
-                for id in snapshot.unknownAttempts { accumulator.markUnknown(attemptID: id) }
-                let outcome = snapshot.outcome == "running" ? "interrupted" : snapshot.outcome
-                return AIUsageFacts(accumulator: accumulator, outcome: outcome,
-                    inheritedUnknown: interrupted || snapshot.hasUnknownUsage).summary
-            } catch { return .unknown }
-        }.value
+    /// 生产恢复从metadata actor取得有界、无符号链接的data，再与实时结果共用同一份事实解析。
+    static func summary(data: Data?, runID: UUID, interrupted: Bool) -> AIUsageSummary {
+        guard let data, data.count <= 65_536 else { return .unknown }
+        do {
+            let snapshot = try JSONDecoder().decode(Snapshot.self, from: data)
+            guard snapshot.runID == runID, snapshot.observations.count <= 128 else { return .unknown }
+            var accumulator = AIUsageAccumulator()
+            for observation in snapshot.observations {
+                do { try accumulator.observe(observation) }
+                catch { accumulator.markUnknown(attemptID: observation.attemptID) }
+            }
+            for id in snapshot.unknownAttempts { accumulator.markUnknown(attemptID: id) }
+            let outcome = snapshot.outcome == "running" ? "interrupted" : snapshot.outcome
+            return AIUsageFacts(accumulator: accumulator, outcome: outcome,
+                inheritedUnknown: interrupted || snapshot.hasUnknownUsage).summary
+        } catch { return .unknown }
     }
+
 }
 
 extension WorkbenchModel {
     func publishAIUsage(_ id: UUID, facts: AIUsageFacts) {
         guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
         tasks[index].aiUsageSummary = facts.summary
+        usageSummaryGenerations[id] = usageHistoryGeneration
+        invalidatedUsageRuns.remove(id)
     }
     func loadRestoredAIUsage(_ id: UUID, interrupted: Bool) {
-        let url = directory.appendingPathComponent("usage/" + id.uuidString + ".json")
+        let generation = historyGeneration, usageGeneration = usageHistoryGeneration
+        let metadata = usageMetadataStore
         Task { [weak self] in
-            let summary = await AIUsageLedgerReader.summary(at: url, runID: id, interrupted: interrupted)
-            guard let self, !isShuttingDown, let index = tasks.firstIndex(where: { $0.id == id }), tasks[index].restoredFromReceipt else { return }
-            tasks[index].aiUsageSummary = summary
+            let read = await metadata.read(id: id)
+            let summary = await Task.detached(priority: .utility) { AIUsageLedgerReader.summary(data: read.data, runID: id, interrupted: interrupted) }.value
+            self?.applyRestoredAIUsage(summary, id: id, historyGeneration: generation, usageGeneration: usageGeneration)
         }
+    }
+    func applyRestoredAIUsage(_ summary: AIUsageSummary, id: UUID, historyGeneration: UInt64, usageGeneration: UInt64) {
+        guard !isShuttingDown, self.historyGeneration == historyGeneration, usageHistoryGeneration == usageGeneration, !invalidatedUsageRuns.contains(id),
+              let index = tasks.firstIndex(where: { $0.id == id }), tasks[index].restoredFromReceipt else { return }
+        tasks[index].aiUsageSummary = summary; usageSummaryGenerations[id] = usageGeneration
     }
 }

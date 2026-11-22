@@ -28,7 +28,24 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public var settingsNotice = ""
     @Published public var workspaceNotice = ""
     @Published public private(set) var applicationIndexNotice = ""
-    @Published public private(set) var drafts: [UUID: AIDraftDocument] = [:]
+    @Published public internal(set) var drafts: [UUID: AIDraftDocument] = [:]
+    @Published public internal(set) var pendingCommandReviews: [PendingCommandReview] = []
+    var activeCommandReviews: [UUID: PendingCommandReview] = [:]
+    @Published public internal(set) var isClearingHistory = false
+    @Published public internal(set) var isClearingUsage = false
+    public var onHistoryRemoved: ((Set<UUID>, Set<UUID>) -> Void)?
+    let sessionLimits: SessionRetentionPolicy
+    var executionReservations: Set<UUID> = []
+    var visibleDraftReferences: [UUID: UUID] = [:]
+    var visibleTaskReferences: [UUID: UUID] = [:]
+    var draftOrder: [UUID] = []
+    var mutatingSession = false
+    var historyGeneration: UInt64 = 0
+    var usageHistoryGeneration: UInt64 = 0
+    var usageSummaryGenerations: [UUID: UInt64] = [:]
+    var invalidatedUsageRuns: Set<UUID> = []
+    let usageMetadataStore: AIUsageMetadataStore
+    var receiptMaintenanceTask: Task<Void, Never>?
     public var onDismiss: ((Bool) -> Void)?
     public var onOpenSettings: ((SettingsPane?) -> Void)?
     public var onOpenWorkspace: ((WorkspaceRoute) -> Void)?
@@ -76,7 +93,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
                 configurationWriter: @escaping @MainActor (Data, URL) throws -> Void = { try PrivateFiles.write($0, to: $1) },
                 terminalHandoff: TerminalHandoffAdapter = TerminalHandoffAdapter(),
                 applicationCatalog: ApplicationCatalog? = nil,
-                applicationLauncher: (@MainActor (CommandItem) async throws -> PreparedApplicationLaunch)? = nil) throws {
+                applicationLauncher: (@MainActor (CommandItem) async throws -> PreparedApplicationLaunch)? = nil,
+                sessionLimits: SessionRetentionPolicy = SessionRetentionPolicy()) throws {
+        self.sessionLimits = sessionLimits
         let desktop = DesktopService(applicationCatalog: applicationCatalog ?? ApplicationCatalog())
         self.desktop = desktop
         self.applicationLauncher = applicationLauncher ?? { try await desktop.launchApplication($0) }
@@ -89,6 +108,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         self.configurationWriter = configurationWriter
         self.terminalHandoff = terminalHandoff
         directory = try dataDirectory ?? PrivateFiles.applicationDirectory()
+        usageMetadataStore = AIUsageMetadataStore(directory: directory.appendingPathComponent("usage"))
         let url = directory.appendingPathComponent("configuration.json")
         if FileManager.default.fileExists(atPath: url.path) {
             let decoded = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: url))
@@ -117,21 +137,37 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         desktop.applicationCatalog.onFailure = { [weak self] in self?.applicationIndexNotice = L("The application list may be out of date. Refresh it and try again.") }
         rebuildCatalog() // 首帧先提供内置能力，不等待磁盘索引或回执恢复。
         desktop.applicationCatalog.start(observing: false)
+        let restoreGeneration = historyGeneration
         Task { [weak self] in
             guard let self else { return }
-            for receipt in await invocationStore.list() { restoreReceipt(receipt) }
-            for receipt in await aiInvocationStore.list() { restoreAIReceipt(receipt) }
+            await usageMetadataStore.setReportHandler { [weak self] report in
+                Task { @MainActor [weak self] in self?.handleUsageMaintenance(report) }
+            }
+            guard !isShuttingDown else { return }
+            await usageMetadataStore.start()
+            let cli = await invocationStore.list()
+            guard !isShuttingDown, historyGeneration == restoreGeneration else { return }
+            let ai = await aiInvocationStore.list()
+            guard !isShuttingDown, historyGeneration == restoreGeneration else { return }
+            restoreHistorySnapshot(cli: cli, ai: ai, generation: restoreGeneration)
+            await invocationStore.acknowledgeRecovery(); await aiInvocationStore.acknowledgeRecovery()
+            await maintainTaskHistory()
+            guard !isShuttingDown else { return }
             guard !isShuttingDown else { return }; rebuildCatalog()
         }
+        startReceiptMaintenance() // 恢复快照过时不能取消每日保留维护。
     }
     public func shutdown() {
         isShuttingDown = true; monitor.stop(); desktop.applicationCatalog.stop()
+        receiptMaintenanceTask?.cancel(); receiptMaintenanceTask = nil
+        let usage = usageMetadataStore; Task { await usage.stop() }
         // 退出围栏与现有工作的取消同步生效，不能等异步终止回调开始后才取消网络。
         for id in Array(taskHandles.keys) { cancelTask(id) }
     }
     public func shutdownAndWait() async {
         shutdown(); let handles = taskHandles
         for handle in handles.values { await handle.value }
+        await usageMetadataStore.stop()
     }
     public func startApplicationUpdates() { guard !isShuttingDown else { return }; desktop.applicationCatalog.start() }
     public func refreshApplications() { guard !isShuttingDown else { return }; desktop.applicationCatalog.refresh() }
@@ -182,11 +218,12 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         case .window:
             do { try authorizeHostItem(item, caller: caller); try desktop.activateWindow(item.payload); onDismiss?(false) } catch { showError(error) }
         case .command:
-            if let command = configuration.savedCommands.first(where: { $0.id.uuidString == item.payload }) { runCommand(command, caller: caller, showWorkspace: false); onDismiss?(true) }
+            if let command = configuration.savedCommands.first(where: { $0.id.uuidString == item.payload }), runCommand(command, caller: caller, showWorkspace: false) != nil { onDismiss?(true) }
         case .ai:
             guard let action = configuration.aiActions.first(where: { $0.id.uuidString == item.payload }) else { return }
             do { try authorizeHostItem(item, caller: caller) } catch { showError(error); return }
             let draft = createDraft(actionID: action.id, target: target, caller: caller)
+            guard ownsDraft(draft) else { return }
             onAIAction?(draft, caller)
         case .utility:
             do { try authorizeHostItem(item, caller: caller) } catch { showError(error); return }
@@ -194,7 +231,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             case "settings": onOpenSettings?(nil)
             case "commands": onOpenSettings?(.commands)
             case "clipboard": onOpenWorkspace?(.clipboard)
-            case "ai": onOpenWorkspace?(.ai(createDraft().id))
+            case "ai": let draft = createDraft(); if ownsDraft(draft) { onOpenWorkspace?(.ai(draft.id)) }
             default: onOpenWorkspace?(.tasks(nil))
             }
         case .clipboard: break
@@ -266,13 +303,19 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             case .manual: break
             }
         }
-        let draft = AIDraftDocument(input: value, actionID: action?.id, target: original, source: origin); draft.notice = notice; drafts[draft.id] = draft; return draft
+        if original?.selectedTextExceedsLimit == true { notice = L("Input is too long. Split it into smaller parts; nothing was sent.") }
+        let draft = AIDraftDocument(input: value, actionID: action?.id, target: original, source: origin)
+        if draft.isDiscarded { launcherNotice = draft.notice; workspaceNotice = draft.notice; return draft }
+        draft.notice = notice
+        _ = registerDraft(draft)
+        return draft
     }
     private func authorizedClipboardInput(caller: ExecutionCaller) throws -> String? {
         try authorizeHostAction(id: "clipboard.input", operation: .readClipboard, resource: "general|\(clipboardChangeCount())", availableContext: [.clipboard], caller: caller)
         return clipboardReader()
     }
     public func useClipboardInput(_ draft: AIDraftDocument) {
+        guard ownsDraft(draft), !isClearingHistory else { return }
         guard allowContextCapture else { draft.notice = L("Context capture is disabled in isolated smoke mode"); return }
         do {
             guard let text = try authorizedClipboardInput(caller: .user), !text.isEmpty else { draft.notice = L("No clipboard text is available. Enter text manually."); return }

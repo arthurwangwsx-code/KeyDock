@@ -11,6 +11,7 @@
 - 优先本地 iSpec；配置在 ispec/config.yaml。新 change 先产 proposal/specs/design/tasks，按 CLI 返回的 start/update 门禁记录，不手改内部状态。
 - 产品愿景在 docs/product，技术真值在 docs/technical；iSpec change 保存增量合同。实现时逐项记录 PASS/PARTIAL/FAIL/BLOCKED 与证据，不用 Git 或 mock 测试替代 macOS 实机验收。
 - 当前 change 是 keydock-foundation；当前执行 apply 的 P0/P1 任务；P2–P4 保留后续，不计入本次目标。
+- 同一 change 的 iSpec start/update/measure 与最终 metrics 审计串行执行，不能把共享索引写入当作独立验证并行。索引异常时保留旧日志/快照，通过 CLI 开始新 attempt 并串行复核，不手工伪造旧开始或成功记录。
 - 本机生成的 .codex/skills 不提交；新开发环境按 CONTRIBUTING.md 安装。
 
 ## 架构与数据

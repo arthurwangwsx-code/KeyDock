@@ -129,6 +129,38 @@
         }
       }
     },
+    "AI usage history cleared. Running requests may create new records when they finish.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI usage history cleared. Running requests may create new records when they finish."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 用量记录已清除。正在运行的请求结束后可能产生新记录。"
+          }
+        }
+      }
+    },
+    "AI usage history was only partly cleared. Some records remain; check permissions and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI usage history was only partly cleared. Some records remain; check permissions and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 用量记录仅部分清除，仍有记录保留。请检查权限后重试。"
+          }
+        }
+      }
+    },
     "AI workspace": {
       "localizations": {
         "en": {
@@ -657,6 +689,38 @@
         }
       }
     },
+    "Clear AI usage history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear AI usage history"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除 AI 用量记录"
+          }
+        }
+      }
+    },
+    "Clear AI usage history?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear AI usage history?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除 AI 用量记录？"
+          }
+        }
+      }
+    },
     "Clear all": {
       "localizations": {
         "en": {
@@ -669,6 +733,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "全部清空"
+          }
+        }
+      }
+    },
+    "Clear finished history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear finished history"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除已结束任务与草稿"
+          }
+        }
+      }
+    },
+    "Clear finished tasks and idle drafts?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear finished tasks and idle drafts?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除已结束任务和闲置草稿？"
           }
         }
       }
@@ -1377,6 +1473,38 @@
         }
       }
     },
+    "Finished history cleared. Drafts edited while clearing were kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finished history cleared. Drafts edited while clearing were kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已结束任务记录已清除。清除期间编辑过的草稿已保留。"
+          }
+        }
+      }
+    },
+    "Finished tasks and idle AI drafts cleared. Running tasks were kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finished tasks and idle AI drafts cleared. Running tasks were kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已清除已结束任务和闲置 AI 草稿，正在运行的任务已保留。"
+          }
+        }
+      }
+    },
     "Follow System": {
       "localizations": {
         "en": {
@@ -1437,6 +1565,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "全局快捷键"
+          }
+        }
+      }
+    },
+    "History is being cleared. Try again when it finishes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History is being cleared. Try again when it finishes."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在清除历史记录，请完成后重试。"
+          }
+        }
+      }
+    },
+    "History was only partly cleared. Some tasks are still finishing or records could not be removed. Try again later.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History was only partly cleared. Some tasks are still finishing or records could not be removed. Try again later."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "历史记录仅部分清除。有些任务仍在保存结果，或记录未能删除，请稍后重试。"
           }
         }
       }
@@ -1601,6 +1761,22 @@
         }
       }
     },
+    "KeyDock is at its task or text limit. Finish a task or clear older history, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeyDock is at its task or text limit. Finish a task or clear older history, then try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已达到任务数量或文本容量上限。请等待任务结束或清除旧记录后重试。"
+          }
+        }
+      }
+    },
     "KeyDock is quitting. No new action was started.": {
       "localizations": {
         "en": {
@@ -1613,6 +1789,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "KeyDock 正在退出，未启动新操作。"
+          }
+        }
+      }
+    },
+    "KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Output stays in memory; after restarting, only task metadata is restored. Finished task and usage records expire after 90 days.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Output stays in memory; after restarting, only task metadata is restored. Finished task and usage records expire after 90 days."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeyDock 同时管理最多 8 个任务，保留最多 200 条任务记录、32 份 AI 草稿和 32 MiB 会话文本。输出只保存在内存中；重启后仅恢复任务元数据。已结束任务和用量记录的保留期为 90 天。"
           }
         }
       }
@@ -2961,6 +3153,38 @@
         }
       }
     },
+    "Some AI usage records could not be maintained. Review or clear usage history in Privacy settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some AI usage records could not be maintained. Review or clear usage history in Privacy settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分 AI 用量记录未能完成清理。请到隐私设置检查或清除用量记录。"
+          }
+        }
+      }
+    },
+    "Some task records could not be maintained. Running and unconfirmed tasks were kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some task records could not be maintained. Running and unconfirmed tasks were kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分任务记录未能完成清理。运行中和结果尚未确认的任务已保留。"
+          }
+        }
+      }
+    },
     "Stop": {
       "localizations": {
         "en": {
@@ -3053,6 +3277,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "切换"
+          }
+        }
+      }
+    },
+    "Task and usage history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task and usage history"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务与用量记录"
           }
         }
       }
@@ -3277,6 +3517,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "此应用不支持替换选区，请复制结果后手动粘贴"
+          }
+        }
+      }
+    },
+    "This discards finished task output, idle unsaved AI drafts and command suggestions. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This discards finished task output, idle unsaved AI drafts and command suggestions. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这会丢弃已结束任务的输出、闲置且未保存的 AI 草稿和命令建议。正在运行的任务会保留。终端中的命令可能仍在运行，清除记录不会停止它们。已保存的命令、设置、凭据和剪贴板历史会保留。"
+          }
+        }
+      }
+    },
+    "This draft is no longer available. Create a new draft to continue.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This draft is no longer available. Create a new draft to continue."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此草稿已不可用，请新建草稿后继续。"
+          }
+        }
+      }
+    },
+    "This removes stored usage metadata. Running requests keep their current usage and may create new records when they finish. AI actions and API credentials are kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes stored usage metadata. Running requests keep their current usage and may create new records when they finish. AI actions and API credentials are kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这会删除已保存的用量元数据。正在运行的请求保留本次用量，结束后可能产生新记录。AI 动作和 API 凭据会保留。"
           }
         }
       }

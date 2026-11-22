@@ -39,9 +39,11 @@ enum AIReceiptProbeMode: String, CaseIterable { case text, proposal, agent }
     @Test func failedIntentWritePreventsAnyHTTPRequest() async throws {
         try await withStoreHTTPFixture(path: "stream") { fixture in
             let folder = fixture.directory.appendingPathComponent("ai-invocations")
-            let backup = fixture.directory.appendingPathComponent("synthetic-ai-receipt-backup")
-            try FileManager.default.moveItem(at: folder, to: backup)
-            try Data("synthetic-blocking-file".utf8).write(to: folder)
+            let target = folder.appendingPathComponent("invocations.json")
+            let backup = fixture.directory.appendingPathComponent("synthetic-ai-receipt-backup.json")
+            // 目录被固定后移动目录仍可安全写入；阻断实际索引entry才是落盘失败。
+            try FileManager.default.moveItem(at: target, to: backup)
+            try FileManager.default.createDirectory(at: target, withIntermediateDirectories: false)
             let draft = fixture.store.createDraft(input: "Synthetic request that must never be sent")
             let id = try #require(fixture.store.runAI(action: fixture.action, draft: draft))
             try await fixture.drain(id)
@@ -49,7 +51,7 @@ enum AIReceiptProbeMode: String, CaseIterable { case text, proposal, agent }
             #expect(task.status == .failed && !task.notice.isEmpty && task.output.isEmpty)
             let stats = try await fixture.server.stats()
             #expect(stats["post_requests"] == 0)
-            #expect(try readReceiptsFrom(backup.appendingPathComponent("invocations.json")).isEmpty)
+            #expect(try readReceiptsFrom(backup).isEmpty)
         }
     }
 
@@ -139,15 +141,16 @@ enum AIReceiptProbeMode: String, CaseIterable { case text, proposal, agent }
             let id = try #require(fixture.store.runAI(action: fixture.action, draft: draft))
             try await storeEventually { try await fixture.server.stats()["held_text_started"] == 1 }
             let folder = fixture.directory.appendingPathComponent("ai-invocations")
-            let backup = fixture.directory.appendingPathComponent("synthetic-preserved-intent")
-            try FileManager.default.moveItem(at: folder, to: backup)
-            try Data("synthetic-blocking-file".utf8).write(to: folder)
+            let target = folder.appendingPathComponent("invocations.json")
+            let backup = fixture.directory.appendingPathComponent("synthetic-preserved-intent.json")
+            try FileManager.default.moveItem(at: target, to: backup)
+            try FileManager.default.createDirectory(at: target, withIntermediateDirectories: false)
             try await release(fixture.server)
             try await fixture.drain(id)
             let task = try #require(fixture.store.tasks.first { $0.id == id })
             #expect(task.status == .completed && task.output == "Synthetic held result")
             #expect(!task.notice.isEmpty && !fixture.store.workspaceNotice.isEmpty)
-            let preserved = try readReceiptsFrom(backup.appendingPathComponent("invocations.json"))
+            let preserved = try readReceiptsFrom(backup)
             #expect(preserved.first?.state == .running)
         }
     }

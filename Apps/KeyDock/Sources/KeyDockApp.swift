@@ -76,14 +76,15 @@ import KeyDockUI
         store.onOpenSettings = { [weak self] in self?.openSettings($0) }
         store.onOpenWorkspace = { [weak self] in self?.openWorkspace($0) }
         store.onAIAction = { [weak self] draft, caller in
-            guard let self else { return }
+            guard let self, store.ownsDraft(draft) else { return }
             self.launcherSession.draft = draft
             if !draft.input.isEmpty, let action = store.configuration.aiActions.first(where: { $0.id == draft.actionID }) { store.runAI(action: action, draft: draft, caller: caller) }
         }
-        store.onReviewCommand = { [weak self] command in
+        store.onHistoryRemoved = { [weak self] taskIDs, draftIDs in
             guard let self else { return }
-            // 草稿回调不抢焦点，不覆盖用户正在编辑的表单。
-            self.settingsSession.pendingCommands.append(command)
+            self.launcherSession.removeHistory(draftIDs: draftIDs)
+            self.workspaceSession.removeHistory(taskIDs: taskIDs, draftIDs: draftIDs, in: store)
+            self.settingsSession.removeHistory(taskIDs: taskIDs)
         }
         store.onLanguageChanged = { [weak self] in self?.installMenus(); self?.refreshTitles() }
         store.onAppearanceChanged = { [weak self] in self?.applyAppearance() }
@@ -152,6 +153,7 @@ import KeyDockUI
                 launcher.setFrame(frame, display: false)
             }
         }
+        launcherSession.setVisible(true)
         NSApp.activate(ignoringOtherApps: true); launcher.makeKeyAndOrderFront(nil)
         if let identity {
             captureTask = Task { [weak self] in
@@ -164,15 +166,18 @@ import KeyDockUI
         } else if let command = pendingCommandID { pendingCommandID = nil; store.performCommand(id: command) }
     }
     func dismissLauncher(restore: Bool) {
+        launcherSession.setVisible(false)
         store.invalidateLauncherReplies()
         generation = UUID(); captureTask?.cancel(); capturePending = false; launcherSession.contextCapturePending = false; pendingCommandID = nil; launcherSession.actionsVisible = false; launcher?.orderOut(nil)
         if restore {
             if let target = store.target { store.desktop.restore(target) }
             else if let originalIdentity { store.desktop.restore(identity: originalIdentity) }
         }
+        store.target = nil
     }
     func openSettings(_ pane: SettingsPane? = nil) {
         guard !store.isShuttingDown else { return }
+        settingsSession.setVisible(true)
         dismissLauncher(restore: false); if let pane { settingsSession.pane = pane }
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 840, height: 620), styleMask: [.titled, .closable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
@@ -185,6 +190,7 @@ import KeyDockUI
     }
     func openWorkspace(_ route: WorkspaceRoute) {
         guard !store.isShuttingDown else { return }
+        workspaceSession.setVisible(true, in: store)
         dismissLauncher(restore: false); workspaceSession.navigate(route, store: store)
         if workspace == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 680), styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
@@ -248,8 +254,9 @@ import KeyDockUI
         dismissLauncher(restore: false)
     }
     func windowShouldClose(_ sender: NSWindow) -> Bool {
+        if sender === workspace { workspaceSession.setVisible(false, in: store) }
         if sender === launcher { dismissLauncher(restore: true); return false }
-        if sender === settings { settingsSession.apiKey = "" }
+        if sender === settings { settingsSession.apiKey = ""; settingsSession.setVisible(false) }
         return true
     }
     func beginShutdown() { hotkeys.suspend(); store.shutdown() }

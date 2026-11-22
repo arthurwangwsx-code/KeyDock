@@ -19,7 +19,7 @@ flowchart TD
 |---|---|---|
 | WindowCoordinator | 窗口、菜单、快捷键、展示 generation、原目标快照捕获 | 模型请求与进程执行实现 |
 | LauncherSession | 查询、结果选择、焦点请求、动作菜单、当前草稿引用 | 设置表单和任务生命周期 |
-| SettingsSession | 分类、命令／动作编辑 sheet、服务草稿与未保存 key、待审建议队列 | AI 输入和工作区路由 |
+| SettingsSession | 分类、命令／动作编辑 sheet、服务草稿与未保存 key、当前审阅表单/来源ID | AI 输入和工作区路由 |
 | WorkspaceSession | 当前页、任务选择、ClipboardBrowserSession、草稿引用 | 设置表单与全量剪贴板正文 |
 | ClipboardBrowserSession | 查询generation、轻量预览、单项详情、变更通知 | 共享业务任务和持久配置 |
 | WorkbenchModel | 配置、能力目录、服务、任务、文档注册表、运行与目标映射 | 窗口搜索／选择／导航 |
@@ -53,3 +53,5 @@ Feature 与 App 各自处理 xcstrings，调用 L／AppL；KeyDockUI 不保存�
 当前 WorkbenchFeature 包含 View 与应用服务编排，适合首阶段小团队；后续功能增多时按 Launcher／Settings／Clipboard／AIWorkspace 拆 feature target，保持 Store 接口和文档引用合同。不允许基础模块反向 import UI；插件通过命令／工具合同接入，不直接操纵任意窗口状态。
 
 验证包含纯模型／配置迁移、窗口会话隔离、草稿版本、键盘导航和实际系统截图。编译成功仅证明 API／类型兼容，不证明材质、布局或系统焦点通过验收。
+
+提案队列由Store持有runID与预算，待审和正在审阅合计最多10份，进入设置表单后仍保留源数据记账。窗口通过可见引用保护草稿和当前结果；清除成功联动移除窗口引用、复制标记与来源。新编辑用revision保留，历史和用量各用generation拒绝迟到恢复；定时维护不依赖恢复快照是否过时。

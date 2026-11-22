@@ -10,6 +10,8 @@ public struct SettingsRootView: View {
     @State private var exclusions = ""
     @State private var shortcutQuery = ""
     @State private var aliases: [String: String] = [:]
+    @State private var confirmTaskClear = false
+    @State private var confirmUsageClear = false
     public init(store: WorkbenchModel, session: SettingsSession) { self.store = store; self.session = session }
     public var body: some View {
         NavigationSplitView {
@@ -25,17 +27,27 @@ public struct SettingsRootView: View {
                         Button(L("Retry shortcuts")) { store.retryShortcuts() }
                     }
                 }
-                if !session.pendingCommands.isEmpty { Section { HStack { Text(L("Command draft ready for review")); Spacer(); Button(L("Review")) { session.editedCommand = session.pendingCommands.removeFirst() }.disabled(session.editedCommand != nil || session.editedAction != nil) } } }
+                if !store.pendingCommandReviews.isEmpty { Section { HStack { Text(L("Command draft ready for review")); Spacer(); Button(L("Review")) { if let review = store.takeNextCommandReview() { session.editedCommandSourceRunID = review.id; session.editedCommand = review.command } }.disabled(session.editedCommand != nil || session.editedAction != nil) } } }
                 content
             }.formStyle(.grouped).navigationTitle(session.pane.title)
                 .toolbar {
-                    if session.pane == .commands { ToolbarItem { Button { session.editedCommand = SavedCommand(name: "", executable: "/usr/bin/printf") } label: { Label(L("New command"), systemImage: "plus") } } }
+                    if session.pane == .commands { ToolbarItem { Button { session.editedCommandSourceRunID = nil; session.editedCommand = SavedCommand(name: "", executable: "/usr/bin/printf") } label: { Label(L("New command"), systemImage: "plus") } } }
                     if session.pane == .aiActions { ToolbarItem { Button { session.editedAction = AIActionPreset(name: "", prompt: "") } label: { Label(L("New action"), systemImage: "plus") } } }
                 }
         }.frame(minWidth: 740, minHeight: 530).environment(\.locale, KDLocalizer.locale)
-            .sheet(item: $session.editedCommand) { command in CommandEditor(command: command) { store.saveCommand($0) } }
+            .sheet(item: $session.editedCommand, onDismiss: { session.editedCommandSourceRunID = nil }) { command in CommandEditor(command: command) { store.saveCommand($0) } }
             .sheet(item: $session.editedAction) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureText: { store.settingsNotice }) { store.saveAction($0) } }
             .onAppear { exclusions = store.configuration.clipboardExclusions.joined(separator: "\n"); session.keyStored = store.credentialExists() }
+            .confirmationDialog(L("Clear finished tasks and idle drafts?"), isPresented: $confirmTaskClear) {
+                Button(L("Clear finished history"), role: .destructive) { Task { await store.clearFinishedHistory() } }
+            } message: {
+                Text(L("This discards finished task output, idle unsaved AI drafts and command suggestions. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept."))
+            }
+            .confirmationDialog(L("Clear AI usage history?"), isPresented: $confirmUsageClear) {
+                Button(L("Clear AI usage history"), role: .destructive) { Task { await store.clearAIUsageHistory() } }
+            } message: {
+                Text(L("This removes stored usage metadata. Running requests keep their current usage and may create new records when they finish. AI actions and API credentials are kept."))
+            }
     }
     @ViewBuilder private var content: some View {
         switch session.pane {
@@ -142,6 +154,17 @@ public struct SettingsRootView: View {
                 Text(L("Application search works without Accessibility. Screen recording is not required for window-title search.")).font(.caption).foregroundStyle(.secondary)
             }
             Section(L("Your data")) { Text(L("Local data, no product telemetry. AI actions send only their chosen input to your configured service.")).font(.callout).foregroundStyle(.secondary) }
+            Section(L("Task and usage history")) {
+                Text(L("KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Output stays in memory; after restarting, only task metadata is restored. Finished task and usage records expire after 90 days.")).font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    Button(L("Clear finished history"), role: .destructive) { confirmTaskClear = true }.disabled(store.isClearingHistory)
+                    if store.isClearingHistory { ProgressView().controlSize(.small) }
+                }
+                HStack {
+                    Button(L("Clear AI usage history"), role: .destructive) { confirmUsageClear = true }.disabled(store.isClearingUsage)
+                    if store.isClearingUsage { ProgressView().controlSize(.small) }
+                }
+            }
         case .about:
             Section {
                 VStack(spacing: 12) {

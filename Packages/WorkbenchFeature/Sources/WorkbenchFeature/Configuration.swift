@@ -91,13 +91,13 @@ public struct RunningTaskItem: Identifiable {
     public var modelName: String?
     public var source: AIDraftSource?
     public var sourceApplication: String?
-    public var notice = ""
+    public var notice = "" { didSet { if notice.utf8.count > 8_192 { notice = TaskTextLimits.prefix(notice, maximumBytes: 8_192) } } }
     public var restoredFromReceipt = false
     public var isRunning: Bool { finishedAt == nil }
     public var canCancel: Bool { isRunning && status != .handoffPending }
     public init(id: UUID, title: String, state: TaskStatus, output: String = "", exitCode: Int32? = nil, startedAt: Date = Date(), finishedAt: Date? = nil, draftID: UUID? = nil, titleKey: String? = nil, modelName: String? = nil) {
-        self.id = id; self.title = title; status = state; self.output = output; self.exitCode = exitCode
-        self.startedAt = startedAt; self.finishedAt = finishedAt; self.draftID = draftID; self.titleKey = titleKey; self.modelName = modelName
+        self.id = id; self.title = TaskTextLimits.prefix(title, maximumBytes: 1_024); status = state; self.output = output; self.exitCode = exitCode
+        self.startedAt = startedAt; self.finishedAt = finishedAt; self.draftID = draftID; self.titleKey = titleKey; self.modelName = modelName.map { TaskTextLimits.prefix($0, maximumBytes: 1_024) }
     }
 }
 
@@ -106,14 +106,26 @@ public struct RunningTaskItem: Identifiable {
     @Published public private(set) var input: String
     @Published public private(set) var actionID: UUID?
     @Published public var latestRunID: UUID?
-    @Published public var notice = ""
+    @Published private var retainedNotice = ""
+    public var notice: String { get { retainedNotice } set { retainedNotice = TaskTextLimits.prefix(newValue, maximumBytes: 8_192) } }
+    @Published public private(set) var isDiscarded = false
     @Published public private(set) var source: AIDraftSource
     public private(set) var sourceTarget: TargetSnapshot?
     public private(set) var revision = UUID()
-    init(input: String, actionID: UUID?, target: TargetSnapshot?, source: AIDraftSource = .manual) { self.input = input; self.actionID = actionID; sourceTarget = target; self.source = source }
-    public func editInput(_ text: String) { guard input != text else { return }; input = text; sourceTarget = nil; source = .manual; revision = UUID(); notice = "" }
-    public func useClipboard(_ text: String) { guard input != text || source != .clipboard else { return }; input = text; sourceTarget = nil; source = .clipboard; revision = UUID(); notice = "" }
-    public func selectAction(_ id: UUID?) { guard actionID != id else { return }; actionID = id; latestRunID = nil; revision = UUID(); notice = "" }
+    init(input: String, actionID: UUID?, target: TargetSnapshot?, source: AIDraftSource = .manual) {
+        self.input = input.utf8.count <= TaskTextLimits.inputBytes ? input : ""
+        self.actionID = actionID; sourceTarget = target; self.source = source
+        if input.utf8.count > TaskTextLimits.inputBytes { discard(); notice = L("Input is too long. Split it into smaller parts; nothing was sent.") }
+    }
+    private func accepts(_ text: String) -> Bool {
+        guard !isDiscarded else { return false }
+        guard text.utf8.count <= TaskTextLimits.inputBytes else { notice = L("Input is too long. Split it into smaller parts; nothing was sent."); return false }
+        return true
+    }
+    public func editInput(_ text: String) { guard accepts(text), input != text else { return }; input = text; sourceTarget = nil; source = .manual; revision = UUID(); notice = "" }
+    public func useClipboard(_ text: String) { guard accepts(text), input != text || source != .clipboard else { return }; input = text; sourceTarget = nil; source = .clipboard; revision = UUID(); notice = "" }
+    public func selectAction(_ id: UUID?) { guard !isDiscarded, actionID != id else { return }; actionID = id; latestRunID = nil; revision = UUID(); notice = "" }
+    func discard() { isDiscarded = true; input = ""; sourceTarget = nil; latestRunID = nil; source = .manual; revision = UUID() }
 }
 
 public enum SettingsPane: String, CaseIterable { case general, shortcuts, aiService, aiActions, commands, clipboard, privacy, about

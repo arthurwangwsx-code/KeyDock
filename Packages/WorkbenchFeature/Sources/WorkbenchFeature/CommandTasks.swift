@@ -6,14 +6,15 @@ import MacAdapters
 extension WorkbenchModel {
     func restoreReceipt(_ receipt: InvocationReceipt) {
         guard !tasks.contains(where: { $0.id == receipt.id }) else { return }
+        guard !isShuttingDown, !isClearingHistory, makeSessionRoom(taskSlots: 1) else { return }
         tasks.append(RunningTaskItem(id: receipt.id, title: receipt.name, state: receipt.message == "terminal.handedOff" ? .handedOff : stateLabel(receipt.state), output: "", exitCode: receipt.exitCode, startedAt: receipt.startedAt, finishedAt: receipt.finishedAt))
         tasks[tasks.count - 1].restoredFromReceipt = true
         if receipt.message == "terminal.handoffUnknown" {
             tasks[tasks.count - 1].notice = L("Terminal did not confirm opening the command. It may already be running. Check Terminal before retrying.")
         } else if receipt.state == .interrupted { tasks[tasks.count - 1].notice = L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
     }
-    public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user, showWorkspace: Bool = true) {
-        guard !isShuttingDown else { return }
+    @discardableResult public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user, showWorkspace: Bool = true) -> UUID? {
+        guard !isShuttingDown else { return nil }
         let id = UUID()
         let authorization: ExecutionRequest
         let configFingerprint: String
@@ -23,8 +24,9 @@ extension WorkbenchModel {
             authorization = try authorizeHostAction(id: "command." + command.id.uuidString, operation: .runCommand, resource: configFingerprint, availableContext: [.workingDirectory], caller: caller, invocation: id)
         } catch is SavedCommandValidationError {
             let notice = L("Check name, absolute paths, arguments, environment and timeout")
-            if showWorkspace { settingsNotice = notice } else { launcherNotice = notice }; return
-        } catch { showError(error); return }
+            if showWorkspace { settingsNotice = notice } else { launcherNotice = notice }; return nil
+        } catch { showError(error); return nil }
+        guard reserveExecution(id) else { return nil }
         tasks.insert(RunningTaskItem(id: id, title: command.name, state: .queued), at: 0)
         if showWorkspace { onOpenWorkspace?(.tasks(id)) }
         taskHandles[id] = Task { [weak self] in
@@ -60,8 +62,9 @@ extension WorkbenchModel {
                 try? await invocationStore.finish(id: id, result: result)
                 updateTask(id, state: stateLabel(result.state), output: cancelled ? L("Cancelled before execution") : L("Command could not be started or its receipt could not be saved."), finished: true)
             }
-            taskHandles[id] = nil; cancelledTaskIDs.remove(id)
+            finishExecutionReservation(id)
         }
+        return id
     }
     private func persistResult(_ id: UUID, result: ProcessResult) async {
         do { try await invocationStore.finish(id: id, result: result) }

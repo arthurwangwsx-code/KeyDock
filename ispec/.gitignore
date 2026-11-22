@@ -13,3 +13,5 @@ changes/**/.changes-state.json
 assets/
 changes/**/metrics.json
 changes/**/metrics.md
+changes/**/receipts/
+changes/**/.local/

@@ -15,16 +15,16 @@
   "verified": {
     "swiftTests": {
       "state": "PASS",
-      "total": 197,
+      "total": 233,
       "commandCore": 15,
-      "executionCore": 22,
+      "executionCore": 33,
       "macAdapters": 50,
       "aiAndAgentCoreIncludingHTTP": 23,
       "workbenchWindowOwnership": 20,
-      "log": ".local/p1-usage-launcher-final-tests.log",
+      "log": ".local/p1-retention-serial-tests.log",
       "workbenchStoreHTTP": 8,
-      "workbenchTotal": 87,
-      "measurementID": "f19904a6-daba-4e95-b860-444bc7a8655c",
+      "workbenchTotal": 112,
+      "measurementID": "9c7f0bf3-fa31-444f-870e-ef3906ae6ef3",
       "workbenchBreakdown": {
         "windowOwnership": 20,
         "storeHTTP": 8,
@@ -37,7 +37,10 @@
         "terminalLifecycle": 4,
         "apiConfiguration": 8,
         "shortcutConfiguration": 6,
-        "aiUsagePresentation": 6
+        "aiUsagePresentation": 6,
+        "sessionRetention": 10,
+        "historyManagement": 8,
+        "aiUsageMetadataStore": 7
       },
       "macAdaptersBreakdown": {
         "existingStorePolicyAndPreview": 4,
@@ -49,13 +52,18 @@
         "applicationDirectoryObserver": 6,
         "applicationParentObserver": 4,
         "hotkeyCenter": 7
+      },
+      "executionCoreBreakdown": {
+        "existingExecutionAndRecovery": 22,
+        "invocationRetention": 10,
+        "directoryPinning": 1
       }
     },
     "nativeBuild": {
       "state": "PASS",
       "configuration": "Debug local ad-hoc signature, not notarized",
-      "log": ".local/p1-usage-launcher-final-native-build.log",
-      "measurementID": "dbcf9305-3637-4767-b9a1-fa439f8ac3e9"
+      "log": ".local/p1-retention-serial-build.log",
+      "measurementID": "c7cce4ca-faf1-4e2b-be5e-09b7285a837a"
     },
     "uiSmoke": {
       "state": "PASS",
@@ -108,9 +116,9 @@
     "localization": {
       "state": "PASS",
       "scope": "English and Simplified Chinese source-key coverage in App and Feature catalogs",
-      "log": ".local/p1-usage-launcher-localizations.log",
-      "keys": 244,
-      "measurementID": "1588cd1c-6be3-49cd-9afc-fa7f0a62268e"
+      "log": ".local/p1-retention-serial-localizations.log",
+      "keys": 262,
+      "measurementID": "d087b2bc-8e03-4034-bdd2-7c4eb443a224"
     },
     "storeHTTPIntegration": {
       "state": "PASS",
@@ -164,7 +172,7 @@
     "Minimum macOS and Intel compatibility",
     "Signed/notarized distribution and remote publication",
     "Live application install/move/duplicate updates in current native UI",
-    "P1 total task/draft retention, 90-day metadata maintenance and clear controls"
+    "Native history-clear dialogs, visual/accessibility/keyboard behavior and long-running retention/energy qualification"
   ],
   "constraints": [
     "No existing AiBox or Ashot source/configuration/credentials/media copied",
@@ -227,9 +235,9 @@
   },
   "currentNativeVerification": {
     "state": "BLOCKED",
-    "reason": "Mac is locked; CUA automatic unlock unavailable",
+    "reason": "Mac is still locked; CUA automatic unlock unavailable",
     "permissionBypassAttempted": false,
-    "review": "docs/implementation/application-shortcuts-2026-11-23.md"
+    "review": "docs/implementation/retention-acceptance-2026-11-23.md"
   },
   "visibleAIUsage": {
     "state": "PARTIAL",
@@ -266,5 +274,56 @@
     "liveActivation": "NOT_RUN: Mac locked",
     "failedMeasurementRetained": "c5b3e391-cb52-4d03-ab51-cc6577377fb6",
     "catalogOrConfigurationRefreshDoesNotInvalidate": true
+  },
+  "sessionRetention": {
+    "state": "PARTIAL",
+    "syntheticState": "PASS",
+    "newTests": 36,
+    "limits": {
+      "managedTasks": 8,
+      "sessionTasks": 200,
+      "aiDrafts": 32,
+      "sessionTextBytes": 33554432,
+      "pendingAndActiveReviews": 10,
+      "inputBytes": 131072,
+      "outputBytes": 1048576
+    },
+    "textBudgetIsRSSPromise": false,
+    "protectsVisibleRunAndClosingTasks": true,
+    "draftRevisionRetainedDuringClear": true,
+    "clearFailureIsPartial": true,
+    "receiptPolicy": {
+      "days": 90,
+      "terminalRecords": 2000,
+      "writeBytes": 4194304,
+      "migrationLoadBytes": 16777216,
+      "pinnedDirectoryFD": true,
+      "liveAndRecoveryLeases": true
+    },
+    "usagePolicy": {
+      "days": 90,
+      "records": 5000,
+      "totalBytes": 16777216,
+      "recordBytes": 65536,
+      "noFollowRelativeIO": true,
+      "diskAndCacheInvalidation": true
+    },
+    "rawBodiesPersisted": false,
+    "nativeUI": "BLOCKED: Mac locked; no click or screenshot verification",
+    "review": "docs/implementation/retention-acceptance-2026-11-23.md",
+    "priorFullFailure": {
+      "measurementID": "aed88343-93d5-4734-83d5-8b2098f4d48f",
+      "log": ".local/p1-retention-full-first-failure.log",
+      "reason": "directory-moving fault fixtures no longer fail writes after pinning; changed to real target-entry rename failure without weakening assertions"
+    }
+  },
+  "workflowEvidence": {
+    "state": "PARTIAL",
+    "currentApplyAttempt": "66eab6e6-f7c0-41eb-8f43-93ec432908e6",
+    "finalVerification": "serial CLI commands with independent native receipts",
+    "incident": "parallel lint writes replaced the unprofiled shared state; old raw logs and earlier metrics snapshots preserved",
+    "historyReconstructed": false,
+    "oldSnapshot": ".local/p1-usage-launcher-metrics.json",
+    "businessAcceptance": "not granted by command receipts"
   }
 }

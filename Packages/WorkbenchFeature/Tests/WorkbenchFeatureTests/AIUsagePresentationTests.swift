@@ -112,17 +112,17 @@ import MacAdapters
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         defer { try? FileManager.default.removeItem(at: directory) }
         let file = directory.appendingPathComponent("synthetic-usage.json"), id = UUID(), attempt = UUID()
-        #expect(await AIUsageLedgerReader.summary(at: file, runID: id, interrupted: false) == .unknown)
+        #expect(AIUsageLedgerReader.summary(data: try? Data(contentsOf: file), runID: id, interrupted: false) == .unknown)
         try PrivateFiles.write(Data("synthetic-corrupt-json".utf8), to: file)
-        #expect(await AIUsageLedgerReader.summary(at: file, runID: id, interrupted: false) == .unknown)
+        #expect(AIUsageLedgerReader.summary(data: try? Data(contentsOf: file), runID: id, interrupted: false) == .unknown)
         let observation: [String: Any] = ["inputTokens": 7, "outputTokens": 3, "attemptID": attempt.uuidString, "counting": "cumulative"]
         let snapshot: [String: Any] = ["runID": id.uuidString, "observations": [observation, observation], "unknownAttempts": [], "hasUnknownUsage": false, "outcome": "succeeded"]
         try PrivateFiles.write(JSONSerialization.data(withJSONObject: snapshot), to: file)
-        let reported = await AIUsageLedgerReader.summary(at: file, runID: id, interrupted: false)
+        let reported = AIUsageLedgerReader.summary(data: try? Data(contentsOf: file), runID: id, interrupted: false)
         #expect(reported.state == .reported && reported.reportedInputTokens == 7 && reported.reportedOutputTokens == 3)
-        let interrupted = await AIUsageLedgerReader.summary(at: file, runID: id, interrupted: true)
+        let interrupted = AIUsageLedgerReader.summary(data: try? Data(contentsOf: file), runID: id, interrupted: true)
         #expect(interrupted.state == .partial && interrupted.reportedInputTokens == 7)
         #expect(interrupted.costText == L("Cost unknown (no rate configured)"))
-        #expect(await AIUsageLedgerReader.summary(at: file, runID: UUID(), interrupted: false) == .unknown)
+        #expect(AIUsageLedgerReader.summary(data: try? Data(contentsOf: file), runID: UUID(), interrupted: false) == .unknown)
     }
 }

@@ -24,7 +24,7 @@ public struct WorkspaceView: View {
                 case .ai:
                     if let draft = session.draft { AIContentView(store: store, draft: draft) }
                     else {
-                        VStack { KDEmptyState(symbol: "sparkles", title: L("Ready when you are"), detail: L("Choose an action and add text. Only this input is sent to your model.")); Button(L("New AI task")) { session.draft = store.createDraft() }.buttonStyle(.borderedProminent).padding(.bottom, 60) }
+                        VStack { KDEmptyState(symbol: "sparkles", title: L("Ready when you are"), detail: L("Choose an action and add text. Only this input is sent to your model.")); Button(L("New AI task")) { let draft = store.createDraft(); if store.ownsDraft(draft) { session.draft = draft } }.buttonStyle(.borderedProminent).padding(.bottom, 60) }
                     }
                 case .clipboard: clipboardContent
                 }
@@ -63,6 +63,7 @@ public struct WorkspaceView: View {
                         Button(L("Explain with AI")) {
                             let action = store.configuration.aiActions.first { $0.builtinKey == "Explain command output" } ?? store.configuration.aiActions.last
                             let draft = store.createDraft(actionID: action?.id, input: task.output, source: .commandOutput)
+                            guard store.ownsDraft(draft) else { return }
                             session.draft = draft; session.page = .ai
                         }.disabled(task.output.isEmpty)
                         Spacer()
