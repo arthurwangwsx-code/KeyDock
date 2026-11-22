@@ -5,18 +5,23 @@ import MacAdapters
 
 extension WorkbenchModel {
     func restoreReceipt(_ receipt: InvocationReceipt) {
-        tasks.append(RunningTaskItem(id: receipt.id, title: receipt.name, state: receipt.message == "terminal.handedOff" ? .handedOff : stateLabel(receipt.state), output: receipt.state == .interrupted ? L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") : "", exitCode: receipt.exitCode, startedAt: receipt.startedAt, finishedAt: receipt.finishedAt))
+        tasks.append(RunningTaskItem(id: receipt.id, title: receipt.name, state: receipt.message == "terminal.handedOff" ? .handedOff : stateLabel(receipt.state), output: "", exitCode: receipt.exitCode, startedAt: receipt.startedAt, finishedAt: receipt.finishedAt))
         tasks[tasks.count - 1].restoredFromReceipt = true
+        if receipt.state == .interrupted { tasks[tasks.count - 1].notice = L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
     }
     public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user, showWorkspace: Bool = true) {
+        guard !isShuttingDown else { return }
         let id = UUID()
         let authorization: ExecutionRequest
         let configFingerprint: String
         do {
+            try command.validate()
             configFingerprint = try fingerprint(command)
-            authorization = try authorizeHostAction(id: "command." + command.id.uuidString, effect: .executeProcess, resource: configFingerprint, caller: caller, invocation: id)
+            authorization = try authorizeHostAction(id: "command." + command.id.uuidString, operation: .runCommand, resource: configFingerprint, availableContext: [.workingDirectory], caller: caller, invocation: id)
+        } catch is SavedCommandValidationError {
+            let notice = L("Check name, absolute paths, arguments, environment and timeout")
+            if showWorkspace { settingsNotice = notice } else { launcherNotice = notice }; return
         } catch { showError(error); return }
-        guard !command.executable.isEmpty, !command.name.isEmpty else { workspaceNotice = L("Name and executable are required"); return }
         tasks.insert(RunningTaskItem(id: id, title: command.name, state: .queued), at: 0)
         if showWorkspace { onOpenWorkspace?(.tasks(id)) }
         taskHandles[id] = Task { [weak self] in
@@ -37,7 +42,10 @@ extension WorkbenchModel {
                         switch event {
                         case .started: updateTask(id, state: .running)
                         case let .output(text, isError):
-                            _ = isError; appendOutput(id, text: text.replacingOccurrences(of: "[process.outputTruncated]", with: L("Output limit reached; remaining output was discarded")))
+                            _ = isError
+                            let upstreamTruncated = text.contains("[process.outputTruncated]")
+                            let accepted = appendOutput(id, text: text.replacingOccurrences(of: "[process.outputTruncated]", with: L("Output limit reached; remaining output was discarded")))
+                            if upstreamTruncated || !accepted { markIncompleteOutput(id, notice: L("Output limit reached; remaining output was discarded")) }
                         case let .finished(result):
                             await persistResult(id, result: result)
                             updateTask(id, state: stateLabel(result.state), finished: true, exitCode: result.exitCode)
@@ -68,11 +76,6 @@ extension WorkbenchModel {
         if aiTaskIDs.contains(id) { taskHandles[id]?.cancel() }
         else { Task { await processRunner.cancel(id) } }
     }
-    func appendOutput(_ id: UUID, text: String) {
-        guard let i = tasks.firstIndex(where: { $0.id == id }) else { return }
-        let limit = 1_048_576
-        if tasks[i].output.utf8.count < limit { tasks[i].output += text }
-    }
     func updateTask(_ id: UUID, state: TaskStatus, output: String? = nil, finished: Bool = false, exitCode: Int32? = nil) {
         guard let i = tasks.firstIndex(where: { $0.id == id }) else { return }
         tasks[i].status = state
@@ -85,10 +88,7 @@ extension WorkbenchModel {
     private func openInTerminal(_ command: SavedCommand) async throws {
         let folder = directory.appendingPathComponent("terminal-launches", isDirectory: true)
         let file = folder.appendingPathComponent(UUID().uuidString + ".command")
-        func quote(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "'\"'\"'") + "'" }
-        let executable = ([command.executable] + command.arguments).map(quote).joined(separator: " ")
-        let environment = command.environment.sorted(by: { $0.key < $1.key }).map { quote($0.key + "=" + $0.value) }.joined(separator: " ")
-        let script = "#!/bin/zsh\n/bin/rm -f -- \"$0\"\ncd -- \(quote(command.workingDirectory)) || exit 1\nexec /usr/bin/env \(environment) \(executable)\n"
+        let script = try TerminalLaunchScript.make(command: command, launchFile: file)
         try PrivateFiles.write(Data(script.utf8), to: file)
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: file.path)
         do {

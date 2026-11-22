@@ -9,6 +9,19 @@ public struct ClipboardEntry: Identifiable, Sendable, Equatable {
     public let source: String
 }
 
+public struct ClipboardPreview: Identifiable, Sendable, Equatable {
+    public let id: String
+    public let preview: String
+    public let createdAt: Date
+    public let pinned: Bool
+    public let source: String
+    public let byteCount: Int
+    public init(id: String, preview: String, createdAt: Date, pinned: Bool, source: String, byteCount: Int) {
+        self.id = id; self.preview = preview; self.createdAt = createdAt
+        self.pinned = pinned; self.source = source; self.byteCount = byteCount
+    }
+}
+
 public struct ClipboardLimits: Sendable {
     public var retention: TimeInterval = 86400
     public var maxEntries: Int = 500
@@ -89,6 +102,57 @@ public actor ClipboardStore {
             if sqlite3_changes(connection.db) == 0 { break }
         }
     }
+    /// 在数据库 actor 上逐行匹配全文；列表只返回短预览，不复制整库正文到窗口。
+    public func searchPreviews(query: String = "") throws -> [ClipboardPreview] {
+        try Task.checkCancellation()
+        try prune()
+        let statement = try prepare("SELECT id,body,created,pinned,source,bytes FROM clips ORDER BY pinned DESC,created DESC LIMIT ?")
+        defer { sqlite3_finalize(statement) }
+        sqlite3_bind_int64(statement, 1, Int64(limits.maxEntries))
+        func text(_ column: Int32) -> String {
+            guard let bytes = sqlite3_column_text(statement, column) else { return "" }
+            return String(decoding: UnsafeBufferPointer(start: bytes, count: Int(sqlite3_column_bytes(statement, column))), as: UTF8.self)
+        }
+        var rows: [ClipboardPreview] = []
+        while true {
+            try Task.checkCancellation()
+            let status = sqlite3_step(statement)
+            if status == SQLITE_DONE { break }
+            guard status == SQLITE_ROW else { throw ClipboardDatabaseError.statement }
+            let body = text(1)
+            guard query.isEmpty || body.localizedCaseInsensitiveContains(query) else { continue }
+            rows.append(ClipboardPreview(id: text(0), preview: Self.previewText(body), createdAt: Date(timeIntervalSince1970: sqlite3_column_double(statement, 2)), pinned: sqlite3_column_int(statement, 3) != 0, source: text(4), byteCount: Int(sqlite3_column_int64(statement, 5))))
+        }
+        return rows
+    }
+
+    private static func previewText(_ text: String) -> String {
+        // 字符数不能限制超长组合字符的字节数，先取合法UTF-8前缀再限制400字符。
+        let bytes = text.utf8
+        var end = bytes.index(bytes.startIndex, offsetBy: min(bytes.count, 1600))
+        if end != bytes.endIndex {
+            while end != bytes.startIndex && bytes[end] & 0xc0 == 0x80 { end = bytes.index(before: end) }
+        }
+        return String(String(decoding: bytes[..<end], as: UTF8.self).prefix(400))
+    }
+
+    /// 用户明确预览/复制时才按 ID 读取单项全文；过期/删除项返回 nil。
+    public func text(id: String) throws -> String? {
+        try Task.checkCancellation()
+        try prune()
+        let statement = try prepare("SELECT body FROM clips WHERE id=? LIMIT 1")
+        defer { sqlite3_finalize(statement) }
+        bind(id, 1, statement)
+        let status = sqlite3_step(statement)
+        if status == SQLITE_DONE { return nil }
+        guard status == SQLITE_ROW, let bytes = sqlite3_column_text(statement, 0) else { throw ClipboardDatabaseError.statement }
+        let count = Int(sqlite3_column_bytes(statement, 0))
+        guard count <= limits.maxItemBytes else { throw ClipboardDatabaseError.statement }
+        let body = String(decoding: UnsafeBufferPointer(start: bytes, count: count), as: UTF8.self)
+        guard sqlite3_step(statement) == SQLITE_DONE else { throw ClipboardDatabaseError.statement }
+        return body
+    }
+
     public func entries(query: String = "") throws -> [ClipboardEntry] {
         try prune()
         let s = try prepare("SELECT id,body,created,pinned,source FROM clips WHERE instr(lower(body),lower(?))>0 ORDER BY pinned DESC,created DESC LIMIT ?")

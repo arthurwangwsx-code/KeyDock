@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "date": "2026-11-22",
+  "date": "2026-11-23",
   "branch": "feature/phase-one",
   "overall": "PARTIAL",
   "goal": "P0+P1 daily-use macOS internal version; scope unchanged",
@@ -15,19 +15,32 @@
   "verified": {
     "swiftTests": {
       "state": "PASS",
-      "total": 77,
+      "total": 120,
       "commandCore": 14,
-      "executionCore": 17,
-      "macAdapters": 3,
+      "executionCore": 21,
+      "macAdapters": 4,
       "aiAndAgentCoreIncludingHTTP": 23,
-      "workbenchWindowOwnership": 12,
-      "log": ".local/phase-one-latest-tests.log",
-      "workbenchStoreHTTP": 8
+      "workbenchWindowOwnership": 15,
+      "log": ".local/foundation-hardening-tests.log",
+      "workbenchStoreHTTP": 8,
+      "workbenchTotal": 58,
+      "measurementID": "21dd576c-40a6-42d4-81ee-4e50c53eb745",
+      "workbenchBreakdown": {
+        "windowOwnership": 15,
+        "storeHTTP": 8,
+        "aiLimits": 11,
+        "hostDescriptorPolicy": 8,
+        "clipboardSession": 6,
+        "clipboardMutationDisconnect": 1,
+        "aiReceipts": 6,
+        "lifecycle": 3
+      }
     },
     "nativeBuild": {
       "state": "PASS",
       "configuration": "Debug local ad-hoc signature, not notarized",
-      "log": ".local/query-store-final-build.log"
+      "log": ".local/foundation-hardening-native-build.log",
+      "measurementID": "140b734e-4b45-451a-ad9f-06bbc416b698"
     },
     "uiSmoke": {
       "state": "PASS",
@@ -40,19 +53,28 @@
         "keyboard selection beyond sixth row",
         "automatic AI input focus and shared draft into Workspace",
         "missing API configuration without external request",
-        "typed query -> background printf -> output and default task selection"
+        "typed query -> background printf -> output and default task selection",
+        "independent AX clipboard row buttons; preview and pin clicked",
+        "full text tail search and native readonly full preview",
+        "existing workspace switches English live; query preserved"
       ],
-      "scope": "Redesigned safe-smoke app, synthetic input and commands; basic flow only"
+      "scope": "Redesigned safe-smoke app, synthetic input and commands; basic flow only",
+      "latestEvidence": ".local/native-ui-hardening-2026-11-23.json"
     },
     "searchBenchmark": {
       "state": "PASS",
-      "scope": "synthetic cached ranking only",
+      "scope": "synthetic ranking and production cached query pipeline, excluding rendering/AX/indexing",
       "items": 2000,
       "samples": 100,
       "warmups": 10,
-      "p50Milliseconds": 18.918375,
-      "p95Milliseconds": 21.651041,
-      "targetMilliseconds": 50
+      "p50Milliseconds": 19.041458,
+      "p95Milliseconds": 21.838625,
+      "targetMilliseconds": 50,
+      "pipelineP50Milliseconds": 20.957833,
+      "pipelineP95Milliseconds": 23.364167,
+      "pipelineMaxMilliseconds": 31.817416,
+      "log": ".local/query-pipeline-benchmark.log",
+      "measurementID": "af1bbedb-8342-4ed0-be76-933b75aceb97"
     },
     "liveHTTPTransport": {
       "state": "PASS",
@@ -62,8 +84,9 @@
     "localization": {
       "state": "PASS",
       "scope": "English and Simplified Chinese source-key coverage in App and Feature catalogs",
-      "log": ".local/phase-one-latest-localizations.log",
-      "keys": 201
+      "log": ".local/foundation-hardening-localization.log",
+      "keys": 214,
+      "measurementID": "a704fb05-5647-4350-8649-33887ebb69c1"
     },
     "storeHTTPIntegration": {
       "state": "PASS",
@@ -71,6 +94,19 @@
       "testFunctions": 8,
       "cases": 9,
       "noPersonalData": true
+    },
+    "aiMinimalRecovery": {
+      "state": "PASS",
+      "scope": "production Store in dedicated synthetic child; not complete GUI crash acceptance",
+      "modes": [
+        "text",
+        "proposal",
+        "readonly-agent"
+      ],
+      "intentBeforeNetwork": true,
+      "realSIGKILLWhileLoopbackRequestActive": true,
+      "relaunchState": "interrupted/unknown; empty output; no replay, copy or review",
+      "bodyOrCredentialPersisted": false
     }
   },
   "unverified": [
@@ -79,7 +115,7 @@
     "Multiple screens, fullscreen and p95 hot panel presentation <=150ms",
     "Real AX permission grant/revocation, window identity/activation and selection replacement",
     "Live user-enabled clipboard capture and sensitive-source behavior",
-    "Terminal handoff and crash recovery; normal quit with synthetic managed sleep verified on initial UI",
+    "Terminal GUI handoff and complete installed-GUI crash/quit acceptance; synthetic child AI SIGKILL recovery passed",
     "External model API, real Keychain credential flow and readonly tool roundtrip",
     "20-case real model quality review",
     "Minimum macOS and Intel compatibility",
@@ -96,7 +132,7 @@
     "state": "PARTIAL",
     "previousUI": "FAIL: user rejected initial dashboard-like design",
     "currentEvidence": "Live CUA screenshots and AX state of native glass launcher, separate Settings/Workspace, both languages, basic app light/dark and AI focus; findings fixed and rechecked",
-    "review": "docs/implementation/native-ui-review-2026-11-22.md",
+    "review": "docs/implementation/native-ui-hardening-2026-11-23.md",
     "remaining": [
       "user visual review",
       "live reduce-transparency/reduce-motion",

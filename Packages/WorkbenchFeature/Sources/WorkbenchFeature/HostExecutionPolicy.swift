@@ -2,6 +2,7 @@ import Foundation
 import CryptoKit
 import CommandCore
 import ExecutionCore
+import AICore
 
 /// 真实 UI/已保存快捷键的宿主决策边界；模型只能产生草稿或工具参数，不能提供 grant。
 extension WorkbenchModel {
@@ -12,32 +13,66 @@ extension WorkbenchModel {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return SHA256.hash(data: try encoder.encode(command)).map { String(format: "%02x", $0) }.joined()
     }
-    @discardableResult func authorizeHostAction(id: String, effect: ExecutionEffect, resource: String, caller: ExecutionCaller = .user, invocation: UUID = UUID()) throws -> ExecutionRequest {
-        guard caller == .user || caller == .shortcut else { throw ExecutionPolicyError.callerMismatch }
-        let commandID = "keydock.command." + fingerprint(id)
-        let toolID = "keydock.tool." + effect.rawValue
+
+    @discardableResult func authorizeHostAction(
+        id: String, operation: HostOperation, resource: String,
+        availableContext: Set<CommandContextRequirement> = [], modelOverride: String = "",
+        caller: ExecutionCaller = .user, invocation: UUID = UUID()
+    ) throws -> ExecutionRequest {
+        guard !isShuttingDown else { throw WorkbenchLifecycleError.shuttingDown }
+        let descriptor = try hostDescriptor(id: id, title: "KeyDock", operations: [operation], modelOverride: modelOverride)
         let scope = ExecutionResourceScope.exact(namespace: "keydock.resource", identifier: fingerprint(resource))
         let source = caller == .shortcut ? "shortcut." + fingerprint(id) : "interactive-ui"
-        let request = ExecutionRequest(invocationID: invocation, commandID: commandID, commandVersion: 1, toolID: toolID, toolVersion: 1, caller: caller, callerInstanceID: source, resourceScope: scope, effects: [effect])
-        // 此处只从真实点击或已保存快捷键创建授权，不读取模型自报 risk/approval 字段。
-        let grant = PolicyGrant(caller: caller, callerInstanceID: source, commandID: commandID, commandVersion: 1, toolID: toolID, toolVersion: 1, resourceScope: scope, allowedEffects: [effect], expiresAt: Date().addingTimeInterval(30), sideEffectsApproved: true, invocationID: invocation)
-        try ExecutionPolicy.authorize(request: request, grant: grant)
-        return request
+        // 此处仅由真实用户入口创建授权，不采信模型 self-report 的批准或风险字段。
+        return try HostDescriptorPolicy.authorize(
+            descriptor: descriptor, availableContext: availableContext, resourceScope: scope,
+            caller: caller, callerInstanceID: source, invocationID: invocation, sideEffectsApproved: true)
     }
+
     func descriptor(for item: CommandItem) throws -> CommandDescriptor {
-        let effect: CommandEffect
-        let input: CommandValueType
-        let context: Set<CommandContextRequirement>
-        switch item.kind {
-        case .application: effect = .activateApplication; input = .application; context = []
-        case .window: effect = .activateWindow; input = .window; context = [.window]
-        case .command: effect = .executeProcess; input = .structuredData; context = [.workingDirectory]
-        case .ai: effect = .network; input = .text; context = [.explicitInput]
-        case .clipboard: effect = .read; input = .clipboardItem; context = [.clipboard]
-        case .utility: effect = .read; input = .none; context = []
+        let operation = HostActionCatalog.operation(for: item.kind)
+        // AI 默认动作只打开输入界面；执行动作另声明并使用相同目录定义。
+        let operations: [HostOperation] = item.kind == .ai ? [.prepareAI, .generateText] : [operation]
+        let override = configuration.aiActions.first { "ai." + $0.id.uuidString == item.id }?.modelOverride ?? ""
+        return try hostDescriptor(id: item.id, title: item.title, keywords: item.keywords, operations: operations, modelOverride: override)
+    }
+
+    /// 使用同一个实际目录描述执行；不会先检查一个描述，再重建另一套 effect/version。
+    @discardableResult func authorizeHostItem(_ item: CommandItem, caller: ExecutionCaller) throws -> ExecutionRequest {
+        guard !isShuttingDown else { throw WorkbenchLifecycleError.shuttingDown }
+        let context: Set<CommandContextRequirement> = item.kind == .window ? [.window] : []
+        return try HostDescriptorPolicy.authorize(
+            descriptor: descriptor(for: item), availableContext: context,
+            resourceScope: .exact(namespace: "keydock.resource", identifier: fingerprint(item.payload)),
+            caller: caller, callerInstanceID: caller == .shortcut ? "shortcut." + fingerprint(item.id) : "interactive-ui",
+            sideEffectsApproved: true)
+    }
+
+    private func hostDescriptor(
+        id: String, title: String, keywords: [String] = [], operations: [HostOperation], modelOverride: String = ""
+    ) throws -> CommandDescriptor {
+        var availability: [HostOperation: CommandAvailability] = [:]
+        for operation in operations { availability[operation] = hostAvailability(for: operation, modelOverride: modelOverride) }
+        return try HostActionCatalog.descriptor(
+            id: "keydock.command." + fingerprint(id), title: title, keywords: keywords,
+            operations: operations, actionAvailability: availability)
+    }
+
+    private func hostAvailability(for operation: HostOperation, modelOverride: String) -> CommandAvailability {
+        switch operation {
+        case .activateWindow, .replaceSelection:
+            return desktop.accessibilityGranted ? .available : .unavailable(reasonKey: "Accessibility permission is required")
+        case .generateText, .proposeCommand, .runReadOnlyAgent:
+            guard let endpoint = URL(string: configuration.endpoint), !configuration.endpoint.isEmpty else {
+                return .unavailable(reasonKey: "Configure a valid API endpoint and model in Settings")
+            }
+            let config = AIProviderConfiguration(endpoint: endpoint,
+                model: modelOverride.isEmpty ? configuration.model : modelOverride,
+                allowsLocalHTTP: configuration.localHTTP,
+                tokenLimitParameter: TokenLimitParameter(rawValue: configuration.tokenLimitParameter) ?? .maxCompletionTokens)
+            do { try config.validate(); return .available }
+            catch { return .unavailable(reasonKey: "Configure a valid API endpoint and model in Settings") }
+        default: return .available
         }
-        let reference = try CommandExecutionReference(toolID: "keydock.tool." + effect.rawValue, toolVersion: 1)
-        let action = try ActionDescriptor(id: "keydock.action." + item.kind.rawValue, version: 1, title: item.title, inputType: input, outputType: .text, requiredContext: context, effects: [effect], execution: reference)
-        return try CommandDescriptor(id: "keydock.command." + fingerprint(item.id), version: 1, title: item.title, providerID: "keydock.provider." + item.kind.rawValue, keywords: item.keywords, actions: [action])
     }
 }

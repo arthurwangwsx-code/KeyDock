@@ -43,13 +43,13 @@ private let legacyCases = [
     private let languageKey: String
     private let previousLanguage: Any?
     private let previousPane: Any?
-    init() throws {
+    init(allowContextCapture: Bool = false, clipboardReader: @escaping @MainActor () -> String? = { nil }) throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-WindowOwnership-" + UUID().uuidString, isDirectory: true)
         languageKey = (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true) ? "KeyDock.Smoke.Language" : "KeyDock.Language"
         previousLanguage = UserDefaults.standard.object(forKey: languageKey)
         previousPane = UserDefaults.standard.object(forKey: "KeyDock.Smoke.SettingsPane")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        do { store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: false) }
+        do { store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: allowContextCapture, clipboardChangeCount: { 7 }, clipboardReader: clipboardReader) }
         catch { try? FileManager.default.removeItem(at: directory); throw error }
     }
     func cleanup() {
@@ -71,6 +71,35 @@ private let legacyCases = [
         #expect(configuration.preferences.aliases["synthetic-command"] == "synthetic-alias")
         #expect(configuration.preferences.favorites.contains("synthetic-command"))
         #expect(configuration.language == "system")
+    }
+
+    @Test func isolatedPreviewDoesNotSilentlyDiscardAnEnteredAPIKey() throws {
+        let fixture = try StoreFixture(); defer { fixture.cleanup() }
+        let saved = fixture.store.saveAPIConfiguration(endpoint: "https://synthetic.invalid/chat/completions", modelName: "synthetic-model", localHTTP: false, tokenParameter: "max_completion_tokens", apiKey: "synthetic-not-a-real-key")
+        #expect(!saved)
+        #expect(fixture.store.configuration.endpoint.isEmpty)
+        #expect(!fixture.store.settingsNotice.isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: fixture.directory.appendingPathComponent("configuration.json").path))
+    }
+
+    @Test func clipboardContextUsesHostCallerPolicyBeforeReadingAnyText() throws {
+        var reads = 0
+        let fixture = try StoreFixture(allowContextCapture: true, clipboardReader: { reads += 1; return "Synthetic clipboard input" }); defer { fixture.cleanup() }
+        var preset = AIActionPreset(name: "Synthetic clipboard", prompt: "Synthetic prompt"); preset.input = .clipboard
+        fixture.store.configuration.aiActions = [preset]
+        let denied = fixture.store.createDraft(actionID: preset.id, caller: .agent)
+        #expect(reads == 0 && denied.input.isEmpty && !denied.notice.isEmpty)
+        let allowed = fixture.store.createDraft(actionID: preset.id, caller: .shortcut)
+        #expect(reads == 1 && allowed.input == "Synthetic clipboard input" && allowed.source == .clipboard)
+    }
+
+    @Test func missingClipboardContentPreservesAnExistingManualDraft() throws {
+        let fixture = try StoreFixture(allowContextCapture: true, clipboardReader: { nil }); defer { fixture.cleanup() }
+        let draft = fixture.store.createDraft(input: "Synthetic existing draft")
+        let revision = draft.revision
+        fixture.store.useClipboardInput(draft)
+        #expect(draft.input == "Synthetic existing draft" && draft.revision == revision && draft.source == .manual)
+        #expect(!draft.notice.isEmpty)
     }
 
     @Test func customNamesAndCustomPromptsAreNotClaimedAsBuiltins() throws {

@@ -82,6 +82,7 @@ public struct RunningTaskItem: Identifiable {
     public var state: String { status.title }
     public var displayTitle: String { titleKey.map(L) ?? title }
     public var output = ""
+    public var outputIsIncomplete = false
     public var exitCode: Int32?
     public var startedAt = Date()
     public var finishedAt: Date?

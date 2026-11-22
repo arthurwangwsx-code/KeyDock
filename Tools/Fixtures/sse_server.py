@@ -38,8 +38,10 @@ class FixtureServer(ThreadingHTTPServer):
                       "slow_open": 0, "slow_closed": 0,
                       "proposal_started": 0, "agent_requests": 0,
                       "agent_tool_messages": 0, "ordinary_tools_advertised": 0,
-                      "authorization_seen": 0}
+                      "authorization_seen": 0, "post_requests": 0,
+                      "limit_agent_requests": 0, "held_text_started": 0}
         self.proposal_release = threading.Event()
+        self.text_release = threading.Event()
 
     def increment(self, key, amount=1):
         with self.stats_lock:
@@ -65,6 +67,9 @@ class Handler(BaseHTTPRequestHandler):
         path = urlsplit(self.path).path
         if path == "/stats":
             self.send_json(200, self.server.snapshot())
+        elif path == "/release-text":
+            self.server.text_release.set()
+            self.send_json(200, {"released": True})
         elif path == "/release-proposal":
             self.server.proposal_release.set()
             self.send_json(200, {"released": True})
@@ -79,17 +84,30 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self.connection.settimeout(5)
             body = self.rfile.read(length)
+            self.server.increment("post_requests")
             if self.headers.get("Authorization"):
                 self.server.increment("authorization_seen")
             path = urlsplit(self.path).path
             if path == "/stream":
                 self.stream()
+            elif path == "/empty":
+                self.complete_text("", "synthetic-empty-response")
             elif path == "/truncated":
                 self.start_sse()
                 self.wfile.write(event(chunk(text="Synthetic partial")) + event(chunk(finish="stop")))
                 self.wfile.flush()
             elif path == "/slow":
                 self.slow_stream()
+            elif path in ("/large-text", "/large-proposal", "/large-agent", "/held-text"):
+                request = json.loads(body)
+                if path == "/held-text":
+                    self.server.increment("held_text_started")
+                    if not self.server.text_release.wait(timeout=5):
+                        self.send_json(504, {"error": MARKER})
+                        return
+                    self.complete_text("Synthetic held result", "synthetic-held-text")
+                else:
+                    self.large_response(path, request)
             elif path in ("/proposal", "/proposal-held", "/agent", "/unexpected-tool"):
                 request = json.loads(body)
                 if not isinstance(request, dict):
@@ -156,6 +174,54 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(bytes((byte,)))
             self.wfile.flush()
             time.sleep(0.001)
+
+    def large_response(self, path, request):
+        if path == "/large-agent":
+            self.server.increment("limit_agent_requests")
+            messages = request.get("messages", [])
+            has_result = any(m.get("role") == "tool" for m in messages)
+            if not has_result:
+                self.start_sse()
+                self.write_large_text("synthetic-agent-large-1", 1_048_448)
+                # 第一轮接近总预算，第二轮必须继续计算同一 Store 预算。
+                first = {"id": "synthetic-agent-large-1", "choices": [{"index": 0, "delta": {
+                    "tool_calls": [{"index": 0, "id": "large_time_1", "type": "function",
+                                    "function": {"name": "current_time", "arguments": "{}"}}]},
+                    "finish_reason": "tool_calls"}]}
+                self.wfile.write(event(first) + event({"id": "synthetic-agent-large-1", "choices": [],
+                    "usage": {"prompt_tokens": 10, "completion_tokens": 4}}) + b"data: [DONE]\r\n\r\n")
+                self.wfile.flush()
+                return
+            response_id, size = "synthetic-agent-large-2", 4096
+        else:
+            response_id, size = "synthetic-large-output", 1_052_672
+        self.start_sse()
+        if path == "/large-proposal":
+            # 直到最后才闭合 JSON；达到 Store 上限后不能解析或触发审阅。
+            initial = chunk(text='{"name":"Synthetic oversize","executable":"/usr/bin/touch",'
+                                 '"arguments":[],"cwd":"","explanation":"')
+            initial["id"] = response_id
+            self.wfile.write(event(initial))
+        self.write_large_text(response_id, size)
+        if path == "/large-proposal":
+            ending = chunk(text='"}')
+            ending["id"] = response_id
+            self.wfile.write(event(ending))
+        finish = chunk(finish="stop")
+        finish["id"] = response_id
+        self.wfile.write(event(finish) + event({"id": response_id, "choices": [],
+            "usage": {"prompt_tokens": 20, "completion_tokens": 6}}) + b"data: [DONE]\r\n\r\n")
+        self.wfile.flush()
+
+    def write_large_text(self, response_id, count):
+        # 每个 SSE 行小于 parser 行上限，专门覆盖累计文本预算而非单行上限。
+        while count > 0:
+            size = min(32_768, count)
+            value = chunk(text="x" * size)
+            value["id"] = response_id
+            self.wfile.write(event(value))
+            self.wfile.flush()
+            count -= size
 
     def complete_text(self, text, response_id, input_tokens=12, output_tokens=5):
         self.start_sse()

@@ -81,6 +81,22 @@
         }
       }
     },
+    "AI finished, but its task receipt could not be saved. Do not retry automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI finished, but its task receipt could not be saved. Do not retry automatically."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 已结束，但无法保存任务回执。请勿自动重试。"
+          }
+        }
+      }
+    },
     "AI request failed. Check endpoint, model, connectivity and compatibility.": {
       "localizations": {
         "en": {
@@ -93,6 +109,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "AI 请求失败，请检查端点、模型、网络连接及兼容性。"
+          }
+        }
+      }
+    },
+    "AI request was not sent because its task receipt could not be saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI request was not sent because its task receipt could not be saved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存任务回执，AI 请求未发送。"
           }
         }
       }
@@ -173,6 +205,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "API 密钥"
+          }
+        }
+      }
+    },
+    "API keys cannot be stored in this isolated preview. Use a regular build to save a key.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API keys cannot be stored in this isolated preview. Use a regular build to save a key."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔离预览无法存储 API 密钥，请使用常规构建保存。"
           }
         }
       }
@@ -545,18 +593,18 @@
         }
       }
     },
-    "Check name, absolute paths and timeout": {
+    "Check name, absolute paths, arguments, environment and timeout": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Check name, absolute paths and timeout"
+            "value": "Check name, absolute paths, arguments, environment and timeout"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "请检查名称、绝对路径和超时时间"
+            "value": "请检查名称、绝对路径、参数、环境变量和超时时间"
           }
         }
       }
@@ -609,6 +657,22 @@
         }
       }
     },
+    "Clipboard changed while AI was running. The result was kept without copying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clipboard changed while AI was running. The result was kept without copying."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 运行期间剪贴板已更改。结果已保留，未自动覆盖剪贴板。"
+          }
+        }
+      }
+    },
     "Clipboard history": {
       "localizations": {
         "en": {
@@ -653,6 +717,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "剪贴板存储失败"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
           }
         }
       }
@@ -1089,22 +1169,6 @@
         }
       }
     },
-    "Enter a command request within the input limit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter a command request within the input limit"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请输入长度未超限的命令需求"
-          }
-        }
-      }
-    },
     "Environment (JSON object)": {
       "localizations": {
         "en": {
@@ -1425,6 +1489,38 @@
         }
       }
     },
+    "Isolated preview: clipboard and selected-text capture, permission requests and credential storage are disabled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isolated preview: clipboard and selected-text capture, permission requests and credential storage are disabled."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔离预览：已停用剪贴板与选区采集、权限请求和凭据存储。"
+          }
+        }
+      }
+    },
+    "Isolated preview: endpoints without keys can be tested. Use a regular build to store credentials.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isolated preview: endpoints without keys can be tested. Use a regular build to store credentials."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔离预览可测试无需密钥的端点。保存凭据请使用常规构建。"
+          }
+        }
+      }
+    },
     "Key stored · leave blank to keep": {
       "localizations": {
         "en": {
@@ -1437,6 +1533,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "密钥已保存 · 留空则保留"
+          }
+        }
+      }
+    },
+    "KeyDock is quitting. No new action was started.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeyDock is quitting. No new action was started."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeyDock 正在退出，未启动新操作。"
           }
         }
       }
@@ -1501,6 +1613,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "浅色"
+          }
+        }
+      }
+    },
+    "Loading preview…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading preview…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在加载预览…"
           }
         }
       }
@@ -1601,22 +1729,6 @@
         }
       }
     },
-    "Name and executable are required": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Name and executable are required"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请填写名称和可执行文件"
-          }
-        }
-      }
-    },
     "New AI task": {
       "localizations": {
         "en": {
@@ -1677,6 +1789,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "暂无剪贴板记录"
+          }
+        }
+      }
+    },
+    "No clipboard text is available. Enter text manually.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No clipboard text is available. Enter text manually."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剪贴板中没有可用文本，请手动输入。"
           }
         }
       }
@@ -1937,6 +2065,22 @@
         }
       }
     },
+    "Preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览"
+          }
+        }
+      }
+    },
     "Previous execution was interrupted. Outcome is unknown; it was not replayed.": {
       "localizations": {
         "en": {
@@ -2157,6 +2301,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "请求直接发送至此端点，仅在运行 AI 动作时发送输入内容。密钥保存在钥匙串中，不写入配置或日志。"
+          }
+        }
+      }
+    },
+    "Response ended early; the result is incomplete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Response ended early; the result is incomplete"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "响应提前结束，结果不完整"
           }
         }
       }
@@ -2673,6 +2833,38 @@
         }
       }
     },
+    "The clipboard item is no longer available": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The clipboard item is no longer available"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此剪贴板记录已不可用"
+          }
+        }
+      }
+    },
+    "The model returned no output. Nothing was copied or replaced.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The model returned no output. Nothing was copied or replaced."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模型未返回内容，未执行复制或替换。"
+          }
+        }
+      }
+    },
     "The shortcut target is no longer available": {
       "localizations": {
         "en": {
@@ -2829,6 +3021,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "试试应用名称、已保存的命令或AI动作。"
+          }
+        }
+      }
+    },
+    "Unpin item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin item"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消固定"
           }
         }
       }

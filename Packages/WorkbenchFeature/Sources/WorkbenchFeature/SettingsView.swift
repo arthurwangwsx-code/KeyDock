@@ -34,6 +34,7 @@ public struct SettingsRootView: View {
     @ViewBuilder private var content: some View {
         switch session.pane {
         case .general:
+            if !store.allowContextCapture { Section { Text(L("Isolated preview: clipboard and selected-text capture, permission requests and credential storage are disabled.")).font(.caption).foregroundStyle(.secondary) } }
             Section(L("Appearance & language")) {
                 Picker(L("Language"), selection: Binding(get: { store.configuration.language }, set: { store.setLanguage($0) })) {
                     Text(L("Follow System")).tag("system"); Text("English").tag("en"); Text("简体中文").tag("zh-Hans")
@@ -59,12 +60,12 @@ public struct SettingsRootView: View {
             Section(L("Connection")) {
                 TextField(L("Full chat completions endpoint"), text: $session.endpoint)
                 TextField(L("Model name"), text: $session.modelName)
-                SecureField(session.keyStored && session.endpoint == store.configuration.endpoint ? L("Key stored · leave blank to keep") : L("API key"), text: $session.apiKey)
+                SecureField(session.keyStored && session.endpoint == store.configuration.endpoint ? L("Key stored · leave blank to keep") : L("API key"), text: $session.apiKey).disabled(!store.allowContextCapture)
                 Picker(L("Token limit parameter"), selection: $session.tokenParameter) { Text("max_completion_tokens").tag("max_completion_tokens"); Text("max_tokens").tag("max_tokens") }
                 Toggle(L("Allow HTTP for localhost only"), isOn: $session.localHTTP)
             }
             Section {
-                Text(L("Requests go directly to this endpoint. Input is sent only when an AI action runs. Keys are stored in Keychain, never in configuration or logs.")).font(.caption).foregroundStyle(.secondary)
+                Text(store.allowContextCapture ? L("Requests go directly to this endpoint. Input is sent only when an AI action runs. Keys are stored in Keychain, never in configuration or logs.") : L("Isolated preview: endpoints without keys can be tested. Use a regular build to store credentials.")).font(.caption).foregroundStyle(.secondary)
                 HStack {
                     Button(L("Save API configuration")) {
                         if store.saveAPIConfiguration(endpoint: session.endpoint, modelName: session.modelName, localHTTP: session.localHTTP, tokenParameter: session.tokenParameter, apiKey: session.apiKey) { session.apiKey = ""; session.keyStored = store.credentialExists() }
@@ -98,7 +99,7 @@ public struct SettingsRootView: View {
             }
         case .clipboard:
             Section(L("Clipboard history")) {
-                Toggle(L("Record clipboard"), isOn: Binding(get: { store.configuration.clipboardEnabled }, set: { store.configuration.clipboardEnabled = $0; store.save() }))
+                Toggle(L("Record clipboard"), isOn: Binding(get: { store.allowContextCapture && store.configuration.clipboardEnabled }, set: { store.configuration.clipboardEnabled = $0; store.save() })).disabled(!store.allowContextCapture)
                 Text(L("Text only · 24 hours · 500 items · 32 MiB total. Pinned items stay until removed. Concealed and transient types are skipped; some applications do not mark secrets.")).font(.caption).foregroundStyle(.secondary)
             }
             Section(L("Excluded applications")) {
@@ -108,7 +109,7 @@ public struct SettingsRootView: View {
         case .privacy:
             Section(L("Accessibility")) {
                 Label(store.desktop.accessibilityGranted ? L("Accessibility enabled") : L("Accessibility required for windows and selected text"), systemImage: store.desktop.accessibilityGranted ? "checkmark.circle" : "lock")
-                Button(L("Enable Accessibility")) { store.requestAccessibility() }
+                Button(L("Enable Accessibility")) { store.requestAccessibility() }.disabled(!store.allowContextCapture)
                 Text(L("Application search works without Accessibility. Screen recording is not required for window-title search.")).font(.caption).foregroundStyle(.secondary)
             }
             Section(L("Your data")) { Text(L("Local data, no product telemetry. AI actions send only their chosen input to your configured service.")).font(.callout).foregroundStyle(.secondary) }

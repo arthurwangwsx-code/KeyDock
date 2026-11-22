@@ -1,6 +1,6 @@
 # 验证与验收方案
 
-本轮只有文档/JSON/分支脚本检查，没有产品编译、TCC、窗口、剪贴板或模型 API 验收。所有下列项目都是待执行标准；结果使用 PASS/PARTIAL/FAIL/BLOCKED，加源码 revision、设备/系统、工具版本、日期与证据路径。
+本文件定义第一阶段验收标准；实际实现和执行证据以[状态总账](../status.md)、[验证回执](../implementation/phase-one-validation.json)及[最新界面与任务边界复查](../implementation/native-ui-hardening-2026-11-23.md)为准。已有原生构建、合成测试、loopback网络和部分真实界面检查，不能据此推定真实外部API、TCC和完整日用验收通过。结果使用PASS/PARTIAL/FAIL/BLOCKED，记录源码revision、环境、日期和证据范围。
 
 ## 验证层次
 
@@ -30,9 +30,11 @@
 - P1 任务中途杀进程，重启从最小 receipt 显示 interrupted/unknown，无自动重试/重放；P2 再验收完整显式恢复和副作用核对。
 - 普通翻译/总结收到意外 tool-call 不执行；累计 usage、增量 usage、重试和 failed+throw 不重复记账。
 
-## 性能预算（设计目标，未测得）
+## 性能预算与测量范围
 
 热唤起 p95 ≤150ms；缓存本地查询首批结果 p95 ≤50ms。采样至少 100 次，记录硬件、电源模式、系统、数据规模、冷/热条件和测量起止；窗口/API 延迟分别计时。冷启动、常驻内存、CPU/能耗先在 P0 建基线再设门槛，不虚构数值。
+
+`KeyDockDiagnostics`分别测量纯排序与生产使用的QueryRequest→缓存Provider→QueryCoordinator→首个可展示ResultBatch。当前2,000条合成数据、预热10次后100次采样，查询链路p95为23.36ms（macOS27.2，低电量模式关闭）；不包含UI绘制、AX或索引，不能据此宣称热唤起150ms通过。原始输出在忽略的.local/query-pipeline-benchmark.log。
 
 Provider 慢/挂起必须有超时与降级；剪贴板轮询在无变更时不读取正文。面板收起后的运行、睡眠/唤醒和权限观察需测耗电。所有性能结论需标记样本数与分位数，不能仅展示一次最好结果。
 

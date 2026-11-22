@@ -40,12 +40,16 @@ App 是组合根，持有服务生命周期和依赖注入；上图是运行链�
 | CommandDescriptor | namespaced ID、版本、标题/关键词、输入/输出类型、provider、可用性、上下文声明、执行引用 |
 | QueryRequest / ResultBatch | queryID/generation、文本/模式、时间、来源、稳定对象 ID、排序依据、partial/complete、diagnostic |
 | ActionDescriptor | 输入 schema、effects、所需能力、目标资源、是否可撤销、幂等性类别、结果动作 |
-| ExecutionRequest | invocationID、caller=user/shortcut/agent/workflow、command/tool ID、validated arguments、target snapshot、policy grant |
+| ExecutionRequest | invocationID、caller=user/shortcut/agent/workflow、command/action/tool ID及版本、validated arguments、target snapshot、policy grant |
 | ContextEnvelope | 来源/类型、采集时间、目标 identity、敏感度、有效期、用户选择范围；内容通过受控 handle 读取 |
 | ExecutionEvent | queued/running/progress/output/awaitingApproval/succeeded/failed/cancelled/interrupted，结果类型和脱敏错误 |
 | ToolDefinition | schema version、参数/结果 schema、effects、host implementation；权限由 Broker 校验 |
 
 命令目录与工具目录分别投影同一能力。允许同一实现供 UI 和 Agent 使用，不把整个搜索目录无条件暴露给模型；通过 tool allowlist 和 caller policy 限定。
+
+宿主动作通过 HostActionCatalog／ActionDescriptor 声明 operation、所需上下文、effects与tool版本，授权入口消费声明，不能由调用方另填效果绕过；打开AI输入与发起网络是两个动作。CLI编辑、后台执行和Terminal脚本共用SavedCommand校验。上述是应用层策略，不等同OS沙箱。
+
+P1 CLI与AI分别使用最小InvocationStore：执行／网络前写intent，完成后写终态，重启只恢复状态且不重放。AI正文和替换目标不落回执；P2完整RunStore与显式恢复仍是计划。
 
 ## 搜索与 UI 生命周期
 

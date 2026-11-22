@@ -95,8 +95,15 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var page: Page = .tasks
     @Published public var selectedTaskID: UUID?
     @Published public var draft: AIDraftDocument?
-    @Published public var clipboardQuery = ""
-    public init() {}
+    public let clipboard = ClipboardBrowserSession()
+    public var clipboardQuery: String {
+        get { clipboard.query }
+        set { clipboard.query = newValue }
+    }
+    private var clipboardChanges: AnyCancellable?
+    public init() {
+        clipboardChanges = clipboard.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
+    }
     public func navigate(_ route: WorkspaceRoute, store: WorkbenchModel) {
         switch route {
         case .tasks(let id): page = .tasks; if let id { selectedTaskID = id } else if selectedTaskID == nil { selectedTaskID = store.tasks.first?.id }

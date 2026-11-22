@@ -1,7 +1,7 @@
 import AppKit
 
 @MainActor public final class ClipboardMonitor {
-    public var enabled = false { didSet { lastChange = NSPasteboard.general.changeCount } }
+    public var enabled = false { didSet { if enabled != oldValue { lastChange = NSPasteboard.general.changeCount } } }
     public var excludedApplications: Set<String> = ["com.1password.1password", "com.agilebits.onepassword7", "com.bitwarden.desktop", "com.apple.keychainaccess"]
     public var onChange: (@MainActor () -> Void)?
     public var onFailure: (@MainActor () -> Void)?

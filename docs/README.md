@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-22。当前处于第一阶段实现，已有可构建原生预览；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-23。当前处于第一阶段实现，已有可构建原生预览；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -19,6 +19,7 @@
 | [开源参考目录](../references/README.md) | 13 个参考工程及固定版本登记 |
 | [第一阶段进度](implementation/phase-one-progress.md) | 实现、测试、真实验收与下一步 |
 | [新版界面实机复查](implementation/native-ui-review-2026-11-22.md) | 三窗口、语言、外观、输入焦点和终端验收边界 |
+| [界面与任务边界复查](implementation/native-ui-hardening-2026-11-23.md) | 最新120项测试、214条文案、全文预览与独立行控件、退出与恢复 |
 | [状态总账](status.md) | PASS/PARTIAL/FAIL/BLOCKED、证据与未完成义务 |
 | [iSpec 提案](../ispec/changes/keydock-foundation/10-proposal.md) | proposal、design、四个能力规范和分阶段 tasks |
 

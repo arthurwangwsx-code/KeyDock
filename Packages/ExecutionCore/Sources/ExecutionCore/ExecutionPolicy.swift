@@ -22,6 +22,8 @@ public struct ExecutionRequest: Sendable {
     public let invocationID: UUID
     public let commandID: String
     public let commandVersion: Int
+    public let actionID: String
+    public let actionVersion: Int
     public let toolID: String
     public let toolVersion: Int
     public let caller: ExecutionCaller
@@ -32,9 +34,11 @@ public struct ExecutionRequest: Sendable {
     public init(
         invocationID: UUID = UUID(), commandID: String, commandVersion: Int,
         toolID: String, toolVersion: Int, caller: ExecutionCaller, callerInstanceID: String,
-        resourceScope: ExecutionResourceScope, effects: Set<ExecutionEffect> = []
+        resourceScope: ExecutionResourceScope, effects: Set<ExecutionEffect> = [],
+        actionID: String? = nil, actionVersion: Int? = nil
     ) {
         self.invocationID = invocationID; self.commandID = commandID; self.commandVersion = commandVersion
+        self.actionID = actionID ?? commandID; self.actionVersion = actionVersion ?? commandVersion
         self.toolID = toolID; self.toolVersion = toolVersion; self.caller = caller
         self.callerInstanceID = callerInstanceID; self.resourceScope = resourceScope; self.effects = effects
     }
@@ -48,6 +52,8 @@ public struct PolicyGrant: Sendable {
     public let callerInstanceID: String
     public let commandID: String
     public let commandVersion: Int
+    public let actionID: String
+    public let actionVersion: Int
     public let toolID: String
     public let toolVersion: Int
     public let resourceScope: ExecutionResourceScope
@@ -61,10 +67,12 @@ public struct PolicyGrant: Sendable {
         id: UUID = UUID(), caller: ExecutionCaller, callerInstanceID: String,
         commandID: String, commandVersion: Int, toolID: String, toolVersion: Int,
         resourceScope: ExecutionResourceScope, allowedEffects: Set<ExecutionEffect> = [],
-        expiresAt: Date, sideEffectsApproved: Bool = false, invocationID: UUID? = nil
+        expiresAt: Date, sideEffectsApproved: Bool = false, invocationID: UUID? = nil,
+        actionID: String? = nil, actionVersion: Int? = nil
     ) {
         self.id = id; self.caller = caller; self.callerInstanceID = callerInstanceID
         self.commandID = commandID; self.commandVersion = commandVersion
+        self.actionID = actionID ?? commandID; self.actionVersion = actionVersion ?? commandVersion
         self.toolID = toolID; self.toolVersion = toolVersion; self.resourceScope = resourceScope
         self.allowedEffects = allowedEffects; self.expiresAt = expiresAt
         self.sideEffectsApproved = sideEffectsApproved; self.invocationID = invocationID
@@ -73,20 +81,22 @@ public struct PolicyGrant: Sendable {
 
 public enum ExecutionPolicyError: Error, Equatable, Sendable {
     case missingGrant, invalidRequest, invalidGrant, expiredGrant, callerMismatch
-    case commandMismatch, commandVersionMismatch, toolMismatch, toolVersionMismatch
+    case commandMismatch, commandVersionMismatch, actionMismatch, actionVersionMismatch, toolMismatch, toolVersionMismatch
     case resourceMismatch, effectNotPermitted, sideEffectApprovalRequired, invocationMismatch
     case agentWriteUnsupported
 }
 
 public enum ExecutionPolicy {
     public static func authorize(request: ExecutionRequest, grant: PolicyGrant?) throws {
-        guard validID(request.commandID), validID(request.toolID), request.commandVersion > 0,
+        guard validID(request.commandID), validID(request.actionID), validID(request.toolID),
+              request.commandVersion > 0, request.actionVersion > 0,
               request.toolVersion > 0, validPrincipal(request.callerInstanceID),
               !request.effects.isEmpty, validScope(request.resourceScope, effects: request.effects) else {
             throw ExecutionPolicyError.invalidRequest
         }
         guard let grant else { throw ExecutionPolicyError.missingGrant }
-        guard validID(grant.commandID), validID(grant.toolID), grant.commandVersion > 0,
+        guard validID(grant.commandID), validID(grant.actionID), validID(grant.toolID),
+              grant.commandVersion > 0, grant.actionVersion > 0,
               grant.toolVersion > 0, validPrincipal(grant.callerInstanceID), !grant.allowedEffects.isEmpty,
               grant.expiresAt.timeIntervalSinceReferenceDate.isFinite,
               validScope(grant.resourceScope, effects: grant.allowedEffects) else {
@@ -98,6 +108,8 @@ public enum ExecutionPolicy {
         }
         guard request.commandID == grant.commandID else { throw ExecutionPolicyError.commandMismatch }
         guard request.commandVersion == grant.commandVersion else { throw ExecutionPolicyError.commandVersionMismatch }
+        guard request.actionID == grant.actionID else { throw ExecutionPolicyError.actionMismatch }
+        guard request.actionVersion == grant.actionVersion else { throw ExecutionPolicyError.actionVersionMismatch }
         guard request.toolID == grant.toolID else { throw ExecutionPolicyError.toolMismatch }
         guard request.toolVersion == grant.toolVersion else { throw ExecutionPolicyError.toolVersionMismatch }
         guard request.resourceScope == grant.resourceScope else { throw ExecutionPolicyError.resourceMismatch }

@@ -21,7 +21,7 @@
 - [ ] 2.6 建立性能采样与 P0 实机证据；记录热唤起/本地查询/CPU/内存/耗电基线。
 - [x] 2.7 按视觉评审重构独立Launcher／Settings／Workspace和菜单栏设置、标准编辑菜单；原生App构建通过。
 - [x] 2.8 建立KeyDockUI、系统Liquid Glass与availability回退、中英语言切换、分bundle String Catalog静态覆盖和旧内置动作迁移。
-- [x] 2.9 分离三个窗口Session，AI共享文档按revision／runID固定输出元数据；配置／草稿／导航与完整结果键盘可达的10项定向测试通过。
+- [x] 2.9 分离三个窗口Session，AI共享文档按revision／runID固定输出元数据；配置／草稿／导航与完整结果键盘可达的15项定向测试通过。
 - [ ] 2.10 完成新版三窗口深浅色、中英、辅助功能、IME、焦点与截图视觉验收；基本画面/双语/焦点已实查，辅助功能、IME、多屏完整矩阵尚待完成。
 
 ## 3. P1 桌面工具
@@ -30,7 +30,7 @@
 - [x] 3.2 建立 SavedCommand 参数/cwd/envRef 表单和 executable+argv runner，shell mode 显式隔离。
 - [x] 3.3 实现 stdout/stderr 有界输出、超时/进程组取消和退出状态，验证满管/派生进程。
 - [ ] 3.4 提供交互 CLI 的用户终端打开 adapter，不伪装 Process 支持 PTY。
-- [x] 3.5 实现最小运行列表/输出详情/取消入口和 durable invocation intent/result，重启仅展示 interrupted/unknown，不重放。
+- [x] 3.5 实现最小运行列表/输出详情/取消入口和CLI／AI最小durable invocation intent/result，重启仅展示 interrupted/unknown，不重放。
 - [x] 3.6 实现读取正文前的 clipboard 类型过滤、暂停/排除/TTL/容量/清空与合成验证。
 - [ ] 3.7 实现纯文本 clipboard 搜索/复制，自动粘贴单独校验权限与目标。
 

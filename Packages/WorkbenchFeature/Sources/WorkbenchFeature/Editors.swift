@@ -37,9 +37,10 @@ struct CommandEditor: View {
         do {
             command.arguments = try JSONDecoder().decode([String].self, from: Data(arguments.utf8))
             command.environment = try JSONDecoder().decode([String: String].self, from: Data(environment.utf8))
-            guard !command.name.isEmpty, command.executable.hasPrefix("/"), command.workingDirectory.hasPrefix("/"), command.timeout > 0, command.timeout <= 86400, command.timeout.isFinite else { error = L("Check name, absolute paths and timeout"); return }
+            try command.validate()
             onSave(command); dismiss()
-        } catch { self.error = L("Arguments and environment must be valid JSON") }
+        } catch is SavedCommandValidationError { self.error = L("Check name, absolute paths, arguments, environment and timeout") }
+        catch { self.error = L("Arguments and environment must be valid JSON") }
     }
 }
 

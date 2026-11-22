@@ -29,6 +29,7 @@ import KeyDockUI
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { coordinator?.presentLauncher(); return true }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !terminating else { return .terminateLater }; terminating = true
+        coordinator?.beginShutdown()
         Task { await coordinator?.prepareForQuit(); sender.reply(toApplicationShouldTerminate: true) }
         return .terminateLater
     }
@@ -87,7 +88,7 @@ import KeyDockUI
         store.onAppearanceChanged = { [weak self] in self?.applyAppearance() }
         store.onShortcutConfigurationChanged = { [weak self] in self?.installShortcuts() }
         store.onShortcutRecordingChanged = { [weak self] recording in
-            guard let self else { return }
+            guard let self, !self.store.isShuttingDown else { return }
             if recording { self.hotkeys.suspend() }
             else { do { try self.hotkeys.resume() } catch { self.shortcutError(AppL("Shortcut could not be registered. It may be used by macOS or another application.")) } }
         }
@@ -114,6 +115,7 @@ import KeyDockUI
         return panel
     }
     func presentLauncher(commandID: String? = nil) {
+        guard !store.isShuttingDown else { return }
         if launcher == nil { launcher = buildLauncher() }
         guard let launcher else { return }
         if launcher.isKeyWindow {
@@ -156,6 +158,7 @@ import KeyDockUI
         }
     }
     func openSettings(_ pane: SettingsPane? = nil) {
+        guard !store.isShuttingDown else { return }
         dismissLauncher(restore: false); if let pane { settingsSession.pane = pane }
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 840, height: 620), styleMask: [.titled, .closable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
@@ -167,6 +170,7 @@ import KeyDockUI
         refreshTitles(); NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
     }
     func openWorkspace(_ route: WorkspaceRoute) {
+        guard !store.isShuttingDown else { return }
         dismissLauncher(restore: false); workspaceSession.navigate(route, store: store)
         if workspace == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 680), styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
@@ -206,6 +210,7 @@ import KeyDockUI
     @objc private func quitAction() { NSApp.terminate(nil) }
     private func shortcutError(_ text: String) { store.settingsNotice = text; store.launcherNotice = text }
     private func installShortcuts() {
+        guard !store.isShuttingDown else { return }
         var next: [UInt32: (HotkeyBinding, String?)] = [:]
         if let binding = store.configuration.launcherShortcut { next[1] = (binding, nil) }
         for (command, binding) in store.directShortcuts {
@@ -236,6 +241,7 @@ import KeyDockUI
         if sender === settings { settingsSession.apiKey = "" }
         return true
     }
+    func beginShutdown() { hotkeys.suspend(); store.shutdown() }
     func prepareForQuit() async { await store.shutdownAndWait() }
     func shutdown() { hotkeys.shutdown(); store.shutdown(); settingsSession.apiKey = "" }
 }

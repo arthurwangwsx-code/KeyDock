@@ -88,10 +88,8 @@ private final class ProcessSession: @unchecked Sendable {
             finish(.init(state: .failed, message: "process.requiresTerminal"))
             return
         }
-        guard valid(command) else {
-            finish(.init(state: .failed, message: "process.invalidConfiguration"))
-            return
-        }
+        do { try command.validate() }
+        catch { finish(.init(state: .failed, message: "process.invalidConfiguration")); return }
         do {
             let child = try spawn()
             continuation.yield(.started(child.pid))
@@ -104,16 +102,6 @@ private final class ProcessSession: @unchecked Sendable {
             }
         } catch {
             finish(.init(state: .failed, message: "process.spawnFailed"))
-        }
-    }
-
-    private func valid(_ command: SavedCommand) -> Bool {
-        guard command.executable.hasPrefix("/"), command.workingDirectory.hasPrefix("/"),
-              command.timeout.isFinite, command.timeout > 0, command.timeout <= 86_400,
-              !command.executable.utf8.contains(0), !command.workingDirectory.utf8.contains(0),
-              command.arguments.allSatisfy({ !$0.utf8.contains(0) }) else { return false }
-        return command.environment.allSatisfy { key, value in
-            !key.isEmpty && !key.contains("=") && !key.utf8.contains(0) && !value.utf8.contains(0)
         }
     }
 

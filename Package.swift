@@ -13,13 +13,15 @@ let package = Package(
         .library(name: "MacAdapters", targets: ["MacAdapters"]),
         .library(name: "WorkbenchFeature", targets: ["WorkbenchFeature"]),
         .library(name: "KeyDockUI", targets: ["KeyDockUI"]),
-        .executable(name: "KeyDockDiagnostics", targets: ["KeyDockDiagnostics"])
+        .executable(name: "KeyDockDiagnostics", targets: ["KeyDockDiagnostics"]),
+        .executable(name: "KeyDockAIRecoveryProbe", targets: ["KeyDockAIRecoveryProbe"])
     ],
     targets: [
         .target(name: "CommandCore", path: "Packages/CommandCore/Sources/CommandCore"),
         .target(name: "ExecutionCore", path: "Packages/ExecutionCore/Sources/ExecutionCore"),
         .target(name: "AICore", path: "Packages/AICore/Sources/AICore"),
         .executableTarget(name: "KeyDockDiagnostics", dependencies: ["CommandCore"], path: "Tools/KeyDockDiagnostics"),
+        .executableTarget(name: "KeyDockAIRecoveryProbe", dependencies: ["WorkbenchFeature"], path: "Tools/KeyDockAIRecoveryProbe"),
         .target(name: "AgentCore", dependencies: ["AICore", "ExecutionCore"], path: "Packages/AgentCore/Sources/AgentCore"),
         .systemLibrary(name: "CSQLite", path: "Packages/CSQLite"),
         .target(name: "MacAdapters", dependencies: ["CommandCore", "CSQLite"], path: "Packages/MacAdapters/Sources/MacAdapters"),
@@ -28,7 +30,7 @@ let package = Package(
         .testTarget(name: "CommandCoreTests", dependencies: ["CommandCore"], path: "Packages/CommandCore/Tests/CommandCoreTests"),
         .testTarget(name: "ExecutionCoreTests", dependencies: ["ExecutionCore"], path: "Packages/ExecutionCore/Tests/ExecutionCoreTests"),
         .testTarget(name: "AICoreTests", dependencies: ["AICore", "AgentCore"], path: "Packages/AICore/Tests/AICoreTests"),
-        .testTarget(name: "WorkbenchFeatureTests", dependencies: ["WorkbenchFeature", "CommandCore", "ExecutionCore", "KeyDockUI"], path: "Packages/WorkbenchFeature/Tests/WorkbenchFeatureTests"),
+        .testTarget(name: "WorkbenchFeatureTests", dependencies: ["WorkbenchFeature", "CommandCore", "ExecutionCore", "KeyDockUI", "MacAdapters", "KeyDockAIRecoveryProbe"], path: "Packages/WorkbenchFeature/Tests/WorkbenchFeatureTests"),
         .testTarget(name: "MacAdaptersTests", dependencies: ["MacAdapters"], path: "Packages/MacAdapters/Tests/MacAdaptersTests")
     ]
 )

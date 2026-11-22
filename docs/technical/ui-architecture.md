@@ -1,6 +1,6 @@
 # UI 架构与组件库
 
-2026-11-22。实现路径为原生模块化单体，UI 不引入 Web runtime 或第三方主题框架。
+2026-11-23。实现路径为原生模块化单体，UI 不引入 Web runtime 或第三方主题框架。
 
 ```mermaid
 flowchart TD
@@ -20,18 +20,21 @@ flowchart TD
 | WindowCoordinator | 窗口、菜单、快捷键、展示 generation、原目标快照捕获 | 模型请求与进程执行实现 |
 | LauncherSession | 查询、结果选择、焦点请求、动作菜单、当前草稿引用 | 设置表单和任务生命周期 |
 | SettingsSession | 分类、命令／动作编辑 sheet、服务草稿与未保存 key、待审建议队列 | AI 输入和工作区路由 |
-| WorkspaceSession | 当前页、任务选择、剪贴板查询、草稿引用 | 设置表单 |
+| WorkspaceSession | 当前页、任务选择、ClipboardBrowserSession、草稿引用 | 设置表单与全量剪贴板正文 |
+| ClipboardBrowserSession | 查询generation、轻量预览、单项详情、变更通知 | 共享业务任务和持久配置 |
 | WorkbenchModel | 配置、能力目录、服务、任务、文档注册表、运行与目标映射 | 窗口搜索／选择／导航 |
 | AIDraftDocument | input、actionID、revision、输入来源与原目标、latestRunID、提示 | 任意新前台窗口的可变选区 |
 | RunningTaskItem | runID、运行时标题／模型／来源、状态、输出、结果提示 | 当前设置中的可变模型名 |
 
-长任务与窗口生命周期解耦；窗口关闭不取消，App 正常退出则等待受控取消。结果按 runID 查找，原目标按结果保存；只因当前窗口切换不能扩大替换权限。配置保存、运行失败和草稿提示分别归属，避免跨窗口旧消息。
+长任务与窗口生命周期解耦；窗口关闭不取消，App 正常退出先同步设置围栏与取消已有工作，再等待任务和回执收尾。结果按 runID 查找，原目标按结果保存；只因当前窗口切换不能扩大替换权限。配置保存、运行失败和草稿提示分别归属，避免跨窗口旧消息。
 
 ## KeyDockUI
 
 独立 SwiftPM library，依赖 AppKit／SwiftUI，不依赖业务模块。包含 KDTokens、KDLauncherSurface、KDSearchField、KDCommandRow、KDKeycap、KDIconButton、KDEmptyState、KDInlineNotice 与跨 bundle 的 KDLocalizer。可复用组件只接受展示数据和回调，文案与业务动作由 Feature 提供。
 
 材质选择集中在 KDLauncherSurface：26+原生SwiftUI glassEffect regular／interactive，减少透明度动态切换identity与系统实色；旧系统使用NSVisualEffectView。hosting和输入前景保持身份，背景参数变化不重建焦点树；减少动态效果关闭交互和动画。应用外观可跟随系统或选择浅／深色，由NSApp.appearance统一应用。标准侧栏／工具栏／表单由当前SDK与系统绘制。Launcher通过CatalogProvider→QueryCoordinator actor接收携带完整QueryRequest的ResultBatch，排序离主线程；慢网络、AX与进程流不在View body运行。
+
+剪贴板全文搜索在数据库 actor 运行，列表只接收受字节数和字符数限制的预览；明确预览／复制时才读取单项正文。行使用独立可访问按钮，查询和单项预览分别以 generation 拒绝迟到结果，数据库变更不重置窗口查询。
 
 ## 本地化约定
 

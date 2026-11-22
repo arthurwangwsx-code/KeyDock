@@ -52,7 +52,7 @@ public struct WorkspaceView: View {
                         VStack(alignment: .leading, spacing: 7) { Text(task.displayTitle).font(.system(size: 20, weight: .semibold)); Text(task.state).font(.system(size: 12)).foregroundStyle(.secondary) }
                         Spacer()
                         if task.isRunning { Button(L("Stop")) { store.cancelTask(task.id) }.keyboardShortcut(".", modifiers: .command) }
-                        KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }
+                        KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }.disabled(task.output.isEmpty)
                     }
                     if !task.notice.isEmpty { KDInlineNotice(task.notice) }
                     if let code = task.exitCode { Text(L("Exit code") + ": \(code)").font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary) }
@@ -75,25 +75,45 @@ public struct WorkspaceView: View {
         VStack(spacing: 0) {
             HStack {
                 TextField(L("Search clipboard history"), text: $session.clipboardQuery).textFieldStyle(.roundedBorder)
+                if session.clipboard.isSearching { ProgressView().controlSize(.small) }
                 Spacer()
                 Button(L("Clear all"), role: .destructive) { confirmClear = true }
                 Button { store.onOpenSettings?(.clipboard) } label: { Image(systemName: "slider.horizontal.3") }.help(L("Clipboard privacy"))
             }.padding(20)
-            if filteredClipboard.isEmpty { KDEmptyState(symbol: "clipboard", title: L("No clipboard items"), detail: L("Recording is optional. Sensitive marked content is skipped.")) }
-            else {
-                List(filteredClipboard) { entry in
-                    HStack(alignment: .top, spacing: 14) {
-                        Image(systemName: entry.pinned ? "pin.fill" : "doc.text").foregroundStyle(.secondary)
-                        VStack(alignment: .leading, spacing: 8) { Text(String(entry.text.prefix(400))).font(.system(size: 12)).lineLimit(4).textSelection(.enabled); Text(entry.createdAt, style: .time).font(.system(size: 10)).foregroundStyle(.tertiary) }
-                        Spacer()
-                        Button { store.pin(entry) } label: { Image(systemName: entry.pinned ? "pin.slash" : "pin") }.help(L("Pin item"))
-                        Button(L("Copy")) { ClipboardMonitor.copy(entry.text) }
-                        Button { store.delete(entry) } label: { Image(systemName: "trash") }.help(L("Delete"))
-                    }.padding(.vertical, 10).accessibilityElement(children: .contain)
-                }.listStyle(.inset)
+            if !session.clipboard.notice.isEmpty { KDInlineNotice(session.clipboard.notice) }
+            if session.clipboard.results.isEmpty && !session.clipboard.isSearching {
+                KDEmptyState(symbol: "clipboard", title: L("No clipboard items"), detail: L("Recording is optional. Sensitive marked content is skipped."))
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(session.clipboard.results) { entry in
+                            clipboardRow(entry)
+                            Divider().padding(.leading, 56)
+                        }
+                    }
+                }
             }
-        }.onAppear { store.refreshClipboard() }
-            .confirmationDialog(L("Delete all clipboard history?"), isPresented: $confirmClear) { Button(L("Clear all"), role: .destructive) { store.clearClipboard() } }
+        }
+        .onAppear { [store] in session.clipboard.connect(to: store.clipboardStore, onMutation: { [weak store] in store?.refreshClipboard() }) }
+        .onDisappear { session.clipboard.disconnect() }
+        .onReceive(store.$clipboardRevision.dropFirst()) { _ in session.clipboard.refresh() }
+        .confirmationDialog(L("Delete all clipboard history?"), isPresented: $confirmClear) {
+            Button(L("Clear all"), role: .destructive) { Task { await session.clipboard.clear() } }
+        }
+        .sheet(isPresented: Binding(get: { session.clipboard.previewedID != nil }, set: { if !$0 { session.clipboard.closePreview() } })) {
+            ClipboardPreviewSheet(session: session.clipboard, writer: store.copyClipboardText)
+        }
     }
-    private var filteredClipboard: [ClipboardEntry] { session.clipboardQuery.isEmpty ? store.clipboardEntries : store.clipboardEntries.filter { $0.text.localizedCaseInsensitiveContains(session.clipboardQuery) } }
+    private func clipboardRow(_ entry: ClipboardPreview) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: entry.pinned ? "pin.fill" : "doc.text").foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 8) { Text(entry.preview).font(.system(size: 12)).lineLimit(4).textSelection(.enabled); Text(entry.createdAt, style: .time).font(.system(size: 10)).foregroundStyle(.tertiary) }
+            Spacer()
+            Button(L("Preview")) { session.clipboard.preview(entry) }
+            Button { Task { await session.clipboard.pin(entry) } } label: { Image(systemName: entry.pinned ? "pin.slash" : "pin") }.help(entry.pinned ? L("Unpin item") : L("Pin item")).accessibilityLabel(entry.pinned ? L("Unpin item") : L("Pin item"))
+            Button(L("Copy")) { Task { await session.clipboard.copy(entry, perform: store.copyClipboardText) } }
+            Button { Task { await session.clipboard.delete(entry) } } label: { Image(systemName: "trash") }.help(L("Delete"))
+        }.padding(.horizontal, 20).padding(.vertical, 10).accessibilityElement(children: .contain)
+    }
+
 }
