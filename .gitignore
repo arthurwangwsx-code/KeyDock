@@ -1,0 +1,19 @@
+# Local tools, provenance and evidence
+.codex/
+.local/
+build/
+.build/
+DerivedData/
+.swiftpm/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+.env
+.env.*
+!.env.example
+*.p12
+*.mobileprovision
+*.key
+*.pem
+# iSpec machine state
+ispec/.cache/

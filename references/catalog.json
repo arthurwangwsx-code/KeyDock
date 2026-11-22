@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-22",
+  "verification": "GitHub metadata and pinned root license/README reviewed; no builds or security audit",
+  "projects": [
+    {
+      "repo": "ospfranco/sol",
+      "url": "https://github.com/ospfranco/sol",
+      "revision": {
+        "branch": "main",
+        "sha": "873ae1c28b153f190a57a56a5ad2bea2159611f8"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "TypeScript / React Native macOS",
+      "licenseSummary": "MIT",
+      "licenseEvidence": "https://github.com/ospfranco/sol/blob/873ae1c28b153f190a57a56a5ad2bea2159611f8/LICENSE",
+      "researchScope": "launcher 与各工具的组合边界",
+      "intendedUse": "研究整体结构，不引入 RN 作为复用代价",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-11-10"
+    },
+    {
+      "repo": "mikker/LeaderKey",
+      "url": "https://github.com/mikker/LeaderKey",
+      "revision": {
+        "branch": "main",
+        "sha": "16bcb307dcc5309fbc3a00fe398d913e1f7ddc51"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "Swift",
+      "licenseSummary": "MIT",
+      "licenseEvidence": "https://github.com/mikker/LeaderKey/blob/16bcb307dcc5309fbc3a00fe398d913e1f7ddc51/LICENSE",
+      "researchScope": "leader key 与多层快捷动作配置",
+      "intendedUse": "作者转向 Tuna，研究交互，不作为持续维护底座",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-03-02"
+    },
+    {
+      "repo": "p0deje/Maccy",
+      "url": "https://github.com/p0deje/Maccy",
+      "revision": {
+        "branch": "master",
+        "sha": "f0b571e32e4031d7b91ba811f50d0f33e8e5548b"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "Swift",
+      "licenseSummary": "MIT",
+      "licenseEvidence": "https://github.com/p0deje/Maccy/blob/f0b571e32e4031d7b91ba811f50d0f33e8e5548b/LICENSE",
+      "researchScope": "clipboard 过滤/搜索/暂停/固定/粘贴",
+      "intendedUse": "剪贴板设计首选参考，逐模块审查后可考虑复用",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-10-26"
+    },
+    {
+      "repo": "rxhanson/Rectangle",
+      "url": "https://github.com/rxhanson/Rectangle",
+      "revision": {
+        "branch": "main",
+        "sha": "adbc8a0560367a6c0a56b2e8ae6f39a24740ab14"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "Swift",
+      "licenseSummary": "MIT (LICENSE text; GitHub NOASSERTION)",
+      "licenseEvidence": "https://github.com/rxhanson/Rectangle/blob/adbc8a0560367a6c0a56b2e8ae6f39a24740ab14/LICENSE",
+      "researchScope": "窗口几何/跨屏/恢复/URL actions",
+      "intendedUse": "窗口参考；可先做用户可选 URL scheme 集成，保留 Spectacle attribution",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-11-20"
+    },
+    {
+      "repo": "lwouis/alt-tab-macos",
+      "url": "https://github.com/lwouis/alt-tab-macos",
+      "revision": {
+        "branch": "master",
+        "sha": "950c1a4e749aef53637bf2833b4a09328cdbce8e"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "Swift",
+      "licenseSummary": "GPL-3.0",
+      "licenseEvidence": "https://github.com/lwouis/alt-tab-macos/blob/950c1a4e749aef53637bf2833b4a09328cdbce8e/LICENCE.md",
+      "researchScope": "窗口切换/缩略图/最小化/Space 边界",
+      "intendedUse": "仅研究行为和验收，独立实现；复制/派生另行评估许可",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-11-17"
+    },
+    {
+      "repo": "Hammerspoon/hammerspoon",
+      "url": "https://github.com/Hammerspoon/hammerspoon",
+      "revision": {
+        "branch": "master",
+        "sha": "23e387e2805a9890066366e0ac96c71b27f0cfd5"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "Objective-C / Lua",
+      "licenseSummary": "MIT",
+      "licenseEvidence": "https://github.com/Hammerspoon/hammerspoon/blob/23e387e2805a9890066366e0ac96c71b27f0cfd5/LICENSE",
+      "researchScope": "OS 模块/事件订阅/modal hotkeys/脚本桥",
+      "intendedUse": "参考 API，逐项检查公开/私有系统接口",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-07-08"
+    },
+    {
+      "repo": "oliverschwendener/ueli",
+      "url": "https://github.com/oliverschwendener/ueli",
+      "revision": {
+        "branch": "main",
+        "sha": "94104292d82b95dfa9300a432dd2ad45d41c2e28"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "TypeScript / Electron / React",
+      "licenseSummary": "MIT",
+      "licenseEvidence": "https://github.com/oliverschwendener/ueli/blob/94104292d82b95dfa9300a432dd2ad45d41c2e28/LICENSE",
+      "researchScope": "扩展启停/设置/结果动作/终端",
+      "intendedUse": "产品与配置参考，不引入 Electron",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-11-16"
+    },
+    {
+      "repo": "johnlindquist/kit",
+      "url": "https://github.com/johnlindquist/kit",
+      "revision": {
+        "branch": "main",
+        "sha": "e82e7846392ba7ec8dac252a12af317d14486579"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "TypeScript",
+      "licenseSummary": "MIT",
+      "licenseEvidence": "https://github.com/johnlindquist/kit/blob/e82e7846392ba7ec8dac252a12af317d14486579/LICENSE",
+      "researchScope": "脚本 prompt/参数/CLI 自动化 SDK",
+      "intendedUse": "SDK API 参考，不把 SDK 当整个桌面宿主",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2025-12-05"
+    },
+    {
+      "repo": "raycast/extensions",
+      "url": "https://github.com/raycast/extensions",
+      "revision": {
+        "branch": "main",
+        "sha": "d0cd72a2a83719a8a8ef93633655b93b0df1b254"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "TypeScript / React",
+      "licenseSummary": "MIT (root; per-extension dependencies separate)",
+      "licenseEvidence": "https://github.com/raycast/extensions/blob/d0cd72a2a83719a8a8ef93633655b93b0df1b254/LICENSE",
+      "researchScope": "manifest/List/Detail/Form 与真实服务扩展",
+      "intendedUse": "仅扩展示例；不是 Raycast 宿主，不承诺 runtime/API 兼容",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-11-21"
+    },
+    {
+      "repo": "sindresorhus/KeyboardShortcuts",
+      "url": "https://github.com/sindresorhus/KeyboardShortcuts",
+      "revision": {
+        "branch": "main",
+        "sha": "772133d9dbe800fdac0473226822994c5c162c58"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "Swift / SPM",
+      "licenseSummary": "MIT",
+      "licenseEvidence": "https://github.com/sindresorhus/KeyboardShortcuts/blob/772133d9dbe800fdac0473226822994c5c162c58/license",
+      "researchScope": "全局快捷键录制/冲突/持久化/原生 UI",
+      "intendedUse": "P0 直接依赖候选，锁 release 与许可后引入",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-09-11"
+    },
+    {
+      "repo": "modelcontextprotocol/swift-sdk",
+      "url": "https://github.com/modelcontextprotocol/swift-sdk",
+      "revision": {
+        "branch": "main",
+        "sha": "c0ffca7b7d564aa750203988782d1f9966893a00"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "Swift",
+      "licenseSummary": "Apache-2.0 for new/relicensed contributions; historical MIT where consent pending; non-spec documentation CC-BY-4.0",
+      "licenseEvidence": "https://github.com/modelcontextprotocol/swift-sdk/blob/c0ffca7b7d564aa750203988782d1f9966893a00/LICENSE",
+      "researchScope": "MCP client/server/stdio/HTTP/取消/进度",
+      "intendedUse": "MCP adapter 候选；当前 Swift6.1+/macOS13+，按实际版本复核",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-11-15"
+    },
+    {
+      "repo": "aaif-goose/goose",
+      "url": "https://github.com/aaif-goose/goose",
+      "revision": {
+        "branch": "main",
+        "sha": "36b29113aff691e1a46a21a5c25900824caf9949"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "Rust",
+      "licenseSummary": "Apache-2.0",
+      "licenseEvidence": "https://github.com/aaif-goose/goose/blob/36b29113aff691e1a46a21a5c25900824caf9949/LICENSE",
+      "researchScope": "Agent 状态机/operations/providers/恢复/ACP",
+      "intendedUse": "旧 block/goose 重定向；oi-kit alpha，参考或可选 ACP adapter",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-11-20"
+    },
+    {
+      "repo": "anomalyco/opencode",
+      "url": "https://github.com/anomalyco/opencode",
+      "revision": {
+        "branch": "dev",
+        "sha": "ee5fe34e136488a1839ac73bcca8321c51a31b75"
+      },
+      "checkedAt": "2026-11-22",
+      "archived": false,
+      "stack": "TypeScript",
+      "licenseSummary": "MIT",
+      "licenseEvidence": "https://github.com/anomalyco/opencode/blob/ee5fe34e136488a1839ac73bcca8321c51a31b75/LICENSE",
+      "researchScope": "多 Provider/自定义 endpoint/plan-build/权限档",
+      "intendedUse": "可选 CLI/Agent adapter，不强绑核心；权限规则不是 OS 沙箱",
+      "copiedFiles": [],
+      "dependencyStatus": "reference-only",
+      "attribution": "No code copied; review exact files and all notices before adoption",
+      "securityReview": "Not performed",
+      "observedLatestCommitDate": "2026-11-22"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "scope": "planning-only",
+  "date": "2026-11-22",
+  "documents": 24,
+  "references": 13,
+  "requirements": 17,
+  "scenarios": 22,
+  "pendingTasks": 47,
+  "results": {
+    "documentLinksAndCatalog": "PASS",
+    "shellSyntax": "PASS",
+    "developmentBranchPolicy": "PASS",
+    "ispecStrictValidation": "PASS",
+    "productBuild": "NOT_RUN",
+    "macOSTCCAndWindowAcceptance": "NOT_RUN",
+    "realModelAPI": "NOT_RUN",
+    "remotePublication": "NOT_RUN"
+  },
+  "reviews": {
+    "product": "PASS after scope/quality fixes",
+    "architectureAndReuse": "PASS after state/receipt/usage fixes",
+    "opensource": "PASS after precise license URLs"
+  },
+  "limitations": [
+    "No runtime App exists",
+    "No previous source or media was copied",
+    "No API credentials were read or remote model called",
+    "No GitHub remote was created or pushed"
+  ]
+}

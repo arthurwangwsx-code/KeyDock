@@ -1,0 +1,37 @@
+## ADDED Requirements
+
+### Requirement: 外部 API 与模型能力协商
+系统 SHALL 提供独立 ProviderGateway、Keychain 凭据、流式结果、超时/取消和明确的模型能力描述，API 未配置时本地工具仍可用。
+
+#### Scenario: Provider 未返回用量
+- **WHEN** 模型成功返回文本但无 usage
+- **THEN** 系统显示未知用量/费用或明确标识估算，不记为实际零消耗
+
+### Requirement: 翻译总结快捷动作
+P1 系统 MUST 支持用户保存输入来源、提示词、语言/参数、模型、输出方式和快捷键，按已配置范围运行。
+
+#### Scenario: 翻译当前选区
+- **WHEN** 用户触发选区翻译快捷键，目标有效且存在可读选区
+- **THEN** 系统仅发送该选区与动作必要参数到配置的 endpoint，流式显示结果并允许复制
+
+#### Scenario: 选区缺失
+- **WHEN** 动作要求选区但目标不提供可读选区
+- **THEN** 系统提示选择/复制输入，不自动读取整个窗口、截图或剪贴板历史
+
+#### Scenario: 替换目标变化
+- **WHEN** 结果返回后原选区/窗口已改变，用户选择替换
+- **THEN** 系统停止写入并保留结果，不向当前任意窗口粘贴
+
+### Requirement: 命令草稿与执行分离
+系统 MUST 把 AI 建议表达为可审阅的 CommandProposal，真实运行经用户动作和 ToolBroker。
+
+#### Scenario: 模型建议运行命令
+- **WHEN** 模型返回 executable、argv、cwd 与解释
+- **THEN** 系统展示草稿，在用户运行之前不启动进程、不安装依赖、不修改 shell 配置
+
+### Requirement: 个人使用分析
+P2 系统 SHALL 首先分析本工具最小事件和独立 AI 用量账本，云分析使用用户选择的聚合范围。
+
+#### Scenario: 生成使用周报
+- **WHEN** 用户选择日期区间并请求 AI 分析
+- **THEN** 报告说明数据范围、覆盖缺口与统计依据，默认不附剪贴板正文、窗口标题或完整终端输出

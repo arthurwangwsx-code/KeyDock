@@ -1,0 +1,7 @@
+{
+  "language": "zh-CN",
+  "profile": "core",
+  "agent": {
+    "default": "codex"
+  }
+}
