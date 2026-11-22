@@ -5,9 +5,9 @@
 ## 1. P0 工程与契约
 
 - [x] 1.1 建立 SwiftPM 核心与 macOS App target，锁定 Swift/Xcode/最低系统、构建命令和矩阵。
-- [ ] 1.2 定义 CommandDescriptor、对象 identity、QueryRequest/ResultBatch 和 ActionDescriptor，检查单向依赖。
+- [x] 1.2 定义 CommandDescriptor、对象 identity、QueryRequest/ResultBatch 和 ActionDescriptor，检查单向依赖；查询合同已进入生产Launcher与协调器并经合成测试。
 - [x] 1.3 实现异步 Provider fan-out、generation 过滤、取消、限时与稳定排序，验证慢 Provider/旧结果。
-- [ ] 1.4 建立 ToolDefinition/ExecutionRequest/Broker caller-policy 与纯合成策略测试。
+- [x] 1.4 建立 ToolDefinition/ExecutionRequest/Broker caller-policy 与纯合成策略测试；该勾选不表示OS沙箱或完整动态能力注册已验收。
 - [x] 1.5 建立 AIRequest/AIEvent/ProviderCapabilities、mock streaming/cancel/usage 与独立 AIGateway。
 - [x] 1.6 定义 AgentRun/attempt 状态机、预算与停止语义，验证迟到授权/结果不复活终态。
 
@@ -22,7 +22,7 @@
 - [x] 2.7 按视觉评审重构独立Launcher／Settings／Workspace和菜单栏设置、标准编辑菜单；原生App构建通过。
 - [x] 2.8 建立KeyDockUI、系统Liquid Glass与availability回退、中英语言切换、分bundle String Catalog静态覆盖和旧内置动作迁移。
 - [x] 2.9 分离三个窗口Session，AI共享文档按revision／runID固定输出元数据；配置／草稿／导航与完整结果键盘可达的10项定向测试通过。
-- [ ] 2.10 完成新版三窗口深浅色、中英、辅助功能、IME、焦点与截图视觉验收；当前Mac锁屏无法观察新版UI。
+- [ ] 2.10 完成新版三窗口深浅色、中英、辅助功能、IME、焦点与截图视觉验收；基本画面/双语/焦点已实查，辅助功能、IME、多屏完整矩阵尚待完成。
 
 ## 3. P1 桌面工具
 

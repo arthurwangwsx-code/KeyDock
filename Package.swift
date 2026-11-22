@@ -28,7 +28,7 @@ let package = Package(
         .testTarget(name: "CommandCoreTests", dependencies: ["CommandCore"], path: "Packages/CommandCore/Tests/CommandCoreTests"),
         .testTarget(name: "ExecutionCoreTests", dependencies: ["ExecutionCore"], path: "Packages/ExecutionCore/Tests/ExecutionCoreTests"),
         .testTarget(name: "AICoreTests", dependencies: ["AICore", "AgentCore"], path: "Packages/AICore/Tests/AICoreTests"),
-        .testTarget(name: "WorkbenchFeatureTests", dependencies: ["WorkbenchFeature", "CommandCore", "KeyDockUI"], path: "Packages/WorkbenchFeature/Tests/WorkbenchFeatureTests"),
+        .testTarget(name: "WorkbenchFeatureTests", dependencies: ["WorkbenchFeature", "CommandCore", "ExecutionCore", "KeyDockUI"], path: "Packages/WorkbenchFeature/Tests/WorkbenchFeatureTests"),
         .testTarget(name: "MacAdaptersTests", dependencies: ["MacAdapters"], path: "Packages/MacAdapters/Tests/MacAdaptersTests")
     ]
 )

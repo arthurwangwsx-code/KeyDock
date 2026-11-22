@@ -14,7 +14,8 @@ public struct SettingsRootView: View {
     public var body: some View {
         NavigationSplitView {
             List(SettingsPane.allCases, id: \.self, selection: Binding<SettingsPane?>(get: { session.pane }, set: { if let value = $0 { session.pane = value } })) { pane in Label(pane.title, systemImage: pane.icon).tag(pane) }
-                .listStyle(.sidebar).navigationSplitViewColumnWidth(min: 175, ideal: 190, max: 220)
+                .id(store.configuration.language)
+                .listStyle(.sidebar).navigationSplitViewColumnWidth(min: 210, ideal: 220, max: 260)
         } detail: {
             Form {
                 if !store.settingsNotice.isEmpty { Section { KDInlineNotice(store.settingsNotice) } }
@@ -37,7 +38,9 @@ public struct SettingsRootView: View {
                 Picker(L("Language"), selection: Binding(get: { store.configuration.language }, set: { store.setLanguage($0) })) {
                     Text(L("Follow System")).tag("system"); Text("English").tag("en"); Text("简体中文").tag("zh-Hans")
                 }
-                LabeledContent(L("Appearance"), value: L("Follows system appearance"))
+                Picker(L("Appearance"), selection: Binding(get: { store.configuration.appearance }, set: { store.setAppearance($0) })) {
+                    Text(L("Follow System")).tag("system"); Text(L("Light")).tag("light"); Text(L("Dark")).tag("dark")
+                }
             }
             Section(L("Launcher")) { HStack { Text(L("Global shortcut")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.configuration.launcherShortcut = $0; store.save(); store.onShortcutConfigurationChanged?() })) } }
             Section { Text(L("Search and quick actions live in the launcher. Configuration stays here, while long tasks continue in Workspace.")).font(.caption).foregroundStyle(.secondary) }
@@ -126,5 +129,5 @@ public struct SettingsRootView: View {
         if !shortcutQuery.isEmpty { return Array(CommandSearch.rank(query: shortcutQuery, items: store.catalog, preferences: store.configuration.preferences).prefix(20)) }
         return store.catalog.filter { $0.kind == .ai || $0.kind == .command || store.configuration.preferences.favorites.contains($0.id) }
     }
-    private func recorder(_ binding: Binding<HotkeyBinding?>) -> some View { HotkeyRecorder(binding: binding, onRecording: { store.onShortcutRecordingChanged?($0) }).frame(minWidth: 115) }
+    private func recorder(_ binding: Binding<HotkeyBinding?>) -> some View { HotkeyRecorder(binding: binding, onRecording: { store.onShortcutRecordingChanged?($0) }).fixedSize() }
 }

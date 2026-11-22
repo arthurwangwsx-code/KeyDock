@@ -2,6 +2,7 @@
 """仅供合成集成测试的 loopback SSE 服务；stdout 只输出动态端口。"""
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+from datetime import datetime
 import socket
 import threading
 import time
@@ -34,11 +35,16 @@ class FixtureServer(ThreadingHTTPServer):
         super().__init__(("127.0.0.1", 0), Handler)
         self.stats_lock = threading.Lock()
         self.stats = {"redirect_hits": 0, "redirect_authorization_seen": 0,
-                      "slow_open": 0, "slow_closed": 0}
+                      "slow_open": 0, "slow_closed": 0,
+                      "proposal_started": 0, "agent_requests": 0,
+                      "agent_tool_messages": 0, "ordinary_tools_advertised": 0,
+                      "authorization_seen": 0}
+        self.proposal_release = threading.Event()
 
     def increment(self, key, amount=1):
         with self.stats_lock:
             self.stats[key] += amount
+            return self.stats[key]
 
     def snapshot(self):
         with self.stats_lock:
@@ -56,8 +62,12 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def do_GET(self):
-        if urlsplit(self.path).path == "/stats":
+        path = urlsplit(self.path).path
+        if path == "/stats":
             self.send_json(200, self.server.snapshot())
+        elif path == "/release-proposal":
+            self.server.proposal_release.set()
+            self.send_json(200, {"released": True})
         else:
             self.send_json(404, {"error": "synthetic fixture route"})
 
@@ -68,7 +78,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(413, {"error": MARKER})
                 return
             self.connection.settimeout(5)
-            self.rfile.read(length)
+            body = self.rfile.read(length)
+            if self.headers.get("Authorization"):
+                self.server.increment("authorization_seen")
             path = urlsplit(self.path).path
             if path == "/stream":
                 self.stream()
@@ -78,6 +90,17 @@ class Handler(BaseHTTPRequestHandler):
                 self.wfile.flush()
             elif path == "/slow":
                 self.slow_stream()
+            elif path in ("/proposal", "/proposal-held", "/agent", "/unexpected-tool"):
+                request = json.loads(body)
+                if not isinstance(request, dict):
+                    raise ValueError("synthetic request shape")
+                if path in ("/proposal", "/proposal-held"):
+                    self.proposal(request, held=path == "/proposal-held")
+                elif path == "/agent":
+                    self.agent(request)
+                else:
+                    self.server.increment("ordinary_tools_advertised", len(request.get("tools", [])))
+                    self.tool_response("synthetic-unexpected-tool")
             elif path in ("/error/401", "/error/429"):
                 self.send_json(int(path.rsplit("/", 1)[1]), {"error": {"message": MARKER}})
             elif path == "/redirect":
@@ -133,6 +156,83 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(bytes((byte,)))
             self.wfile.flush()
             time.sleep(0.001)
+
+    def complete_text(self, text, response_id, input_tokens=12, output_tokens=5):
+        self.start_sse()
+        content = chunk(text=text)
+        content["id"] = response_id
+        finish = chunk(finish="stop")
+        finish["id"] = response_id
+        self.wfile.write(event(content) + event(finish) +
+                         event({"id": response_id, "choices": [], "usage": {
+                             "prompt_tokens": input_tokens, "completion_tokens": output_tokens}}) +
+                         b"data: [DONE]\r\n\r\n")
+        self.wfile.flush()
+
+    def proposal(self, request, held):
+        sequence = self.server.increment("proposal_started")
+        if request.get("tools", []):
+            self.send_json(422, {"error": MARKER})
+            return
+        messages = request.get("messages", [])
+        users = [m for m in messages if m.get("role") == "user"]
+        if not users or not isinstance(users[-1].get("content"), str):
+            self.send_json(422, {"error": MARKER})
+            return
+        # 仅合成输入成为 argv 数据；服务和测试均不会执行这个建议。
+        proposal = {"name": f"Synthetic proposal {sequence}", "executable": "/usr/bin/touch",
+                    "arguments": [users[-1]["content"]], "cwd": "",
+                    "explanation": "Synthetic proposal only"}
+        if held and not self.server.proposal_release.wait(timeout=5):
+            self.send_json(504, {"error": MARKER})
+            return
+        self.complete_text(json.dumps(proposal), f"synthetic-proposal-{sequence}")
+
+    def tool_response(self, response_id):
+        self.start_sse()
+        # 把函数名与参数拆到不同事件，验证真实适配器的组装路径。
+        first = {"id": response_id, "choices": [{"index": 0, "delta": {"tool_calls": [
+            {"index": 0, "id": "fixture_time_1", "type": "function",
+             "function": {"name": "current_", "arguments": "{"}}]}}]}
+        second = {"id": response_id, "choices": [{"index": 0, "delta": {"tool_calls": [
+            {"index": 0, "function": {"name": "time", "arguments": "}"}}]},
+            "finish_reason": "tool_calls"}]}
+        self.wfile.write(event(first) + event(second) +
+                         event({"id": response_id, "choices": [], "usage": {
+                             "prompt_tokens": 10, "completion_tokens": 4}}) +
+                         b"data: [DONE]\r\n\r\n")
+        self.wfile.flush()
+
+    def agent(self, request):
+        self.server.increment("agent_requests")
+        tools = request.get("tools", [])
+        names = [t.get("function", {}).get("name") for t in tools]
+        if names != ["current_time"]:
+            self.send_json(422, {"error": MARKER})
+            return
+        messages = request.get("messages", [])
+        results = [m for m in messages if m.get("role") == "tool"]
+        if not results:
+            self.tool_response("synthetic-agent-1")
+            return
+        result = results[-1]
+        calls = [c for m in messages if m.get("role") == "assistant"
+                 for c in m.get("tool_calls", [])]
+        # 第二轮必须包含真实 host tool 产物及对应调用身份，不能只按请求次数返回成功。
+        valid_call = any(c.get("id") == "fixture_time_1" and
+                         c.get("function", {}).get("name") == "current_time" and
+                         c.get("function", {}).get("arguments") == "{}" for c in calls)
+        try:
+            timestamp = datetime.fromisoformat(result.get("content", "").replace("Z", "+00:00"))
+            valid_time = timestamp.tzinfo is not None
+        except (TypeError, ValueError):
+            valid_time = False
+        if not (len(results) == 1 and result.get("tool_call_id") == "fixture_time_1"
+                and valid_call and valid_time):
+            self.send_json(422, {"error": MARKER})
+            return
+        self.server.increment("agent_tool_messages")
+        self.complete_text("Synthetic read-only tool round-trip complete", "synthetic-agent-2", 20, 6)
 
     def slow_stream(self):
         self.start_sse()

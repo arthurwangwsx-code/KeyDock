@@ -84,6 +84,7 @@ import KeyDockUI
             self.settingsSession.pendingCommands.append(command)
         }
         store.onLanguageChanged = { [weak self] in self?.installMenus(); self?.refreshTitles() }
+        store.onAppearanceChanged = { [weak self] in self?.applyAppearance() }
         store.onShortcutConfigurationChanged = { [weak self] in self?.installShortcuts() }
         store.onShortcutRecordingChanged = { [weak self] recording in
             guard let self else { return }
@@ -91,7 +92,14 @@ import KeyDockUI
             else { do { try self.hotkeys.resume() } catch { self.shortcutError(AppL("Shortcut could not be registered. It may be used by macOS or another application.")) } }
         }
     }
-    func start() { installMenus(); installShortcuts(); presentLauncher() }
+    func start() { applyAppearance(); installMenus(); installShortcuts(); presentLauncher() }
+    private func applyAppearance() {
+        switch store.configuration.appearance {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: NSApp.appearance = nil
+        }
+    }
     private func buildLauncher() -> LauncherPanel {
         let panel = LauncherPanel(contentRect: NSRect(x: 0, y: 0, width: KDTokens.launcherWidth, height: KDTokens.launcherHeight), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.title = "KeyDock"; panel.backgroundColor = .clear; panel.isOpaque = false; panel.hasShadow = true

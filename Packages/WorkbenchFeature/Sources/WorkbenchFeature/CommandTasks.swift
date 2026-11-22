@@ -6,6 +6,7 @@ import MacAdapters
 extension WorkbenchModel {
     func restoreReceipt(_ receipt: InvocationReceipt) {
         tasks.append(RunningTaskItem(id: receipt.id, title: receipt.name, state: receipt.message == "terminal.handedOff" ? .handedOff : stateLabel(receipt.state), output: receipt.state == .interrupted ? L("Previous execution was interrupted. Outcome is unknown; it was not replayed.") : "", exitCode: receipt.exitCode, startedAt: receipt.startedAt, finishedAt: receipt.finishedAt))
+        tasks[tasks.count - 1].restoredFromReceipt = true
     }
     public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user, showWorkspace: Bool = true) {
         let id = UUID()
@@ -25,7 +26,7 @@ extension WorkbenchModel {
                 try Task.checkCancellation()
                 if cancelledTaskIDs.contains(id) { throw CancellationError() }
                 if command.interactive {
-                    try openInTerminal(command)
+                    try await openInTerminal(command)
                     let result = ProcessResult(state: .succeeded, exitCode: nil, message: "terminal.handedOff")
                     await persistResult(id, result: result)
                     updateTask(id, state: .handedOff, output: L("Interactive execution is managed by Terminal; output and cancellation remain there."), finished: true)
@@ -81,7 +82,7 @@ extension WorkbenchModel {
     func stateLabel(_ state: ExecutionState) -> TaskStatus {
         switch state { case .queued: .queued; case .running: .running; case .succeeded: .completed; case .failed: .failed; case .cancelled: .cancelled; case .timedOut: .timedOut; case .interrupted: .interrupted }
     }
-    private func openInTerminal(_ command: SavedCommand) throws {
+    private func openInTerminal(_ command: SavedCommand) async throws {
         let folder = directory.appendingPathComponent("terminal-launches", isDirectory: true)
         let file = folder.appendingPathComponent(UUID().uuidString + ".command")
         func quote(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "'\"'\"'") + "'" }
@@ -90,6 +91,16 @@ extension WorkbenchModel {
         let script = "#!/bin/zsh\n/bin/rm -f -- \"$0\"\ncd -- \(quote(command.workingDirectory)) || exit 1\nexec /usr/bin/env \(environment) \(executable)\n"
         try PrivateFiles.write(Data(script.utf8), to: file)
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: file.path)
-        guard NSWorkspace.shared.open(file) else { try? FileManager.default.removeItem(at: file); throw CocoaError(.executableLoad) }
+        do {
+            let workspace = NSWorkspace.shared
+            // 显式选择 Terminal，不依赖用户对 .command 文件的默认编辑器关联。
+            guard let terminal = workspace.urlForApplication(withBundleIdentifier: "com.apple.Terminal") else { throw CocoaError(.executableLoad) }
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = true
+            _ = try await workspace.open([file], withApplicationAt: terminal, configuration: configuration)
+        } catch {
+            try? FileManager.default.removeItem(at: file)
+            throw error
+        }
     }
 }

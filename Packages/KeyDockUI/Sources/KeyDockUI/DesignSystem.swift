@@ -72,32 +72,6 @@ public struct KDInlineNotice: View {
     public var body: some View { Label(text, systemImage: "info.circle").font(.system(size: 11)).foregroundStyle(.secondary).textSelection(.enabled).padding(10).frame(maxWidth: .infinity, alignment: .leading) }
 }
 
-@MainActor public enum KDLauncherSurface {
-    public static func make<Content: View>(root: Content) -> NSView {
-        let hosting = ClearHostingView(rootView: root)
-        hosting.autoresizingMask = [.width, .height]
-        if NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency {
-            let surface = NSView(); surface.wantsLayer = true
-            surface.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
-            surface.layer?.cornerRadius = KDTokens.corner; surface.layer?.masksToBounds = true
-            surface.addSubview(hosting); return surface
-        }
-        if #available(macOS 26, *) {
-            let glass = NSGlassEffectView(); glass.style = .regular; glass.cornerRadius = KDTokens.corner
-            if #available(macOS 27, *) { glass.effectIsInteractive = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion }
-            glass.contentView = hosting
-            return glass
-        }
-        let effect = NSVisualEffectView(); effect.material = .popover; effect.blendingMode = .behindWindow; effect.state = .active
-        effect.wantsLayer = true; effect.layer?.cornerRadius = KDTokens.corner; effect.layer?.masksToBounds = true
-        effect.addSubview(hosting); return effect
-    }
-}
-
-@MainActor private final class ClearHostingView<Content: View>: NSHostingView<Content> {
-    override var isOpaque: Bool { false }
-}
-
 public struct KDCommandRow: View {
     let icon: NSImage?
     let symbol: String

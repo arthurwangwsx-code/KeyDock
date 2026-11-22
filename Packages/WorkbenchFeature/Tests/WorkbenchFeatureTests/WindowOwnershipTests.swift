@@ -192,4 +192,51 @@ private let legacyCases = [
         launcher.move(-100)
         #expect(launcher.selectedID == results[0].id)
     }
+
+    @Test("生产 Launcher 经过请求/结果协调链路", .timeLimit(.minutes(1)))
+    func launcherConsumesTypedQueryBatches() async throws {
+        let fixture = try StoreFixture(); defer { fixture.cleanup() }
+        let store = fixture.store
+        let alphaID = UUID(), betaID = UUID()
+        store.saveCommand(.init(id: alphaID, name: "KeyDockContractAlphaOnly", executable: "/usr/bin/printf"))
+        store.saveCommand(.init(id: betaID, name: "KeyDockContractBetaOnly", executable: "/usr/bin/printf"))
+        let launcher = LauncherSession(store: store)
+        launcher.query = "KeyDockContractBetaOnly"
+        let batch = try await completedBatch(launcher, text: launcher.query)
+        #expect(batch.request.source == "keydock.launcher")
+        #expect(batch.providerID == "keydock.catalog")
+        #expect(batch.queryID == launcher.queryRequest?.queryID)
+        #expect(batch.items == launcher.results)
+        #expect(batch.items.map(\.payload) == [betaID.uuidString])
+    }
+
+    @Test("新请求就绪前 Return 不执行旧对象", .timeLimit(.minutes(1)))
+    func launcherCannotExecutePreviousRequestWhileWaiting() async throws {
+        let fixture = try StoreFixture(); defer { fixture.cleanup() }
+        let store = fixture.store
+        let alphaID = UUID(), betaID = UUID()
+        store.saveCommand(.init(id: alphaID, name: "KeyDockContractAlphaOnly", executable: "/usr/bin/printf"))
+        store.saveCommand(.init(id: betaID, name: "KeyDockContractBetaOnly", executable: "/usr/bin/printf"))
+        let launcher = LauncherSession(store: store)
+        var executed: [String] = []
+        launcher.onExecute = { executed.append($0.payload) }
+        launcher.query = "KeyDockContractBetaOnly"
+        _ = try await completedBatch(launcher, text: launcher.query)
+        launcher.query = "KeyDockContractAlphaOnly"
+        launcher.execute()
+        #expect(executed.isEmpty)
+        _ = try await completedBatch(launcher, text: launcher.query)
+        launcher.execute()
+        #expect(executed == [alphaID.uuidString])
+    }
+
+    private func completedBatch(_ launcher: LauncherSession, text: String) async throws -> ResultBatch {
+        let deadline = ContinuousClock.now + .seconds(3)
+        while ContinuousClock.now < deadline {
+            if let batch = launcher.resultBatch, batch.request.text == text, batch.isComplete { return batch }
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        struct QueryDeadline: Error {}
+        throw QueryDeadline()
+    }
 }

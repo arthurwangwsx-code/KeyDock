@@ -80,6 +80,9 @@ struct HotkeyRecorder: NSViewRepresentable {
         return button
     }
     func updateNSView(_ button: ShortcutButton, context: Context) { button.onChange = { binding = $0 }; button.onRecording = onRecording; if !button.recording { button.update(binding) } }
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: ShortcutButton, context: Context) -> CGSize? {
+        CGSize(width: min(360, max(120, nsView.intrinsicContentSize.width)), height: max(26, nsView.intrinsicContentSize.height))
+    }
 }
 
 @MainActor final class ShortcutButton: NSButton {
@@ -90,7 +93,7 @@ struct HotkeyRecorder: NSViewRepresentable {
     override var acceptsFirstResponder: Bool { true }
     override init(frame frameRect: NSRect) { super.init(frame: frameRect); target = self; action = #selector(startRecording); setAccessibilityLabel(L("Record shortcut")) }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-    func update(_ binding: HotkeyBinding?) { currentBinding = binding; title = binding?.display ?? L("Record shortcut") }
+    func update(_ binding: HotkeyBinding?) { currentBinding = binding; title = binding?.display ?? L("Record shortcut"); setAccessibilityLabel(L("Record shortcut")) }
     @objc private func startRecording() { recording = true; onRecording(true); title = L("Press shortcut · Esc cancel · Delete clear"); window?.makeFirstResponder(self) }
     override func performKeyEquivalent(with event: NSEvent) -> Bool { if recording { keyDown(with: event); return true }; return super.performKeyEquivalent(with: event) }
     private func finishRecording() {

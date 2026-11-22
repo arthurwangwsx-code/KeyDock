@@ -22,6 +22,7 @@ import KeyDockUI
     public var onAIAction: ((AIDraftDocument, ExecutionCaller) -> Void)?
     public var onReviewCommand: ((SavedCommand) -> Void)?
     public var onLanguageChanged: (() -> Void)?
+    public var onAppearanceChanged: (() -> Void)?
     public var onShortcutConfigurationChanged: (() -> Void)?
     public var onShortcutRecordingChanged: ((Bool) -> Void)?
     public let desktop = DesktopService()
@@ -135,6 +136,7 @@ import KeyDockUI
         } catch { settingsNotice = L("Configuration could not be saved") }
     }
     public func setLanguage(_ language: String) { configuration.language = language; save(); onLanguageChanged?() }
+    public func setAppearance(_ appearance: String) { configuration.appearance = appearance; save(); onAppearanceChanged?() }
     public func refreshClipboard(query: String = "") {
         clipboardTask?.cancel()
         clipboardTask = Task { [weak self] in

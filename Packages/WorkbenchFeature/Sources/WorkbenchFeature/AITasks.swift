@@ -68,7 +68,7 @@ extension WorkbenchModel {
                 if !cancelled { taskError(error, id: id, draft: draft, revision: revision) }
             }
             recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: action.id.uuidString, observations: observations, outcome: outcome)
-            taskHandles[id] = nil; aiTaskIDs.remove(id)
+            taskHandles[id] = nil; aiTaskIDs.remove(id); cancelledTaskIDs.remove(id)
         }
         return id
     }
@@ -109,7 +109,7 @@ extension WorkbenchModel {
                 updateTask(id, state: Task.isCancelled ? .cancelled : .failed, finished: true); if !Task.isCancelled { taskError(error, id: id, draft: draft, revision: revision) }
             }
             recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: "command-proposal", observations: observations, outcome: outcome)
-            taskHandles[id] = nil; aiTaskIDs.remove(id)
+            taskHandles[id] = nil; aiTaskIDs.remove(id); cancelledTaskIDs.remove(id)
         }
     }
     public func runReadOnlyAgent(draft: AIDraftDocument) {
@@ -140,7 +140,7 @@ extension WorkbenchModel {
                 outcome = "succeeded"; updateTask(id, state: .completed, finished: true)
             } catch { outcome = Task.isCancelled ? "cancelled" : "failed"; updateTask(id, state: Task.isCancelled ? .cancelled : .failed, finished: true); if !Task.isCancelled { taskError(error, id: id, draft: draft, revision: revision) } }
             recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: "readonly-agent", observations: usage, outcome: outcome)
-            taskHandles[id] = nil; aiTaskIDs.remove(id)
+            taskHandles[id] = nil; aiTaskIDs.remove(id); cancelledTaskIDs.remove(id)
         }
     }
     private func taskError(_ error: Error, id: UUID, draft: AIDraftDocument, revision: UUID) {

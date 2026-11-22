@@ -15,31 +15,34 @@
   "verified": {
     "swiftTests": {
       "state": "PASS",
-      "total": 64,
-      "commandCore": 11,
+      "total": 77,
+      "commandCore": 14,
       "executionCore": 17,
       "macAdapters": 3,
       "aiAndAgentCoreIncludingHTTP": 23,
-      "workbenchWindowOwnership": 10,
-      "log": ".local/ui-redesign-verified-tests.log"
+      "workbenchWindowOwnership": 12,
+      "log": ".local/phase-one-latest-tests.log",
+      "workbenchStoreHTTP": 8
     },
     "nativeBuild": {
       "state": "PASS",
       "configuration": "Debug local ad-hoc signature, not notarized",
-      "log": ".local/ui-redesign-app-final.log"
+      "log": ".local/query-store-final-build.log"
     },
     "uiSmoke": {
       "state": "PASS",
       "mode": "isolated synthetic data, context capture disabled",
       "paths": [
-        "Chinese UI",
-        "search and launch Calculator",
-        "save/search/run printf and inspect output",
-        "cancel a running sleep task",
-        "CLI output to AI input",
-        "missing API configuration message"
+        "independent Launcher / Settings / Workspace",
+        "Cmd+, settings and menu entries",
+        "live English / Simplified Chinese sidebar and menus",
+        "basic light / dark app appearance",
+        "keyboard selection beyond sixth row",
+        "automatic AI input focus and shared draft into Workspace",
+        "missing API configuration without external request",
+        "typed query -> background printf -> output and default task selection"
       ],
-      "scope": "Initial UI before user-rejected design; does not qualify redesigned windows"
+      "scope": "Redesigned safe-smoke app, synthetic input and commands; basic flow only"
     },
     "searchBenchmark": {
       "state": "PASS",
@@ -59,12 +62,19 @@
     "localization": {
       "state": "PASS",
       "scope": "English and Simplified Chinese source-key coverage in App and Feature catalogs",
-      "log": ".local/ui-redesign-localizations.log"
+      "log": ".local/phase-one-latest-localizations.log",
+      "keys": 201
+    },
+    "storeHTTPIntegration": {
+      "state": "PASS",
+      "scope": "Real URLSession to synthetic loopback through WorkbenchModel; not external AI",
+      "testFunctions": 8,
+      "cases": 9,
+      "noPersonalData": true
     }
   },
   "unverified": [
     "Complete daily-use acceptance",
-    "Redesigned native UI visual and interaction acceptance; Mac locked",
     "Physical global shortcut, conflict/recording, IME composition",
     "Multiple screens, fullscreen and p95 hot panel presentation <=150ms",
     "Real AX permission grant/revocation, window identity/activation and selection replacement",
@@ -83,10 +93,23 @@
     "Generated build products, private logs and test data remain ignored"
   ],
   "visualAcceptance": {
-    "state": "BLOCKED",
-    "previousUI": "FAIL: user rejected dashboard-like design",
-    "implementation": "Native Liquid Glass launcher, separate settings and workspace, KeyDockUI, per-window sessions and bilingual UI built successfully",
-    "currentEvidence": "CUA getApp reported Mac locked and unable to unlock automatically; no redesigned UI screenshot or interaction observation",
-    "required": "Manual unlock then inspect launcher/settings/workspace, light/dark, both languages, accessibility and focus"
+    "state": "PARTIAL",
+    "previousUI": "FAIL: user rejected initial dashboard-like design",
+    "currentEvidence": "Live CUA screenshots and AX state of native glass launcher, separate Settings/Workspace, both languages, basic app light/dark and AI focus; findings fixed and rechecked",
+    "review": "docs/implementation/native-ui-review-2026-11-22.md",
+    "remaining": [
+      "user visual review",
+      "live reduce-transparency/reduce-motion",
+      "VoiceOver",
+      "IME composition",
+      "multiple screens/fullscreen"
+    ]
+  },
+  "terminalHandoff": {
+    "state": "PARTIAL",
+    "scope": "Legacy default association returned open acceptance; synthetic marker absent",
+    "blocker": "Computer Use denied Terminal application access",
+    "fix": "Explicit Terminal bundle URL and async acknowledgment compiled; not physically rerun",
+    "evidence": ".local/terminal-handoff-smoke.json"
   }
 }
