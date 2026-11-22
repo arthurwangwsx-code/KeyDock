@@ -1,23 +1,22 @@
 # 当前状态总账
 
-日期：2026-11-22。范围：产品规划与架构提案；当前应用整体状态为 PARTIAL（尚未实现），不可日用、不可安装，无产品版本。
+更新：2026-11-22。当前范围为第一阶段 P0+P1 实现，目标保持“首个可日用 macOS 内测版”。整体状态 **PARTIAL**：已有可构建、可运行预览，完整日用验收尚未完成。
 
-| 项目 | 状态 | 证据/边界 |
+| 范围 | 状态 | 当前证据与限制 |
 |---|---|---|
-| 用户需求与 KeyDock 代号 | PASS | 产品需求纳入启动/窗口/CLI/剪贴板、AI 总结/翻译快捷键、命令扩展、使用分析和 Agent |
-| 竞品调研 | PASS | 官方来源快照；未做竞品本机实测 |
-| 开源参考 | PASS | references/catalog.json：13 项固定 SHA/许可证据，全部 reference-only，零源码复制 |
-| AiBox/Ashot 复用评估 | PASS | 当前源码只读盘点与成本评估；未迁代码、数据或凭据 |
-| 架构与执行策略 | PASS | 原生模块边界、模型/工具/Agent、权限/数据/usage/恢复设计；仍待实现验证 |
-| iSpec 规划工件 | PASS | proposal/design/4 capability specs/tasks，CLI 严格校验通过；apply 未执行 |
-| 产品/技术/开源只读评审 | PASS | 三路评审问题已整合：任务入口、质量门槛、状态机、usage 去重、许可证据 |
-| 文档与工程脚本检查 | PASS | 24 份 Markdown、13 个参考、17 条需求/22 个场景/47 个任务；链接/JSON/脚本语法/分支规则/iSpec strict 通过，见 [回执](planning-validation.json) |
-| P0–P4 运行时 | PARTIAL | 47 项实施/发布任务均未完成；尚无 Swift App 或产品构建 |
-| 真实 Mac / 外部模型 API 验收 | PARTIAL | 尚未开始，不能用文档/mock/Git 代替 |
-| GitHub 公开托管 | PARTIAL | 已核对账号，候选 arthurwangwsx-code/KeyDock；未创建、无 remote、未 push |
+| 产品/竞品/参考规划 | PASS | 三路调研与评审、13项固定revision参考，历史规划回执保留 |
+| 原生工程与模块 | PASS | 根SwiftPM多target、原生App薄壳、XcodeGen、macOS14目标、Swift6编译；只验证当前27.2/arm64主机 |
+| 命令/搜索核心 | PARTIAL | 排序/别名/收藏/最近使用、异步generation测试通过；统一effects/调用者执行策略待进一步贯通 |
+| 视觉与窗口职责 | FAIL | 用户已拒绝初版大面板外观；正在重构原生Liquid Glass启动台、独立设置与工作区，并建立UI库/中英切换 |
+| 原生界面与CLI | PARTIAL | CUA已验证搜索启动计算器、保存命令、搜索执行、输出、取消及输出进入AI；全局物理快捷键、IME/多屏/全屏仍待验收 |
+| 窗口与选区 | PARTIAL | AX异步快照/身份/失效/替换/精确窗口恢复代码已实现；真实辅助功能授权后验收尚未执行 |
+| 剪贴板 | PARTIAL | SQLite与敏感类型过滤、稳定快照、暂停/排除/过期/容量/固定/清除实现及合成测试；未启用真实个人剪贴板采集 |
+| AI API/动作/Agent基础 | PARTIAL | Provider/stream/schema/readonly Broker/取消/用量合成测试通过，真实URLSession loopback测试通过；用户选择稍后配置外部API |
+| AI质量 | PARTIAL | 20条合成质量样本已准备，全部NOT_RUN；未进行真实模型调用与人工质量验收 |
+| 最小任务与回执 | PARTIAL | UI状态/输出/取消、进程组、0600原子回执/恢复围栏已实现并测试；正常退出/实际崩溃与Terminal handoff尚待全面验收 |
+| 性能 | PARTIAL | 2000条合成命令100次采样Release排序p95 21.65ms；Panel热唤起150ms和长期耗电尚未证明 |
+| 公开托管/发行 | PARTIAL | 未创建GitHub远端、未推送、未公证；当前仅本地ad-hoc Debug构建 |
 
-## 后续入口
+详见 [第一阶段进度](implementation/phase-one-progress.md)、[验收方案](technical/validation.md) 和 [iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选任务表示对应实现/定向验证完成，不替代本表更广范围的真实验收。
 
-从 iSpec 30-tasks.md 的 1.1 开始 P0：Swift 工程、命令合同、原生 Panel/快捷键、搜索和 AI mock。首个 P1 日用版本必须包含 AI 翻译/总结、可配置快捷键与最小任务列表；最低 OS/真实 API 选择在实施前锁定。
-
-本地 canonical checkout 只有一个，使用 master 基线与 feature/product-foundation 规划分支，未建立 worktree。未改动既有 AiBox/Ashot/MacShortCutTest 工程。支持与隐私联系 arthur.wang.wsx@gmail.com。
+canonical checkout 仍唯一，开发分支 feature/phase-one 从master创建，主Agent串行写入，子Agent只提供/tmp独立补丁和只读评审；未创建worktree、未改旧AiBox/Ashot工程。支持/隐私联系 arthur.wang.wsx@gmail.com。

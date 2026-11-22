@@ -1,7 +1,7 @@
 # KeyDock 工程协作规范
 
 ## 入口与事实来源
-- canonical checkout 为本仓库，代号 KeyDock，当前交付范围是产品规划与技术提案；不能把文档完成表述为应用已实现。
+- canonical checkout 为本仓库，代号 KeyDock，当前交付范围是用户已授权的第一阶段实现（P0+P1）；不能把局部编译/模拟验证表述为完整日用验收。
 - 开始前读本文件、docs/README.md、docs/status.md 和对应 iSpec change；执行 `git status --short`、`git branch --show-current`、`git worktree list`，核查 master 和未合并差异。
 - 日常开发使用从 master 创建的 feature/*、fix/*、chore/*、spike/* 或 integration/* 分支；新建必须使用 scripts/new-feature-branch.sh，已有分支需核对起点与未合并差异。测试和评审后只用受控 fast-forward 晋升 master。禁止覆盖用户 WIP、强推、自动删远端分支。
 - 禁止 git worktree add、复制/克隆 checkout 绕过写入互斥，禁止 reset --hard、clean -fdx、stash 丢弃他人内容。
@@ -10,7 +10,7 @@
 ## 规格工作流
 - 优先本地 iSpec；配置在 ispec/config.yaml。新 change 先产 proposal/specs/design/tasks，按 CLI 返回的 start/update 门禁记录，不手改内部状态。
 - 产品愿景在 docs/product，技术真值在 docs/technical；iSpec change 保存增量合同。实现时逐项记录 PASS/PARTIAL/FAIL/BLOCKED 与证据，不用 Git 或 mock 测试替代 macOS 实机验收。
-- 当前 change 是 keydock-foundation；本轮止于 artifacts，所有运行时任务保持未完成。
+- 当前 change 是 keydock-foundation；当前执行 apply 的 P0/P1 任务；P2–P4 保留后续，不计入本次目标。
 - 本机生成的 .codex/skills 不提交；新开发环境按 CONTRIBUTING.md 安装。
 
 ## 架构与数据
@@ -25,4 +25,4 @@
 ## 发布与联系
 - 本地 Git 提交属于工程记录。公开建仓、push、发布、上传和网站部署需当前会话明确授权到具体目标；准备可审阅内容后再确认，避免重复询问。
 - 默认公开技术支持、反馈和隐私请求邮箱：arthur.wang.wsx@gmail.com。UI、站点、政策与元数据统一；邮箱不证明法律发布者身份。
-- 本仓库原创规划文件采用 MIT；引用资料、第三方及未来迁移代码仍遵循各自许可证。
+- 本仓库原创代码与文档采用 MIT；引用资料、第三方及未来迁移代码仍遵循各自许可证。

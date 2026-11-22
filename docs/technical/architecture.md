@@ -1,6 +1,6 @@
 # 系统架构 v0.1
 
-状态：设计，尚未实现。采用原生 macOS 模块化单体，Swift 6 + AppKit/SwiftUI；暂定 macOS 14+。先用单 App 进程与可替换适配器，实际需要时再引入 helper，不提前搭后台 daemon、云服务或插件 UI runtime。
+状态：设计基线与第一阶段实现并行演进，具体进度见 docs/implementation/phase-one-progress.md。采用原生 macOS 模块化单体，Swift 6 + AppKit/SwiftUI；暂定 macOS 14+。先用单 App 进程与可替换适配器，实际需要时再引入 helper，不提前搭后台 daemon、云服务或插件 UI runtime。
 
 ## 模块与依赖
 
@@ -31,7 +31,7 @@ App 是组合根，持有服务生命周期和依赖注入；上图是运行链�
 | T3 功能 | LauncherFeature、ClipboardFeature、CLIWorkbench、AIActionFeature、AgentWorkspace | 使用公开协议，UI 与业务可分别测试 |
 | T4 壳 | KeyDockApp | AppKit Panel、菜单栏、设置和组合根，不承载业务实现 |
 
-目录在 P0 建立：`Apps/KeyDock`、`Packages/<Module>`、`Tests`。本轮不创建空的运行时包冒充工程已编译。
+当前根 Package.swift 定义 CommandCore、ExecutionCore、AICore、MacAdapters、WorkbenchFeature 多个 target，源代码位于 Packages/<Module>；App 薄壳位于 Apps/KeyDock，XcodeGen 生成原生 App 工程。Storage 已在 MacAdapters 内先实现 SQLite 剪贴板和私有文件适配；纯核心没有反向依赖 App。统一的命令 effects/执行策略仍需进一步贯通，不能把当前只读 AI Broker 等同所有桌面操作的完整 Broker。
 
 ## 核心契约
 

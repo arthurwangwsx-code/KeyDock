@@ -11,3 +11,5 @@ config.local.json
 !changes/**
 changes/**/.changes-state.json
 assets/
+changes/**/metrics.json
+changes/**/metrics.md

@@ -17,3 +17,5 @@ xcuserdata/
 *.pem
 # iSpec machine state
 ispec/.cache/
+
+KeyDock.xcodeproj/

@@ -1,0 +1,39 @@
+name: KeyDock
+options:
+  bundleIdPrefix: com.arthurwangwsx
+  deploymentTarget:
+    macOS: '14.0'
+settings:
+  base:
+    SWIFT_VERSION: '6.0'
+    MACOSX_DEPLOYMENT_TARGET: '14.0'
+    CODE_SIGN_IDENTITY: '-'
+    CODE_SIGN_STYLE: Manual
+packages:
+  KeyDockModules:
+    path: .
+targets:
+  KeyDock:
+    type: application
+    platform: macOS
+    sources: [Apps/KeyDock/Sources, Apps/KeyDock/Resources]
+    dependencies:
+      - package: KeyDockModules
+        product: WorkbenchFeature
+      - package: KeyDockModules
+        product: MacAdapters
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.arthurwangwsx.KeyDock
+        PRODUCT_NAME: KeyDock
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_CFBundleDisplayName: KeyDock
+        INFOPLIST_KEY_NSAppleEventsUsageDescription: Open explicitly selected commands in Terminal.
+        MARKETING_VERSION: '0.1.0'
+        CURRENT_PROJECT_VERSION: '1'
+        ENABLE_APP_SANDBOX: NO
+        ENABLE_HARDENED_RUNTIME: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
+    scheme:
+      testTargets: []

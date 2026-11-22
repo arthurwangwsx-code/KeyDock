@@ -13,5 +13,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check planning documents
         run: python3 scripts/validate-docs.py
+      - name: Check localization coverage
+        run: python3 scripts/update-localizations.py --check
       - name: Check shell syntax
         run: bash -n scripts/check-branch-policy.sh scripts/new-feature-branch.sh

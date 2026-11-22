@@ -1,15 +1,15 @@
 # KeyDock 实施任务
 
-本轮只完成规划工件；以下全部为尚未实现的运行时/发布任务。按依赖顺序执行，每项完成须有验收证据；完成 tasks 文档不代表复选框任务已完成。参照 [design](21-design.md)、四个 specs 及 [阶段路线](../../../docs/product/roadmap.md)。
+当前正在实现第一阶段 P0/P1；P2–P4 保持后续范围。按依赖顺序执行，每项完成须有验收证据；完成 tasks 文档不代表复选框任务已完成。当前实现与真实验收缺口见 [进度](../../../docs/implementation/phase-one-progress.md)。参照 [design](21-design.md)、四个 specs 及 [阶段路线](../../../docs/product/roadmap.md)。
 
 ## 1. P0 工程与契约
 
-- [ ] 1.1 建立 SwiftPM 核心与 macOS App target，锁定 Swift/Xcode/最低系统、构建命令和矩阵。
+- [x] 1.1 建立 SwiftPM 核心与 macOS App target，锁定 Swift/Xcode/最低系统、构建命令和矩阵。
 - [ ] 1.2 定义 CommandDescriptor、对象 identity、QueryRequest/ResultBatch 和 ActionDescriptor，检查单向依赖。
-- [ ] 1.3 实现异步 Provider fan-out、generation 过滤、取消、限时与稳定排序，验证慢 Provider/旧结果。
+- [x] 1.3 实现异步 Provider fan-out、generation 过滤、取消、限时与稳定排序，验证慢 Provider/旧结果。
 - [ ] 1.4 建立 ToolDefinition/ExecutionRequest/Broker caller-policy 与纯合成策略测试。
-- [ ] 1.5 建立 AIRequest/AIEvent/ProviderCapabilities、mock streaming/cancel/usage 与独立 AIGateway。
-- [ ] 1.6 定义 AgentRun/attempt 状态机、预算与停止语义，验证迟到授权/结果不复活终态。
+- [x] 1.5 建立 AIRequest/AIEvent/ProviderCapabilities、mock streaming/cancel/usage 与独立 AIGateway。
+- [x] 1.6 定义 AgentRun/attempt 状态机、预算与停止语义，验证迟到授权/结果不复活终态。
 
 ## 2. P0 原生闭环与风险验证
 
@@ -23,18 +23,18 @@
 ## 3. P1 桌面工具
 
 - [ ] 3.1 实现 WindowCatalog/ActivationService，验证同 App 多窗口、关闭/PID 重用/权限撤销。
-- [ ] 3.2 建立 SavedCommand 参数/cwd/envRef 表单和 executable+argv runner，shell mode 显式隔离。
-- [ ] 3.3 实现 stdout/stderr 有界输出、超时/进程组取消和退出状态，验证满管/派生进程。
+- [x] 3.2 建立 SavedCommand 参数/cwd/envRef 表单和 executable+argv runner，shell mode 显式隔离。
+- [x] 3.3 实现 stdout/stderr 有界输出、超时/进程组取消和退出状态，验证满管/派生进程。
 - [ ] 3.4 提供交互 CLI 的用户终端打开 adapter，不伪装 Process 支持 PTY。
-- [ ] 3.5 实现最小运行列表/输出详情/取消入口和 durable invocation intent/result，重启仅展示 interrupted/unknown，不重放。
-- [ ] 3.6 实现读取正文前的 clipboard 类型过滤、暂停/排除/TTL/容量/清空与合成验证。
+- [x] 3.5 实现最小运行列表/输出详情/取消入口和 durable invocation intent/result，重启仅展示 interrupted/unknown，不重放。
+- [x] 3.6 实现读取正文前的 clipboard 类型过滤、暂停/排除/TTL/容量/清空与合成验证。
 - [ ] 3.7 实现纯文本 clipboard 搜索/复制，自动粘贴单独校验权限与目标。
 
 ## 4. P1 AI 快捷动作
 
 - [ ] 4.1 选择首个公开 API provider/endpoint/model，锁定 wire adapter、能力与数据条款；不读取 AiBox 凭据。
 - [ ] 4.2 实现 Keychain/config、HTTPS/localhost 模式、跨源重定向凭据保护和错误映射。
-- [ ] 4.3 实现版本化 AIAction 配置：提示词、语言/参数、输入/输出、模型和快捷键。
+- [x] 4.3 实现版本化 AIAction 配置：提示词、语言/参数、输入/输出、模型和快捷键。
 - [ ] 4.4 实现选区翻译/总结、输入缺失提示、流式结果/复制/取消；普通动作 tools=[]。
 - [ ] 4.5 实现独立替换选区动作并核对原目标；自动 Cmd+C fallback 留专项 spike，不默认启用。
 - [ ] 4.6 实现 AI CommandProposal 草稿/检查/运行和 CLI 输出片段解释，不自动运行模型字符串。

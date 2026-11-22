@@ -2,7 +2,7 @@
 
 面向 macOS 的原生快捷操作与 AI 工作台。用统一入口搜索应用和窗口、运行命令、处理剪贴板，并通过快捷键完成翻译、总结和可控的 Agent 任务。
 
-**当前阶段：规划与架构提案已建立；尚无可运行的 App。** 本仓库独立于 AiBox，未迁入其源码、个人截图或历史数据。
+**当前阶段：第一阶段实现中，已有可构建的 macOS 内测预览；完整日用验收尚未完成。** 本仓库独立于 AiBox，未迁入其源码、个人截图或历史数据。
 
 ## 首版方向
 
@@ -28,10 +28,20 @@ AI 是核心能力域，模型账号和联网并非基础桌面操作的前提�
 | [当前状态](docs/status.md) | 已完成规划与未完成实现的区别 |
 | [iSpec 提案](ispec/changes/keydock-foundation/10-proposal.md) | 需求、设计、场景与执行任务 |
 
-下一步实现 P0：原生 Panel、快捷键和焦点恢复、命令注册/搜索、模拟 AI 流与工具策略验证。首个可日用版本 P1 包含 AI 翻译/总结。
+当前已实现原生 Panel、应用索引、搜索/收藏/别名/快捷键配置、AX 窗口/选区适配、CLI/任务回执、SQLite 剪贴板、AI API/动作/只读工具基础。完整状态及真实验收缺口见 [第一阶段进度](docs/implementation/phase-one-progress.md)。
 
 ## 开发与托管
 
-按 [CONTRIBUTING.md](CONTRIBUTING.md) 准备环境。canonical checkout 在本地；目标 GitHub 为 `arthurwangwsx-code/KeyDock`，尚未创建或推送。默认分支 master，开发从 master 创建命名分支。开源前按 [托管方案](docs/governance/github-publication.md) 确认具体远端。
+按 [CONTRIBUTING.md](CONTRIBUTING.md) 准备环境。
+
+```sh
+./scripts/build-app.sh
+open build/DerivedData/Build/Products/Debug/KeyDock.app
+xcrun swift test
+```
+
+需要 Xcode、XcodeGen，当前构建使用 Xcode 27.2 / Xcode Swift 6.4.2；`xcrun` 可避开 PATH 中另一套不兼容工具链。最低目标 macOS 14 尚待真实最低系统验证。API 端点/模型由用户配置，密钥在设置页写入 Keychain；尚未进行真实外部模型验收。
+
+canonical checkout 在本地；目标 GitHub 为 `arthurwangwsx-code/KeyDock`，尚未创建或推送。默认分支 master，开发从 master 创建命名分支。开源前按 [托管方案](docs/governance/github-publication.md) 确认具体远端。
 
 原创文件采用 [MIT](LICENSE)。技术支持、反馈与隐私请求：arthur.wang.wsx@gmail.com。

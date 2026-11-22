@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-22",
+  "branch": "feature/phase-one",
+  "overall": "PARTIAL",
+  "goal": "P0+P1 daily-use macOS internal version; scope unchanged",
+  "environment": {
+    "hostOS": "macOS 27.2 (26B123)",
+    "architecture": "arm64",
+    "xcode": "27.2 (27B52)",
+    "swift": "Xcode Swift 6.4.2 via xcrun",
+    "deploymentTarget": "macOS 14.0, not yet validated on minimum OS",
+    "xcodegen": "2.43.0"
+  },
+  "verified": {
+    "swiftTests": {
+      "state": "PASS",
+      "total": 54,
+      "commandCore": 11,
+      "executionCore": 17,
+      "macAdapters": 3,
+      "aiAndAgentCoreIncludingHTTP": 23
+    },
+    "nativeBuild": {
+      "state": "PASS",
+      "configuration": "Debug local ad-hoc signature, not notarized"
+    },
+    "uiSmoke": {
+      "state": "PASS",
+      "mode": "isolated synthetic data, context capture disabled",
+      "paths": [
+        "Chinese UI",
+        "search and launch Calculator",
+        "save/search/run printf and inspect output",
+        "cancel a running sleep task",
+        "CLI output to AI input",
+        "missing API configuration message"
+      ]
+    },
+    "searchBenchmark": {
+      "state": "PASS",
+      "scope": "synthetic cached ranking only",
+      "items": 2000,
+      "samples": 100,
+      "warmups": 10,
+      "p50Milliseconds": 18.918375,
+      "p95Milliseconds": 21.651041,
+      "targetMilliseconds": 50
+    },
+    "liveHTTPTransport": {
+      "state": "PASS",
+      "scope": "synthetic loopback server with real URLSession; not external AI",
+      "fixtureCleanup": "bounded POSIX reap; first failed wait measurement retained"
+    }
+  },
+  "unverified": [
+    "Complete daily-use acceptance",
+    "Physical global shortcut, conflict/recording, IME composition",
+    "Multiple screens, fullscreen and p95 hot panel presentation <=150ms",
+    "Real AX permission grant/revocation, window identity/activation and selection replacement",
+    "Live user-enabled clipboard capture and sensitive-source behavior",
+    "Terminal handoff and app quit with managed subprocesses",
+    "External model API, real Keychain credential flow and readonly tool roundtrip",
+    "20-case real model quality review",
+    "Minimum macOS and Intel compatibility",
+    "Signed/notarized distribution and remote publication"
+  ],
+  "constraints": [
+    "No existing AiBox or Ashot source/configuration/credentials/media copied",
+    "No real external model request or billable warmup",
+    "No worktree or secondary checkout",
+    "No GitHub remote created or pushed",
+    "Generated build products, private logs and test data remain ignored"
+  ],
+  "visualAcceptance": {
+    "state": "FAIL",
+    "reason": "User rejected initial dashboard-like UI; native Liquid Glass and independent Launcher/Settings/Workspace redesign in progress"
+  }
+}

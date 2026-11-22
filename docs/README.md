@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-22。当前完成的是规划、研究和工程规则；没有可运行的 App。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-22。当前处于第一阶段实现，已有可构建原生预览；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -15,6 +15,7 @@
 | [验证方案](technical/validation.md) | 合成测试、真实 Mac/API 验收及性能预算 |
 | [GitHub 托管](governance/github-publication.md) | 公开范围、目标账号、分支与发布准备 |
 | [开源参考目录](../references/README.md) | 13 个参考工程及固定版本登记 |
+| [第一阶段进度](implementation/phase-one-progress.md) | 实现、测试、真实验收与下一步 |
 | [状态总账](status.md) | PASS/PARTIAL/FAIL/BLOCKED、证据与未完成义务 |
 | [iSpec 提案](../ispec/changes/keydock-foundation/10-proposal.md) | proposal、design、四个能力规范和分阶段 tasks |
 
