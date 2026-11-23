@@ -74,15 +74,15 @@
 - [ ] 7.3 若用户启用整机活动分析，单独确定观察范围、保留/导出/删除与指标有效性，不默认录屏或采键。
 - [ ] 7.4 评估真实不可信扩展隔离与分发；未验证 OS 沙箱不得宣传权限隔离。
 - [ ] 7.5 补正式发布者/隐私政策/支持页、签名公证、更新/干净安装/数据迁移/回滚证据。
-- [ ] 7.6 获得具体 GitHub 目标授权后创建 public 仓库、push master 并回查可见性/default branch/commit；不能把开源托管当产品验收。
+- [x] 7.6 按新增授权建立arthurwangwsx-code/KeyDock public仓、push master并回查可见性/default branch/commit；不能把开源托管当产品验收。
 
 ## 8. 用户新增：开源、发行与本地安装流水线
 
 - [x] 8.1 复核源码／历史公开候选，更新开源治理和alpha说明；最终资产发布前另行复查。
 - [x] 8.2 建立统一Python／Make入口、版本与完整source SHA、隔离Preview和Release构建；Preview实际构建安装通过。
-- [ ] 8.3 实现Developer ID、Hardened Runtime、App/DMG公证装订、Gatekeeper与最终摘要，真实运行验证。
-- [ ] 8.4 实现同卷原子安装、精确进程正常退出、回执／回退和失败补偿，完成owned目录与canonical安装验证。
+- [x] 8.3 Developer ID、Hardened Runtime、App/DMG公证Accepted／装订、Gatekeeper与最终摘要实际通过，公开包回下载验证通过。
+- [x] 8.4 同卷原子安装、精确正常退出、回执／回退和失败补偿通过；owned签名Preview跨build回退、运行中Preview更新及canonical首次安装分别记录。
 - [ ] 8.5 建立无发行凭据的原生CI与公开后资产复核，远端实际运行通过。
-- [ ] 8.6 受控fast-forward master，建立arthurwangwsx-code/KeyDock公开仓与精确预发行tag，回查可见性／默认分支／commit。
-- [ ] 8.7 本地资产上传draft，回下载验签／验摘要后公开alpha，再复查公开资产与来源。
+- [x] 8.6 受控fast-forward master，建立公开仓与v0.1.0-alpha.1精确tag，public／master／44ace89来源已回查。
+- [x] 8.7 本地四项资产上传draft，回下载验签／验摘要后公开alpha；公开后本地与GitHub release-audit再次通过。
 - [ ] 8.8 实机复验picker语言、启动台完整行、草稿焦点和既有提示；全产品未验项保持PARTIAL。

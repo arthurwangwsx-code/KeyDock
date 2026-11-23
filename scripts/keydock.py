@@ -35,7 +35,9 @@ def stage(name, command):
     record = {"stage": name, "exitCode": result.returncode, "seconds": round(time.monotonic() - started, 3)}
     atomic_json(RUN_DIR / (name + ".json"), record)
     if result.returncode:
-        print("\n".join(path.read_text(errors="replace").splitlines()[-18:]), file=sys.stderr)
+        lines = path.read_text(errors="replace").splitlines()
+        failures = [line for line in lines if any(marker in line for marker in ("✘", "error:", "AssertionError", "FAILED", "recorded an issue"))]
+        print("\n".join(failures[-40:] + lines[-18:]), file=sys.stderr)
         raise PipelineError("%s failed; log: %s" % (name, path))
     return path
 

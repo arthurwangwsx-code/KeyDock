@@ -33,6 +33,8 @@ flowchart LR
 
 `python3 scripts/keydock.py release --install --publish`可组合正式流程。首次开源先建立并核对仓库、受控fast-forward并推送master与tag；发布入口不会隐式创建tag或修改分支。每步退出码、耗时和日志留在忽略的 `.local/pipeline/<run>/`；package／publish可独立重试。已存在版本只复用相同源和摘要；签名时间戳会使重复构建字节不同，不承诺逐位可复现。
 
+发行后的证据文档可以追加提交，发行tag仍固定在原始构建源。复核已有版本使用`make verify-release`；再次发行先更新version／build，不从新HEAD覆盖旧版本。若确需重试未完成的同版发布，先回到对应干净源提交。
+
 ## 调试与正式身份
 
 | 项目 | Preview | 正式身份 |
@@ -45,7 +47,7 @@ flowchart LR
 
 `python3 scripts/keydock.py install --app <App> --dry-run`检查并报告目标／备份／退出计划，不替换或退出App；wrapper可能先编译工程helper。`--quit-running`请求准确路径的App正常退出，取消其可取消任务并结束内存会话，不能宣称未保存正文已持久化。未知同bundleID进程整批拒绝；20秒超时停止，不force kill。
 
-Debug使用单一可执行文件（`ENABLE_DEBUG_DYLIB=NO`），保留Hardened Runtime；避免Xcode未统一签名的debug dylib在安装后触发库验证失败。使用Xcode／LLDB附加本地Preview即可调试，无需关闭系统保护。
+Debug使用单一可执行文件（`ENABLE_DEBUG_DYLIB=NO`），保留Hardened Runtime；避免Xcode未统一签名的debug dylib在安装后触发库验证失败。此路径覆盖构建、安装和UI／日志调试；Xcode／LLDB断点与附加权限尚待专项验收。
 
 安装器完成路径／重叠／身份／进程预检后才按显式参数创建父目录，再在目标同卷复制并验证资源与权限摘要，使用macOS renamex_np原子交换；首次安装使用EXCL拒绝后来出现的目标。旧App保存在回执指定的隐藏备份路径，不自动删除。回退再次检查真实签名team与双方摘要，退出等待后重新核对目标；无法确认时保留双方和needs-recovery回执。不改用户配置、Keychain、TCC或quarantine，不自动授予AX权限，不使用sudo。
 

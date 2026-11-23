@@ -4,6 +4,8 @@
 
 **当前阶段：第一阶段实现中，已有可构建的 macOS 内测预览；完整日用验收尚未完成。** 本仓库独立于 AiBox，未迁入其源码、个人截图或历史数据。
 
+已发布 [v0.1.0-alpha.1](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.1)：macOS arm64，Developer ID签名、App／DMG公证与装订。下载包、完整源SHA和摘要随Release提供；这是早期预览，已知限制见发行说明。
+
 ## 首版方向
 
 - 全局唤起、应用启动、跨应用窗口搜索与切换。
@@ -46,6 +48,6 @@ make publish
 
 需要 Xcode、XcodeGen，当前构建使用 Xcode 27.2 / Xcode Swift 6.4.2；`xcrun` 可避开 PATH 中另一套不兼容工具链。最低目标 macOS 14 尚待真实最低系统验证。API 端点/模型由用户配置，密钥在设置页写入 Keychain；尚未进行真实外部模型验收。
 
-源码与Releases目标为 `arthurwangwsx-code/KeyDock`。默认分支master；调试Preview与正式App分离，安装保留可核验的回退凭据。[工程流水线](docs/technical/release-pipeline.md)说明本地／CI入口、签名公证和资产复核；[托管方案](docs/governance/github-publication.md)记录公开范围。实际远端和发行状态见状态总账。
+源码已开源于 [arthurwangwsx-code/KeyDock](https://github.com/arthurwangwsx-code/KeyDock)，默认分支master。调试Preview与正式App分离，安装保留可核验的回退凭据。[工程流水线](docs/technical/release-pipeline.md)说明本地／CI入口、签名公证和资产复核；[托管方案](docs/governance/github-publication.md)记录公开范围。实际远端和发行状态见状态总账。
 
 原创文件采用 [MIT](LICENSE)。技术支持、反馈与隐私请求：arthur.wang.wsx@gmail.com。

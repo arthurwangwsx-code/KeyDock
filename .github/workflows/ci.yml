@@ -37,3 +37,12 @@ jobs:
           path: build/KeyDock-CI-preview.zip
           retention-days: 7
           if-no-files-found: error
+      - name: Preserve pipeline diagnostics
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: KeyDock-CI-logs-${{ github.sha }}-${{ github.run_attempt }}
+          path: .local/pipeline/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn
