@@ -9,7 +9,7 @@
 - P0/P1 建立启动/窗口切换、保存的 CLI、纯文本剪贴板，以及外部 API 翻译/总结快捷动作。
 - 分阶段加入窗口布局、截图/OCR、使用分析、工具调用 Agent、MCP 和可隔离扩展。
 - 以本地数据、显式上下文、可取消任务和结构化使用量记录作为架构基础。
-- 本 change 的交付止于规划工件；运行时代码、系统权限授予、公开发布不在本轮完成范围。
+- 初始规划工件已完成，后续按用户决定实施P0/P1。2026-11-23新增完整源码开源、预发行包本地打包上传和安装替换流水线；系统权限仍由用户按需授予。
 
 ## Capabilities
 
@@ -18,10 +18,11 @@
 - `desktop-tools`: 应用/窗口、CLI、剪贴板、窗口布局和截图工具的阶段合同。
 - `ai-actions`: 模型接入、快捷翻译/总结、命令生成与个人使用分析。
 - `agent-runtime`: 带工具边界、预算、取消和恢复语义的通用 Agent。
+- `release-engineering`: 同一源码提交的检查、调试、签名公证、原子安装回退、公开托管与发行资产验证。
 
 ### Modified Capabilities
 无；全新项目，不修改 AiBox/Ashot 的行为或代码。
 
 ## Impact
 
-暂定技术栈 Swift 6、AppKit/SwiftUI、AX、Foundation Process、Vision、ScreenCaptureKit、SQLite 和 Keychain。实际引入依赖在实施前逐项锁定。所有 AiBox/Ashot 迁移先做 provenance 与许可证审查；参考工程只记录链接、revision 和评估，不 vendor 第三方源码。本轮不启动 App、不采集个人使用数据、不调用付费模型、不推送远端。
+技术栈 Swift 6、AppKit/SwiftUI、AX、Foundation Process、SQLite 和 Keychain；其他平台能力按阶段引入。所有 AiBox/Ashot 迁移先做provenance与许可证审查；参考工程只记录链接、revision和评估，不vendor第三方源码。调试使用隔离合成输入；当前公开范围为KeyDock原创源码、工程文档、脚本和通过发行门槛的预发行资产，不含个人使用数据、凭据或旧项目源码。

@@ -240,6 +240,22 @@
           }
         }
       }
+    },
+    "New AI task": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New AI task"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建AI任务"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

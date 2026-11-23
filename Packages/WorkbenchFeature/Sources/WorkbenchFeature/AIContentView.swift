@@ -28,7 +28,7 @@ struct AIContentView: View {
                 Text("·"); Text(task?.modelName ?? (action?.modelOverride.isEmpty == false ? action!.modelOverride : (store.configuration.model.isEmpty ? L("No model configured") : store.configuration.model)))
             }.font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
             if !compact {
-                Picker(L("AI action"), selection: Binding(get: { draft.actionID }, set: { draft.selectAction($0) })) { ForEach(store.configuration.aiActions) { Text($0.displayName).tag(Optional($0.id)) } }.labelsHidden().frame(maxWidth: 320, alignment: .leading)
+                Picker(L("AI action"), selection: Binding(get: { draft.actionID }, set: { draft.selectAction($0) })) { ForEach(store.configuration.aiActions) { Text($0.displayName).tag(Optional($0.id)) } }.id(store.configuration.language).labelsHidden().frame(maxWidth: 320, alignment: .leading)
             }
             if task == nil || !compact {
                 TextEditor(text: Binding(get: { draft.input }, set: { draft.editInput($0) })).focused($inputFocused).font(.system(size: 13)).frame(minHeight: 70, maxHeight: compact ? 100 : 150).scrollContentBackground(.hidden).padding(10).modifier(KDReadingSurface()).accessibilityLabel(L("AI input"))
@@ -42,7 +42,7 @@ struct AIContentView: View {
                     Text(task.output.isEmpty && task.isRunning ? L("Waiting for response…") : task.output)
                         .font(.system(size: compact ? 13 : 14)).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
                         .padding(12)
-                }.frame(maxWidth: .infinity, maxHeight: .infinity).modifier(KDReadingSurface())
+                }.frame(maxWidth: .infinity, minHeight: compact ? 0 : 180, idealHeight: compact ? nil : 260, maxHeight: compact ? .infinity : 420).modifier(KDReadingSurface())
             } else if !compact { KDEmptyState(symbol: "sparkles", title: L("Ready when you are"), detail: L("Choose an action and add text. Only this input is sent to your model.")) }
             if !draft.notice.isEmpty { KDInlineNotice(draft.notice).lineLimit(compact ? 2 : 4) }
             if compact && task == nil { Spacer(minLength: 0) }

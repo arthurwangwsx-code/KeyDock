@@ -1,6 +1,6 @@
 # KeyDock 实施任务
 
-当前正在实现第一阶段 P0/P1；P2–P4 保持后续范围。按依赖顺序执行，每项完成须有验收证据；完成 tasks 文档不代表复选框任务已完成。当前实现与真实验收缺口见 [进度](../../../docs/implementation/phase-one-progress.md)。参照 [design](21-design.md)、四个 specs 及 [阶段路线](../../../docs/product/roadmap.md)。
+当前正在实现第一阶段P0/P1，并按2026-11-23用户新增要求推进开源／发行／安装流水线；其他P2–P4保持后续范围。按依赖顺序执行，每项完成须有验收证据；完成 tasks 文档不代表复选框任务已完成。当前实现与真实验收缺口见 [进度](../../../docs/implementation/phase-one-progress.md)。参照 [design](21-design.md)、五个 specs 及 [阶段路线](../../../docs/product/roadmap.md)。
 
 ## 1. P0 工程与契约
 
@@ -75,3 +75,14 @@
 - [ ] 7.4 评估真实不可信扩展隔离与分发；未验证 OS 沙箱不得宣传权限隔离。
 - [ ] 7.5 补正式发布者/隐私政策/支持页、签名公证、更新/干净安装/数据迁移/回滚证据。
 - [ ] 7.6 获得具体 GitHub 目标授权后创建 public 仓库、push master 并回查可见性/default branch/commit；不能把开源托管当产品验收。
+
+## 8. 用户新增：开源、发行与本地安装流水线
+
+- [x] 8.1 复核源码／历史公开候选，更新开源治理和alpha说明；最终资产发布前另行复查。
+- [x] 8.2 建立统一Python／Make入口、版本与完整source SHA、隔离Preview和Release构建；Preview实际构建安装通过。
+- [ ] 8.3 实现Developer ID、Hardened Runtime、App/DMG公证装订、Gatekeeper与最终摘要，真实运行验证。
+- [ ] 8.4 实现同卷原子安装、精确进程正常退出、回执／回退和失败补偿，完成owned目录与canonical安装验证。
+- [ ] 8.5 建立无发行凭据的原生CI与公开后资产复核，远端实际运行通过。
+- [ ] 8.6 受控fast-forward master，建立arthurwangwsx-code/KeyDock公开仓与精确预发行tag，回查可见性／默认分支／commit。
+- [ ] 8.7 本地资产上传draft，回下载验签／验摘要后公开alpha，再复查公开资产与来源。
+- [ ] 8.8 实机复验picker语言、启动台完整行、草稿焦点和既有提示；全产品未验项保持PARTIAL。

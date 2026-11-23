@@ -28,11 +28,7 @@ public struct SettingsRootView: View {
                 }
                 if !store.pendingCommandReviews.isEmpty { Section { HStack { Text(L("Command draft ready for review")); Spacer(); Button(L("Review")) { if let review = store.takeNextCommandReview() { session.editedCommandSourceRunID = review.id; session.editedCommand = review.command } }.disabled(session.editedCommand != nil || session.editedAction != nil) } } }
                 content
-            }.formStyle(.grouped).navigationTitle(session.pane.title)
-                .toolbar {
-                    if session.pane == .commands { ToolbarItem { Button { session.editedCommandSourceRunID = nil; session.editedCommand = SavedCommand(name: "", executable: "/usr/bin/printf") } label: { Label(L("New command"), systemImage: "plus") } } }
-                    if session.pane == .aiActions { ToolbarItem { Button { session.editedAction = AIActionPreset(name: "", prompt: "") } label: { Label(L("New action"), systemImage: "plus") } } }
-                }
+            }.formStyle(.grouped)
         }.frame(minWidth: 740, minHeight: 530).environment(\.locale, KDLocalizer.locale)
             .sheet(item: $session.editedCommand, onDismiss: { session.editedCommandSourceRunID = nil }) { command in CommandEditor(command: command, failureMessage: { store.settingsNoticeMessage }) { store.saveCommand($0) } }
             .sheet(item: $session.editedAction) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureMessage: { store.settingsNoticeMessage }) { store.saveAction($0) } }
@@ -170,7 +166,7 @@ public struct SettingsRootView: View {
                     Image(systemName: "command.square.fill").font(.system(size: 54, weight: .light)).foregroundStyle(.tint)
                     Text("KeyDock").font(.system(size: 26, weight: .semibold))
                     Text(L("Your keyboard workspace")).font(.subheadline).foregroundStyle(.secondary)
-                    Text("0.1.0 · " + L("Internal Preview")).font(.caption).foregroundStyle(.tertiary)
+                    Text(appVersionLabel).font(.caption).foregroundStyle(.tertiary)
                     Link("arthur.wang.wsx@gmail.com", destination: URL(string: "mailto:arthur.wang.wsx@gmail.com")!)
                     Text(L("Support, feedback and privacy requests")).font(.caption).foregroundStyle(.secondary)
                 }.frame(maxWidth: .infinity).padding(.vertical, 30)
@@ -179,6 +175,13 @@ public struct SettingsRootView: View {
     }
     private var shortcutItems: [CommandItem] {
         session.shortcutItems(in: store.catalog, preferences: store.configuration.preferences)
+    }
+    private var appVersionLabel: String {
+        if let version = Bundle.main.object(forInfoDictionaryKey: "KeyDockReleaseVersion") as? String {
+            let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
+            return version + (build.isEmpty ? "" : " (" + build + ")")
+        }
+        return (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0") + " · " + L("Internal Preview")
     }
     private var unavailableShortcutIDs: [String] {
         let current = Set(store.catalog.map(\.id))

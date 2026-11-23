@@ -45,7 +45,7 @@ import KeyDockUI
 }
 
 /// 只负责窗口生命周期、路由、系统菜单与全局触发；业务服务只有一个 Store。
-@MainActor final class WindowCoordinator: NSObject, NSWindowDelegate {
+@MainActor final class WindowCoordinator: NSObject, NSWindowDelegate, NSToolbarDelegate {
     let store: WorkbenchModel
     let launcherSession: LauncherSession
     let settingsSession: SettingsSession
@@ -183,11 +183,12 @@ import KeyDockUI
         settingsSession.setVisible(true)
         dismissLauncher(restore: false); if let pane { settingsSession.pane = pane }
         if settings == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 840, height: 620), styleMask: [.titled, .closable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
-            window.minSize = NSSize(width: 740, height: 530); window.isReleasedWhenClosed = false; window.delegate = self
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 840, height: 620), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+            window.contentMinSize = NSSize(width: 740, height: 530); window.isReleasedWhenClosed = false; window.delegate = self
             window.toolbarStyle = .unified; window.standardWindowButton(.zoomButton)?.isHidden = true
-            window.contentViewController = NSHostingController(rootView: SettingsRootView(store: store, session: settingsSession))
+            installContent(SettingsRootView(store: store, session: settingsSession), in: window)
             window.setFrameAutosaveName("KeyDock.Settings"); window.center(); settings = window
+            installToolbar("KeyDock.Settings.Toolbar", in: window)
         }
         refreshTitles(); NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
     }
@@ -197,12 +198,37 @@ import KeyDockUI
         dismissLauncher(restore: false)
         if let route { workspaceSession.navigate(route, store: store) }
         if workspace == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 680), styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
-            window.minSize = NSSize(width: 820, height: 560); window.isReleasedWhenClosed = false; window.delegate = self
-            window.toolbarStyle = .unified; window.contentViewController = NSHostingController(rootView: WorkspaceView(store: store, session: workspaceSession))
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 680), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+            window.contentMinSize = NSSize(width: 820, height: 560); window.isReleasedWhenClosed = false; window.delegate = self
+            window.toolbarStyle = .unified; installContent(WorkspaceView(store: store, session: workspaceSession), in: window)
             window.setFrameAutosaveName("KeyDock.Workspace"); window.center(); workspace = window
+            installToolbar("KeyDock.Workspace.Toolbar", in: window)
         }
         refreshTitles(); NSApp.activate(ignoringOtherApps: true); workspace?.makeKeyAndOrderFront(nil)
+    }
+    private func installContent<Content: View>(_ content: Content, in window: NSWindow) {
+        let hosting = NSHostingController(rootView: content)
+        // AppKit独占窗口尺寸与工具栏，SwiftUI负责正文。
+        hosting.sizingOptions = []
+        hosting.sceneBridgingOptions = []
+        window.contentViewController = hosting
+    }
+    private func installToolbar(_ name: String, in window: NSWindow) {
+        let toolbar = NSToolbar(identifier: name)
+        toolbar.delegate = self; toolbar.displayMode = .iconOnly; toolbar.allowsUserCustomization = false
+        window.toolbar = toolbar; window.toolbarStyle = .unified
+    }
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.flexibleSpace, .init("KeyDock.Controls")] }
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { toolbarAllowedItemIdentifiers(toolbar) }
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        guard itemIdentifier.rawValue == "KeyDock.Controls" else { return nil }
+        let item = NSToolbarItem(itemIdentifier: itemIdentifier)
+        if toolbar.identifier == "KeyDock.Workspace.Toolbar" {
+            item.view = NSHostingView(rootView: WorkspaceToolbarView(store: store, session: workspaceSession))
+        } else {
+            item.view = NSHostingView(rootView: SettingsToolbarView(store: store, session: settingsSession))
+        }
+        return item
     }
     private func refreshTitles() { settings?.title = settingsSession.pane.title + " — KeyDock"; workspace?.title = AppL("Workspace") + " — KeyDock" }
     private func installMenus() {
@@ -224,6 +250,7 @@ import KeyDockUI
         let appQuit = NSMenuItem(title: AppL("Quit KeyDock"), action: #selector(quitAction), keyEquivalent: "q"); appQuit.target = self; appMenu.addItem(appQuit)
         appItem.submenu = appMenu; main.addItem(appItem)
         let fileMenu = NSMenu(title: AppL("File"))
+        let newAI = NSMenuItem(title: AppL("New AI task"), action: #selector(newAITaskAction), keyEquivalent: "n"); newAI.target = self; fileMenu.addItem(newAI)
         let close = NSMenuItem(title: AppL("Close Window"), action: #selector(closeWindowAction), keyEquivalent: "w"); close.target = self; fileMenu.addItem(close)
         let fileItem = NSMenuItem(); fileItem.submenu = fileMenu; main.addItem(fileItem)
         let editMenu = NSMenu(title: AppL("Edit"))
@@ -236,6 +263,7 @@ import KeyDockUI
     @objc private func openLauncherAction() { presentLauncher() }
     @objc private func openSettingsAction() { openSettings(settingsSession.pane) }
     @objc private func openWorkspaceAction() { openWorkspace() }
+    @objc private func newAITaskAction() { workspaceSession.createDraft(in: store); openWorkspace() }
     @objc private func openAboutAction() { openSettings(.about) }
     @objc private func closeWindowAction() { if NSApp.keyWindow === launcher { dismissLauncher(restore: true) } else { NSApp.keyWindow?.performClose(nil) } }
     @objc private func quitAction() { NSApp.terminate(nil) }

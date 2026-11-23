@@ -16,4 +16,6 @@ jobs:
       - name: Check localization coverage
         run: python3 scripts/update-localizations.py --check
       - name: Check shell syntax
-        run: bash -n scripts/check-branch-policy.sh scripts/new-feature-branch.sh
+        run: bash -n scripts/check-branch-policy.sh scripts/new-feature-branch.sh scripts/build-app.sh
+      - name: Check portable pipeline rules
+        run: python3 -m unittest discover -s scripts/tests -v

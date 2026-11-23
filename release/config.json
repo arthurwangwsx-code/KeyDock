@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.0-alpha.1",
+  "buildNumber": "1",
+  "repository": "arthurwangwsx-code/KeyDock",
+  "bundleIdentifier": "com.arthurwangwsx.KeyDock",
+  "previewBundleIdentifier": "com.arthurwangwsx.KeyDock.preview",
+  "teamID": "J56BFQN5PZ",
+  "signingIdentity": "6A45E4456EFCEBAA49A80EFFB30155DB442211B9",
+  "xcodeVersion": "27.2",
+  "architecture": "arm64",
+  "supportEmail": "arthur.wang.wsx@gmail.com"
+}

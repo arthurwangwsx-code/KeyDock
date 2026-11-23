@@ -1,0 +1,39 @@
+name: Native macOS checks
+on:
+  push:
+    branches: [master, 'feature/**', 'fix/**', 'chore/**', 'spike/**', 'integration/**']
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    runs-on: xcode-27
+    timeout-minutes: 35
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select required build tools
+        run: |
+          xcodebuild -version
+          command -v xcodegen || brew install xcodegen
+      - name: Check source and pipeline contracts
+        run: python3 scripts/keydock.py check --ci
+      - name: Build isolated preview with Release optimization
+        run: python3 scripts/keydock.py build --profile preview --configuration Release
+      - name: Archive CI preview
+        run: ditto -c -k --keepParent "build/pipeline/preview/KeyDock Preview.app" build/KeyDock-CI-preview.zip
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: KeyDock-CI-preview-${{ github.sha }}
+          path: build/KeyDock-CI-preview.zip
+          retention-days: 7
+          if-no-files-found: error

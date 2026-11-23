@@ -1,12 +1,12 @@
 ## Context
 
-参考 [提案](10-proposal.md) 建立全新 KeyDock。用户要求原生快捷操作、可持续架构及外部 API AI，包含可绑定快捷键的翻译/总结、CLI 扩展、使用分析和通用 Agent。本轮只交付方案和需求合同，实施尚未开始。
+参考 [提案](10-proposal.md) 建立全新 KeyDock。用户要求原生快捷操作、可持续架构及外部 API AI，包含可绑定快捷键的翻译/总结、CLI 扩展、使用分析和通用 Agent。初始方案已进入P0/P1实施；2026-11-23追加开源、预发行和安装流水线。
 
 ## Goals / Non-Goals
 
 **Goals:** 以统一命令/工具/上下文/执行模型承接桌面与 AI 动作；P1 可日用；各阶段有真实验收；选择性参考 AiBox 与公开项目。
 
-**Non-Goals:** 本轮不实现 App、不采集个人数据、不复制旧源码/凭据、不发布远端；首期不做全屏持续监控、扩展市场或完整 Raycast 兼容。
+**Non-Goals:** 不采集个人开发素材、不复制旧源码／凭据；首期不做全屏持续监控、扩展市场或完整Raycast兼容。公开范围按用户新增发行要求与治理文档执行。
 
 ## Decisions
 
@@ -34,3 +34,7 @@
 ## Open Questions
 
 第一个联调 provider/endpoint/model、最低系统真实验证设备、签名发布者和 App Sandbox 能力 spike 尚待实施前确定。名称 KeyDock 为用户接受代号。公开远端的具体仓库与范围在可审阅内容完成后确认。
+
+## 2026-11-23 范围追加
+
+用户明确要求完整应用GitHub开源、本地Release上传及本地安装替换流水线。当前追加release-engineering合同与任务8.x，技术细节以docs/technical/release-pipeline.md为准。master在编译／测试／审查通过后受控fast-forward，alpha发行与完整P1日用资格分别记录；其余P2–P4产品能力继续后置。签名凭据由系统钥匙串引用，公开源码与发行物不含私钥、API配置或个人数据。

@@ -35,13 +35,17 @@ AI 是核心能力域，模型账号和联网并非基础桌面操作的前提�
 按 [CONTRIBUTING.md](CONTRIBUTING.md) 准备环境。
 
 ```sh
-./scripts/build-app.sh
-open build/DerivedData/Build/Products/Debug/KeyDock.app
-xcrun swift test
+make doctor
+make check
+make debug
+# 在已审查、已提交的源码上构建签名公证包：
+KEYDOCK_NOTARY_PROFILE=<已有profile> make release
+make install
+make publish
 ```
 
 需要 Xcode、XcodeGen，当前构建使用 Xcode 27.2 / Xcode Swift 6.4.2；`xcrun` 可避开 PATH 中另一套不兼容工具链。最低目标 macOS 14 尚待真实最低系统验证。API 端点/模型由用户配置，密钥在设置页写入 Keychain；尚未进行真实外部模型验收。
 
-canonical checkout 在本地；目标 GitHub 为 `arthurwangwsx-code/KeyDock`，尚未创建或推送。默认分支 master，开发从 master 创建命名分支。开源前按 [托管方案](docs/governance/github-publication.md) 确认具体远端。
+源码与Releases目标为 `arthurwangwsx-code/KeyDock`。默认分支master；调试Preview与正式App分离，安装保留可核验的回退凭据。[工程流水线](docs/technical/release-pipeline.md)说明本地／CI入口、签名公证和资产复核；[托管方案](docs/governance/github-publication.md)记录公开范围。实际远端和发行状态见状态总账。
 
 原创文件采用 [MIT](LICENSE)。技术支持、反馈与隐私请求：arthur.wang.wsx@gmail.com。

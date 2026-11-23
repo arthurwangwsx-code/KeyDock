@@ -1,6 +1,7 @@
 import Foundation
 import Darwin
 import Testing
+import MacAdapters
 @testable import WorkbenchFeature
 
 enum StoreHTTPError: Error { case missingScript, startupFailed, timedOut }
@@ -185,7 +186,7 @@ final class StoreSSEServer {
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
             try JSONEncoder().encode(configuration).write(to: directory.appendingPathComponent("configuration.json"))
-            store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: false, clipboardWriter: clipboardWriter, clipboardChangeCount: clipboardChangeCount)
+            store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: false, clipboardWriter: clipboardWriter, clipboardChangeCount: clipboardChangeCount, applicationCatalog: ApplicationCatalog(roots: []))
         } catch {
             server.stop(); try? FileManager.default.removeItem(at: directory); throw error
         }

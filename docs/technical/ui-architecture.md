@@ -57,3 +57,7 @@ Feature 与 App 各自处理 xcstrings，调用 L／AppL；KeyDockUI 不保存�
 提案队列由Store持有runID与预算，待审和正在审阅合计最多10份，进入设置表单后仍保留源数据记账。窗口通过可见引用保护草稿和当前结果；清除成功联动移除窗口引用、复制标记与来源。新编辑用revision保留，历史和用量各用generation拒绝迟到恢复；定时维护不依赖恢复快照是否过时。
 
 快捷键深链接把CommandItem稳定ID送入SettingsSession，按ID显示精确目标；修改查询才解除定位。菜单栏reveal工作区不发送新route。AI工具栏提供可返回的会话草稿列表，空白新草稿请求输入焦点；界面关闭仍不取消任务。
+
+原生Picker按语言设置重建控件身份，保留草稿ID和输入，避免AppKit桥接控件缓存旧标题。启动台高度调整为456pt以显示六行完整结果；英文空态说明按自然高度换行。
+
+窗口尺寸／工具栏由AppKit统一管理：直接NSHostingController关闭sizingOptions和sceneBridgingOptions，使用contentMinSize；普通SwiftUI工具栏控件通过独立NSHostingView放入NSToolbar。NavigationSplitView只布局正文。AI工作区整体可滚动，非compact结果区保留180–420pt有界滚动，避免正文自然高度撑高根分栏。完整视觉复验保持独立门槛。

@@ -3,7 +3,7 @@ import SwiftUI
 
 public enum KDTokens {
     public static let launcherWidth: CGFloat = 680
-    public static let launcherHeight: CGFloat = 440
+    public static let launcherHeight: CGFloat = 456
     public static let corner: CGFloat = 24
     public static let rowHeight: CGFloat = 50
     public static let space: CGFloat = 16
@@ -141,7 +141,7 @@ public struct KDEmptyState: View {
         VStack(spacing: 10) {
             Image(systemName: symbol).font(.system(size: 28, weight: .light)).foregroundStyle(.tertiary)
             Text(title).font(.system(size: 15, weight: .semibold))
-            Text(detail).font(.system(size: 12)).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 320)
+            Text(detail).font(.system(size: 12)).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 320).fixedSize(horizontal: false, vertical: true)
         }.frame(maxWidth: .infinity, maxHeight: .infinity).padding(24)
     }
 }

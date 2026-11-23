@@ -22,32 +22,20 @@ public struct WorkspaceView: View {
                 switch session.page {
                 case .tasks: taskContent
                 case .ai:
-                    if let draft = session.draft { AIContentView(store: store, draft: draft) }
+                    if let draft = session.draft {
+                        ScrollView {
+                            AIContentView(store: store, draft: draft).frame(maxWidth: .infinity, minHeight: 520, alignment: .topLeading)
+                        }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                     else {
                         VStack { KDEmptyState(symbol: "sparkles", title: L("Ready when you are"), detail: L("Choose an action and add text. Only this input is sent to your model.")); Button(L("New AI task"), action: newAI).buttonStyle(.borderedProminent).padding(.bottom, 60) }
                     }
                 case .clipboard: clipboardContent
                 }
                 }
-            }.navigationTitle(pageTitle)
-                .toolbar {
-                    if session.page == .ai {
-                        ToolbarItem { Button(action: newAI) { Label(L("New AI task"), systemImage: "square.and.pencil") }.keyboardShortcut("n", modifiers: .command) }
-                        ToolbarItem {
-                            Menu {
-                                ForEach(session.availableDrafts(in: store)) { draft in
-                                    Button { session.navigate(.ai(draft.id), store: store) } label: { AIDraftMenuLabel(draft: draft, selected: session.draft?.id == draft.id) }
-                                }
-                            } label: { Label(L("AI drafts"), systemImage: "clock") }
-                                .help(L("Drafts kept for this session"))
-                                .disabled(session.availableDrafts(in: store).isEmpty)
-                        }
-                    }
-                    ToolbarItem { KDIconButton("gearshape", label: L("Settings"), style: .toolbar) { store.onOpenSettings?(nil) } }
-                }
+            }
         }.frame(minWidth: 820, minHeight: 560).environment(\.locale, KDLocalizer.locale)
     }
-    private var pageTitle: String { switch session.page { case .tasks: L("Tasks"); case .ai: L("AI workspace"); case .clipboard: L("Clipboard history") } }
     private func newAI() { session.createDraft(in: store) }
     private var taskContent: some View {
         HSplitView {
@@ -136,7 +124,7 @@ public struct WorkspaceView: View {
 
 }
 
-private struct AIDraftMenuLabel: View {
+struct AIDraftMenuLabel: View {
     @ObservedObject var draft: AIDraftDocument
     let selected: Bool
     var body: some View {

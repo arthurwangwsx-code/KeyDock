@@ -50,7 +50,7 @@ private let legacyCases = [
         previousLanguage = UserDefaults.standard.object(forKey: languageKey)
         previousPane = UserDefaults.standard.object(forKey: "KeyDock.Smoke.SettingsPane")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        do { store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: allowContextCapture, clipboardChangeCount: { 7 }, clipboardReader: clipboardReader, applicationCatalog: applicationCatalog, applicationLauncher: applicationLauncher) }
+        do { store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: allowContextCapture, clipboardChangeCount: { 7 }, clipboardReader: clipboardReader, applicationCatalog: applicationCatalog ?? ApplicationCatalog(roots: []), applicationLauncher: applicationLauncher) }
         catch { try? FileManager.default.removeItem(at: directory); throw error }
     }
     func cleanup() {

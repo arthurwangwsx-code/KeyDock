@@ -10,7 +10,7 @@
 ## 规格工作流
 - 优先本地 iSpec；配置在 ispec/config.yaml。新 change 先产 proposal/specs/design/tasks，按 CLI 返回的 start/update 门禁记录，不手改内部状态。
 - 产品愿景在 docs/product，技术真值在 docs/technical；iSpec change 保存增量合同。实现时逐项记录 PASS/PARTIAL/FAIL/BLOCKED 与证据，不用 Git 或 mock 测试替代 macOS 实机验收。
-- 当前 change 是 keydock-foundation；当前执行 apply 的 P0/P1 任务；P2–P4 保留后续，不计入本次目标。
+- 当前 change 是 keydock-foundation；当前执行P0/P1及用户于2026-11-23新增的开源、预发行和安装流水线任务；其他P2–P4能力保留后续。
 - 同一 change 的 iSpec start/update/measure 与最终 metrics 审计串行执行，不能把共享索引写入当作独立验证并行。索引异常时保留旧日志/快照，通过 CLI 开始新 attempt 并串行复核，不手工伪造旧开始或成功记录。
 - 本机生成的 .codex/skills 不提交；新开发环境按 CONTRIBUTING.md 安装。
 
@@ -27,3 +27,11 @@
 - 本地 Git 提交属于工程记录。公开建仓、push、发布、上传和网站部署需当前会话明确授权到具体目标；准备可审阅内容后再确认，避免重复询问。
 - 默认公开技术支持、反馈和隐私请求邮箱：arthur.wang.wsx@gmail.com。UI、站点、政策与元数据统一；邮箱不证明法律发布者身份。
 - 本仓库原创代码与文档采用 MIT；引用资料、第三方及未来迁移代码仍遵循各自许可证。
+
+## 工程流水线
+- 统一入口 `python3 scripts/keydock.py`／Makefile；版本、架构、bundleID、签名team与源仓库在 release/config.json。
+- `make debug` 构建并安装独立KeyDock Preview；其bundleID与数据／权限能力和正式应用分离。调试流程不读真实剪贴板／凭据。
+- `KEYDOCK_NOTARY_PROFILE=<已有profile> make release` 执行检查、干净提交的Release构建、Developer ID签名、App/DMG公证装订、Gatekeeper与摘要。凭据留在钥匙串，禁止导出私钥到工程或日志。
+- `make install` 使用同卷原子交换；核对bundleID/team/资源摘要，精确路径请求正常退出，保留旧App与回退receipt。未知进程、symlink、目标漂移或退出失败时停止，不force kill、不改TCC或quarantine。
+- `make publish` 仅消费已验证资产、已推送master可达的精确tag；先draft、回下载验签／验哈希再公开prerelease，不覆盖不同字节的既有资产。
+- 当前用户已要求整个KeyDock应用源码开源、Release本地打包上传和安装替换自动化。目标根据已选项目名及已核对GitHub账号为arthurwangwsx-code/KeyDock；不得扩大到其他仓库或私人数据。

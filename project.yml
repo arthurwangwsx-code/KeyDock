@@ -1,4 +1,9 @@
 name: KeyDock
+configs:
+  Debug: debug
+  Release: release
+  DebugPreview: debug
+  ReleasePreview: release
 options:
   bundleIdPrefix: com.arthurwangwsx
   deploymentTarget:
@@ -36,6 +41,16 @@ targets:
         CURRENT_PROJECT_VERSION: '1'
         ENABLE_APP_SANDBOX: NO
         ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_DEBUG_DYLIB: NO
         SWIFT_EMIT_LOC_STRINGS: YES
+      configs:
+        DebugPreview:
+          PRODUCT_NAME: KeyDockPreview
+          PRODUCT_BUNDLE_IDENTIFIER: com.arthurwangwsx.KeyDock.preview
+          INFOPLIST_KEY_CFBundleDisplayName: KeyDock Preview
+        ReleasePreview:
+          PRODUCT_NAME: KeyDockPreview
+          PRODUCT_BUNDLE_IDENTIFIER: com.arthurwangwsx.KeyDock.preview
+          INFOPLIST_KEY_CFBundleDisplayName: KeyDock Preview
     scheme:
       testTargets: []

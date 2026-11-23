@@ -16,6 +16,7 @@
 | [P1会话保留](technical/session-retention.md) | 已实现的总预算、元数据维护、清除和恢复围栏及待验收边界 |
 | [复用评估](technical/reuse-assessment.md) | AiBox/Ashot 可借鉴模块与迁移条件 |
 | [验证方案](technical/validation.md) | 合成测试、真实 Mac/API 验收及性能预算 |
+| [工程流水线](technical/release-pipeline.md) | 共用检查／调试／签名公证／安装回退／上传与回下载 |
 | [GitHub 托管](governance/github-publication.md) | 公开范围、目标账号、分支与发布准备 |
 | [开源参考目录](../references/README.md) | 13 个参考工程及固定版本登记 |
 | [第一阶段进度](implementation/phase-one-progress.md) | 实现、测试、真实验收与下一步 |
@@ -25,7 +26,8 @@
 | [启动台与AI状态复查](implementation/application-shortcuts-2026-11-23.md) | 应用更新、快捷键/API回滚、迟到交互隔离与用量未知状态 |
 | [会话保留与清除复查](implementation/retention-acceptance-2026-11-23.md) | 8任务/200历史/32草稿/32MiB、90天维护、清除与失败回归 |
 | [玻璃界面与双语复查](implementation/interface-refinement-2026-11-23.md) | 组件分层、导航上下文、可返回草稿、动态提示与设置失败边界 |
+| [发行工程实查](implementation/release-engineering-2026-11-23.md) | 统一流水线、真实安装／替换／回退、启动问题与发布证据 |
 | [状态总账](status.md) | PASS/PARTIAL/FAIL/BLOCKED、证据与未完成义务 |
-| [iSpec 提案](../ispec/changes/keydock-foundation/10-proposal.md) | proposal、design、四个能力规范和分阶段 tasks |
+| [iSpec 提案](../ispec/changes/keydock-foundation/10-proposal.md) | proposal、design、五个能力规范和分阶段 tasks |
 
 产品需求表中的 P0–P4 均为建设计划。已验证的竞品官方材料不等于在本机测试过竞品，AiBox 现有源码不等于 KeyDock 已实现。

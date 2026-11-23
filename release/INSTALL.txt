@@ -1,0 +1,14 @@
+KeyDock — macOS arm64 preview
+
+Drag KeyDock.app into Applications, then open it from Applications.
+The release manifest records the Developer ID signature, Apple notarization and source commit.
+Clipboard recording starts off. Configure your own compatible API endpoint and model in Settings;
+API credentials are stored in macOS Keychain. Accessibility is optional for application search,
+and is requested only when you explicitly enable window/selected-text capabilities.
+
+This is an alpha preview. Full physical-shortcut, IME, multiple-screen, Accessibility and external
+model quality qualification is still in progress. macOS 14 is the deployment target, not a claim
+that the minimum system or Intel has been tested. See the release notes before daily use.
+
+源码、发行与文档：https://github.com/arthurwangwsx-code/KeyDock
+技术支持、反馈与隐私请求：arthur.wang.wsx@gmail.com
