@@ -82,7 +82,7 @@
 - [x] 8.2 建立统一Python／Make入口、版本与完整source SHA、隔离Preview和Release构建；Preview实际构建安装通过。
 - [x] 8.3 Developer ID、Hardened Runtime、App/DMG公证Accepted／装订、Gatekeeper与最终摘要实际通过，公开包回下载验证通过。
 - [x] 8.4 同卷原子安装、精确正常退出、回执／回退和失败补偿通过；owned签名Preview跨build回退、运行中Preview更新及canonical首次安装分别记录。
-- [ ] 8.5 建立无发行凭据的原生CI与公开后资产复核，远端实际运行通过。
+- [x] 8.5 无发行凭据的原生CI（cb74c41，248 Swift／32 Python／271 key、ReleasePreview与产物）和公开后资产复核均在GitHub实际通过；保留前次未复现失败与完整诊断。
 - [x] 8.6 受控fast-forward master，建立公开仓与v0.1.0-alpha.1精确tag，public／master／44ace89来源已回查。
 - [x] 8.7 本地四项资产上传draft，回下载验签／验摘要后公开alpha；公开后本地与GitHub release-audit再次通过。
 - [ ] 8.8 实机复验picker语言、启动台完整行、草稿焦点和既有提示；全产品未验项保持PARTIAL。

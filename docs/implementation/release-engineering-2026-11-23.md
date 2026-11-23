@@ -40,7 +40,11 @@
 | 替换／回退 | PASS限于前述真实签名隔离Preview演练；不声明正式版本升级或数据迁移已验收 |
 | 公开资产 | PASS，仅ZIP、DMG、release-manifest.json、SHA256SUMS.txt；公开前后回下载实际验签、公证、来源和摘要 |
 | GitHub资产复核 | [PASS](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45200153987)，远端Xcode runner实际执行 |
-| 原生完整CI | 首次取消后重跑，WorkbenchFeatureTests失败；原日志摘要未包含具体失败，补齐CI诊断后继续定位 |
+| 原生完整CI | [PASS](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45202054398)，cb74c41：248 Swift／32 Python／271 key、ReleasePreview构建和两类artifact |
 | 最终原生界面 | BLOCKED，工具确认Mac已锁屏；不绕过锁屏，最新界面和正式包首次启动尚待解锁后复验 |
 
 ZIP SHA256为`856fa9eb287310a64a8d8b275ccd4011276a07a02e5d04ae2d8beaa796b9f8a8`；DMG为`60dbcb9bc8b124f5eeaa660806fec4782955fc9e736986b845473de02f3c6322`。最终公开manifest保留确切源与Apple提交标识。源码／资源扫描未发现已知私有构建home前缀，个人数据、凭据、诊断与安装备份未上传。
+
+远端日志已回下载核对：Swift五个target分别123／54／33／15／23项，合计248；Python32项与271条本地化检查通过。此前44ace89出现一次Workbench失败，原先仅输出末尾18行而丢失具体错误；现改为保留完整CI诊断7天并优先输出失败行。同组断言未改且没有增加超时，旧失败本次未复现，根因仍未定位，后续持续追踪。
+
+iSpec本轮带回执测量均已核对实际文件摘要、apply stage和attempt绑定；失败尝试保留。历史总审计仍为不完整：两条旧lint缺少可信start／receipt，且expectation未声明；不重构旧事实，也不把测量完成当作业务验收。整体apply和日用验收继续保持未完成。

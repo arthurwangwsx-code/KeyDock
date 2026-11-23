@@ -58,3 +58,5 @@ Debug使用单一可执行文件（`ENABLE_DEBUG_DYLIB=NO`），保留Hardened R
 CI使用GitHub官方 [`xcode-27` arm64 image](https://github.com/actions/runner-images)，显式选择Xcode27.2；runner目前为public preview，实际远端结果单独记录。PR/master保持contents: read，运行共用check与隔离Preview构建；签名凭据留在本机。公开后release-audit工作流再次下载并验签／验摘要。Actions固定经核对的完整commit SHA。[文档工作流](../../.github/workflows/docs.yml)继续快速反馈。
 
 参考 [Apple命令行公证](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow)和[GitHub Release CLI](https://cli.github.com/manual/gh_release_create)。工程思路参考本机DevSpace的来源绑定、公证、摘要与回下载；使用KeyDock自己的源码仓与身份配置。
+
+原生CI成功和失败均保留该VM上的合成验证日志7天；失败摘要优先输出具体测试错误，再保留末尾上下文。日志artifact与隔离Preview各自独立，公开Release使用固定四项资产清单。

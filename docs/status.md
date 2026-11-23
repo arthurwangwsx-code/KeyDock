@@ -15,7 +15,7 @@
 | AI质量 | PARTIAL | 20条合成质量样本已准备，全部NOT_RUN；未进行真实模型调用与人工质量验收 |
 | 最小任务与回执 | PARTIAL | CLI/AI网络前intent、终态元数据与退出围栏通过；三个AI入口的专用子进程SIGKILL+Store恢复通过且不重放；当前新版原生App带sleep退出已验证；Terminal交接有界/unknown/迟到隔离的合成测试通过，完整GUI崩溃和真实Terminal仍待验收 |
 | 性能 | PARTIAL | 2000条合成命令100次采样，Release排序p95 20.47ms、生产缓存查询链路p95 20.85ms；Panel热唤起150ms和长期耗电尚未证明 |
-| 公开托管/发行 | PARTIAL | public／master与v0.1.0-alpha.1已公开，Developer ID、App/DMG公证、Gatekeeper、本地安装和GitHub资产复核PASS；原生完整CI出现Workbench测试失败，正在补齐远端诊断并修复；完整日用仍PARTIAL |
+| 公开托管/发行 | PASS（alpha工程） | public／master与v0.1.0-alpha.1已公开；Developer ID、App/DMG公证、Gatekeeper、本地安装、GitHub资产复核及cb74c41完整原生CI通过；完整日用仍PARTIAL |
 
 详见 [第一阶段进度](implementation/phase-one-progress.md)、[验收方案](technical/validation.md) 和 [iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选任务表示对应实现/定向验证完成，不替代本表更广范围的真实验收。
 
@@ -28,3 +28,5 @@ canonical checkout 仍唯一，开发分支 feature/phase-one 从master创建，
 本轮细化玻璃／控件／正文分层与高对比度、共享按钮、快捷键精确深链接和可返回AI草稿；语言／外观／命令候选保存失败回滚，应用提示运行时双语解析，剪贴板写入失败保持本次暂停。代码与合成验证通过；当时Mac锁屏；本轮已解锁，新增实机证据见发行工程实查。
 
 本轮新增调试／安装／发行流水线与合成、真实签名App验证，详见[发行工程实查](implementation/release-engineering-2026-11-23.md)。源码已推送，首个签名公证alpha已公开并安装。最终原生复验时工具确认Mac已锁屏，最新视觉修复和正式包首次启动保持待验收。
+
+远端原生CI在44ace89曾出现WorkbenchFeatureTests失败，旧摘要未包含具体用例；加入完整诊断后，cb74c41的同一组248项Swift／32项Python检查及ReleasePreview构建通过。未放宽断言或增加超时，先前失败根因仍未定位，不能宣称稳定性问题已修复。[远端通过记录](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45202054398)。
