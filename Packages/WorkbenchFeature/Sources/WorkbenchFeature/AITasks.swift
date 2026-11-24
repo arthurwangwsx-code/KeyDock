@@ -23,7 +23,8 @@ extension WorkbenchModel {
     /// 原生菜单与按钮共用当前草稿门槛；不让快捷键重启在途任务或运行已移除草稿。
     public func canRunAIFromInput(_ draft: AIDraftDocument?) -> Bool {
         guard !isShuttingDown, let draft, ownsDraft(draft), !draft.input.isEmpty,
-              configuration.aiActions.contains(where: { $0.id == draft.actionID }) else { return false }
+              let action = configuration.aiActions.first(where: { $0.id == draft.actionID }),
+              hasValidAIConfiguration(modelOverride: action.modelOverride) else { return false }
         return !tasks.contains { $0.id == draft.latestRunID && $0.isRunning }
     }
     @discardableResult public func runAIFromInput(_ draft: AIDraftDocument?) -> UUID? {
@@ -31,11 +32,17 @@ extension WorkbenchModel {
               let action = configuration.aiActions.first(where: { $0.id == draft.actionID }) else { return nil }
         return runAI(action: action, draft: draft)
     }
-    func provider(override: String = "") throws -> ChatCompletionsProvider {
+    /// 只检查配置结构，不读取凭据或测试服务联通；匿名服务不要求密钥。
+    public func hasValidAIConfiguration(modelOverride: String = "") -> Bool { (try? providerConfiguration(override: modelOverride)) != nil }
+    private func providerConfiguration(override: String) throws -> AIProviderConfiguration {
         guard let url = URL(string: configuration.endpoint), !configuration.endpoint.isEmpty else { throw AIProviderError.invalidConfiguration }
         let selectedModel = override.isEmpty ? configuration.model : override
         let config = AIProviderConfiguration(endpoint: url, model: selectedModel, allowsLocalHTTP: configuration.localHTTP, tokenLimitParameter: TokenLimitParameter(rawValue: configuration.tokenLimitParameter) ?? .maxCompletionTokens)
         try config.validate()
+        return config
+    }
+    func provider(override: String = "") throws -> ChatCompletionsProvider {
+        let config = try providerConfiguration(override: override)
         let key = allowContextCapture ? (try credentialReader(configuration.endpoint) ?? "") : ""
         return ChatCompletionsProvider(configuration: config, apiKey: key)
     }

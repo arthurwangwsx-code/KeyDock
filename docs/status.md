@@ -6,7 +6,9 @@
 
 后续有序集合增量已实现：32项有序草稿、浏览／编辑隔离、明确失效清理、AI空白手动草稿和CLI可见任务。23项定向检查及原生重排／保存／双语／AI入口子集通过；首版Form运行行与编辑行混用的真实渲染缺陷已复验修补。干净源`0d3a0c2`本机cloud-core检查为491 Swift／46 Python／602 key，[同源core CI 45477121418](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45477121418)通过；此范围的OCR明确NOT_QUALIFIED，完整本机／发行仍未放行，见[集合复查](implementation/command-collections-2026-11-25.md)。
 
-继续增加仅隔离Preview可启用的视觉样例，强化剪贴板选中态、实色正文与合并行辅助名称。原生发现材质切换导致Launcher文本选区丢失后，将玻璃移至背景；修补后的选区、剪贴板查询／合并选择及AI草稿往返得到保留。中文浅色／英文深色剪贴板样例及独立设置页已观察；9项定向检查通过，完整当前源码检查另录。它不改变OS偏好，也不替代真实辅助功能／IME矩阵，见[视觉样例复查](implementation/visual-samples-2026-11-25.md)。
+继续增加仅隔离Preview可启用的视觉样例，强化剪贴板选中态、实色正文与合并行辅助名称。原生发现材质切换导致Launcher文本选区丢失后，将玻璃移至背景；修补后的选区、剪贴板查询／合并选择及AI草稿往返得到保留。中文浅色／英文深色剪贴板样例及独立设置页已观察；9项定向检查及干净源`8ae77c3`的493 Swift／46 Python／608 key cloud-core检查、[同源CI 45483484071](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45483484071)通过。OCR仍NOT_QUALIFIED，它不改变OS偏好，也不替代真实辅助功能／IME矩阵，见[视觉样例复查](implementation/visual-samples-2026-11-25.md)。
+
+AI配置前置增量已实现：配置不完整时以设置入口替代运行，原生菜单共用Provider结构校验，检查不读密钥／不联网。动作模型覆盖与两个辅助动作的全局模型分别判断。21项定向检查通过；中文浅色工作区／紧凑入口、未配置⌘Return及设置往返保留输入已观察。真实API仍未配置，最新完整core另录，见[配置引导复查](implementation/ai-setup-guidance-2026-11-25.md)。
 
 本轮已发布并安装alpha.7：有序多选合并、完整预览与可配置主动作，最多20项／1MiB。中文浅色／英文深色、跨查询、重排、空行与Shift-Return、偏好重启保留及实际合并复制均已观察。AI生成成功但复制失败会保留完整结果和成功回执。当前源472项Swift、46项Python、583条文案、同源CI及公证／公开回下载通过；真实自动插入仍依10.1验收。详见[本轮证据](implementation/clipboard-composition-2026-11-25.md)及[合并合同](technical/clipboard-composition.md)。
 

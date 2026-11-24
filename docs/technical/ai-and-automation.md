@@ -93,3 +93,9 @@ Skills 为有版本、来源和显式启用范围的资料/提示工作流；导
 两组数据独立：ActivityEvent 是 KeyDock 命令 ID、结果类别、耗时和时间；UsageObservation 是 provider、wireModelID、purpose、runID、requestID、token buckets、usage source、cost basis 与费率快照。每次真实网络请求有 attemptID，重试产生新 attempt；usage 明确 cumulative snapshot 或 delta，按 provider request/response identity 去重合并。stream 同时发 failed 并抛错也仅记一个终态，cancel/fail 保留已知部分并将未报告部分标 unknown。provider 不返回 usage 就显示 unknown；估算、影子订阅价与实际 API 费用分开，账本不等于服务商账单。
 
 本地先做按日次数、耗时、失败率、热门动作和使用趋势。AIInsight 使用用户选择区间的聚合报告，附数据覆盖率/来源和依据；“建议创建某快捷动作”可审阅后一键生成草稿，不能直接修改配置或运行自动化。P4 可另行启用前台活动观察；window title、浏览 URL、键盘内容与屏幕截图绝不成为默认行为日志。
+
+## 配置前置体验
+
+AI动作界面与原生运行菜单使用同一配置门槛：共享实际Provider的结构验证，使用动作独立模型或全局模型；缺少有效endpoint／模型时，主动作打开AI服务设置，不新建模型任务。结构检查不读取钥匙串、不访问网络，缺密钥不代表配置无效，服务可能允许匿名。HTTPS与显式允许的loopback HTTP规则沿用Provider，不能据“配置有效”宣称已认证或联通。
+
+CLI草稿与只读Agent辅助动作实际使用全局模型，因此独立判断全局配置，不套用当前AI动作的modelOverride。未配置时仍能输入、打开工作台、使用已授权的输入与返回草稿；运行中优先保留Stop，旧结果复制／替换继续使用原有授权，不由当前配置反向剥夺。打开设置或保存配置不会自动提交输入。

@@ -34,3 +34,5 @@ v1在同一hosting与查询值不变时仍出现选区重置：搜索`KeyDock`�
 另有两次连续使用旧AX索引被工具拒绝；已先回查实际状态，再按新索引操作，没有据拒绝重复业务写入。工具超时／索引错误不当作产品通过，也未证实为产品死锁。
 
 定向单元检查及原生截图只支持本文范围。真实OS增加对比度／减少透明度／减少动态效果、VoiceOver、中文组合输入、所有窗口／尺寸／深浅色组合、最低macOS版本与长期性能仍保持PARTIAL。完整本机OCR失败与发行未放行继续见[复发记录](ocr-recurrence-2026-11-25.md)。
+
+干净源`8ae77c34583806bc022252deb3b6235ff0ff7ca5`本机cloud-core测量`f4a0116b-40c7-43fa-b66c-c22c0bfaf57c`通过，20:41:42Z–20:45:41Z，493 Swift／46 Python／608 key，473个声明ID。[同源core CI 45483484071](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45483484071)及优化版Preview构建通过。该范围明确OCR NOT_QUALIFIED；完整原生门禁未放行。

@@ -609,6 +609,22 @@
         }
       }
     },
+    "Add an API endpoint and model in Settings. Your draft will stay here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add an API endpoint and model in Settings. Your draft will stay here."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先在设置中填写 API 地址和模型。草稿会保留在这里。"
+          }
+        }
+      }
+    },
     "Add application action": {
       "localizations": {
         "en": {
