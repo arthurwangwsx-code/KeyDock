@@ -24,6 +24,7 @@ flowchart LR
 | `make doctor` | 版本、Git状态、工具与公证profile是否配置，不读取凭据正文 |
 | `make check` | 分支、文档、本地化、Python流水线边界、Swift测试与lifecycle helper编译 |
 | `make debug` | 构建隔离Preview，正常退出旧Preview，原子替换到用户Applications并启动 |
+| `make desktop-fixture` | 构建独立的三个合成文本窗口宿主，保留全新App与收据，不启动、不替换生产数据 |
 | `make build` | 只构建允许WIP的Preview |
 | `KEYDOCK_NOTARY_PROFILE=<profile> make release` | 干净提交的Release archive、签名、公证、装订、Gatekeeper与最终资产 |
 | `make install` | 核验当前版本包的ZIP／DMG同源同字节App后安装至 `/Applications/KeyDock.app`，保留旧App与回退凭据 |

@@ -18,6 +18,7 @@ public enum CommandContextRequirement: String, Codable, Hashable, Sendable, Case
 public enum CommandEffect: String, Codable, Hashable, Sendable, CaseIterable {
     case read, activateApplication, activateWindow, executeProcess, replaceText
     case writeClipboard, writeFile, network, publish
+    case modifyWindow, changeApplicationVisibility, terminateApplication
 }
 
 public enum CommandContractError: Error, Equatable, Sendable {

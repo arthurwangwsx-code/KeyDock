@@ -115,4 +115,27 @@ struct HostDescriptorPolicyTests {
             callerInstanceID: "synthetic.ui", sideEffectsApproved: true)
         #expect(request.effects == [.network] && request.toolID == "keydock.tool.generateText")
     }
+
+    @Test func desktopOperationsDeclareTheirActualEffectsAndRejectModels() throws {
+        let expected: [(HostOperation, Set<CommandEffect>)] = [
+            (.layoutWindow, [.modifyWindow, .activateApplication]),
+            (.minimizeWindow, [.modifyWindow, .activateApplication]),
+            (.cycleWindow, [.activateWindow, .activateApplication]),
+            (.hideApplication, [.changeApplicationVisibility]),
+            (.showApplication, [.changeApplicationVisibility, .activateApplication]),
+            (.quitApplication, [.terminateApplication])
+        ]
+        for (operation, effects) in expected {
+            let descriptor = try HostActionCatalog.descriptor(id: "synthetic.desktop", title: "Synthetic", operations: [operation])
+            #expect(descriptor.actions[0].effects == effects)
+            #expect(throws: ExecutionPolicyError.sideEffectApprovalRequired) {
+                try HostDescriptorPolicy.authorize(descriptor: descriptor, availableContext: [.window], resourceScope: scope, caller: .user, callerInstanceID: "synthetic.ui")
+            }
+            #expect(throws: ExecutionPolicyError.callerMismatch) {
+                try HostDescriptorPolicy.authorize(descriptor: descriptor, availableContext: [.window], resourceScope: scope, caller: .agent, callerInstanceID: "synthetic.model", sideEffectsApproved: true)
+            }
+        }
+        let layout = try HostActionCatalog.descriptor(id: "synthetic.layout", title: "Synthetic", operations: [.layoutWindow])
+        #expect(layout.version == 2 && layout.actions[0].version == 2 && layout.actions[0].execution.toolVersion == 2)
+    }
 }

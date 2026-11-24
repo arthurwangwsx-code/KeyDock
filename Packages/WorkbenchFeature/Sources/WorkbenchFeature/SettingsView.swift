@@ -135,6 +135,8 @@ public struct SettingsRootView: View {
                 }
             }
             Section { Text(L("Create a translation, summary or custom prompt, then assign its own shortcut.")).font(.caption).foregroundStyle(.secondary) }
+        case .applications:
+            ApplicationActionsSettingsView(store: store)
         case .commands:
             Section(L("Saved commands")) {
                 if store.configuration.savedCommands.isEmpty { Text(L("Create a reusable command")).foregroundStyle(.secondary) }

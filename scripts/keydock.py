@@ -65,6 +65,29 @@ def helper():
     return path
 
 
+def desktop_fixture():
+    # 独立bundle和全新目录，不替换用户应用或复用生产数据。
+    parent = Path.home() / "Applications/KeyDock Acceptance Fixtures"
+    parent.mkdir(parents=True, exist_ok=True)
+    folder = Path(tempfile.mkdtemp(prefix="synthetic-", dir=parent))
+    app = folder / "KeyDock Desktop Fixture.app"
+    executable = app / "Contents/MacOS/KeyDockDesktopFixture"
+    executable.parent.mkdir(parents=True)
+    info = {"CFBundleIdentifier": "com.arthurwangwsx.KeyDock.DesktopFixture", "CFBundleName": "KeyDock Desktop Fixture",
+            "CFBundleExecutable": executable.name, "CFBundlePackageType": "APPL", "CFBundleVersion": "1",
+            "CFBundleShortVersionString": "1.0", "LSMinimumSystemVersion": "14.0", "NSHighResolutionCapable": True}
+    (app / "Contents/Info.plist").write_bytes(plistlib.dumps(info))
+    stage("desktop-fixture-compile", ["xcrun", "swiftc", "-parse-as-library", "-swift-version", "6", "-warnings-as-errors",
+                                       "-target", "arm64-apple-macos14.0", ROOT / "Tools/KeyDockDesktopFixture/main.swift", "-o", executable])
+    run(["/usr/bin/codesign", "--force", "--sign", "-", "--identifier", info["CFBundleIdentifier"], app])
+    run(["/usr/bin/codesign", "--verify", "--strict", app])
+    receipt = {"app": str(app), "bundleIdentifier": info["CFBundleIdentifier"], "source": source_identity(False),
+               "binarySHA256": sha256(executable), "syntheticOnly": True, "launched": False}
+    atomic_json(RUN_DIR / "desktop-fixture.json", receipt)
+    print(json.dumps(receipt, indent=2))
+    return app
+
+
 def check(ci=False):
     source = source_identity(False)
     attempt = quality.begin_check(RUN_DIR, source, ci)
@@ -500,12 +523,14 @@ def main():
     p = sub.add_parser("install"); p.add_argument("--app", type=Path, required=True); p.add_argument("--destination", type=Path); p.add_argument("--quit-running", action="store_true"); p.add_argument("--dry-run", action="store_true"); p.add_argument("--receipt", type=Path)
     p = sub.add_parser("rollback"); p.add_argument("receipt", type=Path); p.add_argument("--dry-run", action="store_true"); p.add_argument("--quit-running", action="store_true")
     p = sub.add_parser("debug"); p.add_argument("--no-launch", action="store_true")
+    sub.add_parser("desktop-fixture")
     p = sub.add_parser("release"); p.add_argument("--publish", action="store_true"); p.add_argument("--install", action="store_true")
     args = parser.parse_args()
     if args.command == "doctor":
         print(json.dumps({"source": source_identity(False), "platform": platform.system(), "architecture": platform.machine(), "version": CONFIG["version"],
                           "repository": CONFIG["repository"], "tools": {tool: shutil.which(tool) is not None for tool in ["xcrun", "xcodegen", "gh", "codesign", "hdiutil"]},
                           "notaryProfileConfigured": bool(os.environ.get("KEYDOCK_NOTARY_PROFILE"))}, indent=2))
+    elif args.command == "desktop-fixture": desktop_fixture()
     elif args.command == "check": check(args.ci)
     elif args.command == "build": build(args.profile, args.configuration, args.allow_dirty)
     elif args.command == "package": package(args.app, args.notary_profile)

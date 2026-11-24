@@ -1,6 +1,8 @@
 import AppKit
 import SwiftUI
 import WorkbenchFeature
+import CommandCore
+import ExecutionCore
 import MacAdapters
 import KeyDockUI
 
@@ -75,6 +77,14 @@ import KeyDockUI
     private var clipboardTarget: ClipboardPasteTarget?
     private var clipboardFence: ClipboardPasteActivationFence?
     private var clipboardActivationObserver: NSObjectProtocol?
+    private struct DesktopInvocation {
+        let lease: DesktopOperationLease
+        let source: TargetIdentity?
+        let destinationPath: String?
+        let allowsDeactivationAfterSubmission: Bool
+        let isWindowCycle: Bool
+    }
+    private var desktopInvocations: [UUID: DesktopInvocation] = [:]
     private var statusItem: NSStatusItem?
     private var generation = UUID()
     private var captureTask: Task<Void, Never>?
@@ -89,7 +99,7 @@ import KeyDockUI
         launcherSession.onExecute = { [weak self] item in
             guard let self else { return }
             store.invalidateLauncherReplies()
-            if self.capturePending && (item.kind == .ai || item.payload.hasPrefix("window-layout.")) { self.pendingCommandID = item.id }
+            if self.capturePending && item.kind == .ai { self.pendingCommandID = item.id }
             else { store.execute(item) }
         }
         store.onDismiss = { [weak self] in self?.dismissLauncher(restore: $0) }
@@ -99,6 +109,8 @@ import KeyDockUI
         }
         store.onOpenWorkspace = { [weak self] in self?.openWorkspace($0) }
         store.onOpenClipboard = { [weak self] in self?.presentClipboard() }
+        store.onDesktopAction = { [weak self] item, caller in self?.runDesktopAction(item, caller: caller) }
+        store.onDesktopActionFinished = { [weak self] id in self?.desktopInvocations[id] = nil }
         clipboardSession.onCopy = { [weak self] text in
             guard let self else { return }; self.store.copyClipboardText(text); self.dismissClipboard(restore: true)
         }
@@ -107,7 +119,14 @@ import KeyDockUI
             guard let application = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
             let pid = application.processIdentifier
             MainActor.assumeIsolated {
-                guard let self, let fence = self.clipboardFence else { return }
+                guard let self else { return }
+                for invocation in self.desktopInvocations.values {
+                    let isSource = invocation.source?.pid == pid && invocation.source?.launchDate == application.launchDate
+                    let isDestination = invocation.destinationPath != nil && invocation.destinationPath == application.bundleURL?.path
+                    let expectedDeactivation = invocation.allowsDeactivationAfterSubmission && invocation.lease.didSubmit
+                    if pid != ProcessInfo.processInfo.processIdentifier && !isSource && !isDestination && !expectedDeactivation { invocation.lease.revoke() }
+                }
+                guard let fence = self.clipboardFence else { return }
                 fence.observeActivation(pid: pid)
                 if fence.revoked { self.dismissClipboard(restore: false) }
             }
@@ -169,6 +188,7 @@ import KeyDockUI
     }
     func presentLauncher(commandID: String? = nil) {
         guard !store.isShuttingDown else { return }
+        revokeDesktopInvocations()
         dismissClipboard(restore: false)
         if launcher == nil { launcher = buildLauncher() }
         guard let launcher else { return }
@@ -206,6 +226,34 @@ import KeyDockUI
             }
         } else if let command = pendingCommandID { pendingCommandID = nil; store.performCommand(id: command) }
     }
+    private func runDesktopAction(_ item: CommandItem, caller: ExecutionCaller) {
+        guard !store.isShuttingDown else { return }
+        let inherited = launcher?.isKeyWindow == true && NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier
+        let identity = inherited ? originalIdentity : store.desktop.frontmostTarget()
+        let isCycle = item.payload == "window-command.focusNext" || item.payload == "window-command.focusPrevious"
+        revokeDesktopInvocations(keepingCyclesFor: isCycle ? identity : nil)
+        let window = inherited ? store.target.flatMap { try? store.desktop.windowTarget(from: $0) } : nil
+        let destination: String?
+        let behavior: ApplicationBehavior
+        if item.kind == .application { destination = String(item.id.dropFirst(4)); behavior = .launchOrActivate }
+        else {
+            let definition = store.applicationActions.first(where: { "application-action." + $0.id.uuidString == item.id })
+            destination = definition.map { String($0.applicationID.dropFirst(4)) }; behavior = definition?.behavior ?? .launchOrActivate
+        }
+        let togglesOriginal = behavior == .toggleVisibility && identity.flatMap { NSRunningApplication(processIdentifier: $0.pid)?.bundleURL?.path } == destination
+        let allowsDeactivation = behavior == .hide || behavior == .requestQuit || togglesOriginal
+        let lease = DesktopOperationLease()
+        guard let id = store.runDesktopCommand(item, original: identity, window: window, caller: caller, lease: lease) else { lease.revoke(); return }
+        desktopInvocations[id] = DesktopInvocation(lease: lease, source: identity, destinationPath: destination, allowsDeactivationAfterSubmission: allowsDeactivation, isWindowCycle: isCycle)
+        dismissClipboard(restore: false)
+        dismissLauncher(restore: false)
+    }
+    private func revokeDesktopInvocations(keepingCyclesFor identity: TargetIdentity? = nil) {
+        for invocation in desktopInvocations.values {
+            if let identity, invocation.isWindowCycle, invocation.source?.pid == identity.pid, invocation.source?.launchDate == identity.launchDate { continue }
+            invocation.lease.revoke()
+        }
+    }
     func dismissLauncher(restore: Bool) {
         launcherSession.setVisible(false)
         store.invalidateLauncherReplies()
@@ -218,6 +266,7 @@ import KeyDockUI
     }
     func openSettings(_ pane: SettingsPane? = nil) {
         guard !store.isShuttingDown else { return }
+        revokeDesktopInvocations()
         dismissClipboard(restore: false)
         settingsSession.setVisible(true)
         dismissLauncher(restore: false); if let pane { settingsSession.pane = pane }
@@ -233,6 +282,7 @@ import KeyDockUI
     }
     func openWorkspace(_ route: WorkspaceRoute? = nil) {
         guard !store.isShuttingDown else { return }
+        revokeDesktopInvocations()
         dismissClipboard(restore: false)
         workspaceSession.present(route, in: store)
         dismissLauncher(restore: false)
@@ -247,6 +297,7 @@ import KeyDockUI
     }
     func presentClipboard() {
         guard !store.isShuttingDown else { return }
+        revokeDesktopInvocations()
         if clipboardPanel?.isKeyWindow == true { dismissClipboard(restore: true); return }
         let ownPID = ProcessInfo.processInfo.processIdentifier
         let fromLauncher = launcher?.isKeyWindow == true && NSWorkspace.shared.frontmostApplication?.processIdentifier == ownPID
@@ -423,6 +474,11 @@ import KeyDockUI
             editMenu.addItem(NSMenuItem(title: title, action: selector, keyEquivalent: key))
         }
         let editItem = NSMenuItem(); editItem.submenu = editMenu; main.addItem(editItem)
+        let viewMenu = NSMenu(title: AppL("View"))
+        for (title, selector) in [(AppL("Open KeyDock"), #selector(openLauncherAction)), (AppL("Clipboard history"), #selector(openClipboardAction)), (AppL("Workspace"), #selector(openWorkspaceAction))] {
+            let entry = NSMenuItem(title: title, action: selector, keyEquivalent: ""); entry.target = self; viewMenu.addItem(entry)
+        }
+        let viewItem = NSMenuItem(); viewItem.submenu = viewMenu; main.addItem(viewItem)
         if safeSmoke {
             let previewMenu = NSMenu(title: AppL("Preview"))
             let demo = NSMenuItem(title: AppL("Sample clipboard history"), action: #selector(openClipboardDemoAction), keyEquivalent: "")
@@ -482,6 +538,7 @@ import KeyDockUI
             HotkeyDefinition(id: entry.id, binding: entry.binding) { [weak self] in
                 guard let self else { return }
                 if entry.commandID == "utility.clipboard" { self.presentClipboard() }
+                else if let command = entry.commandID, self.store.isDesktopCommand(command) { self.store.desktopShortcut(command) }
                 else if let command = entry.commandID { self.presentLauncher(commandID: command) }
                 else if self.launcher?.isKeyWindow == true { self.dismissLauncher(restore: true) }
                 else { self.presentLauncher() }

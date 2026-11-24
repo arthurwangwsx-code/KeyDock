@@ -72,6 +72,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public var onOpenShortcutSettings: ((CommandItem) -> Void)?
     public var onOpenWorkspace: ((WorkspaceRoute) -> Void)?
     public var onOpenClipboard: (() -> Void)?
+    public var onDesktopAction: ((CommandItem, ExecutionCaller) -> Void)?
+    public var onDesktopActionFinished: ((UUID) -> Void)?
     public var onAIAction: ((AIDraftDocument, ExecutionCaller) -> Void)?
     public var onCaptureRequested: (() -> Void)?
     public var onReviewCommand: ((SavedCommand) -> Void)?
@@ -87,6 +89,12 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     }
     public let desktop: DesktopService
     let windowLayouts = WindowLayoutController()
+    let windowCommands = WindowCommandController()
+    let applicationControl: ApplicationControlService
+    let applicationActionStore: ApplicationActionStore?
+    @Published public internal(set) var applicationActions: [SavedApplicationAction] = []
+    @Published public internal(set) var applicationActionsWritable = false
+    var desktopLeases: [UUID: DesktopOperationLease] = [:]
     public var target: TargetSnapshot?
     public let clipboardStore: ClipboardStore
     let monitor: ClipboardMonitor
@@ -164,6 +172,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         self.sessionLimits = sessionLimits
         let desktop = DesktopService(applicationCatalog: applicationCatalog ?? ApplicationCatalog())
         self.desktop = desktop
+        applicationControl = ApplicationControlService(catalog: desktop.applicationCatalog)
         self.applicationLauncher = applicationLauncher ?? { try await desktop.launchApplication($0) }
         self.allowContextCapture = allowContextCapture
         self.clipboardWriter = clipboardWriter
@@ -175,6 +184,10 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         self.languageApplier = languageApplier
         self.terminalHandoff = terminalHandoff
         directory = try dataDirectory ?? PrivateFiles.applicationDirectory()
+        do {
+            let actions = try ApplicationActionStore(directory: directory)
+            applicationActionStore = actions; applicationActions = actions.actions; applicationActionsWritable = actions.writable
+        } catch { applicationActionStore = nil }
         usageMetadataStore = AIUsageMetadataStore(directory: directory.appendingPathComponent("usage"))
         let url = directory.appendingPathComponent("configuration.json")
         var statisticsEnabled = false
@@ -239,6 +252,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public func shutdown() {
         isShuttingDown = true; monitor.stop(); desktop.applicationCatalog.stop()
         windowLayouts.close()
+        windowCommands.close()
+        for lease in desktopLeases.values { lease.revoke() }
         scheduleTimer?.cancel()
         mcpConnectionTask?.cancel()
         receiptMaintenanceTask?.cancel(); receiptMaintenanceTask = nil
@@ -277,16 +292,19 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         let layouts = WindowLayout.allCases.map { layout in
             CommandItem(id: "utility.window-layout." + layout.rawValue, title: L(layout.titleKey), subtitle: L("Original window"), keywords: ["window", "layout", "窗口", "布局"], kind: .utility, payload: "window-layout." + layout.rawValue)
         }
+        let windowActions = WindowCommand.allCases.map { CommandItem(id: "utility.window-command." + $0.rawValue, title: L($0.titleKey), subtitle: L("Original application"), keywords: ["window", "窗口"], kind: .utility, payload: "window-command." + $0.rawValue) }
+        let appActions = applicationActions.map { CommandItem(id: "application-action." + $0.id.uuidString, title: $0.name, subtitle: L($0.behavior.titleKey), keywords: ["application", "应用"], kind: .utility, payload: "application-action." + $0.id.uuidString, objectRevision: fingerprint($0.applicationID + "|" + $0.behavior.rawValue + "|" + $0.name)) }
         let additional = [("activity",L("Usage insights")),("workflows",L("Workflows")),("tools",L("Tools")),("capture",L("Capture a region"))].map { CommandItem(id:"utility."+$0.0,title:$0.1,kind:.utility,payload:$0.0) }
         let workflows = configuration.workflows.map { CommandItem(id:"workflow."+$0.id.uuidString,title:$0.name,subtitle:L("Workflow"),kind:.utility,payload:"workflow."+$0.id.uuidString) }
         let snippets = configuration.snippets.map { CommandItem(id:"snippet."+$0.id.uuidString,title:$0.name,subtitle:L("Snippet"),kind:.utility,payload:"snippet."+$0.id.uuidString) }
         let web = configuration.webActions.map { CommandItem(id:"web."+$0.id.uuidString,title:$0.name,subtitle:L("URL action"),kind:.utility,payload:"web."+$0.id.uuidString) }
         let collections = configuration.collections.map { CommandItem(id:"collection."+$0.id.uuidString,title:$0.name,subtitle:L("Command collection"),kind:.utility,payload:"collection."+$0.id.uuidString) }
-        return saved + ai + builtins + layouts + additional + workflows + snippets + web + collections
+        return saved + ai + builtins + layouts + windowActions + appActions + additional + workflows + snippets + web + collections
     }
-    private func rebuildCatalog() { catalog = catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
+    func rebuildCatalog() { catalog = catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
     public func execute(_ item: CommandItem, caller: ExecutionCaller = .user) {
         guard !isShuttingDown else { launcherNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return }
+        if isDesktopItem(item) { onDesktopAction?(item, caller); return }
         invalidateLauncherReplies()
         configuration.preferences.recent[item.id] = Date(); save()
         switch item.kind {
@@ -329,15 +347,6 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             if item.payload.hasPrefix("collection."),let id = UUID(uuidString:String(item.payload.dropFirst(11))) { onOpenWorkspace?(.collection(id)); return }
             if item.payload.hasPrefix("snippet."), let id = UUID(uuidString:String(item.payload.dropFirst(8))) { copySnippet(id,caller:caller); onDismiss?(true); return }
             if item.payload.hasPrefix("calculate.") { do { try copyAuthorizedText(String(item.payload.dropFirst(10)),caller:caller); onDismiss?(true) } catch { showError(error) }; return }
-            if item.payload.hasPrefix("window-layout."), let layout = WindowLayout(rawValue: String(item.payload.dropFirst("window-layout.".count))) {
-                guard allowContextCapture, let snapshot = target else { launcherNoticeMessage = noticeKey("No original window is available"); return }
-                Task { [weak self] in
-                    guard let self else { return }
-                    do { try await windowLayouts.apply(layout, target: snapshot); recordDirectActivity(commandID:item.id,category:.window,outcome:.succeeded); if !isShuttingDown { onDismiss?(false) } }
-                    catch { if !isShuttingDown { launcherNoticeMessage = noticeKey("Window layout could not be applied. Check permission, target and window size.") } }
-                }
-                return
-            }
             if item.payload.hasPrefix("workflow."), let id = UUID(uuidString:String(item.payload.dropFirst("workflow.".count))), let workflow = configuration.workflows.first(where:{$0.id == id}) { _ = runWorkflow(workflow,input:""); return }
             switch item.payload {
             case "activity": onOpenWorkspace?(.activity)

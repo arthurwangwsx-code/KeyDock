@@ -1,4 +1,4 @@
-.PHONY: doctor check build debug package release publish verify-release install rollback
+.PHONY: doctor check build debug desktop-fixture package release publish verify-release install rollback
 doctor:
 	python3 scripts/keydock.py doctor
 check:
@@ -7,6 +7,8 @@ build:
 	python3 scripts/keydock.py build --profile preview --allow-dirty
 debug:
 	python3 scripts/keydock.py debug
+desktop-fixture:
+	python3 scripts/keydock.py desktop-fixture
 package:
 	python3 scripts/keydock.py package
 release:

@@ -15,11 +15,11 @@ public enum ShortcutCategory: CaseIterable {
     func contains(_ item: CommandItem) -> Bool {
         switch self {
         case .all: true
-        case .applications: item.kind == .application
-        case .windows: item.payload.hasPrefix("window-layout.")
+        case .applications: item.kind == .application || item.payload.hasPrefix("application-action.")
+        case .windows: item.payload.hasPrefix("window-layout.") || item.payload.hasPrefix("window-command.")
         case .ai: item.kind == .ai
         case .commands: item.kind == .command
-        case .tools: item.kind == .utility && !item.payload.hasPrefix("window-layout.")
+        case .tools: item.kind == .utility && !item.payload.hasPrefix("window-layout.") && !item.payload.hasPrefix("window-command.") && !item.payload.hasPrefix("application-action.")
         }
     }
 }

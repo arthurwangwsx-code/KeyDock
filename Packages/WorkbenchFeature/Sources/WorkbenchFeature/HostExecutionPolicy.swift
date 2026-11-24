@@ -32,6 +32,8 @@ extension WorkbenchModel {
     func descriptor(for item: CommandItem) throws -> CommandDescriptor {
         let operation: HostOperation
         if item.kind == .utility && item.payload.hasPrefix("window-layout.") { operation = .layoutWindow }
+        else if item.payload.hasPrefix("window-command.") { operation = item.payload == "window-command.minimize" ? .minimizeWindow : .cycleWindow }
+        else if item.payload.hasPrefix("application-action."), let action = applicationActions.first(where: { "application-action." + $0.id.uuidString == item.id }) { operation = Self.operation(for: action.behavior) }
         else if item.kind == .utility && item.payload.hasPrefix("web.") { operation = .openURL }
         else if item.kind == .utility && (item.payload.hasPrefix("snippet.") || item.payload.hasPrefix("calculate.")) { operation = .copyText }
         else { operation = HostActionCatalog.operation(for:item.kind) }
@@ -64,7 +66,7 @@ extension WorkbenchModel {
 
     private func hostAvailability(for operation: HostOperation, modelOverride: String) -> CommandAvailability {
         switch operation {
-        case .activateWindow, .replaceSelection, .layoutWindow, .pasteClipboard:
+        case .activateWindow, .replaceSelection, .layoutWindow, .pasteClipboard, .cycleWindow, .minimizeWindow:
             return desktop.accessibilityGranted ? .available : .unavailable(reasonKey: "Accessibility permission is required")
         case .generateText, .proposeCommand, .runReadOnlyAgent, .runAgent:
             guard let endpoint = URL(string: configuration.endpoint), !configuration.endpoint.isEmpty else {

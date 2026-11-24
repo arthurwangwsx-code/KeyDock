@@ -9,8 +9,13 @@ extension WorkbenchModel {
         guard !isShuttingDown, !isClearingHistory, makeSessionRoom(taskSlots: 1) else { return }
         tasks.append(RunningTaskItem(id: receipt.id, title: receipt.name, state: receipt.message == "terminal.handedOff" ? .handedOff : stateLabel(receipt.state), output: "", exitCode: receipt.exitCode, startedAt: receipt.startedAt, finishedAt: receipt.finishedAt))
         tasks[tasks.count - 1].restoredFromReceipt = true
+        if receipt.message.hasPrefix("desktop.") { tasks[tasks.count - 1].titleKey = "Desktop action" }
         if receipt.message == "terminal.handoffUnknown" {
             tasks[tasks.count - 1].noticeMessage = noticeKey("Terminal did not confirm opening the command. It may already be running. Check Terminal before retrying.")
+        } else if receipt.message == "desktop.quitRequested" {
+            tasks[tasks.count - 1].noticeMessage = noticeKey("Quit was requested once. The application may be waiting for you to save; check it before retrying.")
+        } else if receipt.message == "desktop.windowsRequested" {
+            tasks[tasks.count - 1].noticeMessage = noticeKey("macOS accepted the request to bring all application windows forward. Check their arrangement; minimized windows and Spaces were not individually verified.")
         } else if receipt.state == .interrupted { tasks[tasks.count - 1].noticeMessage = noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
     }
     @discardableResult public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user, showWorkspace: Bool = true) -> UUID? {
@@ -88,7 +93,8 @@ extension WorkbenchModel {
         cancelledTaskIDs.insert(id)
         cancelApprovals(runID: id)
         cancelWorkflowInputs(runID: id)
-        if aiTaskIDs.contains(id) { taskHandles[id]?.cancel() }
+        if let lease = desktopLeases[id] { lease.revoke(); taskHandles[id]?.cancel() }
+        else if aiTaskIDs.contains(id) { taskHandles[id]?.cancel() }
         else { Task { await processRunner.cancel(id) } }
     }
     func updateTask(_ id: UUID, state: TaskStatus, output: String? = nil, finished: Bool = false, exitCode: Int32? = nil) {

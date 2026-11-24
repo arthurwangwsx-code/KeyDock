@@ -7,6 +7,7 @@
 | [产品愿景](product/vision.md) | 用户、定位、产品原则、成功指标 |
 | [扩展能力使用说明](product/expanded-tools-guide.md) | Agent、MCP、工作流、调度、OCR和常用工具的实际入口 |
 | [完整快捷操作建设与验收](product/quick-actions-completion.md) | 独立剪贴板面板、快捷键分类、竞品能力和完整目标验收矩阵 |
+| [稳定窗口与应用动作](technical/desktop-actions.md) | 直接快捷键、窗口循环、应用行为、独立配置及合成宿主；alpha.6开发中 |
 | [产品需求](product/requirements.md) | 统一能力模型、AI 快捷动作和核心流程 |
 | [竞品调研](product/competitive-research.md) | 官方来源支持的能力矩阵与产品判断 |
 | [建设路线](product/roadmap.md) | 每阶段闭环、依赖、验收与投入估算 |

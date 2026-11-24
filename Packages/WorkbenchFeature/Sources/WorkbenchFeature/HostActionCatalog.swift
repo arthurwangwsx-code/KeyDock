@@ -5,6 +5,7 @@ import CommandCore
 enum HostOperation: String, Hashable, Sendable, CaseIterable {
     case openApplication, activateWindow, runCommand, prepareAI, generateText
     case proposeCommand, runReadOnlyAgent, runAgent, copyText, replaceSelection, pasteClipboard, readClipboard, navigate, layoutWindow, importContext, captureScreen, revealFile, openURL
+    case cycleWindow, minimizeWindow, hideApplication, showApplication, showAllApplicationWindows, quitApplication
 }
 
 /// 同一份声明同时供目录展示和真实执行使用，版本、效果与执行引用只在此定义。
@@ -28,7 +29,7 @@ enum HostActionCatalog {
         let actions = try operations.map { operation in
             try action(operation, title: title, availability: actionAvailability[operation] ?? .available)
         }
-        return try CommandDescriptor(id: id, version: 1, title: title,
+        return try CommandDescriptor(id: id, version: operations.contains(.layoutWindow) || operations.contains(.openApplication) ? 2 : 1, title: title,
             providerID: "keydock.provider.host", keywords: keywords,
             availability: availability, actions: actions)
     }
@@ -46,9 +47,21 @@ enum HostActionCatalog {
         case .revealFile:
             input = .structuredData; output = .none; context = []; effects = [.activateApplication]
         case .openApplication:
-            input = .application; output = .none; context = []; effects = [.activateApplication]
-        case .activateWindow, .layoutWindow:
+            input = .application; output = .none; context = []; effects = [.activateApplication, .changeApplicationVisibility]
+        case .activateWindow:
             input = .window; output = .none; context = [.window]; effects = [.activateWindow]
+        case .layoutWindow, .minimizeWindow:
+            input = .window; output = .none; context = [.window]; effects = [.modifyWindow, .activateApplication]
+        case .cycleWindow:
+            input = .window; output = .none; context = [.window]; effects = [.activateWindow, .activateApplication]
+        case .hideApplication:
+            input = .application; output = .none; context = []; effects = [.changeApplicationVisibility]
+        case .showApplication:
+            input = .application; output = .none; context = []; effects = [.changeApplicationVisibility, .activateApplication]
+        case .showAllApplicationWindows:
+            input = .application; output = .none; context = []; effects = [.changeApplicationVisibility, .activateApplication, .activateWindow]
+        case .quitApplication:
+            input = .application; output = .none; context = []; effects = [.terminateApplication]
         case .runCommand:
             input = .structuredData; output = .text; context = [.workingDirectory]; effects = [.executeProcess]
         case .prepareAI:
@@ -75,9 +88,9 @@ enum HostActionCatalog {
             input = .structuredData; output = .text; context = [.explicitInput]; effects = [.read]
         }
         return try ActionDescriptor(
-            id: "keydock.action." + operation.rawValue, version: 1, title: title,
+            id: "keydock.action." + operation.rawValue, version: operation == .layoutWindow || operation == .openApplication ? 2 : 1, title: title,
             inputType: input, outputType: output, availability: availability,
             requiredContext: context, effects: effects,
-            execution: CommandExecutionReference(toolID: "keydock.tool." + operation.rawValue, toolVersion: 1))
+            execution: CommandExecutionReference(toolID: "keydock.tool." + operation.rawValue, toolVersion: operation == .layoutWindow || operation == .openApplication ? 2 : 1))
     }
 }

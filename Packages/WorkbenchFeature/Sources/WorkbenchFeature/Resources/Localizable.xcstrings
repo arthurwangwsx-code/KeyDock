@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "A desktop request may already have taken effect. Check the target application before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A desktop request may already have taken effect. Check the target application before retrying."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面操作请求可能已经生效。重试前请先检查目标应用。"
+          }
+        }
+      }
+    },
     "A new attempt rechecks current scope and may repeat completed work. Unknown effects must be checked first.": {
       "localizations": {
         "zh-Hans": {
@@ -529,6 +545,22 @@
         }
       }
     },
+    "Add application action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add application action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加应用动作"
+          }
+        }
+      }
+    },
     "Add favorite": {
       "localizations": {
         "en": {
@@ -753,6 +785,86 @@
         }
       }
     },
+    "Application action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用动作"
+          }
+        }
+      }
+    },
+    "Application actions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用动作"
+          }
+        }
+      }
+    },
+    "Application actions are read-only because their file could not be loaded or safely saved. Existing data has not been reset.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application actions are read-only because their file could not be loaded or safely saved. Existing data has not been reset."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用动作文件无法读取或安全保存，当前为只读状态。已有数据未被重置。"
+          }
+        }
+      }
+    },
+    "Application actions could not be saved. Existing data was preserved; check the file before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application actions could not be saved. Existing data was preserved; check the file before retrying."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用动作保存失败。已有数据已保留，请检查文件后再重试。"
+          }
+        }
+      }
+    },
+    "Application actions were saved, but a recovery file was retained. Further changes are disabled until the file is checked.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application actions were saved, but a recovery file was retained. Further changes are disabled until the file is checked."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用动作已保存，但保留了恢复文件。检查文件前将停用后续修改。"
+          }
+        }
+      }
+    },
     "Application could not be opened. It may have moved or changed; refreshing the list.": {
       "localizations": {
         "en": {
@@ -781,6 +893,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "未授予辅助功能权限时仍可搜索应用。按窗口标题搜索无需屏幕录制权限。"
+          }
+        }
+      }
+    },
+    "Application unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application unavailable"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用不可用"
           }
         }
       }
@@ -1229,6 +1357,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "选择动作并输入文本。仅将这些内容发送至所选模型。"
+          }
+        }
+      }
+    },
+    "Choose an application": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an application"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择应用"
+          }
+        }
+      }
+    },
+    "Choose an available application and enter a short name.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an available application and enter a short name."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请选择可用应用并填写简短名称。"
           }
         }
       }
@@ -1985,6 +2145,22 @@
         }
       }
     },
+    "Create a named action for an application, then give it an alias or shortcut. Application shortcuts run directly without opening KeyDock.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a named action for an application, then give it an alias or shortcut. Application shortcuts run directly without opening KeyDock."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "为应用创建命名动作，再设置别名或快捷键。应用快捷键会直接执行，无需打开 KeyDock。"
+          }
+        }
+      }
+    },
     "Create a reusable command": {
       "localizations": {
         "en": {
@@ -2033,6 +2209,38 @@
         }
       }
     },
+    "Current app: Next window": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current app: Next window"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前应用：下一个窗口"
+          }
+        }
+      }
+    },
+    "Current app: Previous window": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current app: Previous window"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前应用：上一个窗口"
+          }
+        }
+      }
+    },
     "Current clipboard": {
       "localizations": {
         "en": {
@@ -2061,6 +2269,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Current time · read only"
+          }
+        }
+      }
+    },
+    "Current window: Minimize": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current window: Minimize"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前窗口：最小化"
           }
         }
       }
@@ -2161,6 +2385,22 @@
         }
       }
     },
+    "Delete this application action? Its shortcut will become unavailable until removed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this application action? Its shortcut will become unavailable until removed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除这个应用动作？已绑定的快捷键将变为不可用，可在快捷键设置中移除。"
+          }
+        }
+      }
+    },
     "Deny": {
       "localizations": {
         "zh-Hans": {
@@ -2173,6 +2413,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deny"
+          }
+        }
+      }
+    },
+    "Desktop action confirmed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop action confirmed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面动作已确认"
           }
         }
       }
@@ -2817,6 +3073,38 @@
         }
       }
     },
+    "Hide application": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide application"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏应用"
+          }
+        }
+      }
+    },
+    "Hide when frontmost, otherwise show": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide when frontmost, otherwise show"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前台时隐藏，否则显示"
+          }
+        }
+      }
+    },
     "History is being cleared. Try again when it finishes.": {
       "localizations": {
         "en": {
@@ -3245,6 +3533,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Last 7 days"
+          }
+        }
+      }
+    },
+    "Launch or activate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch or activate"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启动或激活"
           }
         }
       }
@@ -3793,6 +4097,22 @@
         }
       }
     },
+    "No application actions yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No application actions yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未添加应用动作"
+          }
+        }
+      }
+    },
     "No clipboard items": {
       "localizations": {
         "en": {
@@ -3917,6 +4237,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "未设置快捷键"
+          }
+        }
+      }
+    },
+    "Normal quit never force-quits or dismisses save dialogs. Show all windows brings windows forward; minimized windows and Spaces remain controlled by macOS.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal quit never force-quits or dismisses save dialogs. Show all windows brings windows forward; minimized windows and Spaces remain controlled by macOS."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正常退出不会强制结束应用，也不会关闭保存提示。“显示所有窗口”会请求将窗口置前，最小化窗口和桌面空间仍由 macOS 管理。"
           }
         }
       }
@@ -4077,6 +4413,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Optional, local statistics for KeyDock actions only. Stores command IDs, outcomes, durations and dates for 30 days. No window titles, arguments, clipboard text or model input is recorded. This is partial coverage, not whole-computer tracking."
+          }
+        }
+      }
+    },
+    "Original application": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original application"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原应用"
           }
         }
       }
@@ -4445,6 +4797,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "排队中"
+          }
+        }
+      }
+    },
+    "Quit was requested once. The application may be waiting for you to save; check it before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit was requested once. The application may be waiting for you to save; check it before retrying."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已发送一次正常退出请求。应用可能正在等待保存，请检查后再重试。"
           }
         }
       }
@@ -4849,6 +5217,22 @@
         }
       }
     },
+    "Request normal quit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request normal quit"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请求正常退出"
+          }
+        }
+      }
+    },
     "Request timeout (seconds)": {
       "localizations": {
         "en": {
@@ -5117,6 +5501,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Runs only while KeyDock is open. Missed times after sleep merge into one run. Interactive steps and dynamic command arguments cannot run unattended. Changed commands or AI targets require a new approval."
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
           }
         }
       }
@@ -5777,6 +6177,22 @@
         }
       }
     },
+    "Shortcut & alias": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut & alias"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷键与别名"
+          }
+        }
+      }
+    },
     "Shortcut changes could not be saved and rollback was incomplete. Check the saved shortcuts before retrying.": {
       "localizations": {
         "en": {
@@ -5869,6 +6285,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "快捷键当前未启用。请更换快捷键或重试注册。"
+          }
+        }
+      }
+    },
+    "Show all application windows": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all application windows"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示应用所有窗口"
+          }
+        }
+      }
+    },
+    "Show application": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show application"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示应用"
           }
         }
       }
@@ -6449,6 +6897,22 @@
         }
       }
     },
+    "The application or window is already in the requested state": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The application or window is already in the requested state"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用或窗口已处于目标状态"
+          }
+        }
+      }
+    },
     "The clipboard item is no longer available": {
       "localizations": {
         "en": {
@@ -6461,6 +6925,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "此剪贴板记录已不可用"
+          }
+        }
+      }
+    },
+    "The desktop target is unavailable or changed. Refresh it and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The desktop target is unavailable or changed. Refresh it and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面操作目标不可用或已变化。请刷新后重试。"
           }
         }
       }
@@ -7505,22 +7985,6 @@
         }
       }
     },
-    "Window layout could not be applied. Check permission, target and window size.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无法应用窗口布局。请检查权限、目标窗口和窗口大小。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Window layout could not be applied. Check permission, target and window size."
-          }
-        }
-      }
-    },
     "Window management": {
       "localizations": {
         "en": {
@@ -7937,6 +8401,22 @@
         }
       }
     },
+    "macOS accepted the request to bring all application windows forward. Check their arrangement; minimized windows and Spaces were not individually verified.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS accepted the request to bring all application windows forward. Check their arrangement; minimized windows and Spaces were not individually verified."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 已接受将应用所有窗口置前的请求。请检查排列结果；最小化窗口和桌面空间未逐一确认。"
+          }
+        }
+      }
+    },
     "macOS could not bring this window to the front. Try selecting it again.": {
       "localizations": {
         "en": {
@@ -7949,6 +8429,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "macOS 未能将此窗口切换到前台，请重新选择。"
+          }
+        }
+      }
+    },
+    "macOS declined the application request. Check the target application before trying again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS declined the application request. Check the target application before trying again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 拒绝了应用操作请求。请检查目标应用后再重试。"
           }
         }
       }

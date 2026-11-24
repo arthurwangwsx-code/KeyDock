@@ -28,6 +28,8 @@ for name, folders in targets.items():
     if 'WorkbenchFeature/' in name:
         geometry = (root / 'Packages/CommandCore/Sources/CommandCore/WindowGeometry.swift').read_text()
         keys.update(re.findall(r'case \.[A-Za-z]+: "([^"\\]+)"', geometry))
+        desktop = (root / 'Packages/CommandCore/Sources/CommandCore/DesktopActionDefinition.swift').read_text()
+        keys.update(re.findall(r'case \.[A-Za-z]+: "([^"\\]+)"', desktop))
         receipts = (root / 'Packages/WorkbenchFeature/Sources/WorkbenchFeature/AITaskReceipts.swift').read_text()
         keys.update(re.findall(r'case [A-Za-z]+ = "([^"\\]+)"', receipts))
     keys.discard('')

@@ -8,6 +8,7 @@ public enum ExecutionCaller: String, Hashable, Sendable {
 public enum ExecutionEffect: String, Hashable, Sendable, CaseIterable {
     case read, activateApplication, activateWindow, executeProcess, replaceText
     case writeClipboard, writeFile, network, publish
+    case modifyWindow, changeApplicationVisibility, terminateApplication
     public var isReadOnly: Bool { self == .read }
 }
 
