@@ -2,6 +2,8 @@
 
 更新：2026-11-25。用户已授权在保留P0/P1验收义务的同时推进P2–P4。**完整产品仍为PARTIAL**；当前源码、真实系统验收、已发布版本分别记录，不能用代码或CI绿测替代日用验收。
 
+后续修补分支`fix/ui-semantics-and-text-sync`从master `703b9a1`创建，已实现任务13的文本字节同步、编辑器AX名称、计划时区与Launcher副标题。33项定向执行通过（包含真实owned NSTextView字节／选区测试）；587个中英UI key已补齐。Agent／计划中英深浅四组合和临时Workflow输入等原生子集已观察，详见[语义复查](implementation/ui-semantics-2026-11-25.md)。alpha.8仍为开发候选，尚待完整检查及发行；当前正式版本继续为alpha.7。
+
 本轮已发布并安装alpha.7：有序多选合并、完整预览与可配置主动作，最多20项／1MiB。中文浅色／英文深色、跨查询、重排、空行与Shift-Return、偏好重启保留及实际合并复制均已观察。AI生成成功但复制失败会保留完整结果和成功回执。当前源472项Swift、46项Python、583条文案、同源CI及公证／公开回下载通过；真实自动插入仍依10.1验收。详见[本轮证据](implementation/clipboard-composition-2026-11-25.md)及[合并合同](technical/clipboard-composition.md)。
 
 2026-11-25交付增量：alpha.6已加入直接窗口／应用动作、独立应用动作设置与事务存储；457项Swift、46项Python、556个中英UI key、同源CI及发行门禁通过，并已替换正式alpha.5。首次编辑和显示提前短路已修补，合成应用真实隐藏→显示、退出只请求一次和正常结束得到确认。原生双语视觉仅通过已观察子集，完整目标仍未关闭。详见[本轮增量复查](implementation/desktop-controls-2026-11-25.md)。

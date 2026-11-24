@@ -86,7 +86,7 @@ struct WorkflowInputView: View {
     var body: some View {
         VStack(alignment:.leading,spacing:10) {
             Text(L("Workflow needs input")).font(.headline)
-            TextEditor(text:$text).frame(minHeight:80,maxHeight:160).modifier(KDReadingSurface())
+            TextEditor(text:$text).frame(minHeight:80,maxHeight:160).modifier(KDReadingSurface()).accessibilityLabel(L("Workflow input"))
             HStack {
                 Button(L("Cancel")) { store.cancelTask(request.runID) }
                 Button(L("Continue")) { store.resolveWorkflowInput(request.id,value:text) }.buttonStyle(.borderedProminent)

@@ -67,9 +67,10 @@ public struct LauncherView: View {
     }
     private func resultRow(_ item: CommandItem) -> some View {
         let icon: NSImage? = item.kind == .application ? NSWorkspace.shared.icon(forFile: item.payload) : nil
-        let spoken = [item.title, category(item.kind), item.subtitle].filter { !$0.isEmpty }.joined(separator: ", ")
+        let presentationSubtitle = subtitle(item)
+        let spoken = [item.title, category(item.kind), presentationSubtitle].filter { !$0.isEmpty }.joined(separator: ", ")
         return Button { session.selectedID = item.id; session.execute() } label: {
-            KDCommandRow(icon: icon, symbol: symbol(item.kind), title: item.title, subtitle: subtitle(item), category: category(item.kind), selected: item.id == session.selectedID)
+            KDCommandRow(icon: icon, symbol: symbol(item.kind), title: item.title, subtitle: presentationSubtitle, category: category(item.kind), selected: item.id == session.selectedID)
         }.buttonStyle(.plain).id(item.id)
             .onHover { hovering in
                 let position = NSEvent.mouseLocation

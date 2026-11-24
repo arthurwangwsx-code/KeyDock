@@ -51,6 +51,10 @@ struct ClipboardReadOnlyText: NSViewRepresentable {
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let view = scroll.documentView as? NSTextView else { return }
         view.setAccessibilityLabel(L("Preview"))
-        if view.string != text { view.string = text }
+        Self.synchronizeText(text, in: view)
+    }
+    static func synchronizeText(_ text: String, in view: NSTextView) {
+        // 规范等价不代表同一份字节正文；同时避免无变化刷新重置用户选区。
+        if !view.string.utf8.elementsEqual(text.utf8) { view.string = text }
     }
 }

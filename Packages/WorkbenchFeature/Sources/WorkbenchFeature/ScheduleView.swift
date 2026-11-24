@@ -8,6 +8,7 @@ private struct ScheduleApproval: Identifiable {
     let review: String
 }
 struct SchedulePanel: View {
+    @Environment(\.timeZone) private var displayTimeZone
     @ObservedObject var store: WorkbenchModel
     @State private var name = ""
     @State private var workflowID: UUID?
@@ -44,7 +45,14 @@ struct SchedulePanel: View {
                         }
                         Button(L("Remove"),role:.destructive) { removal = value }
                     }
-                    Text(value.nextFireAt,style:.date).font(.caption) + Text(" ") + Text(value.nextFireAt,style:.time).font(.caption)
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 6) {
+                            Text(L("Next run"))
+                            Text(value.nextFireAt, style: .date)
+                            Text(value.nextFireAt, style: .time)
+                        }
+                        Text(L("Displayed time zone") + ": " + displayTimeZone.identifier).foregroundStyle(.secondary)
+                    }.font(.caption).accessibilityElement(children: .combine)
                     if value.activeAttempt != nil { Text(L("Running")).foregroundStyle(.secondary) }
                     if let last = value.lastAttempt { Text(outcome(last.outcome)).font(.caption).foregroundStyle(.secondary) }
                     if value.reviewRequired { Button(L("I checked the unknown result")) { acknowledge = value } }

@@ -19,7 +19,7 @@ struct AgentWorkspaceView: View {
                     Button(L("Save profile")) { store.saveAgent(session.agentProfile) }
                     if store.configuration.agents.contains(where:{$0.id == session.agentProfile.id}) { Button(L("Remove"),role:.destructive) { confirmRemoval = true } }
                 }
-                TextEditor(text:$session.agentProfile.instructions).font(.body).frame(minHeight:90).modifier(KDReadingSurface())
+                TextEditor(text:$session.agentProfile.instructions).font(.body).frame(minHeight:90).modifier(KDReadingSurface()).accessibilityLabel(L("Agent instructions"))
                 TextField(L("Model override (optional)"),text:$session.agentProfile.modelOverride)
             }
             DisclosureGroup(L("Tools and budgets")) {
@@ -49,7 +49,7 @@ struct AgentWorkspaceView: View {
                 Text(L("Tool scope is frozen when a run starts. Every command call needs approval; its output is sent to the selected model. Cancelling does not undo effects already completed.")).font(.caption).foregroundStyle(.secondary)
             }
             Section(L("Your task")) {
-                TextEditor(text:$session.agentInput).font(.body).frame(minHeight:140).modifier(KDReadingSurface())
+                TextEditor(text:$session.agentInput).font(.body).frame(minHeight:140).modifier(KDReadingSurface()).accessibilityLabel(L("Agent task input"))
                 Button(L("Run agent")) { store.runAgent(session.agentProfile,input:session.agentInput) }.buttonStyle(.borderedProminent).disabled(session.agentInput.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty)
             }
         }.formStyle(.grouped).confirmationDialog(L("Remove this Agent profile? Running tasks keep their original snapshot."),isPresented:$confirmRemoval) { Button(L("Remove"),role:.destructive) { if store.removeAgent(session.agentProfile.id) { session.agentProfile = store.configuration.agents.first ?? AgentDefinition() } } }.onAppear {

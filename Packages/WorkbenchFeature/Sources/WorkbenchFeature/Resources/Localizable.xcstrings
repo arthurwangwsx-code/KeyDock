@@ -657,6 +657,22 @@
         }
       }
     },
+    "Agent instructions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent instructions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent 指令"
+          }
+        }
+      }
+    },
     "Agent paused. A new attempt rechecks scope and may repeat completed work; nothing resumes automatically.": {
       "localizations": {
         "zh-Hans": {
@@ -701,6 +717,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agent run"
+          }
+        }
+      }
+    },
+    "Agent task input": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent task input"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent 任务输入"
           }
         }
       }
@@ -2577,6 +2609,22 @@
         }
       }
     },
+    "Displayed time zone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Displayed time zone"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示时区"
+          }
+        }
+      }
+    },
     "Draft ready · not executed": {
       "localizations": {
         "en": {
@@ -4317,6 +4365,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "New workflow"
+          }
+        }
+      }
+    },
+    "Next run": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next run"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下次执行"
           }
         }
       }

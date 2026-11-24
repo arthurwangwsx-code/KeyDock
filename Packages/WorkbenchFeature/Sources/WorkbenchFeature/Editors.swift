@@ -69,7 +69,7 @@ struct AIActionEditor: View {
             }
             TextField(L("Model override (optional)"), text: $action.modelOverride)
             Text(L("Prompt")).font(.headline)
-            TextEditor(text: $action.prompt).frame(height: 160).border(.quaternary)
+            TextEditor(text: $action.prompt).frame(height: 160).border(.quaternary).accessibilityLabel(L("Prompt"))
             HStack { Text(L("Shortcut")); HotkeyRecorder(binding: $action.shortcut, onRecording: onRecording); Spacer() }
             Text(L("This shortcut sends only the configured input to your selected API. Replacement is a separate action.")).font(.caption).foregroundStyle(.secondary)
             if !saveError.rendered().isEmpty { KDInlineNotice(saveError.rendered()) }

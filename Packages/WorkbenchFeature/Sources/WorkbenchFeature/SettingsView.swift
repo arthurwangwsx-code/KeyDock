@@ -156,7 +156,7 @@ public struct SettingsRootView: View {
                 if !store.clipboardCaptureNotice.isEmpty { KDInlineNotice(store.clipboardCaptureNotice) }
             }
             Section(L("Excluded applications")) {
-                TextEditor(text: $exclusions).font(.system(size: 11, design: .monospaced)).frame(height: 110)
+                TextEditor(text: $exclusions).font(.system(size: 11, design: .monospaced)).frame(height: 110).accessibilityLabel(L("Excluded applications"))
                 Button(L("Save exclusions")) { store.saveClipboardExclusions(exclusions.split(whereSeparator: \.isNewline).map(String.init)) }
             }
         case .privacy:

@@ -48,6 +48,12 @@ AIUsageStatusView由AI结果和任务详情复用；事实聚合继续使用AICo
 
 Feature 与 App 各自处理 xcstrings，调用 L／AppL；KeyDockUI 不保存业务文案。`scripts/update-localizations.py --check` 验证两个 bundle 的英中 key 覆盖。语言／外观候选先持久化再publish，失败补偿原始文件，保持界面选择和活动外观。KDLocalizer集中解析system／en／zh-Hans，系统语言取本次进程快照，下次启动重新解析。设置保存语言后更新 Store、菜单标题和环境 locale，原生 NSTextField 同步更新 placeholder 与 accessibility label。任务状态、内置动作、应用提示按key运行时翻译；LocalizedNotice明确区分key、原文suffix与verbatim，不反向猜测用户文本。Task／Draft提示实际保留和渲染均限8KiB；CLI宿主错误进入提示域，stdout／stderr保持原文。key在所属Feature bundle构造和解析，App通过Feature错误入口报告注册失败。测试可注入languageApplier，避免异步合成采集测试更改全局语言偏好。权限InfoPlist.strings由系统决定弹窗语言。
 
+## 语义、文本与时间
+
+2026-11-25后续修补：只读NSTextView按实际UTF8同步正文，相同字节时保留选区；不能用String的规范等价比较替代准确正文更新。Agent、临时Workflow、Prompt与排除列表编辑器使用本地化辅助功能名称，不将输入正文当成控件名称。
+
+Launcher视觉行与辅助名称共用呈现副标题，只有实际需要区分重复应用时才展示技术路径。计划时间从同一个SwiftUI时区环境格式化并明确显示该时区，不修改保存的trigger或审批。源代码标签、单元测试和Catalog通过仍不能替代真实VoiceOver、时区及四组合视觉验收。
+
 ## 继续拆分边界
 
 当前 WorkbenchFeature 包含 View 与应用服务编排，适合首阶段小团队；后续功能增多时按 Launcher／Settings／Clipboard／AIWorkspace 拆 feature target，保持 Store 接口和文档引用合同。不允许基础模块反向 import UI；插件通过命令／工具合同接入，不直接操纵任意窗口状态。
