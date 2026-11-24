@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "0.1.0-alpha.1",
-  "buildNumber": "1",
+  "version": "0.1.0-alpha.2",
+  "buildNumber": "2",
   "repository": "arthurwangwsx-code/KeyDock",
   "bundleIdentifier": "com.arthurwangwsx.KeyDock",
   "previewBundleIdentifier": "com.arthurwangwsx.KeyDock.preview",

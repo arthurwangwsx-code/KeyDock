@@ -54,7 +54,7 @@ public struct WorkspaceView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 7) { Text(task.displayTitle).font(.system(size: 20, weight: .semibold)); Text(task.state).font(.system(size: 12)).foregroundStyle(.secondary) }
                         Spacer()
-                        if task.canCancel { Button(L("Stop")) { store.cancelTask(task.id) }.keyboardShortcut(".", modifiers: .command) }
+                        if task.canCancel { Button(L("Stop")) { store.cancelTask(task.id) } }
                         KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }.disabled(task.output.isEmpty)
                     }
                     if !task.notice.isEmpty { KDInlineNotice(task.notice) }

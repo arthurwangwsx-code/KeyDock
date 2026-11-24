@@ -1,6 +1,6 @@
 # 当前状态总账
 
-更新：2026-11-23。当前范围为第一阶段 P0+P1 实现，目标保持“首个可日用 macOS 内测版”。整体状态 **PARTIAL**：已有可构建、可运行预览，完整日用验收尚未完成。最新增量见[玻璃界面与双语复查](implementation/interface-refinement-2026-11-23.md)。
+更新：2026-11-24。当前范围为第一阶段 P0+P1 实现，目标保持“首个可日用 macOS 内测版”。整体状态 **PARTIAL**：已有可构建、可运行预览，完整日用验收尚未完成。最新增量见[解锁后原生交互复查](implementation/native-actions-2026-11-24.md)。
 
 | 范围 | 状态 | 当前证据与限制 |
 |---|---|---|
@@ -19,14 +19,16 @@
 
 详见 [第一阶段进度](implementation/phase-one-progress.md)、[验收方案](technical/validation.md) 和 [iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选任务表示对应实现/定向验证完成，不替代本表更广范围的真实验收。
 
-canonical checkout 仍唯一，开发分支 feature/phase-one 从master创建，主Agent串行写入，子Agent只提供/tmp独立补丁和只读评审；未创建worktree、未改旧AiBox/Ashot工程。支持/隐私联系 arthur.wang.wsx@gmail.com。
+canonical checkout 仍唯一，当前开发分支 fix/native-actions-and-ci 从master创建，主Agent串行写入，子Agent只提供/tmp独立补丁和只读评审；未创建worktree、未改旧AiBox/Ashot工程。支持/隐私联系 arthur.wang.wsx@gmail.com。
 
-当前248项Swift测试与32项Python流水线测试通过；271条UI key中英文静态覆盖通过。查询合同进入生产Launcher与QueryCoordinator，迟到请求不能取消新请求，Return不能执行旧批次。最新实际检查与边界记录见[界面与任务复查](implementation/native-ui-hardening-2026-11-23.md)，早前画面和查询记录保留。终端UI由工具明确禁止访问，旧适配路径未产生合成marker；新的有界回调适配器已编译并通过合成验证，真实交接不计通过。CUA注入alt+space未触发可观察切换，物理快捷键仍未验收。
+当前251项Swift测试与32项Python流水线测试通过；273条UI key中英文静态覆盖通过。查询合同进入生产Launcher与QueryCoordinator，迟到请求不能取消新请求，Return不能执行旧批次。最新实际检查与边界记录见[界面与任务复查](implementation/native-ui-hardening-2026-11-23.md)，早前画面和查询记录保留。终端UI由工具明确禁止访问，旧适配路径未产生合成marker；新的有界回调适配器已编译并通过合成验证，真实交接不计通过。CUA注入alt+space未触发可观察切换，物理快捷键仍未验收。
 
 此前GUI复验曾因Mac锁屏未执行；应用目录更新、快捷键事务、迟到启动回调与用量状态的最新合成证据见[本轮复查](implementation/application-shortcuts-2026-11-23.md)。本轮已实现任务/草稿总预算、90天元数据维护与两类独立清除，合成验证通过；原生清除交互与长期驻留仍待验收，32MiB为逻辑文本预算而非进程RSS承诺。
 
 本轮细化玻璃／控件／正文分层与高对比度、共享按钮、快捷键精确深链接和可返回AI草稿；语言／外观／命令候选保存失败回滚，应用提示运行时双语解析，剪贴板写入失败保持本次暂停。代码与合成验证通过；当时Mac锁屏；本轮已解锁，新增实机证据见发行工程实查。
 
-本轮新增调试／安装／发行流水线与合成、真实签名App验证，详见[发行工程实查](implementation/release-engineering-2026-11-23.md)。源码已推送，首个签名公证alpha已公开并安装。最终原生复验时工具确认Mac已锁屏，最新视觉修复和正式包首次启动保持待验收。
+本轮新增调试／安装／发行流水线与合成、真实签名App验证，详见[发行工程实查](implementation/release-engineering-2026-11-23.md)。源码已推送，首个签名公证alpha已公开并安装。此前最终复验时Mac锁屏；2026-11-24已在解锁后观察正式alpha.1三窗口和基本语言／外观，修复后Preview完成原生运行与停止、命令到合成Agent链路；完整系统矩阵仍未验收。
 
-远端原生CI在44ace89曾出现WorkbenchFeatureTests失败，旧摘要未包含具体用例；加入完整诊断后，cb74c41的同一组248项Swift／32项Python检查及ReleasePreview构建通过。未放宽断言或增加超时，先前失败根因仍未定位，不能宣称稳定性问题已修复。[远端通过记录](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45202054398)。
+远端原生CI在44ace89曾出现WorkbenchFeatureTests失败，旧摘要未包含具体用例；加入完整诊断后，cb74c41的同一组248项Swift／32项Python检查及ReleasePreview构建通过。未放宽断言或增加超时。后续faaa9d6原生CI再失败，现完整日志定位为用量展示夹具drain超时，已隔离语义测试与大响应压力，仍须新提交远端CI验证；不能将44ace89旧失败直接认定同一根因。[远端通过记录](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45202054398)。
+
+2026-11-24新增3项回归与原生AppKit运行／停止菜单、设置页原生新增图标、恢复任务默认选择。定向40项和全量251项Swift通过；Mac已解锁，确认原生⌘Return发出合成流、⌘.取消、只读Agent两轮和报告30/10用量，Preview配置已还原。两次临时计数验证脚本失败分别来自断言误读和服务已停止，均保留FAIL回执，不伪报E2E通过。alpha.2候选已准备，最终签名公证／升级／公开结果待本轮发行记录；alpha.1标签资产不变。

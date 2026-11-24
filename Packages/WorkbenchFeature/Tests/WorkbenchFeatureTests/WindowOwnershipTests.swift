@@ -82,6 +82,35 @@ private let legacyCases = [
 }
 
 @Suite(.serialized) @MainActor struct WindowOwnershipTests {
+    @Test func newSettingsActionsDoNotReplaceAnOpenUnsavedEditor() throws {
+        let fixture = try StoreFixture(); defer { fixture.cleanup() }
+        let session = SettingsSession(store: fixture.store)
+        session.beginNewCommand()
+        session.editedCommand?.name = "Synthetic unsaved command"
+        let id = session.editedCommand?.id
+        session.beginNewCommand(); session.beginNewAction()
+        #expect(session.editedCommand?.id == id && session.editedCommand?.name == "Synthetic unsaved command")
+        #expect(session.editedAction == nil)
+        session.editedCommand = nil; session.beginNewAction()
+        #expect(session.editedAction != nil && session.editedCommand == nil)
+        fixture.store.shutdown(); session.editedAction = nil; session.beginNewCommand()
+        #expect(session.editedCommand == nil)
+    }
+    @Test func firstWorkspacePresentationSelectsRestoredTaskAndKeepsLaterNavigation() throws {
+        let fixture = try StoreFixture(); defer { fixture.cleanup() }
+        let store = fixture.store
+        let id = UUID()
+        store.tasks = [RunningTaskItem(id: id, title: "Synthetic restored task", state: .interrupted, finishedAt: Date())]
+        let session = WorkspaceSession()
+        session.present(in: store)
+        #expect(session.page == .tasks && session.selectedTaskID == id)
+        session.createDraft(in: store)
+        let draftID = session.draft?.id
+        session.present(in: store)
+        #expect(session.page == .ai && session.draft?.id == draftID)
+        session.present(.tasks(nil), in: store)
+        #expect(session.page == .tasks && session.selectedTaskID == id)
+    }
     @Test(arguments: ["presentation", "query", "dismiss", "action"], [false, true])
     func oldApplicationReplyCannotDismissOrWarnANewPresentation(change: String, failing: Bool) async throws {
         let gate = ApplicationOpenGate()

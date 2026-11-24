@@ -117,6 +117,15 @@ private struct LauncherCatalogProvider: CommandProviding {
         endpoint = store.configuration.endpoint; modelName = store.configuration.model
         localHTTP = store.configuration.localHTTP; tokenParameter = store.configuration.tokenLimitParameter
     }
+    public func beginNewCommand() {
+        guard store?.isShuttingDown == false, editedCommand == nil, editedAction == nil else { return }
+        editedCommandSourceRunID = nil
+        editedCommand = SavedCommand(name: "", executable: "/usr/bin/printf")
+    }
+    public func beginNewAction() {
+        guard store?.isShuttingDown == false, editedCommand == nil, editedAction == nil else { return }
+        editedAction = AIActionPreset(name: "", prompt: "")
+    }
     public func setVisible(_ value: Bool) { visible = value; updateVisibleReferences() }
     private func updateVisibleReferences() {
         guard let store else { return }
@@ -146,6 +155,11 @@ private struct LauncherCatalogProvider: CommandProviding {
         clipboardChanges = clipboard.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
     }
     public func setVisible(_ value: Bool, in store: WorkbenchModel) { self.store = store; visible = value; updateVisibleReferences() }
+    public func present(_ route: WorkspaceRoute? = nil, in store: WorkbenchModel) {
+        setVisible(true, in: store)
+        if let route { navigate(route, store: store) }
+        else if page == .tasks && selectedTaskID == nil { navigate(.tasks(nil), store: store) }
+    }
     private func updateVisibleReferences() {
         guard let store else { return }
         if visible { store.setVisibleReferences(owner: visibilityOwner, draftID: draft?.id, taskID: selectedTaskID) }

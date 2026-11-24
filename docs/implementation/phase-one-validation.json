@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "date": "2026-11-23",
-  "branch": "feature/phase-one",
+  "date": "2026-11-24",
+  "branch": "fix/native-actions-and-ci",
   "overall": "PARTIAL",
   "goal": "P0+P1 daily-use macOS internal version; scope unchanged",
   "environment": {
@@ -15,18 +15,18 @@
   "verified": {
     "swiftTests": {
       "state": "PASS",
-      "total": 248,
+      "total": 251,
       "commandCore": 15,
       "executionCore": 33,
       "macAdapters": 54,
       "aiAndAgentCoreIncludingHTTP": 23,
-      "workbenchWindowOwnership": 20,
-      "log": ".local/p1-interface-final-tests.log",
+      "workbenchWindowOwnership": 22,
+      "log": ".local/nov24-full-check.log",
       "workbenchStoreHTTP": 8,
-      "workbenchTotal": 123,
-      "measurementID": "bcd48803-0052-4451-b16f-d738b854b63d",
+      "workbenchTotal": 126,
+      "measurementID": "8c9b55b3-cec6-4311-9575-cbdb2f651547",
       "workbenchBreakdown": {
-        "windowOwnership": 20,
+        "windowOwnership": 22,
         "storeHTTP": 8,
         "aiLimits": 11,
         "hostDescriptorPolicy": 8,
@@ -37,7 +37,7 @@
         "terminalLifecycle": 4,
         "apiConfiguration": 8,
         "shortcutConfiguration": 6,
-        "aiUsagePresentation": 6,
+        "aiUsagePresentation": 7,
         "sessionRetention": 10,
         "historyManagement": 8,
         "aiUsageMetadataStore": 7,
@@ -64,9 +64,9 @@
     },
     "nativeBuild": {
       "state": "PASS",
-      "configuration": "Debug local ad-hoc signature, not notarized",
-      "log": ".local/p1-interface-final-build.log",
-      "measurementID": "4153c4f9-74fe-46f4-ba7c-3c718865b66b"
+      "configuration": "DebugPreview isolated ad-hoc signed current native-actions source; formal alpha.1 separately notarized",
+      "log": ".local/nov24-native-preview-v2.log",
+      "measurementID": "43cb8218-ebc3-4af6-bd7d-69967280f44a"
     },
     "uiSmoke": {
       "state": "PASS",
@@ -86,10 +86,15 @@
         "new Chinese clipboard capacity guidance",
         "native CmdQ stops owned managed sleep; durable cancelled receipt",
         "relaunch task UI shows cancelled exit143 without retained output",
-        "final hover/keyboard scroll separation; first result and seventh result verified"
+        "final hover/keyboard scroll separation; first result and seventh result verified",
+        "native CmdReturn starts current AI draft with real synthetic loopback streaming",
+        "native CmdPeriod cancels and retains partial output with unknown usage",
+        "native settings plus visible and opens editor; saved printf exits0",
+        "command output to readonly Agent: two requests, one actual host tool, reported usage30/10",
+        "Preview quit normally and original configuration atomically restored"
       ],
-      "scope": "Earlier redesigned safe-smoke app; basic flow only. Current interface refinement not rechecked because Mac is locked.",
-      "latestEvidence": ".local/p1-launcher-hover-native.json"
+      "scope": "Historical synthetic paths plus Nov24 unlocked Mac inspection of installed alpha.1 and current repaired Preview. Basic native flow only; full visual/system matrix remains PARTIAL.",
+      "latestEvidence": "docs/implementation/native-actions-2026-11-24.md"
     },
     "searchBenchmark": {
       "state": "PASS",
@@ -119,9 +124,9 @@
     "localization": {
       "state": "PASS",
       "scope": "Translated English and Simplified Chinese source keys in App/Feature; typed notices, suffix extraction and both InfoPlist permission resources",
-      "log": ".local/p1-interface-final-localizations.log",
-      "keys": 270,
-      "measurementID": "740207ec-f4c3-4bd5-ba0f-9728aa951ef2"
+      "log": ".local/nov24-full-check.log",
+      "keys": 273,
+      "measurementID": "8c9b55b3-cec6-4311-9575-cbdb2f651547"
     },
     "storeHTTPIntegration": {
       "state": "PASS",
@@ -173,7 +178,6 @@
     "External model API, real Keychain credential flow and readonly tool roundtrip",
     "20-case real model quality review",
     "Minimum macOS and Intel compatibility",
-    "Signed/notarized distribution and remote publication",
     "Live application install/move/duplicate updates in current native UI",
     "Native history-clear dialogs, visual/accessibility/keyboard behavior and long-running retention/energy qualification"
   ],
@@ -181,14 +185,14 @@
     "No existing AiBox or Ashot source/configuration/credentials/media copied",
     "No real external model request or billable warmup",
     "No worktree or secondary checkout",
-    "No GitHub remote created or pushed",
+    "User-authorized public repository arthurwangwsx-code/KeyDock; alpha.1 published with signed/notarized assets",
     "Generated build products, private logs and test data remain ignored"
   ],
   "visualAcceptance": {
     "state": "PARTIAL",
     "previousUI": "FAIL: user rejected initial dashboard-like design",
-    "currentEvidence": "Earlier native inspection verified basic separate windows, glass, languages and focus. Current refined material/control/notice iteration has no native visual evidence: Mac locked.",
-    "review": "docs/implementation/interface-refinement-2026-11-23.md",
+    "currentEvidence": "Unlocked Mac basic separate windows, language/appearance, dynamic notices, new/restored draft focus and repaired native toolbar/keyboard flow observed. Complete system matrix and user visual approval remain unverified.",
+    "review": "docs/implementation/native-actions-2026-11-24.md",
     "remaining": [
       "user visual review",
       "live reduce-transparency/reduce-motion",
@@ -239,15 +243,31 @@
     "clipboardPreferenceFailureTests": 2
   },
   "currentNativeVerification": {
-    "state": "BLOCKED",
-    "reason": "Mac is still locked; CUA automatic unlock unavailable",
+    "state": "PARTIAL",
+    "scope": "Unlocked Mac formal alpha.1 basic windows/languages and repaired Preview command/AI/Agent flow observed",
     "permissionBypassAttempted": false,
-    "review": "docs/implementation/interface-refinement-2026-11-23.md"
+    "review": "docs/implementation/native-actions-2026-11-24.md",
+    "wireCounters": {
+      "postRequests": 3,
+      "agentRequests": 2,
+      "toolMessages": 1,
+      "activeSlowConnections": 0,
+      "closedSlowConnections": 1,
+      "authorizationSeen": 0
+    },
+    "temporaryStatsVerification": {
+      "state": "FAIL",
+      "meaning": "First assertion misread active connection count; corrected re-read hit stopped server. UI and captured counters are independent observations, not passing e2e receipts.",
+      "measurements": [
+        "23c30853-4be5-4155-b49c-35edd4468415",
+        "73b0cb87-9acb-410e-bcae-b1580e8c2c91"
+      ]
+    }
   },
   "visibleAIUsage": {
     "state": "PARTIAL",
     "syntheticState": "PASS",
-    "tests": 6,
+    "tests": 7,
     "states": [
       "pending",
       "reported",
@@ -259,7 +279,7 @@
     "ledgerAndUIShareFacts": true,
     "successfulAgentMissingTurnIsPartial": true,
     "restoresMetadataOnlyWithoutReplay": true,
-    "liveUI": "NOT_RUN: Mac locked",
+    "liveUI": "PASS within synthetic Preview scope: pending, partial output/cancelled unknown and completed reported Agent30/10; external API not tested",
     "failedMeasurementRetained": "1465c3b8-ee6b-4826-b09b-861c0de4964d"
   },
   "applicationLaunchReply": {
@@ -324,7 +344,7 @@
   },
   "workflowEvidence": {
     "state": "PARTIAL",
-    "currentApplyAttempt": "66eab6e6-f7c0-41eb-8f43-93ec432908e6",
+    "currentApplyAttempt": "0622d277-f905-4369-8189-b16c918e8b2b",
     "finalVerification": "serial CLI commands with independent native receipts",
     "incident": "parallel lint writes replaced the unprofiled shared state; old raw logs and earlier metrics snapshots preserved",
     "historyReconstructed": false,
@@ -345,6 +365,15 @@
     "clipboardWriteFailurePausesCurrentSession": true,
     "windowActivationSyntheticTests": 4,
     "synchronousNavigationShutdownTestFunctions": 1,
-    "realVisualAndAXAcceptance": "NOT_RUN: Mac locked"
+    "realVisualAndAXAcceptance": "PARTIAL: unlocked basic native visuals and shortcuts inspected Nov24; AX, IME, multiple screens, VoiceOver and user visual review pending"
+  },
+  "releaseEngineering": {
+    "state": "PASS within alpha.1 engineering scope",
+    "publicRepository": "https://github.com/arthurwangwsx-code/KeyDock",
+    "currentRelease": "v0.1.0-alpha.1",
+    "sourceCommit": "44ace89decd96a19746c9cf66829b708ec71a4f8",
+    "installedApp": "/Applications/KeyDock.app",
+    "newCandidate": "v0.1.0-alpha.2 build2; release verification pending",
+    "priorNativeCI": "45202054398 PASS at cb74c41; 45205239086 FAIL at faaa9d6 fixture drain timeout; new source run pending"
   }
 }

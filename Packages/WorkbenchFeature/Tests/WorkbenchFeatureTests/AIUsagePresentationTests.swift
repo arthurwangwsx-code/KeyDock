@@ -5,6 +5,27 @@ import MacAdapters
 @testable import WorkbenchFeature
 
 @Suite(.serialized) @MainActor struct AIUsagePresentationTests {
+    @Test func sharedRunActionRejectsEmptyForeignAndInFlightDrafts() async throws {
+        try await withStoreHTTPFixture(path: "slow") { fixture in
+            let store = fixture.store
+            let empty = store.createDraft(actionID: fixture.action.id, input: "")
+            let foreign = AIDraftDocument(input: "Synthetic foreign draft", actionID: fixture.action.id, target: nil)
+            #expect(!store.canRunAIFromInput(empty) && !store.canRunAIFromInput(foreign))
+            #expect(store.runAIFromInput(empty) == nil && store.runAIFromInput(foreign) == nil)
+            #expect(store.tasks.isEmpty)
+            let draft = store.createDraft(actionID: fixture.action.id, input: "Synthetic keyboard action")
+            #expect(store.canRunAIFromInput(draft))
+            let id = try #require(store.runAIFromInput(draft))
+            try await storeEventually { !store.tasks.first(where: { $0.id == id })!.output.isEmpty }
+            #expect(!store.canRunAIFromInput(draft) && store.runAIFromInput(draft) == nil)
+            #expect(store.tasks.count == 1)
+            store.cancelTask(id); try await fixture.drain(id)
+            #expect(store.tasks.first { $0.id == id }?.status == .cancelled)
+            #expect(store.canRunAIFromInput(draft))
+            store.shutdown()
+            #expect(!store.canRunAIFromInput(draft) && store.runAIFromInput(draft) == nil)
+        }
+    }
     @Test func cumulativeFactsKeepMissingValuesUnknownAndReportedZeroDistinct() throws {
         var accumulator = AIUsageAccumulator()
         #expect(AIUsageFacts(accumulator: accumulator, outcome: "succeeded").summary == .unknown)
@@ -42,7 +63,7 @@ import MacAdapters
     }
 
     @Test func failedSecondAgentTurnShowsOnlyItsKnownReportedPortion() async throws {
-        try await withStoreHTTPFixture(path: "large-agent") { fixture in
+        try await withStoreHTTPFixture(path: "agent-second-turn-failure") { fixture in
             let draft = fixture.store.createDraft(input: "Synthetic partial usage agent")
             fixture.store.runReadOnlyAgent(draft: draft)
             let id = try #require(fixture.store.tasks.first?.id)
@@ -55,6 +76,9 @@ import MacAdapters
             #expect(receipt.hasUnknownUsage && receipt.observations.count == 1)
             #expect(receipt.observations.first?.inputTokens == summary.reportedInputTokens)
             #expect(receipt.observations.first?.outputTokens == summary.reportedOutputTokens)
+            let stats = try await fixture.server.stats()
+            #expect(stats["post_requests"] == 2 && stats["agent_requests"] == 2 && stats["agent_tool_messages"] == 1)
+            try fixture.assertNoCommandEffects()
         }
     }
 

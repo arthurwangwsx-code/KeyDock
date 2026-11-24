@@ -113,14 +113,15 @@ class Handler(BaseHTTPRequestHandler):
                     self.complete_text("Synthetic held result", "synthetic-held-text")
                 else:
                     self.large_response(path, request)
-            elif path in ("/proposal", "/proposal-held", "/agent", "/agent-no-final-usage", "/unexpected-tool"):
+            elif path in ("/proposal", "/proposal-held", "/agent", "/agent-no-final-usage", "/agent-second-turn-failure", "/unexpected-tool"):
                 request = json.loads(body)
                 if not isinstance(request, dict):
                     raise ValueError("synthetic request shape")
                 if path in ("/proposal", "/proposal-held"):
                     self.proposal(request, held=path == "/proposal-held")
-                elif path in ("/agent", "/agent-no-final-usage"):
-                    self.agent(request, report_final_usage=path == "/agent")
+                elif path in ("/agent", "/agent-no-final-usage", "/agent-second-turn-failure"):
+                    self.agent(request, report_final_usage=path != "/agent-no-final-usage",
+                               fail_final_turn=path == "/agent-second-turn-failure")
                 else:
                     self.server.increment("ordinary_tools_advertised", len(request.get("tools", [])))
                     self.tool_response("synthetic-unexpected-tool")
@@ -274,7 +275,7 @@ class Handler(BaseHTTPRequestHandler):
                          b"data: [DONE]\r\n\r\n")
         self.wfile.flush()
 
-    def agent(self, request, report_final_usage=True):
+    def agent(self, request, report_final_usage=True, fail_final_turn=False):
         self.server.increment("agent_requests")
         tools = request.get("tools", [])
         names = [t.get("function", {}).get("name") for t in tools]
@@ -303,6 +304,10 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(422, {"error": MARKER})
             return
         self.server.increment("agent_tool_messages")
+        if fail_final_turn:
+            # 用量展示只检验失败轮未知用量，不依赖1MiB输出压力；仍校验真实host工具回传。
+            self.send_json(503, {"error": MARKER})
+            return
         if report_final_usage:
             self.complete_text("Synthetic read-only tool round-trip complete", "synthetic-agent-2", 20, 6)
         else:

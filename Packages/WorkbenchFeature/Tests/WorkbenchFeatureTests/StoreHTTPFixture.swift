@@ -192,7 +192,15 @@ final class StoreSSEServer {
         }
     }
     func drain(_ id: UUID) async throws {
-        try await storeEventually { self.store.taskHandles[id] == nil }
+        do { try await storeEventually { self.store.taskHandles[id] == nil } }
+        catch {
+            // 只记录合成任务状态和计数，不把提示词／输出正文写入诊断。
+            let task = store.tasks.first { $0.id == id }
+            let stats = try? await server.stats()
+            let posts = stats?["post_requests"] ?? -1, tools = stats?["agent_tool_messages"] ?? -1
+            Issue.record("Synthetic drain timeout: status=\(String(describing: task?.status)), outputBytes=\(task?.output.utf8.count ?? 0), handles=\(store.taskHandles.count), posts=\(posts), agentTools=\(tools)")
+            throw error
+        }
     }
     func usage(_ id: UUID) throws -> StoreUsageReceipt {
         try JSONDecoder().decode(StoreUsageReceipt.self, from: usageData(id))

@@ -45,7 +45,7 @@ import KeyDockUI
 }
 
 /// 只负责窗口生命周期、路由、系统菜单与全局触发；业务服务只有一个 Store。
-@MainActor final class WindowCoordinator: NSObject, NSWindowDelegate, NSToolbarDelegate {
+@MainActor final class WindowCoordinator: NSObject, NSWindowDelegate, NSToolbarDelegate, NSMenuItemValidation {
     let store: WorkbenchModel
     let launcherSession: LauncherSession
     let settingsSession: SettingsSession
@@ -194,9 +194,8 @@ import KeyDockUI
     }
     func openWorkspace(_ route: WorkspaceRoute? = nil) {
         guard !store.isShuttingDown else { return }
-        workspaceSession.setVisible(true, in: store)
+        workspaceSession.present(route, in: store)
         dismissLauncher(restore: false)
-        if let route { workspaceSession.navigate(route, store: store) }
         if workspace == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 680), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             window.contentMinSize = NSSize(width: 820, height: 560); window.isReleasedWhenClosed = false; window.delegate = self
@@ -225,12 +224,42 @@ import KeyDockUI
         let item = NSToolbarItem(itemIdentifier: itemIdentifier)
         if toolbar.identifier == "KeyDock.Workspace.Toolbar" {
             item.view = NSHostingView(rootView: WorkspaceToolbarView(store: store, session: workspaceSession))
-        } else {
-            item.view = NSHostingView(rootView: SettingsToolbarView(store: store, session: settingsSession))
-        }
+        } else { configureSettingsToolbarItem(item) }
         return item
     }
-    private func refreshTitles() { settings?.title = settingsSession.pane.title + " — KeyDock"; workspace?.title = AppL("Workspace") + " — KeyDock" }
+    private func configureSettingsToolbarItem(_ item: NSToolbarItem) {
+        let command = settingsSession.pane == .commands
+        let title = command ? AppL("New command") : AppL("New action")
+        item.label = title; item.toolTip = title
+        item.image = NSImage(systemSymbolName: "plus", accessibilityDescription: title)
+        item.target = self; item.action = command ? #selector(newCommandAction) : #selector(newAIAction)
+    }
+    private func refreshTitles() {
+        settings?.title = settingsSession.pane.title + " — KeyDock"
+        if let item = settings?.toolbar?.items.first(where: { $0.itemIdentifier.rawValue == "KeyDock.Controls" }) {
+            configureSettingsToolbarItem(item)
+        }
+        settings?.toolbar?.isVisible = settingsSession.pane == .commands || settingsSession.pane == .aiActions
+        workspace?.title = AppL("Workspace") + " — KeyDock"
+    }
+    private var keyboardDraft: AIDraftDocument? {
+        guard let keyWindow = NSApp.keyWindow else { return nil }
+        if keyWindow === workspace, workspaceSession.page == .ai { return workspaceSession.draft }
+        if keyWindow === launcher { return launcherSession.draft }
+        return nil
+    }
+    private var keyboardCancellationID: UUID? {
+        guard let keyWindow = NSApp.keyWindow else { return nil }
+        let id: UUID?
+        if keyWindow === workspace, workspaceSession.page == .tasks { id = workspaceSession.selectedTaskID }
+        else { id = keyboardDraft?.latestRunID }
+        return store.tasks.first { $0.id == id && $0.canCancel }?.id
+    }
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(runAIAction) { return store.canRunAIFromInput(keyboardDraft) }
+        if menuItem.action == #selector(stopCurrentTaskAction) { return !store.isShuttingDown && keyboardCancellationID != nil }
+        return !store.isShuttingDown
+    }
     private func installMenus() {
         let item = statusItem ?? NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "command.square", accessibilityDescription: "KeyDock")
@@ -251,6 +280,9 @@ import KeyDockUI
         appItem.submenu = appMenu; main.addItem(appItem)
         let fileMenu = NSMenu(title: AppL("File"))
         let newAI = NSMenuItem(title: AppL("New AI task"), action: #selector(newAITaskAction), keyEquivalent: "n"); newAI.target = self; fileMenu.addItem(newAI)
+        let runAI = NSMenuItem(title: AppL("Run AI action"), action: #selector(runAIAction), keyEquivalent: "\r"); runAI.target = self; fileMenu.addItem(runAI)
+        let stop = NSMenuItem(title: AppL("Stop current task"), action: #selector(stopCurrentTaskAction), keyEquivalent: "."); stop.target = self; fileMenu.addItem(stop)
+        fileMenu.addItem(.separator())
         let close = NSMenuItem(title: AppL("Close Window"), action: #selector(closeWindowAction), keyEquivalent: "w"); close.target = self; fileMenu.addItem(close)
         let fileItem = NSMenuItem(); fileItem.submenu = fileMenu; main.addItem(fileItem)
         let editMenu = NSMenu(title: AppL("Edit"))
@@ -264,6 +296,10 @@ import KeyDockUI
     @objc private func openSettingsAction() { openSettings(settingsSession.pane) }
     @objc private func openWorkspaceAction() { openWorkspace() }
     @objc private func newAITaskAction() { workspaceSession.createDraft(in: store); openWorkspace() }
+    @objc private func newCommandAction() { settingsSession.beginNewCommand() }
+    @objc private func newAIAction() { settingsSession.beginNewAction() }
+    @objc private func runAIAction() { store.runAIFromInput(keyboardDraft) }
+    @objc private func stopCurrentTaskAction() { if let id = keyboardCancellationID { store.cancelTask(id) } }
     @objc private func openAboutAction() { openSettings(.about) }
     @objc private func closeWindowAction() { if NSApp.keyWindow === launcher { dismissLauncher(restore: true) } else { NSApp.keyWindow?.performClose(nil) } }
     @objc private func quitAction() { NSApp.terminate(nil) }

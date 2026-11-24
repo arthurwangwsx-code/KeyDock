@@ -1,6 +1,5 @@
 import SwiftUI
 import KeyDockUI
-import ExecutionCore
 
 /// 由AppKit工具栏承载；正文NavigationSplitView不再接管窗口工具栏或安全区。
 public struct WorkspaceToolbarView: View {
@@ -22,20 +21,5 @@ public struct WorkspaceToolbarView: View {
             }
             KDIconButton("gearshape", label: L("Settings"), style: .toolbar) { store.onOpenSettings?(nil) }
         }.buttonStyle(.borderless).frame(width: 160, height: 32, alignment: .trailing).environment(\.locale, KDLocalizer.locale)
-    }
-}
-
-public struct SettingsToolbarView: View {
-    @ObservedObject var store: WorkbenchModel
-    @ObservedObject var session: SettingsSession
-    public init(store: WorkbenchModel, session: SettingsSession) { self.store = store; self.session = session }
-    public var body: some View {
-        Group {
-            if session.pane == .commands {
-                KDIconButton("plus", label: L("New command"), style: .toolbar) { session.editedCommandSourceRunID = nil; session.editedCommand = SavedCommand(name: "", executable: "/usr/bin/printf") }
-            } else if session.pane == .aiActions {
-                KDIconButton("plus", label: L("New action"), style: .toolbar) { session.editedAction = AIActionPreset(name: "", prompt: "") }
-            }
-        }.buttonStyle(.borderless).frame(width: 40, height: 32).environment(\.locale, KDLocalizer.locale)
     }
 }

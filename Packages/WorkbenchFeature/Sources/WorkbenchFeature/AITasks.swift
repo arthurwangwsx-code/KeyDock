@@ -20,6 +20,17 @@ private struct UsageReceipt: Codable {
 }
 
 extension WorkbenchModel {
+    /// 原生菜单与按钮共用当前草稿门槛；不让快捷键重启在途任务或运行已移除草稿。
+    public func canRunAIFromInput(_ draft: AIDraftDocument?) -> Bool {
+        guard !isShuttingDown, let draft, ownsDraft(draft), !draft.input.isEmpty,
+              configuration.aiActions.contains(where: { $0.id == draft.actionID }) else { return false }
+        return !tasks.contains { $0.id == draft.latestRunID && $0.isRunning }
+    }
+    @discardableResult public func runAIFromInput(_ draft: AIDraftDocument?) -> UUID? {
+        guard canRunAIFromInput(draft), let draft,
+              let action = configuration.aiActions.first(where: { $0.id == draft.actionID }) else { return nil }
+        return runAI(action: action, draft: draft)
+    }
     private func provider(override: String = "") throws -> ChatCompletionsProvider {
         guard let url = URL(string: configuration.endpoint), !configuration.endpoint.isEmpty else { throw AIProviderError.invalidConfiguration }
         let selectedModel = override.isEmpty ? configuration.model : override

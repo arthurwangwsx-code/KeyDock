@@ -85,4 +85,6 @@
 - [x] 8.5 无发行凭据的原生CI（cb74c41，248 Swift／32 Python／271 key、ReleasePreview与产物）和公开后资产复核均在GitHub实际通过；保留前次未复现失败与完整诊断。
 - [x] 8.6 受控fast-forward master，建立公开仓与v0.1.0-alpha.1精确tag，public／master／44ace89来源已回查。
 - [x] 8.7 本地四项资产上传draft，回下载验签／验摘要后公开alpha；公开后本地与GitHub release-audit再次通过。
-- [ ] 8.8 实机复验picker语言、启动台完整行、草稿焦点和既有提示；全产品未验项保持PARTIAL。
+- [x] 8.8 解锁后实机复验语言／外观picker、启动台行、草稿新建／恢复焦点和既有提示；真实按键、AX、IME、多屏及用户视觉评审仍未通过，见2026-11-24复查。
+- [x] 8.9 修复原生⌘Return／⌘.与设置工具栏新增按钮、首次恢复任务选择；新增3项边界回归，完整251 Swift／32 Python／273 key通过；Preview用合成服务实查命令到只读Agent链路。
+- [ ] 8.10 对alpha.2干净源提交完成原生远端CI、Developer ID签名公证、运行中正式App升级、回退凭据和GitHub资产回下载复核；不覆盖alpha.1。

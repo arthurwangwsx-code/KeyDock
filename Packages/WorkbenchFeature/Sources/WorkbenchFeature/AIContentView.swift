@@ -16,11 +16,11 @@ struct AIContentView: View {
                 Image(systemName: "sparkles").foregroundStyle(.tint)
                 Text(task?.displayTitle ?? action?.displayName ?? L("AI workspace")).font(.system(size: compact ? 15 : 22, weight: .semibold))
                 Spacer()
-                if task?.isRunning == true, let id = task?.id { ProgressView().controlSize(.small); Button(L("Stop")) { store.cancelTask(id) }.keyboardShortcut(".", modifiers: .command) }
-                else if let action {
-                    Button { store.runAI(action: action, draft: draft) } label: {
+                if task?.isRunning == true, let id = task?.id { ProgressView().controlSize(.small); Button(L("Stop")) { store.cancelTask(id) } }
+                else if action != nil {
+                    Button { store.runAIFromInput(draft) } label: {
                         HStack(spacing: 7) { Text(L("Run")); Text("⌘↩").font(.caption.monospaced()).opacity(0.8) }
-                    }.keyboardShortcut(.return, modifiers: .command).buttonStyle(.borderedProminent).disabled(draft.input.isEmpty)
+                    }.buttonStyle(.borderedProminent).disabled(!store.canRunAIFromInput(draft))
                 }
             }
             HStack(spacing: 6) {
