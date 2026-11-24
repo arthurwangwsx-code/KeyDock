@@ -2689,6 +2689,22 @@
         }
       }
     },
+    "Editing URL action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editing URL action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑 URL 动作"
+          }
+        }
+      }
+    },
     "Enable Accessibility": {
       "localizations": {
         "en": {
@@ -7521,6 +7537,22 @@
         }
       }
     },
+    "This URL action no longer exists. Start a new action to save this draft.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This URL action no longer exists. Start a new action to save this draft."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 URL 动作已不存在。请新建动作后保存此草稿。"
+          }
+        }
+      }
+    },
     "This application does not support selection replacement; copy the result instead": {
       "localizations": {
         "en": {
@@ -7997,6 +8029,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "URL action"
+          }
+        }
+      }
+    },
+    "URL action limit reached. Remove an action before adding another.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL action limit reached. Remove an action before adding another."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL 动作已达数量上限。请先移除一个动作，再添加新动作。"
           }
         }
       }

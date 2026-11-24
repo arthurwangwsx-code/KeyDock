@@ -5,12 +5,28 @@ import ExecutionCore
 
 extension WorkbenchModel {
     @discardableResult func saveWebAction(id:UUID?,name:String,template:String) -> Bool {
+        // 带ID只代表显式编辑；目标删除后不能通过旧草稿隐式复活。
+        if let id, !configuration.webActions.contains(where: { $0.id == id }) {
+            workspaceNoticeMessage = noticeKey("This URL action no longer exists. Start a new action to save this draft.")
+            return false
+        }
         do {
             let value = try WebActionDefinition(id:id ?? UUID(),name:name,urlTemplate:template)
             var next = configuration
             if let index = next.webActions.firstIndex(where:{$0.id == value.id}) { next.webActions[index] = value }
-            else { guard next.webActions.count < 100 else { return false }; next.webActions.append(value) }
-            return commitSettingsConfiguration(next)
+            else {
+                guard next.webActions.count < 100 else {
+                    workspaceNoticeMessage = noticeKey("URL action limit reached. Remove an action before adding another.")
+                    return false
+                }
+                next.webActions.append(value)
+            }
+            guard commitSettingsConfiguration(next) else {
+                workspaceNoticeMessage = settingsNoticeMessage
+                return false
+            }
+            workspaceNoticeMessage = .none
+            return true
         } catch { workspaceNoticeMessage = noticeKey("Use a valid HTTP or HTTPS URL. One {query} placeholder is allowed in the query section."); return false }
     }
     func openWebAction(_ id:UUID,query:String? = nil,caller:ExecutionCaller = .user) {

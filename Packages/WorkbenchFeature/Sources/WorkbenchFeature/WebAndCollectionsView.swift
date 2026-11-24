@@ -4,8 +4,6 @@ import CommandCore
 struct WebAndCollectionsPanel: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: WorkspaceSession
-    @State private var webName = ""
-    @State private var webTemplate = ""
     @State private var collectionName = ""
     @State private var selected: Set<String> = []
     @State private var actionFilter = ""
@@ -16,7 +14,7 @@ struct WebAndCollectionsPanel: View {
                 HStack {
                     Text(item.name).lineLimit(1); Spacer()
                     Button(L("Use")) { session.selectedWebActionID = item.id }
-                    Button(L("Edit")) { session.selectedWebActionID = item.id; webName = item.name; webTemplate = item.urlTemplate }
+                    Button(L("Edit")) { session.editWebAction(item) }
                     Button(L("Remove"),role:.destructive) { removal = "web."+item.id.uuidString }
                 }
             }
@@ -26,12 +24,13 @@ struct WebAndCollectionsPanel: View {
                 if let destination = try? item.resolvedURL(query:item.requiresQuery ? session.webQuery:nil) { Text(destination.absoluteString).font(.caption).foregroundStyle(.secondary).textSelection(.enabled) }
                 Button(L("Open URL")) { open(item) }.disabled(item.requiresQuery && session.webQuery.isEmpty)
             }
-            TextField(L("Name"),text:$webName)
-            TextField(L("URL or template"),text:$webTemplate)
+            Text(session.webActionDraft.editingID == nil ? L("New URL action") : L("Editing URL action")).font(.headline)
+            TextField(L("Name"),text:$session.webActionDraft.name)
+            TextField(L("URL or template"),text:$session.webActionDraft.urlTemplate)
             Text(L("Example: https://example.com/search?q={query}. Query text is percent-encoded; scripts and custom URL schemes are rejected.")).font(.caption).foregroundStyle(.secondary)
             HStack {
-                Button(L("Save URL action")) { if store.saveWebAction(id:session.selectedWebActionID,name:webName,template:webTemplate) { webName = ""; webTemplate = "" } }
-                Button(L("New URL action")) { session.selectedWebActionID = nil; webName = ""; webTemplate = ""; session.webQuery = "" }
+                Button(L("Save URL action")) { session.saveWebAction(in: store) }
+                Button(L("New URL action")) { session.newWebAction() }
             }
         }
         Section(L("Command collections")) {

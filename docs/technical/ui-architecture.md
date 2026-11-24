@@ -54,6 +54,8 @@ Feature 与 App 各自处理 xcstrings，调用 L／AppL；KeyDockUI 不保存�
 
 Launcher视觉行与辅助名称共用呈现副标题，只有实际需要区分重复应用时才展示技术路径。计划时间从同一个SwiftUI时区环境格式化并明确显示该时区，不修改保存的trigger或审批。源代码标签、单元测试和Catalog通过仍不能替代真实VoiceOver、时区及四组合视觉验收。
 
+URL动作的运行选择与编辑草稿分别归WorkspaceSession，Use／Launcher不赋予编辑身份，只有Edit载入指定ID。View重建或导航保留完整草稿，成功持久化才清空，失败保留字段并在工作区显示语义提示。编辑目标删除后拒绝旧ID保存，不能走upsert复活；新建上限与更新既有项分别处理。配置仍使用统一事务写入和原文件补偿。
+
 ## 继续拆分边界
 
 当前 WorkbenchFeature 包含 View 与应用服务编排，适合首阶段小团队；后续功能增多时按 Launcher／Settings／Clipboard／AIWorkspace 拆 feature target，保持 Store 接口和文档引用合同。不允许基础模块反向 import UI；插件通过命令／工具合同接入，不直接操纵任意窗口状态。
