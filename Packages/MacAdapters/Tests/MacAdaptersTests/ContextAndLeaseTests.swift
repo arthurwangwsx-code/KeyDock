@@ -75,15 +75,18 @@ extension ContextAndLeaseTests {
         let image = try #require(context.makeImage()), destination = try #require(CGImageDestinationCreateWithURL(url as CFURL,"public.png" as CFString,1,nil))
         CGImageDestinationAddImage(destination,image,nil); #expect(CGImageDestinationFinalize(destination))
         var rounds: [[String:Bool]] = []
-        for _ in 0..<2 {
+        let started = ProcessInfo.processInfo.systemUptime
+        for round in 1...2 {
+            print("KEYDOCK_OCR_ROUND round=\(round) event=start elapsed=\(ProcessInfo.processInfo.systemUptime-started)")
             let value: DocumentText
             do { value = try await DocumentContextService.read(url) }
             catch {
                 let failure = error as NSError, underlying = (error as NSError).userInfo[NSUnderlyingErrorKey] as? NSError
-                Issue.record("Synthetic OCR failed: domain=\(failure.domain), code=\(failure.code), underlyingDomain=\(underlying?.domain ?? "none"), underlyingCode=\(underlying?.code ?? 0)")
+                Issue.record("Synthetic OCR failed: round=\(round), elapsed=\(ProcessInfo.processInfo.systemUptime-started), domain=\(failure.domain), code=\(failure.code), underlyingDomain=\(underlying?.domain ?? "none"), underlyingCode=\(underlying?.code ?? 0)")
                 throw error
             }
             let outcome = ["usedOCR":value.usedOCR,"hasKeyDock":value.text.uppercased().contains("KEYDOCK"),"hasSynthetic":value.text.uppercased().contains("SYNTHETIC")]
+            print("KEYDOCK_OCR_ROUND round=\(round) event=finished matched=\(outcome.values.allSatisfy{$0}) elapsed=\(ProcessInfo.processInfo.systemUptime-started)")
             #expect(outcome.values.allSatisfy{$0}); rounds.append(outcome)
         }
         let request = try DocumentContextService.makeOCRRequest()
