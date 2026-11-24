@@ -28,6 +28,10 @@ canonical目录唯一；当前分支`feature/desktop-capability-expansion`从mas
 
 本轮最终统一检查通过382项Swift（主体373＋独立Terminal生命周期9）、34项Python、503条UI key中英覆盖及lifecycle helper编译。此前两次混合套件检查的两秒退出断言FAIL保留；第二次实际shutdown为2.087s，3.688s是整个用例耗时。并发MainActor合成夹具含同步poll／usleep，现将Terminal套件作为互补且强制的独立阶段，时限不变、空匹配拒绝；提交时捕获绝对deadline并独立计时。见`expansion-unified-check-v3`，不把繁忙系统视为硬实时系统。
 
+干净源首次release随后因超长AI输出的五秒drain超时停止，未生成发行资产。显式`--no-parallel`的19项集成诊断通过，日志确认套件不再重叠；两个Swift阶段均已追加显式串行，原预算／等待／断言不变。最终新版发行检查尚在进行，失败日志继续保留。
+
+显式串行check-v4已通过全382／34／503；首轮远端CI另有Vision unknownError。OCR现按Apple API为各阶段选择其声明支持的CPU，本机六项上下文测试（含真实合成图识别）通过；新版完整本机发行／远端复验结果待记录，不把unknownError擅自定性为VM硬件缺失。
+
 详见[扩展能力证据](implementation/capability-expansion-2026-11-24.md)、[使用说明](product/expanded-tools-guide.md)、[技术合同](technical/capability-expansion.md)和[iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选仅表示对应实现／定向验证，不关闭本表更广的真实验收。
 
 ## 已发布与安装

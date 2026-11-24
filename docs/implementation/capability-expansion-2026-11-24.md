@@ -24,6 +24,12 @@ iSpec当前apply attempt为`d3f5e2a2-0c44-46b6-850a-5dbc8619e906`，CLI测量均
 
 最终公开性静态复核覆盖260个tracked／未忽略候选，未发现凭据、个人媒体、机器home路径、额外邮箱或AiBox迁入源码；不替代最终资产检查。
 
+干净提交`5e6c70b`的首次release在检查阶段停止（`expansion-release-alpha3-v1`，退出码1，未生成发行资产）。`oversizedTextFailsExplicitlyAndNeverAutomaticallyCopies`的五秒drain超时，当时只消费524288字节、状态running；其他并发合成进程夹具在主线程同步startup／cleanup。诊断显式使用`--no-parallel`，19项集成用例8.943s通过且顶层套件不再重叠（`expansion-serial-diagnosis-v1`）。流水线现显式串行两个Swift阶段，不调整五秒等待、一MiB输出上限或原断言；新版全量结果随后记录。
+
+显式串行的完整check-v4通过全部382项Swift／34项Python／503 key，测量`83cadb0f-13c1-4333-871f-de18169fc079`，11:44:29Z–11:45:57Z。首轮远端CI `45386390231`仍失败于并发HTTP夹具等待和Vision unknownError，完整artifact已保留。OCR依[Apple设备选择API](https://developer.apple.com/documentation/vision/vnrequest/setcomputedevice(_:for:))在最终请求配置后为支持CPU的阶段选择其声明的CPU；未支持的阶段保持默认，不使用弃用usesCPUOnly或伪造设备。真实识别断言继续强制执行；失败诊断仅增加NSError域／码，无正文／图片。
+
+CPU设备配置后本机ContextAndLeaseTests六项通过，其中实际Vision合成图识别1.004s（`c9904375-9421-4cea-9446-faa945191b12`）。这只证明本机结果；首轮CI的unknownError不能据此定性为已确认的VM硬件缺失，新版远端结果另记。
+
 ## 原生观察
 
 Preview由统一debug流水线构建、原子替换并启动，与正式App数据／bundleID分离。已实际观察中文Agent／Tools／Workflow页面、独立MCP设置、英文深色设置以及语言／外观恢复。工具页算式`2×(3+4)`得到14，`1 GiB to MiB`得到1024 MiB；按钮和原生菜单均可运行合成trim工作流。

@@ -71,7 +71,13 @@ extension ContextAndLeaseTests {
         CTLineDraw(line,context)
         let image = try #require(context.makeImage()), destination = try #require(CGImageDestinationCreateWithURL(url as CFURL,"public.png" as CFString,1,nil))
         CGImageDestinationAddImage(destination,image,nil); #expect(CGImageDestinationFinalize(destination))
-        let value = try await DocumentContextService.read(url)
+        let value: DocumentText
+        do { value = try await DocumentContextService.read(url) }
+        catch {
+            let failure = error as NSError, underlying = (error as NSError).userInfo[NSUnderlyingErrorKey] as? NSError
+            Issue.record("Synthetic OCR failed: domain=\(failure.domain), code=\(failure.code), underlyingDomain=\(underlying?.domain ?? "none"), underlyingCode=\(underlying?.code ?? 0)")
+            throw error
+        }
         #expect(value.usedOCR && value.text.uppercased().contains("KEYDOCK") && value.text.uppercased().contains("SYNTHETIC"))
     }
 }

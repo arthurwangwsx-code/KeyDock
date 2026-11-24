@@ -1,5 +1,6 @@
 import AppKit
 import Vision
+import CoreML
 import PDFKit
 import ImageIO
 import ExecutionCore
@@ -52,6 +53,11 @@ public enum DocumentContextService {
                   width.doubleValue > 0, height.doubleValue > 0, width.doubleValue*height.doubleValue <= 20_000_000,
                   let pixels = CGImageSourceCreateImageAtIndex(image,0,[kCGImageSourceShouldCache:false] as CFDictionary) else { throw DocumentContextError.tooLarge }
             let request = VNRecognizeTextRequest(); request.recognitionLevel = .accurate; request.usesLanguageCorrection = true; request.automaticallyDetectsLanguage = true
+            // 有界单图文字提取优先使用各阶段明确支持的CPU，减少虚拟机／GPU驱动依赖。
+            // 未声明CPU支持的阶段保持Vision默认选择；不构造或强塞不支持的设备。
+            for (stage,devices) in try request.supportedComputeStageDevices {
+                if let cpu = devices.first(where:{ if case .cpu = $0 { return true }; return false }) { request.setComputeDevice(cpu,for:stage) }
+            }
             cancellation.install(request); try Task.checkCancellation()
             try VNImageRequestHandler(cgImage:pixels).perform([request]); try Task.checkCancellation()
             text = (request.results ?? []).compactMap{$0.topCandidates(1).first?.string}.joined(separator:"\n"); ocr = true

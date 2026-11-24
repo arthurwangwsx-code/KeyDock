@@ -35,6 +35,8 @@ class ReleasePipelineTests(unittest.TestCase):
                         commands = dict(stages)
                         primary, timing = commands["swift-tests"], commands["swift-terminal-lifecycle"]
                         self.assertEqual(primary[primary.index("--skip") + 1], timing[timing.index("--filter") + 1])
+                        self.assertIn("--no-parallel", primary)
+                        self.assertIn("--no-parallel", timing)
                         helper.assert_called_once()
 
     def test_empty_or_missing_swift_test_summary_cannot_pass_a_partition(self):

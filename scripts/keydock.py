@@ -59,7 +59,8 @@ def check(ci=False):
     stage("pipeline-tests", [sys.executable, "-m", "unittest", "discover", "-s", "scripts/tests", "-v"])
     # Swift Testing默认并行套件；时限合同在独立进程验证，不能被其余主线程负载污染。
     # 两个互补阶段都强制成功，既不删除用例，也不通过失败后重试掩盖问题。
-    tests = ["xcrun", "swift", "test", "--jobs", "2"]
+    # 显式关闭套件并发；CLI默认值并未让Swift Testing套件串行，进程夹具会争用MainActor。
+    tests = ["xcrun", "swift", "test", "--jobs", "2", "--no-parallel"]
     require_swift_tests(stage("swift-tests", tests + ["--skip", TERMINAL_TIMING_SUITES]))
     require_swift_tests(stage("swift-terminal-lifecycle", tests + ["--filter", TERMINAL_TIMING_SUITES]))
     helper()
