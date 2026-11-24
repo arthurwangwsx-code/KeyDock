@@ -81,18 +81,18 @@
         }
       }
     },
-    "Copy clipboard item": {
+    "Copy clipboard selection": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy clipboard item"
+            "value": "Copy clipboard selection"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "复制剪贴板条目"
+            "value": "复制剪贴板所选内容"
           }
         }
       }
@@ -141,6 +141,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "文件"
+          }
+        }
+      }
+    },
+    "Insert clipboard selection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert clipboard selection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "插入剪贴板所选内容"
           }
         }
       }

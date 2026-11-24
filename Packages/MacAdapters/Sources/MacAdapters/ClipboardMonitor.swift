@@ -83,8 +83,11 @@ import AppKit
         }
         catch { onFailure?() }
     }
-    public static func copy(_ text: String) {
-        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)
+    public static func copy(_ text: String) throws {
+        _ = try ClipboardPasteboardStage().write(text, transient: false)
+    }
+    public static func copyHistory(_ text: String) throws {
+        _ = try ClipboardPasteboardStage().write(text)
     }
     public static func explicitTextInput() -> String? {
         let pb = NSPasteboard.general

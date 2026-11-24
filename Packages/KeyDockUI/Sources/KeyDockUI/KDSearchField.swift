@@ -9,10 +9,12 @@ public struct KDSearchField: NSViewRepresentable {
     let onSubmit: () -> Void
     let onCancel: () -> Void
     let onAlternateSubmit: (() -> Void)?
-    public init(text: Binding<String>, focusRequest: UUID, placeholder: String, onMove: @escaping (Int) -> Void, onSubmit: @escaping () -> Void, onCancel: @escaping () -> Void, onAlternateSubmit: (() -> Void)? = nil) {
+    let onToggleSelection: (() -> Void)?
+    public init(text: Binding<String>, focusRequest: UUID, placeholder: String, onMove: @escaping (Int) -> Void, onSubmit: @escaping () -> Void, onCancel: @escaping () -> Void, onAlternateSubmit: (() -> Void)? = nil, onToggleSelection: (() -> Void)? = nil) {
         _text = text; self.focusRequest = focusRequest; self.placeholder = placeholder
         self.onMove = onMove; self.onSubmit = onSubmit; self.onCancel = onCancel
         self.onAlternateSubmit = onAlternateSubmit
+        self.onToggleSelection = onToggleSelection
     }
     public func makeCoordinator() -> Coordinator { Coordinator(self) }
     public func makeNSView(context: Context) -> NSTextField {
@@ -42,8 +44,10 @@ public struct KDSearchField: NSViewRepresentable {
             // 输入法正在组合时，把 Return/Esc/方向键交回输入法。
             guard !textView.hasMarkedText() else { return false }
             switch selector {
-            case #selector(NSResponder.insertNewline(_:)):
-                if NSApp.currentEvent?.modifierFlags.contains(.command) == true, let alternate = parent.onAlternateSubmit { alternate() }
+            case #selector(NSResponder.insertNewline(_:)), #selector(NSResponder.insertLineBreak(_:)):
+                if NSApp.currentEvent?.modifierFlags.contains(.shift) == true, let toggle = parent.onToggleSelection { toggle() }
+                else if selector == #selector(NSResponder.insertLineBreak(_:)) { return false }
+                else if NSApp.currentEvent?.modifierFlags.contains(.command) == true, let alternate = parent.onAlternateSubmit { alternate() }
                 else { parent.onSubmit() }
                 return true
             case #selector(NSResponder.moveDown(_:)): parent.onMove(1); return true

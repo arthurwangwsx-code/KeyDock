@@ -93,6 +93,15 @@ struct ClipboardPasteTransactionTests {
         board.clearContents(); board.setString("External synthetic copy", forType: .string)
         #expect(!second.owns(board.changeCount))
     }
+    @Test func ordinaryResultCopyRemainsAvailableToExplicitClipboardInputPolicy() throws {
+        let board = NSPasteboard.withUniqueName()
+        defer { board.releaseGlobally() }
+        let stage = ClipboardPasteboardStage(board: board)
+        let count = try stage.write("Synthetic AI result for another explicit action", transient: false)
+        #expect(stage.owns(count))
+        #expect(ClipboardPolicy.allows(types: board.types?.map(\.rawValue) ?? [], source: nil, excluded: []))
+        #expect(board.string(forType: .string) == "Synthetic AI result for another explicit action")
+    }
     @Test func thirdAppActivationPermanentlyRevokesEvenWhenOriginalTargetActivatesLate() async {
         let destination = SyntheticPasteDestination()
         let fence = ClipboardPasteActivationFence(ownPID: 100, targetPID: 200)

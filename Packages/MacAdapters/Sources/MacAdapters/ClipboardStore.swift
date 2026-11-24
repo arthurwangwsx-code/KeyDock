@@ -1,5 +1,6 @@
 import Foundation
 import CSQLite
+import CommandCore
 
 public struct ClipboardEntry: Identifiable, Sendable, Equatable {
     public let id: String
@@ -179,6 +180,27 @@ public actor ClipboardStore {
     }
 
     /// 用户明确预览/复制时才按 ID 读取单项全文；过期/删除项返回 nil。
+    /// 同一事务／同一过期时刻，任何成员缺失都不能退化为部分复制。
+    public func composition(ids: [String], separator: ClipboardSeparator) throws -> ClipboardComposition {
+        try ClipboardComposition.validate(ids: ids)
+        return try transaction {
+            try pruneRows(now: Date())
+            return try ClipboardComposition.read(ids: ids, separator: separator) { id, remaining in
+                let statement = try prepare("SELECT body FROM clips WHERE id=?")
+                defer { sqlite3_finalize(statement) }
+                bind(id, 1, statement)
+                let status = sqlite3_step(statement)
+                if status == SQLITE_DONE { return nil }
+                guard status == SQLITE_ROW else { throw ClipboardDatabaseError.statement }
+                let size = Int(sqlite3_column_bytes(statement, 0))
+                guard size <= remaining, size <= limits.maxItemBytes else { throw ClipboardCompositionError.tooLarge }
+                guard let bytes = sqlite3_column_text(statement, 0),
+                      let text = String(bytes: UnsafeBufferPointer(start: bytes, count: size), encoding: .utf8) else { throw ClipboardDatabaseError.statement }
+                return text
+            }
+        }
+    }
+
     public func text(id: String) throws -> String? {
         try Task.checkCancellation()
         try prune()

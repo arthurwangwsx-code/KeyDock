@@ -49,6 +49,22 @@
         }
       }
     },
+    "A selected item is no longer available. Remove it or select the items again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A selected item is no longer available. Remove it or select the items again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "某个已选条目已失效。请移除该条目或重新选择。"
+          }
+        }
+      }
+    },
     "A tool may have effects. Check the result before starting a new run; nothing was replayed.": {
       "localizations": {
         "zh-Hans": {
@@ -609,6 +625,22 @@
         }
       }
     },
+    "Add to merge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to merge"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入合并清单"
+          }
+        }
+      }
+    },
     "Agent configuration is invalid": {
       "localizations": {
         "zh-Hans": {
@@ -1153,6 +1185,22 @@
         }
       }
     },
+    "Blank line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blank line"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空行"
+          }
+        }
+      }
+    },
     "Calculate": {
       "localizations": {
         "zh-Hans": {
@@ -1521,6 +1569,22 @@
         }
       }
     },
+    "Clear selection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear selection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清空选择"
+          }
+        }
+      }
+    },
     "Clear statistics": {
       "localizations": {
         "zh-Hans": {
@@ -1873,6 +1937,22 @@
         }
       }
     },
+    "Command-Return performs the other action. Shift-Return adds or removes the current item from the ordered merge selection. Recording remains optional.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command-Return performs the other action. Shift-Return adds or removes the current item from the ordered merge selection. Recording remains optional."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command-Return执行另一项动作。Shift-Return将当前条目加入或移出有序合并清单。此设置不会开启剪贴板记录。"
+          }
+        }
+      }
+    },
     "Commands": {
       "localizations": {
         "en": {
@@ -2109,6 +2189,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "复制"
+          }
+        }
+      }
+    },
+    "Copy could not be confirmed. The clipboard may have changed. Review before trying again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy could not be confirmed. The clipboard may have changed. Review before trying again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法确认复制成功，剪贴板可能已改变。请检查后再试。"
           }
         }
       }
@@ -3121,6 +3217,22 @@
         }
       }
     },
+    "History panel behavior": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History panel behavior"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "历史面板操作"
+          }
+        }
+      }
+    },
     "History was only partly cleared. Some tasks are still finishing or records could not be removed. Try again later.": {
       "localizations": {
         "en": {
@@ -3245,6 +3357,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "插入"
+          }
+        }
+      }
+    },
+    "Insert sends the merged plain text once to the original app. The text stays on the clipboard.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert sends the merged plain text once to the original app. The text stays on the clipboard."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "插入会将所选纯文本一次发送到原应用，文本会保留在剪贴板上。"
           }
         }
       }
@@ -3841,6 +3969,54 @@
         }
       }
     },
+    "Merge separator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merge separator"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合并分隔符"
+          }
+        }
+      }
+    },
+    "Merged preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merged preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合并预览"
+          }
+        }
+      }
+    },
+    "Merged text exceeds 1 MiB. Remove an item or choose a shorter separator.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merged text exceeds 1 MiB. Remove an item or choose a shorter separator."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合并文本超过1 MiB。请移除条目或选择更短的分隔符。"
+          }
+        }
+      }
+    },
     "Minute: %d": {
       "localizations": {
         "zh-Hans": {
@@ -3937,6 +4113,38 @@
         }
       }
     },
+    "Move earlier": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move earlier"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前移"
+          }
+        }
+      }
+    },
+    "Move later": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move later"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后移"
+          }
+        }
+      }
+    },
     "Move step down": {
       "localizations": {
         "zh-Hans": {
@@ -4029,6 +4237,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "New collection"
+          }
+        }
+      }
+    },
+    "New line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New line"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "换行"
           }
         }
       }
@@ -4161,6 +4385,22 @@
         }
       }
     },
+    "No matching clipboard items": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching clipboard items"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有匹配的剪贴板条目"
+          }
+        }
+      }
+    },
     "No model configured": {
       "localizations": {
         "en": {
@@ -4221,6 +4461,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "未读取到选中文本，请输入内容后开始。"
+          }
+        }
+      }
+    },
+    "No separator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No separator"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无分隔符"
           }
         }
       }
@@ -5057,6 +5313,22 @@
         }
       }
     },
+    "Remove from merge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from merge"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从合并清单移除"
+          }
+        }
+      }
+    },
     "Remove shortcut": {
       "localizations": {
         "en": {
@@ -5313,18 +5585,18 @@
         }
       }
     },
-    "Return inserts into the original app. The selected plain text stays on the clipboard.": {
+    "Return key action": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Return inserts into the original app. The selected plain text stays on the clipboard."
+            "value": "Return key action"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "按 Return 向原应用插入。所选纯文本会保留在当前剪贴板。"
+            "value": "Return键动作"
           }
         }
       }
@@ -6049,6 +6321,22 @@
         }
       }
     },
+    "Select for merge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select for merge"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择合并"
+          }
+        }
+      }
+    },
     "Select text or enter input; context was not expanded": {
       "localizations": {
         "en": {
@@ -6061,6 +6349,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "请选择文本或手动输入；系统未扩大上下文范围"
+          }
+        }
+      }
+    },
+    "Select up to 20 items to merge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select up to 20 items to merge."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最多选择20项进行合并。"
+          }
+        }
+      }
+    },
+    "Selected items": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected items"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已选条目"
           }
         }
       }
@@ -6093,6 +6413,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "选中文本"
+          }
+        }
+      }
+    },
+    "Selected text changed. Review the merged preview before submitting again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected text changed. Review the merged preview before submitting again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所选文本已改变。请查看更新后的合并预览，再重新提交。"
+          }
+        }
+      }
+    },
+    "Selection order · up to 20 items · 1 MiB including separators": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selection order · up to 20 items · 1 MiB including separators"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按选择顺序 · 最多20项 · 含分隔符最多1 MiB"
+          }
+        }
+      }
+    },
+    "Separator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separator"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分隔符"
           }
         }
       }
@@ -6477,6 +6845,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Source"
+          }
+        }
+      }
+    },
+    "Space": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空格"
           }
         }
       }
@@ -7009,6 +7393,22 @@
         }
       }
     },
+    "The merged preview could not be loaded. Review the selection and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The merged preview could not be loaded. Review the selection and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法加载合并预览。请检查所选清单后重试。"
+          }
+        }
+      }
+    },
     "The model returned no output. Nothing was copied or replaced.": {
       "localizations": {
         "en": {
@@ -7021,6 +7421,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "模型未返回内容，未执行复制或替换。"
+          }
+        }
+      }
+    },
+    "The result was generated, but copying could not be confirmed. The clipboard may have changed. Your result was kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result was generated, but copying could not be confirmed. The clipboard may have changed. Your result was kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结果已生成，但无法确认复制成功，剪贴板可能已改变。完整结果已保留。"
           }
         }
       }

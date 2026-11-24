@@ -149,6 +149,7 @@ public struct SettingsRootView: View {
                 }
             }
         case .clipboard:
+            ClipboardBehaviorSettingsView(preferences: store.clipboardPreferences)
             Section(L("Clipboard history")) {
                 Toggle(L("Record clipboard"), isOn: Binding(get: { store.allowContextCapture && store.configuration.clipboardEnabled }, set: { store.setClipboardRecording($0) })).disabled(!store.allowContextCapture)
                 Text(L("Text only · 24 hours · 500 items · 1 MiB per item · 32 MiB of text. Pinned items count toward capacity and stay until removed. When they leave too little room, new items are skipped without deleting existing history. Concealed and transient types are skipped; some applications do not mark secrets.")).font(.caption).foregroundStyle(.secondary)

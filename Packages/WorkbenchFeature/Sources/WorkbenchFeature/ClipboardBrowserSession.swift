@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 import MacAdapters
+import CommandCore
 
 /// 查询/操作共享同一个数据库 actor；窗口只拥有轻量预览和一个显式打开的正文。
 public protocol ClipboardAccess: Sendable {
@@ -12,6 +13,11 @@ public protocol ClipboardAccess: Sendable {
 }
 
 extension ClipboardStore: ClipboardAccess {}
+
+public protocol ClipboardCompositionAccess: ClipboardAccess {
+    func composition(ids: [String], separator: ClipboardSeparator) async throws -> ClipboardComposition
+}
+extension ClipboardStore: ClipboardCompositionAccess {}
 
 @MainActor public final class ClipboardBrowserSession: ObservableObject {
     @Published public var query = "" {
@@ -124,6 +130,15 @@ extension ClipboardStore: ClipboardAccess {}
 
     public func copy(_ entry: ClipboardPreview, perform: @MainActor (String) -> Void) async {
         await copy(id: entry.id, perform: perform)
+    }
+
+    func composition(ids: [String], separator: ClipboardSeparator) async throws -> ClipboardComposition {
+        guard let source = access as? any ClipboardCompositionAccess else { throw ClipboardCompositionError.unsupported }
+        let request = generation
+        let result = try await source.composition(ids: ids, separator: separator)
+        try Task.checkCancellation()
+        guard request == generation else { throw CancellationError() }
+        return result
     }
 
     public func copyPreview(perform: @MainActor (String) -> Void) async {

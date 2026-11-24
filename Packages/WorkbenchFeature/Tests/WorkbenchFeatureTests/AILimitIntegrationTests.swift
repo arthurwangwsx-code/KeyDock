@@ -7,6 +7,24 @@ enum AIEntry: CaseIterable { case text, proposal, agent }
 
 /// 验证宿主预算和副作用门槛；全部正文合成，clipboard writer 只写内存 spy。
 @Suite(.serialized) @MainActor struct AILimitIntegrationTests {
+    @Test func successfulGenerationWithCopyFailureKeepsOutputUsageAndSuccessReceipt() async throws {
+        var copies = 0
+        try await withStoreHTTPFixture(path: "stream", clipboardWriter: { _ in copies += 1; throw CocoaError(.fileWriteUnknown) }) { fixture in
+            var action = fixture.action; action.output = .copy
+            let draft = fixture.store.createDraft(input: "Synthetic copy delivery failure")
+            let id = try #require(fixture.store.runAI(action: action, draft: draft))
+            try await fixture.drain(id)
+            let task = try #require(fixture.store.tasks.first { $0.id == id })
+            #expect(copies == 1 && task.status == .completed && task.output == "你好，网络 🌍" && !task.outputIsIncomplete)
+            #expect(!task.notice.isEmpty && !draft.notice.isEmpty)
+            #expect(try fixture.usage(id).outcome == "succeeded")
+            struct Index: Decodable { let receipts: [InvocationReceipt] }
+            let file = fixture.directory.appendingPathComponent("ai-invocations/invocations.json")
+            let receipt = try JSONDecoder().decode(Index.self, from: Data(contentsOf: file)).receipts.first { $0.id == id }
+            #expect(receipt?.state == .succeeded)
+            #expect(try await fixture.server.stats()["post_requests"] == 1)
+        }
+    }
     @Test func emptyTextResponseCannotClearTheClipboard() async throws {
         var writes: [String] = []
         try await withStoreHTTPFixture(path: "empty", clipboardWriter: { writes.append($0) }) { fixture in

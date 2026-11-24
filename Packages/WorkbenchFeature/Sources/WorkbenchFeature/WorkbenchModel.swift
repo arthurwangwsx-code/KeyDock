@@ -18,6 +18,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public var configuration: AppConfiguration
     @Published public private(set) var catalog: [CommandItem] = []
     @Published public private(set) var clipboardRevision: UInt64 = 0
+    public let clipboardPreferences = ClipboardPanelPreferences()
     @Published private var clipboardCaptureIssue: ClipboardRejection?
     @Published public private(set) var clipboardPauseNeedsPersistence = false
     public var clipboardCaptureNotice: String {
@@ -145,7 +146,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     private var launcherReplyGeneration = UUID()
     private var applicationItems: [CommandItem] = []
     public let allowContextCapture: Bool
-    let clipboardWriter: @MainActor (String) -> Void
+    let clipboardWriter: @MainActor (String) throws -> Void
+    let clipboardSelectionWriter: @MainActor (String) throws -> Void
     let clipboardChangeCount: @MainActor () -> Int
     private let clipboardReader: @MainActor () -> String?
     private let applicationLauncher: @MainActor (CommandItem) async throws -> PreparedApplicationLaunch
@@ -157,7 +159,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     var latestAutoCopyRunID: UUID?
 
     public init(dataDirectory: URL? = nil, allowContextCapture: Bool = true,
-                clipboardWriter: @escaping @MainActor (String) -> Void = { ClipboardMonitor.copy($0) },
+                clipboardWriter: (@MainActor (String) throws -> Void)? = nil,
+                clipboardSelectionWriter: (@MainActor (String) throws -> Void)? = nil,
                 clipboardChangeCount: @escaping @MainActor () -> Int = { NSPasteboard.general.changeCount },
                 clipboardReader: @escaping @MainActor () -> String? = { ClipboardMonitor.explicitTextInput() },
                 credentialReader: @escaping @MainActor (String) throws -> String? = { try CredentialStore.load(account: $0) },
@@ -175,7 +178,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         applicationControl = ApplicationControlService(catalog: desktop.applicationCatalog)
         self.applicationLauncher = applicationLauncher ?? { try await desktop.launchApplication($0) }
         self.allowContextCapture = allowContextCapture
-        self.clipboardWriter = clipboardWriter
+        self.clipboardWriter = clipboardWriter ?? { try ClipboardMonitor.copy($0) }
+        // 既有注入仍覆盖所有复制，避免测试或隔离宿主意外触及真实剪贴板。
+        self.clipboardSelectionWriter = clipboardSelectionWriter ?? clipboardWriter ?? { try ClipboardMonitor.copyHistory($0) }
         self.clipboardChangeCount = clipboardChangeCount
         self.clipboardReader = clipboardReader
         self.credentialReader = credentialReader
@@ -489,12 +494,17 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         do { try copyAuthorizedText(task.output) } catch { resultError(error, id: id) }
     }
     public func copyClipboardText(_ text: String) {
-        do { try copyAuthorizedText(text); recordDirectActivity(commandID:"clipboard.copy",category:.clipboard,outcome:.succeeded) } catch { workspaceNoticeMessage = errorNotice(error) }
+        do { try copyClipboardSelection(text) } catch { workspaceNoticeMessage = errorNotice(error) }
     }
-    func copyAuthorizedText(_ text: String, caller: ExecutionCaller = .user) throws {
+    public func copyClipboardSelection(_ text: String) throws {
+        try copyAuthorizedText(text, historySelection: true)
+        recordDirectActivity(commandID:"clipboard.copy",category:.clipboard,outcome:.succeeded)
+    }
+    func copyAuthorizedText(_ text: String, caller: ExecutionCaller = .user, historySelection: Bool = false) throws {
         try authorizeHostAction(id: "result.copy", operation: .copyText, resource: "general|" + fingerprint(text), caller: caller)
         latestAutoCopyRunID = nil
-        clipboardWriter(text)
+        if historySelection { try clipboardSelectionWriter(text) }
+        else { try clipboardWriter(text) }
     }
     public func canReplaceResult(_ id: UUID) -> Bool {
         guard resultTargets[id] != nil, let task = tasks.first(where: { $0.id == id }) else { return false }

@@ -64,7 +64,7 @@ import KeyDockUI
     let launcherSession: LauncherSession
     let settingsSession: SettingsSession
     let workspaceSession = WorkspaceSession()
-    let clipboardSession = ClipboardPanelSession()
+    let clipboardSession: ClipboardPanelSession
     private let hotkeys = HotkeyCenter()
     private let safeSmoke: Bool
     private var launcher: LauncherPanel?
@@ -93,6 +93,7 @@ import KeyDockUI
     private var capturePending = false
     init(store: WorkbenchModel, safeSmoke: Bool) {
         self.store = store; self.safeSmoke = safeSmoke
+        clipboardSession = ClipboardPanelSession(preferences: store.clipboardPreferences)
         launcherSession = LauncherSession(store: store); settingsSession = SettingsSession(store: store)
         super.init()
         settingsSession.onPaneChanged = { [weak self] in self?.refreshTitles() }
@@ -112,7 +113,7 @@ import KeyDockUI
         store.onDesktopAction = { [weak self] item, caller in self?.runDesktopAction(item, caller: caller) }
         store.onDesktopActionFinished = { [weak self] id in self?.desktopInvocations[id] = nil }
         clipboardSession.onCopy = { [weak self] text in
-            guard let self else { return }; self.store.copyClipboardText(text); self.dismissClipboard(restore: true)
+            guard let self else { return }; try self.store.copyClipboardSelection(text); self.dismissClipboard(restore: true)
         }
         clipboardSession.onInsert = { [weak self] text, token in self?.insertClipboard(text, token: token) }
         clipboardActivationObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] notification in
@@ -425,8 +426,9 @@ import KeyDockUI
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         if menuItem.action == #selector(runCurrentAction) {
             if NSApp.keyWindow === clipboardPanel {
-                menuItem.title = AppL("Copy clipboard item")
-                return !store.isShuttingDown && clipboardSession.selection != nil && !clipboardSession.isCommitting && !clipboardHasMarkedText
+                let alternate = clipboardSession.preferences.primaryAction.alternate
+                menuItem.title = alternate == .copy ? AppL("Copy clipboard selection") : AppL("Insert clipboard selection")
+                return !store.isShuttingDown && clipboardSession.canCommit && !clipboardHasMarkedText && (alternate == .copy || clipboardSession.canInsert)
             }
             // Return只有一个菜单owner；同一keyEquivalent的禁用项仍可能挡住后续项。
             if NSApp.keyWindow === workspace, workspaceSession.page == .agent {
@@ -508,7 +510,7 @@ import KeyDockUI
     @objc private func newAIAction() { settingsSession.beginNewAction() }
     @objc private func runCurrentAction() {
         guard !store.isShuttingDown else { return }
-        if NSApp.keyWindow === clipboardPanel { if !clipboardHasMarkedText { clipboardSession.commit(insert: false) } }
+        if NSApp.keyWindow === clipboardPanel { if !clipboardHasMarkedText { clipboardSession.commitAlternate() } }
         else if NSApp.keyWindow === workspace, workspaceSession.page == .agent { runAgentAction() }
         else if NSApp.keyWindow === workspace, workspaceSession.page == .workflows { runWorkflowAction() }
         else { runAIAction() }

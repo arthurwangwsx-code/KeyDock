@@ -84,7 +84,13 @@ extension WorkbenchModel {
                 if action.output == .copy, latestAutoCopyRunID == id, draft.latestRunID == id && draft.revision == revision,
                    let task = tasks.first(where: { $0.id == id }), !task.outputIsIncomplete {
                     if let copyChangeCount, clipboardChangeCount() == copyChangeCount {
-                        try copyAuthorizedText(task.output, caller: caller)
+                        do { try copyAuthorizedText(task.output, caller: caller) }
+                        catch {
+                            // 生成与剪贴板交付是不同结果；完整输出和模型成功回执仍有效。
+                            let notice = noticeKey("The result was generated, but copying could not be confirmed. The clipboard may have changed. Your result was kept.")
+                            if let index = tasks.firstIndex(where: { $0.id == id }) { tasks[index].noticeMessage = notice }
+                            draft.noticeMessage = notice
+                        }
                     } else {
                         let notice = noticeKey("Clipboard changed while AI was running. The result was kept without copying.")
                         if let index = tasks.firstIndex(where: { $0.id == id }) { tasks[index].noticeMessage = notice }

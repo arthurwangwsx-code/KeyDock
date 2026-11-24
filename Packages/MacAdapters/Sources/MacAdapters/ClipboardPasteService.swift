@@ -147,12 +147,12 @@ extension DesktopService {
     private let board: NSPasteboard
     private var nonce: String?
     init(board: NSPasteboard = .general) { self.board = board }
-    func write(_ text: String) throws -> Int {
+    func write(_ text: String, transient: Bool = true) throws -> Int {
         let token = UUID().uuidString
         let item = NSPasteboardItem()
         guard item.setString(text, forType: .string),
-              item.setString("KeyDock", forType: NSPasteboard.PasteboardType("org.nspasteboard.TransientType")),
               item.setString(token, forType: Self.ownerType) else { throw ClipboardPasteError.clipboardChanged }
+        if transient, !item.setString("KeyDock", forType: NSPasteboard.PasteboardType("org.nspasteboard.TransientType")) { throw ClipboardPasteError.clipboardChanged }
         nonce = token; board.clearContents()
         guard board.writeObjects([item]) else { throw ClipboardPasteError.clipboardChanged }
         let count = board.changeCount

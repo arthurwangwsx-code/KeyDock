@@ -173,7 +173,7 @@ final class StoreSSEServer {
     private let languageKey: String
     private let previousLanguage: Any?
 
-    init(path: String, clipboardWriter: @escaping @MainActor (String) -> Void = { _ in }, clipboardChangeCount: @escaping @MainActor () -> Int = { 0 }) throws {
+    init(path: String, clipboardWriter: @escaping @MainActor (String) throws -> Void = { _ in }, clipboardChangeCount: @escaping @MainActor () -> Int = { 0 }) throws {
         server = try StoreSSEServer()
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-StoreHTTP-" + UUID().uuidString, isDirectory: true)
         languageKey = (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true) ? "KeyDock.Smoke.Language" : "KeyDock.Language"
@@ -256,7 +256,7 @@ struct StoreUsageReceipt: Decodable {
     let costBasis: String
 }
 
-@MainActor func withStoreHTTPFixture(path: String, clipboardWriter: @escaping @MainActor (String) -> Void = { _ in }, clipboardChangeCount: @escaping @MainActor () -> Int = { 0 }, _ operation: (StoreHTTPFixture) async throws -> Void) async throws {
+@MainActor func withStoreHTTPFixture(path: String, clipboardWriter: @escaping @MainActor (String) throws -> Void = { _ in }, clipboardChangeCount: @escaping @MainActor () -> Int = { 0 }, _ operation: (StoreHTTPFixture) async throws -> Void) async throws {
     let fixture = try StoreHTTPFixture(path: path, clipboardWriter: clipboardWriter, clipboardChangeCount: clipboardChangeCount)
     do { try await operation(fixture); await fixture.cleanup() }
     catch { await fixture.cleanup(); throw error }

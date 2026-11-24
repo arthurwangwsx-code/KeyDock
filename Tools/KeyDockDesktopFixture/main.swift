@@ -1,6 +1,6 @@
 import AppKit
 
-/// 专供人工/原生UI验收的合成宿主，没有剪贴板、文件或网络入口。
+/// 专供原生UI验收的合成宿主；剪贴板仅响应用户的标准编辑动作，无采集、文件或网络。
 @main @MainActor enum KeyDockDesktopFixture {
     static func main() {
         let app = NSApplication.shared
@@ -17,7 +17,14 @@ import AppKit
     func applicationDidFinishLaunching(_ notification: Notification) {
         let menu = NSMenu(), item = NSMenuItem(), appMenu = NSMenu()
         appMenu.addItem(withTitle: "Quit KeyDock Desktop Fixture", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        item.submenu = appMenu; menu.addItem(item); NSApp.mainMenu = menu
+        item.submenu = appMenu; menu.addItem(item)
+        let editItem = NSMenuItem(), edit = NSMenu(title: "Edit")
+        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(.separator())
+        edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editItem.submenu = edit; menu.addItem(editItem); NSApp.mainMenu = menu
         for (index, name) in ["A", "B", "C"].enumerated() {
             let window = NSWindow(contentRect: NSRect(x: 180 + index * 130, y: 180 + index * 80, width: 500, height: 330), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             window.title = "KeyDock Synthetic Window " + name
