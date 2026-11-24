@@ -31,3 +31,7 @@
 英文深色列表与620×590编辑器截图已检查，两张目标卡片、原布局与策略、滚动区及固定保存／取消均可用；无变化保存仍为版本2，修改名称后Esc取消不写入。语言／外观最后恢复Follow System。一次长菜单元素过期后重新读取并选择成功，不记作首次点击成功。
 
 原生没有执行布局、启动这些目标、注册物理执行热键、提交永久删除、授予权限或请求API。真正的全目标冻结、焦点交接、父子回执／unknown、AX／多屏／物理热键和完整视觉仍未完成；不能用本轮编辑与模型通过代替它们。
+
+## 完整核心范围
+
+干净源`d1af256f80647526992023bbfb51f7dbe66d228f`完整cloud-core测量`cc4505ff-25fe-4be6-b50a-31daf41c91cd`通过，23:23:31Z–23:24:40Z：545 Swift／46 Python／660 key。摘要`.local/pipeline/20261124T232331312645Z/check-summary.json`清单525个声明ID（core515／Terminal9／OCR1），inventory SHA256为`128c232c0da3419109cd7061d172900b9f53fc010b8534d5a9117db7741dd29d`。此范围系统OCR为NOT_QUALIFIED，非完整发行资格。[同源CI45509658224](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45509658224)PASS，job138853780765的源码／流水线检查、Release优化Preview、归档与上传均通过；系统OCR仍NOT_QUALIFIED，诊断job未运行。

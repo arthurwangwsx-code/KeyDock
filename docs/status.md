@@ -20,7 +20,7 @@ Agent／工作流的保存反馈后续已实现：验证或写入失败在发起
 
 完整范围复查仍保留**代码层待实现义务**：任务20的多应用桌面工作区。不能把目前的Workspace页面或命令集合视作多窗口工作区完成。设计见[桌面工作区方案](technical/desktop-workspaces.md)；完整目标并非只剩权限或实机检查。
 
-桌面工作区第一段定义管理已接入：独立档案／有序目标／屏幕策略／revision，设置编辑器与仅管理入口快捷键；30项档案定向、48项编辑／事务回归，以及中文浅色／英文深色添加、重排、保存重开、失败保留和取消子集通过。原应用动作存储算法抽成共用内核，保留旧wrapper与完整事务回归；no-op外部变化校验已补齐。完整core与同源CI另录，见[定义复查](implementation/desktop-workspace-definitions-2026-11-25.md)。**全目标冻结与批量执行、profile快捷键生命周期仍未接通**，任务20保持未关闭。
+桌面工作区第一段定义管理已接入：独立档案／有序目标／屏幕策略／revision，设置编辑器与仅管理入口快捷键；30项档案定向、48项编辑／事务回归，以及中文浅色／英文深色添加、重排、保存重开、失败保留和取消子集通过。原应用动作存储算法抽成共用内核，保留旧wrapper与完整事务回归；no-op外部变化校验已补齐。干净源`d1af256`完整cloud-core为545 Swift／46 Python／660 key通过，[同源core与优化构建45509658224](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45509658224)PASS，系统OCR仍NOT_QUALIFIED；见[定义复查](implementation/desktop-workspace-definitions-2026-11-25.md)。**全目标冻结与批量执行、profile快捷键生命周期仍未接通**，任务20保持未关闭。
 
 本轮已发布并安装alpha.7：有序多选合并、完整预览与可配置主动作，最多20项／1MiB。中文浅色／英文深色、跨查询、重排、空行与Shift-Return、偏好重启保留及实际合并复制均已观察。AI生成成功但复制失败会保留完整结果和成功回执。当前源472项Swift、46项Python、583条文案、同源CI及公证／公开回下载通过；真实自动插入仍依10.1验收。详见[本轮证据](implementation/clipboard-composition-2026-11-25.md)及[合并合同](technical/clipboard-composition.md)。
 
