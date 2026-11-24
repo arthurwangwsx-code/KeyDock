@@ -5,6 +5,11 @@ import MacAdapters
 import CommandCore
 
 public struct ClipboardPanelView: View {
+    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.kdVisualReview) private var review
+    private var highContrast: Bool { review.increasesContrast(system: contrast) }
+    private var opaqueSurface: Bool { review.usesOpaqueSurfaces(system: reduceTransparency) }
     @ObservedObject private var store: WorkbenchModel
     @ObservedObject private var session: ClipboardPanelSession
     @ObservedObject private var browser: ClipboardBrowserSession
@@ -101,8 +106,8 @@ public struct ClipboardPanelView: View {
                 }.font(.caption2).foregroundStyle(.secondary)
             }
         }.padding(12).frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-            .background(session.selectedID == entry.id ? Color.accentColor.opacity(0.16) : .clear, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(session.selectedID == entry.id ? Color.accentColor.opacity(0.32) : .clear))
+            .background(session.selectedID == entry.id ? Color.accentColor.opacity(highContrast ? 0.28 : 0.16) : .clear, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(session.selectedID == entry.id ? Color.accentColor.opacity(highContrast ? 0.9 : 0.32) : .clear, lineWidth: highContrast ? 1.5 : 1))
     }
     private var preview: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -118,7 +123,7 @@ public struct ClipboardPanelView: View {
             if browser.isPreviewLoading || session.isCompositionLoading { ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity) }
             else if let text = session.previewText {
                 ClipboardReadOnlyText(text: text, transparent: true)
-                    .background(Color(nsColor: .textBackgroundColor).opacity(0.55), in: RoundedRectangle(cornerRadius: 12))
+                    .background(Color(nsColor: .textBackgroundColor).opacity(opaqueSurface ? 1 : 0.55), in: RoundedRectangle(cornerRadius: 12))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             else { Text(L("Select an item to preview its full text.")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity) }
@@ -146,9 +151,9 @@ public struct ClipboardPanelView: View {
                         HStack(spacing: 8) {
                             Text("\(index + 1)").font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 20)
                             Text(item.preview.replacingOccurrences(of: "\n", with: " ")).lineLimit(1).font(.caption).frame(maxWidth: .infinity, alignment: .leading)
-                            KDIconButton("arrow.up", label: L("Move earlier")) { session.moveMark(id: item.id, delta: -1) }.disabled(index == 0)
-                            KDIconButton("arrow.down", label: L("Move later")) { session.moveMark(id: item.id, delta: 1) }.disabled(index == session.markedItems.count - 1)
-                            KDIconButton("minus.circle", label: L("Remove from merge")) { session.removeMark(id: item.id) }
+                            KDIconButton("arrow.up", label: L("Move earlier") + " " + (index + 1).formatted()) { session.moveMark(id: item.id, delta: -1) }.disabled(index == 0)
+                            KDIconButton("arrow.down", label: L("Move later") + " " + (index + 1).formatted()) { session.moveMark(id: item.id, delta: 1) }.disabled(index == session.markedItems.count - 1)
+                            KDIconButton("minus.circle", label: L("Remove from merge") + " " + (index + 1).formatted()) { session.removeMark(id: item.id) }
                         }
                     }
                 }

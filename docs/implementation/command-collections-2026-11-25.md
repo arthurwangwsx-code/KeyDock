@@ -37,4 +37,4 @@
 
 ## 未完成
 
-最新源码完整core检查和同源CI另录；完整本机OCR与发行仍依[复发记录](ocr-recurrence-2026-11-25.md)，不因本功能绿测放行。集合完整键盘／VoiceOver／高对比／减少透明度／其他尺寸和真实个人配置尚未全面验收。总体P0–P4义务不变。
+干净源`0d3a0c2fdf1689a631c47bb29fd1e3072ec14afc`本机cloud-core测量`4717d4ad-906c-4687-bf1c-e9710d72b100`通过，20:05:35Z–20:06:43Z，491 Swift／46 Python／602 key；471个声明ID，inventory摘要`05c7fdf9880df3e65cd1dc2101ebebccf5dff83b2e74adbfa2bc6e517a0f7bce`。[同源core CI 45477121418](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45477121418)通过。该范围明确OCR NOT_QUALIFIED，完整本机OCR与发行仍依[复发记录](ocr-recurrence-2026-11-25.md)，不因本功能绿测放行。集合完整键盘／VoiceOver／高对比／减少透明度／其他尺寸和真实个人配置尚未全面验收。总体P0–P4义务不变。

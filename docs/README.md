@@ -36,6 +36,7 @@
 | [alpha.8 OCR复发记录](implementation/ocr-recurrence-2026-11-25.md) | 完整检查失败、逐轮诊断与不放宽发行门禁；尚未确认根因 |
 | [有序命令集合](technical/command-collections.md) | 顺序、编辑隔离、可用引用和AI／CLI单项入口合同；alpha.8候选 |
 | [集合实现与原生复查](implementation/command-collections-2026-11-25.md) | 定向检查、真实渲染行冲突及修复、双语深浅子集；发行仍未放行 |
+| [隔离视觉样例复查](implementation/visual-samples-2026-11-25.md) | Preview专用环境、玻璃切换选区修补、剪贴板双语抽样及未完成矩阵 |
 | [开源参考目录](../references/README.md) | 13 个参考工程及固定版本登记 |
 | [第一阶段进度](implementation/phase-one-progress.md) | 实现、测试、真实验收与下一步 |
 | [新版界面实机复查](implementation/native-ui-review-2026-11-22.md) | 三窗口、语言、外观、输入焦点和终端验收边界 |

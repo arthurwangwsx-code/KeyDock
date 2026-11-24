@@ -45,10 +45,12 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: YES
       configs:
         DebugPreview:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) KEYDOCK_PREVIEW
           PRODUCT_NAME: KeyDockPreview
           PRODUCT_BUNDLE_IDENTIFIER: com.arthurwangwsx.KeyDock.preview
           INFOPLIST_KEY_CFBundleDisplayName: KeyDock Preview
         ReleasePreview:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) KEYDOCK_PREVIEW
           PRODUCT_NAME: KeyDockPreview
           PRODUCT_BUNDLE_IDENTIFIER: com.arthurwangwsx.KeyDock.preview
           INFOPLIST_KEY_CFBundleDisplayName: KeyDock Preview

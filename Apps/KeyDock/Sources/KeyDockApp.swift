@@ -67,6 +67,7 @@ import KeyDockUI
     let clipboardSession: ClipboardPanelSession
     private let hotkeys = HotkeyCenter()
     private let safeSmoke: Bool
+    private let visualReview: KDVisualReviewState
     private var launcher: LauncherPanel?
     private var settings: NSWindow?
     private var workspace: NSWindow?
@@ -93,6 +94,16 @@ import KeyDockUI
     private var capturePending = false
     init(store: WorkbenchModel, safeSmoke: Bool) {
         self.store = store; self.safeSmoke = safeSmoke
+        #if KEYDOCK_PREVIEW
+        let previewBuild = true
+        #else
+        let previewBuild = false
+        #endif
+        var buildProfile: String?
+        if let url = Bundle.main.url(forResource: "BuildInfo", withExtension: "json"), let data = try? Data(contentsOf: url),
+           let info = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] { buildProfile = info["profile"] as? String }
+        visualReview = KDVisualReviewState(previewBuild: previewBuild, isolatedPreview: safeSmoke && (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true),
+                                          bundleIdentifier: Bundle.main.bundleIdentifier, buildProfile: buildProfile)
         clipboardSession = ClipboardPanelSession(preferences: store.clipboardPreferences)
         launcherSession = LauncherSession(store: store); settingsSession = SettingsSession(store: store)
         super.init()
@@ -180,7 +191,7 @@ import KeyDockUI
         panel.isReleasedWhenClosed = false; panel.hidesOnDeactivate = false; panel.isFloatingPanel = true
         panel.level = .floating; panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.isMovableByWindowBackground = true; panel.delegate = self
-        panel.contentView = KDLauncherSurface.make(root: LauncherView(store: store, session: launcherSession))
+        panel.contentView = KDLauncherSurface.make(root: LauncherView(store: store, session: launcherSession), review: visualReview)
         panel.onEscape = { [weak self] in
             if self?.launcherSession.actionsVisible == true { self?.launcherSession.actionsVisible = false }
             else { self?.dismissLauncher(restore: true) }
@@ -326,7 +337,7 @@ import KeyDockUI
                 panel.isFloatingPanel = true; panel.level = .floating
                 panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]; panel.delegate = self
                 panel.isMovableByWindowBackground = true
-                panel.contentView = KDLauncherSurface.make(root: ClipboardPanelView(store: store, session: clipboardSession, dismiss: { [weak self] in self?.dismissClipboard(restore: true) }))
+                panel.contentView = KDLauncherSurface.make(root: ClipboardPanelView(store: store, session: clipboardSession, dismiss: { [weak self] in self?.dismissClipboard(restore: true) }), review: visualReview)
                 panel.onEscape = { [weak self] in self?.dismissClipboard(restore: true) }
                 clipboardPanel = panel
             }
@@ -373,7 +384,7 @@ import KeyDockUI
         }
     }
     private func installContent<Content: View>(_ content: Content, in window: NSWindow) {
-        let hosting = NSHostingController(rootView: content)
+        let hosting = NSHostingController(rootView: KDVisualReviewHost(review: visualReview) { content })
         // AppKit独占窗口尺寸与工具栏，SwiftUI负责正文。
         hosting.sizingOptions = []
         hosting.sceneBridgingOptions = []
@@ -390,7 +401,7 @@ import KeyDockUI
         guard itemIdentifier.rawValue == "KeyDock.Controls" else { return nil }
         let item = NSToolbarItem(itemIdentifier: itemIdentifier)
         if toolbar.identifier == "KeyDock.Workspace.Toolbar" {
-            item.view = NSHostingView(rootView: WorkspaceToolbarView(store: store, session: workspaceSession))
+            item.view = NSHostingView(rootView: KDVisualReviewHost(review: visualReview) { WorkspaceToolbarView(store: store, session: workspaceSession) })
         } else { configureSettingsToolbarItem(item) }
         return item
     }
@@ -424,6 +435,10 @@ import KeyDockUI
         return store.tasks.first { $0.id == id && $0.canCancel }?.id
     }
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(visualPresetAction(_:)) {
+            menuItem.state = menuItem.tag == visualReview.preset.rawValue ? .on : .off
+            return visualReview.allowsChanges && safeSmoke && !store.isShuttingDown
+        }
         if menuItem.action == #selector(runCurrentAction) {
             if NSApp.keyWindow === clipboardPanel {
                 let alternate = clipboardSession.preferences.primaryAction.alternate
@@ -485,11 +500,24 @@ import KeyDockUI
             let previewMenu = NSMenu(title: AppL("Preview"))
             let demo = NSMenuItem(title: AppL("Sample clipboard history"), action: #selector(openClipboardDemoAction), keyEquivalent: "")
             demo.target = self; previewMenu.addItem(demo)
+            if visualReview.allowsChanges {
+                let samples = NSMenuItem(title: AppL("Visual samples (KeyDock controls)"), action: nil, keyEquivalent: "")
+                let presets = NSMenu(title: samples.title)
+                for (preset, title) in [(KDVisualReviewPreset.system, AppL("Follow system visuals")), (.contrast, AppL("Higher contrast sample")), (.opaque, AppL("Opaque surface sample")), (.motion, AppL("Reduced motion sample")), (.all, AppL("All visual samples"))] {
+                    let entry = NSMenuItem(title: title, action: #selector(visualPresetAction(_:)), keyEquivalent: "")
+                    entry.target = self; entry.tag = preset.rawValue; presets.addItem(entry)
+                }
+                samples.submenu = presets; previewMenu.addItem(samples)
+            }
             let previewItem = NSMenuItem(); previewItem.submenu = previewMenu; main.addItem(previewItem)
         }
         NSApp.mainMenu = main
     }
     @objc private func openClipboardDemoAction() { loadClipboardDemo() }
+    @objc private func visualPresetAction(_ sender: NSMenuItem) {
+        guard safeSmoke, visualReview.allowsChanges, !store.isShuttingDown, let preset = KDVisualReviewPreset(rawValue: sender.tag) else { return }
+        visualReview.select(preset)
+    }
     func loadClipboardDemo() {
         guard safeSmoke, !store.isShuttingDown else { return }
         Task { [weak self] in

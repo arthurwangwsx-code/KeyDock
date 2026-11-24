@@ -17,6 +17,22 @@
         }
       }
     },
+    "All visual samples": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All visual samples"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部视觉样例"
+          }
+        }
+      }
+    },
     "Another KeyDock instance owns this data directory. Close it before opening this copy.": {
       "localizations": {
         "zh-Hans": {
@@ -145,6 +161,38 @@
         }
       }
     },
+    "Follow system visuals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow system visuals"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随系统显示"
+          }
+        }
+      }
+    },
+    "Higher contrast sample": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Higher contrast sample"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提高对比度样例"
+          }
+        }
+      }
+    },
     "Insert clipboard selection": {
       "localizations": {
         "en": {
@@ -225,6 +273,22 @@
         }
       }
     },
+    "Opaque surface sample": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opaque surface sample"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实色表面样例"
+          }
+        }
+      }
+    },
     "Open KeyDock": {
       "localizations": {
         "en": {
@@ -301,6 +365,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "重做"
+          }
+        }
+      }
+    },
+    "Reduced motion sample": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reduced motion sample"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "减少动画样例"
           }
         }
       }
@@ -445,6 +525,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "显示"
+          }
+        }
+      }
+    },
+    "Visual samples (KeyDock controls)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visual samples (KeyDock controls)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视觉样例（仅 KeyDock 组件）"
           }
         }
       }

@@ -47,13 +47,15 @@ public enum KDLocalizer {
 
 public struct KDKeycap: View {
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.kdVisualReview) private var review
+    private var highContrast: Bool { review.increasesContrast(system: contrast) }
     let text: String
     public init(_ text: String) { self.text = text }
     public var body: some View {
         Text(text).font(.system(size: 10, weight: .medium, design: .monospaced))
-            .foregroundStyle(contrast == .increased ? .primary : .secondary).padding(.horizontal, 6).padding(.vertical, 3)
-            .background(.primary.opacity(contrast == .increased ? 0.12 : 0.055), in: RoundedRectangle(cornerRadius: 5))
-            .overlay(RoundedRectangle(cornerRadius: 5).stroke(.primary.opacity(contrast == .increased ? 0.45 : 0.12), lineWidth: contrast == .increased ? 1 : 0.5))
+            .foregroundStyle(highContrast ? .primary : .secondary).padding(.horizontal, 6).padding(.vertical, 3)
+            .background(.primary.opacity(highContrast ? 0.12 : 0.055), in: RoundedRectangle(cornerRadius: 5))
+            .overlay(RoundedRectangle(cornerRadius: 5).stroke(.primary.opacity(highContrast ? 0.45 : 0.12), lineWidth: highContrast ? 1 : 0.5))
     }
 }
 
@@ -69,6 +71,8 @@ public enum KDIconButtonStyle { case automatic, toolbar }
 
 public struct KDIconButton: View {
     @Environment(\.kdOnGlassSurface) private var onGlassSurface
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.kdVisualReview) private var review
     let symbol: String
     let label: String
     let style: KDIconButtonStyle
@@ -89,6 +93,7 @@ public struct KDIconButton: View {
         Group {
             if style == .toolbar { button }
             else if onGlassSurface { button.buttonStyle(.borderless) }
+            else if review.usesOpaqueSurfaces(system: reduceTransparency) { button.buttonStyle(.bordered).buttonBorderShape(.circle) }
             else if #available(macOS 26, *) {
                 button.buttonStyle(.glass).buttonBorderShape(.circle)
             } else {
@@ -125,10 +130,12 @@ public struct KDResultSectionHeader: View {
 /// 正文层保持系统阅读背景；不在玻璃之上再叠一层玻璃。
 public struct KDReadingSurface: ViewModifier {
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.kdVisualReview) private var review
+    private var highContrast: Bool { review.increasesContrast(system: contrast) }
     public init() {}
     public func body(content: Content) -> some View {
         content.background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: KDTokens.rowCorner))
-            .overlay(RoundedRectangle(cornerRadius: KDTokens.rowCorner).stroke(.primary.opacity(contrast == .increased ? 0.4 : 0.08), lineWidth: contrast == .increased ? 1 : 0.5))
+            .overlay(RoundedRectangle(cornerRadius: KDTokens.rowCorner).stroke(.primary.opacity(highContrast ? 0.4 : 0.08), lineWidth: highContrast ? 1 : 0.5))
     }
 }
 
@@ -154,6 +161,8 @@ public struct KDInlineNotice: View {
 
 public struct KDCommandRow: View {
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.kdVisualReview) private var review
+    private var highContrast: Bool { review.increasesContrast(system: contrast) }
     let icon: NSImage?
     let symbol: String
     let title: String
@@ -177,8 +186,8 @@ public struct KDCommandRow: View {
             if selected { KDKeycap("↩") }
             else { Text(category).font(KDTokens.Typography.detail).foregroundStyle(.secondary) }
         }.padding(.horizontal, 12).frame(height: KDTokens.rowHeight)
-            .background(selected ? Color.accentColor.opacity(contrast == .increased ? 0.28 : 0.14) : .clear, in: RoundedRectangle(cornerRadius: KDTokens.rowCorner))
-            .overlay(RoundedRectangle(cornerRadius: KDTokens.rowCorner).stroke(selected ? Color.accentColor.opacity(contrast == .increased ? 0.9 : 0.24) : .clear, lineWidth: contrast == .increased ? 1.5 : 0.5))
+            .background(selected ? Color.accentColor.opacity(highContrast ? 0.28 : 0.14) : .clear, in: RoundedRectangle(cornerRadius: KDTokens.rowCorner))
+            .overlay(RoundedRectangle(cornerRadius: KDTokens.rowCorner).stroke(selected ? Color.accentColor.opacity(highContrast ? 0.9 : 0.24) : .clear, lineWidth: highContrast ? 1.5 : 0.5))
             .contentShape(RoundedRectangle(cornerRadius: KDTokens.rowCorner))
     }
 }
