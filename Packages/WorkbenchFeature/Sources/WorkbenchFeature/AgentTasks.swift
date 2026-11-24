@@ -5,18 +5,18 @@ import ExecutionCore
 
 extension WorkbenchModel {
     @discardableResult public func removeAgent(_ id:UUID) -> Bool {
-        var next = configuration; next.agents.removeAll{$0.id == id}; return commitSettingsConfiguration(next)
+        var next = configuration; next.agents.removeAll{$0.id == id}; return commitWorkspaceConfiguration(next)
     }
 
     @discardableResult public func saveAgent(_ value: AgentDefinition) -> Bool {
-        guard !isShuttingDown else { return false }
+        guard !isShuttingDown else { workspaceNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return false }
         do {
             var next = configuration, agent = value
             try agent.validate()
             agent.version = (next.agents.first { $0.id == agent.id }?.version ?? 0) + 1
             if let index = next.agents.firstIndex(where:{ $0.id == agent.id }) { next.agents[index] = agent }
             else { guard next.agents.count < 32 else { throw AgentToolError.invalidDefinition }; next.agents.append(agent) }
-            return commitSettingsConfiguration(next)
+            return commitWorkspaceConfiguration(next)
         } catch { workspaceNoticeMessage = noticeKey("Agent configuration is invalid"); return false }
     }
 

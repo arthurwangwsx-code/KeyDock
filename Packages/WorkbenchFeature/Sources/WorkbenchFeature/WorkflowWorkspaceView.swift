@@ -16,9 +16,11 @@ struct WorkflowWorkspaceView: View {
                 HStack {
                     TextField(L("Name"),text:$session.workflowDraft.name)
                     Button(L("New workflow")) { session.workflowDraft = WorkflowDefinition(name:"",steps:[.init(operation:.transform(.trim))]) }
-                    Button(L("Save workflow")) { store.saveWorkflow(session.workflowDraft) }
+                    Button(L("Save workflow")) { session.saveWorkflow(in: store) }
                     if store.configuration.workflows.contains(where:{$0.id == session.workflowDraft.id}) { Button(L("Remove"),role:.destructive) { confirmRemoval = true } }
                 }
+                let saveState = session.workflowSaveState(in: store)
+                Label(saveState.title, systemImage: saveState.symbol).font(.caption).foregroundStyle(.secondary)
                 Text(L("Steps use a frozen snapshot of saved commands and AI actions. Review commands before starting. Only a whole {{input}} argument passes this step's input; shell-mode commands cannot use that placeholder.")).font(.caption).foregroundStyle(.secondary)
             }
             ForEach($session.workflowDraft.steps) { $step in

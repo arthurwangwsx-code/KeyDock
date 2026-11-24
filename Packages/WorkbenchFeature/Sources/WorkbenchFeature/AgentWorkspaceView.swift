@@ -16,9 +16,11 @@ struct AgentWorkspaceView: View {
                 HStack {
                     TextField(L("Name"),text:$session.agentProfile.name)
                     Button(L("New profile")) { session.agentProfile = AgentDefinition() }
-                    Button(L("Save profile")) { store.saveAgent(session.agentProfile) }
+                    Button(L("Save profile")) { session.saveAgentProfile(in: store) }
                     if store.configuration.agents.contains(where:{$0.id == session.agentProfile.id}) { Button(L("Remove"),role:.destructive) { confirmRemoval = true } }
                 }
+                let saveState = session.agentProfileSaveState(in: store)
+                Label(saveState.title, systemImage: saveState.symbol).font(.caption).foregroundStyle(.secondary)
                 TextEditor(text:$session.agentProfile.instructions).font(.body).frame(minHeight:90).modifier(KDReadingSurface()).accessibilityLabel(L("Agent instructions"))
                 TextField(L("Model override (optional)"),text:$session.agentProfile.modelOverride)
             }

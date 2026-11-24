@@ -41,6 +41,7 @@
 | [工作流快捷入口输入](technical/workflow-launch-input.md) | 初始文本依赖、独立输入呈现、迟到／定义变化／预算与执行合同 |
 | [工作流输入原生复查](implementation/workflow-launch-input-2026-11-25.md) | 18项定向执行、编辑稿保留、双语输入页及实际纯变换任务 |
 | [目录观察生命周期复查](implementation/catalog-volume-lifecycle-2026-11-25.md) | 保留远端100ms失败、后台卷通知准备／清理、恢复与停止重入回归 |
+| [工作区定义保存复查](implementation/definition-saving-2026-11-25.md) | Agent／工作流失败提示、原文件补偿、编辑状态与真实保存版本 |
 | [桌面工作区建设方案](technical/desktop-workspaces.md) | 原窗口域的多应用组合缺口与待实现身份／焦点／两阶段合同 |
 | [开源参考目录](../references/README.md) | 13 个参考工程及固定版本登记 |
 | [第一阶段进度](implementation/phase-one-progress.md) | 实现、测试、真实验收与下一步 |

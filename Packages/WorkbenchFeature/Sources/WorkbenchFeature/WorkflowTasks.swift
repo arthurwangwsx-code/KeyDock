@@ -41,10 +41,11 @@ extension WorkbenchModel {
     }
 
     @discardableResult public func removeWorkflow(_ id:UUID) -> Bool {
-        var next = configuration; next.workflows.removeAll{$0.id == id}; return commitSettingsConfiguration(next)
+        var next = configuration; next.workflows.removeAll{$0.id == id}; return commitWorkspaceConfiguration(next)
     }
 
     @discardableResult public func saveWorkflow(_ definition: WorkflowDefinition) -> Bool {
+        guard !isShuttingDown else { workspaceNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return false }
         do {
             _ = try compileWorkflow(definition)
             var next = configuration, value = definition
@@ -52,7 +53,7 @@ extension WorkbenchModel {
             if let index = next.workflows.firstIndex(where:{$0.id == value.id}) { next.workflows[index] = value }
             else { guard next.workflows.count < 32 else { throw WorkflowCompileError.tooManySteps }; next.workflows.append(value) }
             guard try JSONEncoder().encode(next).count <= 4*1_048_576 else { throw WorkflowCompileError.tooManySteps }
-            return commitSettingsConfiguration(next)
+            return commitWorkspaceConfiguration(next)
         } catch { workspaceNoticeMessage = noticeKey("Workflow is invalid. Check names, inputs, references and budgets."); return false }
     }
     func compileWorkflow(_ definition: WorkflowDefinition, interaction: Bool = true) throws -> WorkflowPlan {
