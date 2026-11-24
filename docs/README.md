@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-25。当前已有签名公证的公开alpha.6；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-25。当前已有签名公证的公开alpha.7；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -27,9 +27,10 @@
 | [alpha.4发行说明](releases/v0.1.0-alpha.4.md) | 扩展能力、系统资格与验收边界；实际发布状态见Releases及状态总账 |
 | [alpha.5发行说明](releases/v0.1.0-alpha.5.md) | 独立剪贴板快捷面板与快捷键分类；实际发行状态见状态总账 |
 | [alpha.6发行说明](releases/v0.1.0-alpha.6.md) | 稳定窗口动作、命名应用控制与最小回执；实际发行状态见状态总账 |
+| [alpha.7发行说明](releases/v0.1.0-alpha.7.md) | 有序剪贴板合并、可配置主动作和AI复制兼容；实际发行状态见状态总账 |
 | [剪贴板原生交互复查](implementation/clipboard-panel-2026-11-24.md) | 查询／选择／插入围栏、快捷键定制和中英深浅色实查 |
-| [有序剪贴板合并](technical/clipboard-composition.md) | 独立勾选清单、合并预算、准确预览与可配置主动作；开发中 |
-| [剪贴板合并增量复查](implementation/clipboard-composition-2026-11-25.md) | 定向回归、实际合并复制、双语原生观察与待完成发行门禁 |
+| [有序剪贴板合并](technical/clipboard-composition.md) | 独立勾选清单、合并预算、准确预览与可配置主动作；alpha.7已发行 |
+| [剪贴板合并增量复查](implementation/clipboard-composition-2026-11-25.md) | 定向回归、实际合并复制、双语原生观察与发行证据及失败恢复 |
 | [开源参考目录](../references/README.md) | 13 个参考工程及固定版本登记 |
 | [第一阶段进度](implementation/phase-one-progress.md) | 实现、测试、真实验收与下一步 |
 | [新版界面实机复查](implementation/native-ui-review-2026-11-22.md) | 三窗口、语言、外观、输入焦点和终端验收边界 |
