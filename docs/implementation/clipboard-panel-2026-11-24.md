@@ -1,6 +1,6 @@
 # 独立剪贴板面板与快捷键定制
 
-本轮从干净master `43aca85`建立`feature/clipboard-command-panels`，主Agent独占写入、分支、集成和设备；两位子Agent只读研究／评审。没有创建worktree、复制checkout或改动AiBox。
+本轮从干净master `43aca85`建立`feature/clipboard-command-panels`，主Agent独占写入、分支、集成和设备；子Agent只读研究／评审。没有创建worktree、复制checkout或改动AiBox。
 
 ## 当前实现
 
@@ -30,6 +30,26 @@
 
 最终审查另发现无AX插入目标时，Copy／Esc原应用身份被丢弃。现将presentation的returnTarget与插入目标分开保存，查询变化保留返回身份，关闭清理；从Launcher继承时若其最初快照尚未就绪，仅保留复制／返回路径，不重新读取较晚的输入位置。旧源`1a5d0e7`完整检查399 Swift／43 Python／524 key及Release构建通过，但不作为此修补后的发行资格，修补提交需重新检查。
 
-## 未关闭义务
+## alpha.5最终发行证据
+
+| 范围 | 结果与绑定 |
+|---|---|
+| 源与tag | `7541c25c1893c7e8237d87280525ec4c48702407`，受控fast-forward master后建立并回查`v0.1.0-alpha.5`；后续证据doc另从master的chore分支提交 |
+| 完整本机＋Release | PASS，400 Swift执行（390 core＋9 Terminal＋1 OCR）、43 Python、524中英key、50文档；测量`86372456-e6ae-4d16-bc81-5a3437507857`，14:35:16Z–14:41:52Z |
+| 清单／OCR | 379个声明ID及21次参数化额外执行；生产accurate／revision3两轮真实识别，macOS27.2 arm64／Xcode27.2；资格摘要`8e0efea04ebaed857f55893f23e30b067d9f7455dd2bba9931f1ccf87add5d73`封入App与manifest |
+| 同源core CI | [45415628626](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45415628626) PASS，399 Swift及优化版Preview；云端系统OCR为NOT_QUALIFIED。旧源1a5d0e7运行因修补push按concurrency取消，未伪报为最终PASS |
+| 公开性 | 276候选及最后4文件delta静态复核PASS，无个人内容／凭据／新增依赖；不替代实际资产审计 |
+| 公证与包 | Developer ID／Hardened Runtime、App／DMG公证装订、Gatekeeper及只读DMG内部App与ZIP一致性PASS；测量`b86e69d5-c46a-44bc-8155-2d9f4abfe398`，14:44:07Z–14:45:35Z |
+| Apple公证ID | App `b58849fb-2d04-4a45-992d-7d5aebcc6267`；DMG `c57aee2c-0848-437b-a9f5-2d21342b7943`，均Accepted |
+| 正式安装 | 运行中alpha.4正常退出，原子替换为alpha.5；测量`7c6287d7-7038-42a0-adfc-c884d7cd9fb4`，14:46:34Z–14:46:46Z；未force kill／改TCC |
+| 公开发布 | [GitHub alpha.5](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.5)，测量`380e2bec-1c54-4719-9746-3bf34ca79608`，14:49:14Z–14:50:02Z，draft回下载后公开prerelease并再次核验 |
+| 独立公开回下载 | PASS，测量`345dff65-bff4-48f7-9940-e43634d184d4`，14:50:50Z–14:51:11Z，tag／源／资格／签名／摘要及DMG内部App一致 |
+| GitHub资产审计 | [45418462685](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45418462685) PASS，精确tag下载核验；不代表真实插入或物理键盘验收 |
+
+发行资产保留于`build/releases/0.1.0-alpha.5`：ZIP SHA256为`e5ffad61d939a59085d36f2f7bd39811d488ccacc38f495111bc7ec6f25025c3`，DMG为`a6a3d5f57cdd2d3d99768f7797621e651cc62d94fe6dda628dbf2d7697347ae5`，manifest为`5f4a029688d8e09f8e78735ff3339d126d4ef937451df5f7eb4c2093a44bb852`。旧alpha.1／2／4及本地未公开alpha.3字节保留。
+
+安装事务`bfb039fa-3c73-4ccd-8da6-70d83b7eb212`，回退凭据在本机`.local/pipeline/20261124T144634404642Z/install-receipt.json`，备份是`/Applications/.KeyDock.app.keydock-backup-bfb039fa-3c73-4ccd-8da6-70d83b7eb212.app`。可用`python3 scripts/keydock.py rollback .local/pipeline/20261124T144634404642Z/install-receipt.json --quit-running`恢复alpha.4；本次未执行回退。正式App已实际启动，「关于」显示`0.1.0-alpha.5 (5)`；隐私页仍显示需要辅助功能权限，未打开个人历史或更改权限。安装App的bundle摘要为`bb707fc94297cb319c5be4bf188bfe9a9b20fa3a6c59d73f2cb0fc99722cd96f`。
+
+## 持续建设义务
 
 完整目标保持active：真实原生／浏览器输入目标的插入、AX与事件权限授予／撤销、Secure Input、物理全局热键、真实IME、VoiceOver、不同显示设置／屏幕及完整视觉矩阵待验收。窗口循环／最小化、应用行为定制、剪贴板多项合并／顺序插入、主动作偏好、更多竞品常见能力及原P0–P4继续推进。真实API按用户决定稍后配置，AI质量与第三方协议仍需实际验证。当前正式版／签名公证／公开发行状态见[状态总账](../status.md)。
