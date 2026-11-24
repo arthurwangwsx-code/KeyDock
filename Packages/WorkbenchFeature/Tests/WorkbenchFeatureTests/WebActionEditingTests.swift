@@ -143,4 +143,17 @@ import MacAdapters
             #expect(store.workspaceNotice.isEmpty)
         }
     }
+
+    @Test(arguments: [InterfaceWriteRelay.Failure.before, .after])
+    func rejectedRemovalKeepsTheActionAndShowsWorkspaceFailure(failure: InterfaceWriteRelay.Failure) throws {
+        try withStore { store, relay, file in
+            let action = try add("Synthetic A", to: store)
+            let bytes = try Data(contentsOf: file)
+            relay.failure = failure
+            #expect(!store.removeWebAction(action.id))
+            #expect(store.configuration.webActions == [action])
+            #expect(!store.workspaceNotice.isEmpty && store.workspaceNoticeMessage == store.settingsNoticeMessage)
+            #expect(try Data(contentsOf: file) == bytes)
+        }
+    }
 }

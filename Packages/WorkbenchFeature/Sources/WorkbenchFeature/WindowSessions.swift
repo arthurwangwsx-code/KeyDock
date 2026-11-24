@@ -177,6 +177,7 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var selectedWebActionID: UUID?
     @Published var webActionDraft = WebActionEditorDraft()
     @Published public var selectedCollectionID: UUID?
+    @Published var collectionDraft = CollectionEditorDraft()
     @Published public var webQuery = ""
     @Published public var unitInput = ""
     @Published public var unitResult = ""

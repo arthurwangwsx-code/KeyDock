@@ -4,6 +4,8 @@
 
 后续修补分支`fix/ui-semantics-and-text-sync`从master `703b9a1`创建，已实现任务13的文本字节同步、编辑器AX名称、计划时区与Launcher副标题，33项定向执行及Agent／计划中英深浅四组合等原生子集通过。前一候选`36812e0`的474 Swift／46 Python／587 key完整检查、Release构建及同源CI通过，但未发布。随后`57f308d`补URL运行／编辑隔离及工作区失败提示，27项定向执行和合成原生操作通过，共590个中英UI key；其core CI通过，完整本机检查却在OCR失败。增加轮次日志后真实提取首轮也失败，三个独立对照均未解决；未改变生产模式或门禁。alpha.8发行保持未放行，正式版本继续为alpha.7。详见[语义复查](implementation/ui-semantics-2026-11-25.md)、[URL编辑复查](implementation/url-action-editing-2026-11-25.md)及[OCR复发记录](implementation/ocr-recurrence-2026-11-25.md)。
 
+后续有序集合增量已实现：32项有序草稿、浏览／编辑隔离、明确失效清理、AI空白手动草稿和CLI可见任务。23项定向检查及原生重排／保存／双语／AI入口子集通过；首版Form运行行与编辑行混用的真实渲染缺陷已复验修补。尚待最新源码完整core检查及同源CI，完整本机／发行仍未放行，见[集合复查](implementation/command-collections-2026-11-25.md)。
+
 本轮已发布并安装alpha.7：有序多选合并、完整预览与可配置主动作，最多20项／1MiB。中文浅色／英文深色、跨查询、重排、空行与Shift-Return、偏好重启保留及实际合并复制均已观察。AI生成成功但复制失败会保留完整结果和成功回执。当前源472项Swift、46项Python、583条文案、同源CI及公证／公开回下载通过；真实自动插入仍依10.1验收。详见[本轮证据](implementation/clipboard-composition-2026-11-25.md)及[合并合同](technical/clipboard-composition.md)。
 
 2026-11-25交付增量：alpha.6已加入直接窗口／应用动作、独立应用动作设置与事务存储；457项Swift、46项Python、556个中英UI key、同源CI及发行门禁通过，并已替换正式alpha.5。首次编辑和显示提前短路已修补，合成应用真实隐藏→显示、退出只请求一次和正常结束得到确认。原生双语视觉仅通过已观察子集，完整目标仍未关闭。详见[本轮增量复查](implementation/desktop-controls-2026-11-25.md)。

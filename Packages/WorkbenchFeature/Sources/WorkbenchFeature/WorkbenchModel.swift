@@ -526,7 +526,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public func showError(_ error: Error) {
         launcherNoticeMessage = errorNotice(error)
     }
-    private func errorNotice(_ error: Error) -> LocalizedNotice {
+    func errorNotice(_ error: Error) -> LocalizedNotice {
         switch error {
         case WorkbenchLifecycleError.shuttingDown: noticeKey("KeyDock is quitting. No new action was started.")
         case HostDescriptorPolicyError.unavailable(let reasonKey): noticeKey(reasonKey)

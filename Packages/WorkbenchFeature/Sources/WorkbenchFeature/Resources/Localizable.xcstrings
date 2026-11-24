@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "A collection can contain up to 32 actions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A collection can contain up to 32 actions."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每个集合最多包含 32 个动作。"
+          }
+        }
+      }
+    },
     "A desktop request may already have taken effect. Check the target application before retrying.": {
       "localizations": {
         "en": {
@@ -157,6 +173,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "AI 动作"
+          }
+        }
+      }
+    },
+    "AI actions open a blank draft. Choose input and run it in AI workspace.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI actions open a blank draft. Choose input and run it in AI workspace."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 动作会打开空白草稿。请在 AI 工作台选择输入并运行。"
           }
         }
       }
@@ -525,6 +557,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "动作分类"
+          }
+        }
+      }
+    },
+    "Action order": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action order"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "动作顺序"
           }
         }
       }
@@ -1377,6 +1425,22 @@
         }
       }
     },
+    "Choose a collection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a collection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择集合"
+          }
+        }
+      }
+    },
     "Choose a source": {
       "localizations": {
         "zh-Hans": {
@@ -1421,6 +1485,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose actions"
+          }
+        }
+      }
+    },
+    "Choose actions to build an ordered list.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose actions to build an ordered list."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择动作以建立有序清单。"
           }
         }
       }
@@ -1825,6 +1905,22 @@
         }
       }
     },
+    "Collection limit reached. Remove a collection before adding another.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collection limit reached. Remove a collection before adding another."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "集合已达数量上限。请先移除一个集合，再添加新集合。"
+          }
+        }
+      }
+    },
     "Collection name": {
       "localizations": {
         "zh-Hans": {
@@ -1901,6 +1997,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "命令无法启动，或执行回执无法保存。"
+          }
+        }
+      }
+    },
+    "Command could not be started. Check its configuration and permissions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command could not be started. Check its configuration and permissions."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令未能启动。请检查配置和权限。"
           }
         }
       }
@@ -2701,6 +2813,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "编辑 URL 动作"
+          }
+        }
+      }
+    },
+    "Editing collection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editing collection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑集合"
           }
         }
       }
@@ -4641,6 +4769,22 @@
         }
       }
     },
+    "Open AI workspace": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open AI workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 AI 工作台"
+          }
+        }
+      }
+    },
     "Open KeyDock": {
       "localizations": {
         "en": {
@@ -5277,6 +5421,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "剪贴板记录可自行开启，带有敏感标记的内容会被跳过。"
+          }
+        }
+      }
+    },
+    "Refine your search to see more actions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refine your search to see more actions."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请缩小搜索范围以查看其他动作。"
           }
         }
       }
@@ -7569,6 +7729,22 @@
         }
       }
     },
+    "This collection no longer exists. Start a new collection to save this draft.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This collection no longer exists. Start a new collection to save this draft."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此集合已不存在。请新建集合后保存此草稿。"
+          }
+        }
+      }
+    },
     "This discards finished task output, idle unsaved AI drafts and command suggestions. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept.": {
       "localizations": {
         "en": {
@@ -8509,6 +8685,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "窗口"
+          }
+        }
+      }
+    },
+    "Window actions need the original target. Use the launcher or a direct shortcut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window actions need the original target. Use the launcher or a direct shortcut."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口动作需要原窗口目标。请从启动台或直接快捷键运行。"
           }
         }
       }

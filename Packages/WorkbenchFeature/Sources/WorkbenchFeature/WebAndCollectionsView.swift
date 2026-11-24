@@ -4,9 +4,6 @@ import CommandCore
 struct WebAndCollectionsPanel: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: WorkspaceSession
-    @State private var collectionName = ""
-    @State private var selected: Set<String> = []
-    @State private var actionFilter = ""
     @State private var removal: String?
     var body: some View {
         Section(L("URL actions")) {
@@ -33,36 +30,7 @@ struct WebAndCollectionsPanel: View {
                 Button(L("New URL action")) { session.newWebAction() }
             }
         }
-        Section(L("Command collections")) {
-            Text(L("Group related actions into a named workspace. Each action runs only when selected; opening a collection does not run every command.")).font(.caption).foregroundStyle(.secondary)
-            Picker(L("Collection"),selection:$session.selectedCollectionID) {
-                Text(L("New collection")).tag(Optional<UUID>.none)
-                ForEach(store.configuration.collections) { Text($0.name).tag(Optional($0.id)) }
-            }.onChange(of:session.selectedCollectionID) { _,value in
-                let collection = store.configuration.collections.first{$0.id == value}; collectionName = collection?.name ?? ""; selected = Set(collection?.commandIDs ?? [])
-            }
-            if let collection = store.configuration.collections.first(where:{$0.id == session.selectedCollectionID}) {
-                ForEach(collection.commandIDs,id:\.self) { id in
-                    HStack {
-                        Text(store.catalog.first{$0.id == id}?.title ?? L("Unavailable action")).lineLimit(1); Spacer()
-                        Button(L("Run")) { if let item = store.catalog.first(where:{$0.id == id}) { store.execute(item) } }.disabled(!store.catalog.contains{$0.id == id})
-                    }
-                }
-                Button(L("Remove collection"),role:.destructive) { removal = "collection."+collection.id.uuidString }
-            }
-            TextField(L("Collection name"),text:$collectionName)
-            TextField(L("Find an action"),text:$actionFilter)
-            Button(L("Remove unavailable actions")) { selected = selected.filter { id in store.catalog.contains{$0.id == id} } }
-            DisclosureGroup(L("Choose actions")) {
-                ForEach(Array(store.catalog.filter{$0.kind != .window && !$0.id.hasPrefix("collection.") && (actionFilter.isEmpty || $0.title.localizedCaseInsensitiveContains(actionFilter))}.prefix(80))) { item in
-                    Toggle(item.title,isOn:Binding(get:{selected.contains(item.id)},set:{value in if value { if selected.count < 32 { selected.insert(item.id) } } else { selected.remove(item.id) } }))
-                }
-            }
-            Button(L("Save collection")) {
-                let id = session.selectedCollectionID ?? UUID()
-                if store.saveCollection(id:id,name:collectionName,commandIDs:selected.sorted()) { session.selectedCollectionID = id }
-            }
-        }.onAppear { if let collection = store.configuration.collections.first(where:{$0.id == session.selectedCollectionID}) { collectionName = collection.name; selected = Set(collection.commandIDs) } }
+        CollectionPanel(store: store, session: session) { removal = "collection." + $0.uuidString }
             .confirmationDialog(L("Remove this saved item?"),isPresented:Binding(get:{removal != nil},set:{if !$0 { removal = nil }})) {
                 Button(L("Remove"),role:.destructive) {
                     if let value = removal,let id = UUID(uuidString:String(value.split(separator:".").last ?? "")) { if value.hasPrefix("web.") { store.removeWebAction(id) } else { store.removeCollection(id) } }; removal = nil

@@ -38,16 +38,65 @@ extension WorkbenchModel {
             recordDirectActivity(commandID:"web."+id.uuidString,category:.utility,outcome:.succeeded)
         } catch { workspaceNoticeMessage = noticeKey("URL could not be opened. Check the saved address and query.") }
     }
-    func removeWebAction(_ id:UUID) { var next = configuration; next.webActions.removeAll{$0.id == id}; _ = commitSettingsConfiguration(next) }
+    @discardableResult func removeWebAction(_ id:UUID) -> Bool {
+        var next = configuration; next.webActions.removeAll { $0.id == id }
+        guard commitSettingsConfiguration(next) else { workspaceNoticeMessage = settingsNoticeMessage; return false }
+        workspaceNoticeMessage = .none
+        return true
+    }
     @discardableResult func saveCollection(id:UUID?,name:String,commandIDs:[String]) -> Bool {
+        if let id, !configuration.collections.contains(where: { $0.id == id }) {
+            workspaceNoticeMessage = noticeKey("This collection no longer exists. Start a new collection to save this draft.")
+            return false
+        }
         do {
             let value = try CommandCollection(id:id ?? UUID(),name:name,commandIDs:commandIDs)
-            guard value.commandIDs.allSatisfy({id in catalog.contains{$0.id == id && $0.kind != .window}}) else { throw CommandCollectionValidationError.invalidCommandID }
+            guard value.commandIDs.allSatisfy({ collectionAction($0) != nil }) else { throw CommandCollectionValidationError.invalidCommandID }
             var next = configuration
             if let index = next.collections.firstIndex(where:{$0.id == value.id}) { next.collections[index] = value }
-            else { guard next.collections.count < 32 else { return false }; next.collections.append(value) }
-            return commitSettingsConfiguration(next)
+            else {
+                guard next.collections.count < 32 else {
+                    workspaceNoticeMessage = noticeKey("Collection limit reached. Remove a collection before adding another.")
+                    return false
+                }
+                next.collections.append(value)
+            }
+            guard commitSettingsConfiguration(next) else { workspaceNoticeMessage = settingsNoticeMessage; return false }
+            workspaceNoticeMessage = .none
+            return true
         } catch { workspaceNoticeMessage = noticeKey("Collection could not be saved. Choose up to 32 available actions."); return false }
     }
-    func removeCollection(_ id:UUID) { var next = configuration; next.collections.removeAll{$0.id == id}; _ = commitSettingsConfiguration(next) }
+    @discardableResult func removeCollection(_ id:UUID) -> Bool {
+        var next = configuration; next.collections.removeAll { $0.id == id }
+        guard commitSettingsConfiguration(next) else { workspaceNoticeMessage = settingsNoticeMessage; return false }
+        workspaceNoticeMessage = .none
+        return true
+    }
+    func runCollectionAction(_ id: String, caller: ExecutionCaller = .user) {
+        guard !isShuttingDown else { workspaceNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return }
+        guard let item = collectionAction(id) else { workspaceNoticeMessage = noticeKey("Unavailable action"); return }
+        if item.kind == .ai {
+            do { try authorizeHostItem(item, caller: caller) }
+            catch { workspaceNoticeMessage = errorNotice(error); return }
+            guard let action = configuration.aiActions.first(where: { "ai." + $0.id.uuidString == id }) else { return }
+            // 工作区没有唤起前目标。先打开明确的手动草稿，不读取剪贴板或触发模型。
+            let draft = createDraft(actionID: action.id, input: "", target: nil, source: .manual, caller: caller)
+            if ownsDraft(draft) { onOpenWorkspace?(.ai(draft.id)) }
+        } else if item.kind == .command {
+            guard let command = configuration.savedCommands.first(where: { "command." + $0.id.uuidString == id }) else { return }
+            let previousSettings = settingsNoticeMessage, previousLauncher = launcherNoticeMessage
+            if runCommand(command, caller: caller, showWorkspace: true) == nil {
+                if settingsNoticeMessage != previousSettings { workspaceNoticeMessage = settingsNoticeMessage }
+                else if launcherNoticeMessage != previousLauncher { workspaceNoticeMessage = launcherNoticeMessage }
+                else { workspaceNoticeMessage = noticeKey("Command could not be started. Check its configuration and permissions.") }
+            }
+        } else { execute(item, caller: caller) }
+    }
+    private func isCollectionAction(_ item: CommandItem) -> Bool {
+        item.kind != .window && item.kind != .clipboard && !item.id.hasPrefix("collection.") && !item.payload.hasPrefix("window-layout.") && !item.payload.hasPrefix("window-command.")
+    }
+    var collectionActions: [CommandItem] { catalog.filter(isCollectionAction) }
+    func collectionAction(_ id: String) -> CommandItem? {
+        catalog.first { $0.id == id && isCollectionAction($0) }
+    }
 }
