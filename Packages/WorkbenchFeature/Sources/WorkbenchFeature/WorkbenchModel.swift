@@ -95,6 +95,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     let applicationActionStore: ApplicationActionStore?
     @Published public internal(set) var applicationActions: [SavedApplicationAction] = []
     @Published public internal(set) var applicationActionsWritable = false
+    let desktopWorkspaceStore: DesktopWorkspaceStore?
+    @Published public internal(set) var desktopWorkspaces: [SavedDesktopWorkspace] = []
+    @Published public internal(set) var desktopWorkspacesWritable = false
     var desktopLeases: [UUID: DesktopOperationLease] = [:]
     public var target: TargetSnapshot?
     public let clipboardStore: ClipboardStore
@@ -166,6 +169,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
                 credentialReader: @escaping @MainActor (String) throws -> String? = { try CredentialStore.load(account: $0) },
                 credentialWriter: @escaping @MainActor (String, String) throws -> Void = { try CredentialStore.save($0, account: $1) },
                 configurationWriter: @escaping @MainActor (Data, URL) throws -> Void = { try PrivateFiles.write($0, to: $1) },
+                desktopWorkspaceFaultHook: @escaping @MainActor (DesktopWorkspaceStoreFaultStage) throws -> Void = { _ in },
                 terminalHandoff: TerminalHandoffAdapter = TerminalHandoffAdapter(),
                 applicationCatalog: ApplicationCatalog? = nil,
                 applicationLauncher: (@MainActor (CommandItem) async throws -> PreparedApplicationLaunch)? = nil,
@@ -193,6 +197,10 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             let actions = try ApplicationActionStore(directory: directory)
             applicationActionStore = actions; applicationActions = actions.actions; applicationActionsWritable = actions.writable
         } catch { applicationActionStore = nil }
+        do {
+            let workspaces = try DesktopWorkspaceStore(directory: directory, faultHook: desktopWorkspaceFaultHook)
+            desktopWorkspaceStore = workspaces; desktopWorkspaces = workspaces.workspaces; desktopWorkspacesWritable = workspaces.writable
+        } catch { desktopWorkspaceStore = nil }
         usageMetadataStore = AIUsageMetadataStore(directory: directory.appendingPathComponent("usage"))
         let url = directory.appendingPathComponent("configuration.json")
         var statisticsEnabled = false
@@ -299,7 +307,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         }
         let windowActions = WindowCommand.allCases.map { CommandItem(id: "utility.window-command." + $0.rawValue, title: L($0.titleKey), subtitle: L("Original application"), keywords: ["window", "窗口"], kind: .utility, payload: "window-command." + $0.rawValue) }
         let appActions = applicationActions.map { CommandItem(id: "application-action." + $0.id.uuidString, title: $0.name, subtitle: L($0.behavior.titleKey), keywords: ["application", "应用"], kind: .utility, payload: "application-action." + $0.id.uuidString, objectRevision: fingerprint($0.applicationID + "|" + $0.behavior.rawValue + "|" + $0.name)) }
-        let additional = [("activity",L("Usage insights")),("workflows",L("Workflows")),("tools",L("Tools")),("capture",L("Capture a region"))].map { CommandItem(id:"utility."+$0.0,title:$0.1,kind:.utility,payload:$0.0) }
+        let additional = [("activity",L("Usage insights")),("workflows",L("Workflows")),("tools",L("Tools")),("capture",L("Capture a region")),("desktop-workspaces",L("Manage desktop workspaces"))].map { CommandItem(id:"utility."+$0.0,title:$0.1,kind:.utility,payload:$0.0) }
         let workflows = configuration.workflows.map { CommandItem(id:"workflow."+$0.id.uuidString,title:$0.name,subtitle:L("Workflow"),kind:.utility,payload:"workflow."+$0.id.uuidString) }
         let snippets = configuration.snippets.map { CommandItem(id:"snippet."+$0.id.uuidString,title:$0.name,subtitle:L("Snippet"),kind:.utility,payload:"snippet."+$0.id.uuidString) }
         let web = configuration.webActions.map { CommandItem(id:"web."+$0.id.uuidString,title:$0.name,subtitle:L("URL action"),kind:.utility,payload:"web."+$0.id.uuidString) }
@@ -362,6 +370,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             case "tools": onOpenWorkspace?(.tools)
             case "capture": onCaptureRequested?()
             case "settings": onOpenSettings?(nil)
+            case "desktop-workspaces": onOpenSettings?(.desktopWorkspaces)
             case "commands": onOpenSettings?(.commands)
             case "clipboard": onOpenClipboard?()
             case "agent": onOpenWorkspace?(.agent)
@@ -546,6 +555,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         if id.hasPrefix("ai."), let action = configuration.aiActions.first(where: { "ai." + $0.id.uuidString == id }) { return action.shortcut }; return configuration.commandShortcuts[id]
     }
     @discardableResult public func setShortcut(_ binding: HotkeyBinding?, for id: String) -> Bool {
+        if binding != nil && id.hasPrefix("desktop-workspace.") {
+            settingsNoticeMessage = noticeKey("Workspace execution shortcuts are not available yet."); return false
+        }
         var next = configuration
         if id.hasPrefix("ai."), let i = next.aiActions.firstIndex(where: { "ai." + $0.id.uuidString == id }) { next.aiActions[i].shortcut = binding; next.commandShortcuts[id] = nil }
         else { next.commandShortcuts[id] = binding }

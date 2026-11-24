@@ -115,7 +115,8 @@ import KeyDockUI
             let catalog = store.catalog + [app, ephemeral]
             session.shortcutCategory = .windows
             let layouts = session.shortcutItems(in: catalog, preferences: .init())
-            #expect(layouts.count == 16)
+            #expect(layouts.count == 17)
+            #expect(layouts.contains { $0.id == "utility.desktop-workspaces" })
             #expect(layouts.filter { $0.payload.hasPrefix("window-layout.") }.count == 13)
             #expect(Set(layouts.filter { $0.payload.hasPrefix("window-command.") }.map(\.id)) == ["utility.window-command.focusNext", "utility.window-command.focusPrevious", "utility.window-command.minimize"])
             session.shortcutCategory = .applications

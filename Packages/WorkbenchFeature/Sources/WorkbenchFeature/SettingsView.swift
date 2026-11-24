@@ -33,6 +33,7 @@ public struct SettingsRootView: View {
             .sheet(item: $session.editedCommand, onDismiss: { session.editedCommandSourceRunID = nil; session.editedCommandExistingID = nil }) { command in CommandEditor(command: command, failureMessage: { store.settingsNoticeMessage }) { session.saveEditedCommand($0, in: store) } }
             .sheet(item: $session.editedAction, onDismiss: { session.editedActionExistingID = nil }) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureMessage: { store.settingsNoticeMessage }) { session.saveEditedAction($0, in: store) } }
             .sheet(item: $session.savedItemRemoval) { presentation in SavedItemRemovalView(store: store, session: session, presentation: presentation) }
+            .sheet(item: $session.desktopWorkspaceEditor) { draft in DesktopWorkspaceEditorView(store: store, session: session, draft: draft) }
             .onAppear { exclusions = store.configuration.clipboardExclusions.joined(separator: "\n"); session.keyStored = store.credentialExists() }
             .confirmationDialog(L("Clear finished tasks and idle drafts?"), isPresented: $confirmTaskClear) {
                 Button(L("Clear finished history"), role: .destructive) { Task { await store.clearFinishedHistory() } }
@@ -139,6 +140,8 @@ public struct SettingsRootView: View {
             Section { Text(L("Create a translation, summary or custom prompt, then assign its own shortcut.")).font(.caption).foregroundStyle(.secondary) }
         case .applications:
             ApplicationActionsSettingsView(store: store)
+        case .desktopWorkspaces:
+            DesktopWorkspacesSettingsView(store: store, session: session)
         case .commands:
             Section(L("Saved commands")) {
                 if store.configuration.savedCommands.isEmpty { Text(L("Create a reusable command")).foregroundStyle(.secondary) }

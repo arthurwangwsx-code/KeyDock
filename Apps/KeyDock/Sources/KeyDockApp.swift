@@ -575,6 +575,7 @@ import KeyDockUI
                 guard let self else { return }
                 if entry.commandID == "utility.clipboard" { self.presentClipboard() }
                 else if let command = entry.commandID, self.store.isDesktopCommand(command) { self.store.desktopShortcut(command) }
+                else if entry.commandID == "utility.desktop-workspaces" { self.store.performCommand(id: "utility.desktop-workspaces") }
                 else if let command = entry.commandID, command.hasPrefix("workflow.") {
                     self.revokeDesktopInvocations(); self.dismissClipboard(restore: false); self.dismissLauncher(restore: false)
                     self.store.performWorkflowShortcut(id: command)

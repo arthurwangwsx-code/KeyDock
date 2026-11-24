@@ -165,9 +165,9 @@ public struct RunningTaskItem: Identifiable {
     func discard() { isDiscarded = true; input = ""; sourceTarget = nil; latestRunID = nil; source = .manual; revision = UUID() }
 }
 
-public enum SettingsPane: String, CaseIterable { case general, shortcuts, applications, aiService, aiActions, commands, mcp, clipboard, privacy, about
-    public var title: String { switch self { case .general: L("General"); case .shortcuts: L("Shortcuts"); case .applications: L("Application actions"); case .aiService: L("AI Service"); case .aiActions: L("AI Actions"); case .commands: L("Commands"); case .mcp: L("MCP servers"); case .clipboard: L("Clipboard"); case .privacy: L("Privacy & Permissions"); case .about: L("About") } }
-    public var icon: String { switch self { case .general: "slider.horizontal.3"; case .shortcuts: "command"; case .applications: "app.badge"; case .aiService: "network"; case .aiActions: "sparkles"; case .commands: "terminal"; case .mcp: "puzzlepiece.extension"; case .clipboard: "clipboard"; case .privacy: "hand.raised"; case .about: "info.circle" } }
+public enum SettingsPane: String, CaseIterable { case general, shortcuts, applications, desktopWorkspaces, aiService, aiActions, commands, mcp, clipboard, privacy, about
+    public var title: String { switch self { case .general: L("General"); case .shortcuts: L("Shortcuts"); case .applications: L("Application actions"); case .desktopWorkspaces: L("Desktop workspaces"); case .aiService: L("AI Service"); case .aiActions: L("AI Actions"); case .commands: L("Commands"); case .mcp: L("MCP servers"); case .clipboard: L("Clipboard"); case .privacy: L("Privacy & Permissions"); case .about: L("About") } }
+    public var icon: String { switch self { case .general: "slider.horizontal.3"; case .shortcuts: "command"; case .applications: "app.badge"; case .desktopWorkspaces: "rectangle.3.group"; case .aiService: "network"; case .aiActions: "sparkles"; case .commands: "terminal"; case .mcp: "puzzlepiece.extension"; case .clipboard: "clipboard"; case .privacy: "hand.raised"; case .about: "info.circle" } }
 }
 public enum WorkspaceRoute { case tasks(UUID?), ai(UUID), clipboard, agent, activity, workflows, workflowInput(UUID), tools, web(UUID), collection(UUID) }
 func L(_ key: String) -> String { KDLocalizer.string(key, bundle: .module) }

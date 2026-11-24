@@ -641,6 +641,38 @@
         }
       }
     },
+    "Add application target": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add application target"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加应用目标"
+          }
+        }
+      }
+    },
+    "Add desktop workspace": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add desktop workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加桌面工作区"
+          }
+        }
+      }
+    },
     "Add favorite": {
       "localizations": {
         "en": {
@@ -845,6 +877,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "仅允许 localhost 使用 HTTP"
+          }
+        }
+      }
+    },
+    "Allow background launch if missing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow background launch if missing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未运行时允许后台启动"
           }
         }
       }
@@ -1581,6 +1629,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "请选择可用应用并填写简短名称。"
+          }
+        }
+      }
+    },
+    "Choose an available application for each new workspace target.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an available application for each new workspace target."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请为每个新增目标选择可用应用。"
           }
         }
       }
@@ -2705,6 +2769,54 @@
         }
       }
     },
+    "Desktop workspace definition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop workspace definition"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面工作区定义"
+          }
+        }
+      }
+    },
+    "Desktop workspaces": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop workspaces"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面工作区"
+          }
+        }
+      }
+    },
+    "Desktop workspaces are read-only. Existing data has been preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop workspaces are read-only. Existing data has been preserved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面工作区处于只读状态，现有数据已保留。"
+          }
+        }
+      }
+    },
     "Disable": {
       "localizations": {
         "zh-Hans": {
@@ -2797,6 +2909,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "本次运行中保留的草稿"
+          }
+        }
+      }
+    },
+    "Each target uses the application's focused window at invocation. Window titles and selected text are not saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each target uses the application's focused window at invocation. Window titles and selected text are not saved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每个目标使用本次调用时该应用的焦点窗口。不保存窗口标题或选中文本。"
+          }
+        }
+      }
+    },
+    "Each window's original screen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each window's original screen"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "各窗口原来的屏幕"
           }
         }
       }
@@ -2941,6 +3085,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enabled"
+          }
+        }
+      }
+    },
+    "Enter a short name and one to eight distinct applications with valid layouts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a short name and one to eight distinct applications with valid layouts."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入简短名称，添加一至八个不同应用，并选择有效布局。"
           }
         }
       }
@@ -4193,6 +4353,22 @@
         }
       }
     },
+    "Main screen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main screen"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主屏幕"
+          }
+        }
+      }
+    },
     "Manage MCP servers": {
       "localizations": {
         "zh-Hans": {
@@ -4205,6 +4381,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manage MCP servers"
+          }
+        }
+      }
+    },
+    "Manage desktop workspaces": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage desktop workspaces"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理桌面工作区"
           }
         }
       }
@@ -4285,6 +4477,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Minute: %d"
+          }
+        }
+      }
+    },
+    "Missing application": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing application"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用未运行时"
           }
         }
       }
@@ -4429,6 +4637,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move step up"
+          }
+        }
+      }
+    },
+    "Move target down": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move target down"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下移应用目标"
+          }
+        }
+      }
+    },
+    "Move target up": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move target up"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上移应用目标"
           }
         }
       }
@@ -4637,6 +4877,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "剪贴板中没有可用文本，请手动输入。"
+          }
+        }
+      }
+    },
+    "No desktop workspaces yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No desktop workspaces yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚无桌面工作区"
           }
         }
       }
@@ -5617,6 +5873,22 @@
         }
       }
     },
+    "Remove application target": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove application target"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除应用目标"
+          }
+        }
+      }
+    },
     "Remove collection": {
       "localizations": {
         "zh-Hans": {
@@ -5793,6 +6065,22 @@
         }
       }
     },
+    "Remove this workspace definition?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this workspace definition?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除此桌面工作区定义？"
+          }
+        }
+      }
+    },
     "Remove unavailable actions": {
       "localizations": {
         "zh-Hans": {
@@ -5901,6 +6189,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "请求直接发送至此端点，仅在运行 AI 动作时发送输入内容。密钥保存在钥匙串中，不写入配置或日志。"
+          }
+        }
+      }
+    },
+    "Require application already running": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Require application already running"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要求应用已在运行"
           }
         }
       }
@@ -6241,6 +6545,22 @@
         }
       }
     },
+    "Save an ordered group of applications and window layouts. Applying workspaces is not available yet; saving does not launch or move applications.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save an ordered group of applications and window layouts. Applying workspaces is not available yet; saving does not launch or move applications."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按顺序保存一组应用及窗口布局。目前尚未支持应用布局，保存不会启动应用或移动窗口。"
+          }
+        }
+      }
+    },
     "Save collection": {
       "localizations": {
         "en": {
@@ -6269,6 +6589,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "保存命令"
+          }
+        }
+      }
+    },
+    "Save definition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save definition"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存定义"
           }
         }
       }
@@ -6573,6 +6909,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Screen Recording settings"
+          }
+        }
+      }
+    },
+    "Screen used to invoke the workspace": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen used to invoke the workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "调用工作区时所在屏幕"
           }
         }
       }
@@ -7521,6 +7873,22 @@
         }
       }
     },
+    "Target screen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target screen"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目标屏幕"
+          }
+        }
+      }
+    },
     "Task and usage history": {
       "localizations": {
         "en": {
@@ -8221,6 +8589,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "This workflow is unavailable for unattended execution. Check its steps and AI configuration."
+          }
+        }
+      }
+    },
+    "This workspace changed or was removed. Keep your draft and reopen it before saving.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workspace changed or was removed. Keep your draft and reopen it before saving."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工作区已更改或移除。请保留草稿，重新打开后再保存。"
+          }
+        }
+      }
+    },
+    "This workspace has saved references. Remove its shortcut, alias, favorite or collection references first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workspace has saved references. Remove its shortcut, alias, favorite or collection references first."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工作区仍有已保存的引用。请先移除其快捷键、别名、收藏或集合引用。"
           }
         }
       }
@@ -9073,6 +9473,22 @@
         }
       }
     },
+    "Window layout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window layout"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口布局"
+          }
+        }
+      }
+    },
     "Window management": {
       "localizations": {
         "en": {
@@ -9421,6 +9837,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "工作目录"
+          }
+        }
+      }
+    },
+    "Workspace definitions could not be saved. Your draft and existing data were preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace definitions could not be saved. Your draft and existing data were preserved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存工作区定义，草稿与现有数据已保留。"
+          }
+        }
+      }
+    },
+    "Workspace definitions were saved, but a recovery file remains. Further changes are disabled until checked.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace definitions were saved, but a recovery file remains. Further changes are disabled until checked."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区定义已保存，但仍有恢复文件。检查前已停用进一步更改。"
+          }
+        }
+      }
+    },
+    "Workspace execution shortcuts are not available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace execution shortcuts are not available yet."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前尚未支持工作区执行快捷键。"
           }
         }
       }

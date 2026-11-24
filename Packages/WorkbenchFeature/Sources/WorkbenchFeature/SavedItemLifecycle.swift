@@ -108,15 +108,15 @@ extension WorkbenchModel {
 
 extension SettingsSession {
     func editCommand(_ value: SavedCommand) {
-        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil else { return }
+        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, desktopWorkspaceEditor == nil else { return }
         editedCommandExistingID = value.id; editedCommandSourceRunID = nil; editedCommand = value
     }
     func editAction(_ value: AIActionPreset) {
-        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil else { return }
+        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, desktopWorkspaceEditor == nil else { return }
         editedActionExistingID = value.id; editedAction = value
     }
     func reviewCommand(_ value: SavedCommand, sourceRunID: UUID) {
-        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil else { return }
+        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, desktopWorkspaceEditor == nil else { return }
         editedCommandExistingID = nil; editedCommandSourceRunID = sourceRunID; editedCommand = value
     }
     @discardableResult func saveEditedCommand(_ value: SavedCommand, in store: WorkbenchModel) -> Bool {
@@ -134,7 +134,7 @@ extension SettingsSession {
         return store.saveAction(value)
     }
     func prepareRemoval(_ target: SavedItemTarget, in store: WorkbenchModel) {
-        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil else { return }
+        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, desktopWorkspaceEditor == nil else { return }
         savedItemRemoval = store.reviewSavedItemRemoval(target).map(SavedItemRemovalPresentation.init)
     }
     func refreshRemoval(_ presentationID: UUID, in store: WorkbenchModel) {
