@@ -21,6 +21,8 @@
 
 覆盖初始／前步／固定绑定、AI与最终输出依赖、固定命令与人工输入屏障、完整argv占位参数、准确工作流ID、旧编辑稿保留、迟到按钮、定义变化／删除／失效引用、Unicode字节、超预算与退出围栏。真实合成printf和人工输入步骤经原宿主完成；loopback AI入口在确认前POST为零。此汇总为工具报告执行数，声明ID和参数化次数分开。
 
+干净源`9cd6d1052876a40c8800e238e9da46100fd00ff7`本机cloud-core测量`f02b27ab-d7d1-4082-99ba-21e326f43278`通过，21:39:18Z–21:40:27Z，508 Swift／46 Python／615 key；488个声明ID，inventory摘要`2c1a98fa5a0a35b31f9e1050818041d2a71e5f397869831482a43e936d8d1b44`。[同源core CI与优化构建45493283966](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45493283966)的实际结果单独以该run为准。此范围OCR明确NOT_QUALIFIED，不是完整原生发行资格。
+
 ## 原生子集
 
 - 在隔离Preview保存纯trim流程`Synthetic Input Review B`，另建不同ID的未保存稿`Synthetic unsaved editor A`，保留输入`Keep this editor input`。

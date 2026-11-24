@@ -10,7 +10,7 @@
 
 AI配置前置增量已实现：配置不完整时以设置入口替代运行，原生菜单共用Provider结构校验，检查不读密钥／不联网。动作模型覆盖与两个辅助动作的全局模型分别判断。21项定向检查通过；中文浅色工作区／紧凑入口、未配置⌘Return及设置往返保留输入已观察。干净源`6633d70`本机cloud-core为496 Swift／46 Python／609 key通过；[同源CI与优化构建45486089503](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45486089503)的实际结果单独以该run为准。OCR仍NOT_QUALIFIED，真实API仍未配置，见[配置引导复查](implementation/ai-setup-guidance-2026-11-25.md)。
 
-工作流快捷入口已修补固定空输入问题：依赖初始文本时打开指定工作流的独立输入页，保留原编辑稿；专用快捷键跳过通用Launcher捕获，固定流程仍直接运行。18项定向执行、中文浅色／英文深色输入页、取消／Esc、主窗口菜单围栏和实际纯变换任务子集通过；最新完整core另录。见[本轮复查](implementation/workflow-launch-input-2026-11-25.md)及[输入合同](technical/workflow-launch-input.md)。
+工作流快捷入口已修补固定空输入问题：依赖初始文本时打开指定工作流的独立输入页，保留原编辑稿；专用快捷键跳过通用Launcher捕获，固定流程仍直接运行。18项定向执行、中文浅色／英文深色输入页、取消／Esc、主窗口菜单围栏和实际纯变换任务子集通过。干净源`9cd6d10`本机cloud-core为508 Swift／46 Python／615 key通过；[同源CI与优化构建45493283966](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45493283966)实际结果单独以该run为准，OCR仍NOT_QUALIFIED。见[本轮复查](implementation/workflow-launch-input-2026-11-25.md)及[输入合同](technical/workflow-launch-input.md)。
 
 只读完整范围复查还确认了**代码层待实现义务**：多应用桌面工作区、自定义AI动作／保存命令的删除与引用收口，以及Agent／工作流保存失败的当前页面反馈。它们在任务20／21保留，不能把目前的Workspace页面或命令集合视作多窗口工作区完成。设计见[桌面工作区方案](technical/desktop-workspaces.md)；完整目标并非只剩权限或实机检查。
 
