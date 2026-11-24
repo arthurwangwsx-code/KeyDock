@@ -1,14 +1,14 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-24。当前处于第一阶段实现，已有签名公证的公开alpha；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-25。当前已有签名公证的公开alpha.6；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
 | [产品愿景](product/vision.md) | 用户、定位、产品原则、成功指标 |
 | [扩展能力使用说明](product/expanded-tools-guide.md) | Agent、MCP、工作流、调度、OCR和常用工具的实际入口 |
 | [完整快捷操作建设与验收](product/quick-actions-completion.md) | 独立剪贴板面板、快捷键分类、竞品能力和完整目标验收矩阵 |
-| [稳定窗口与应用动作](technical/desktop-actions.md) | 直接快捷键、窗口循环、应用行为、独立配置及合成宿主；alpha.6开发中 |
-| [窗口与应用控制增量复查](implementation/desktop-controls-2026-11-25.md) | 模型／事务回归、原生双语编辑、显示失败与修补及alpha.6待验收门禁 |
+| [稳定窗口与应用动作](technical/desktop-actions.md) | 直接快捷键、窗口循环、应用行为、独立配置及合成宿主；alpha.6已发行 |
+| [窗口与应用控制增量复查](implementation/desktop-controls-2026-11-25.md) | 模型／事务回归、原生双语编辑、显示失败与修补及alpha.6发行证据 |
 | [产品需求](product/requirements.md) | 统一能力模型、AI 快捷动作和核心流程 |
 | [竞品调研](product/competitive-research.md) | 官方来源支持的能力矩阵与产品判断 |
 | [建设路线](product/roadmap.md) | 每阶段闭环、依赖、验收与投入估算 |
