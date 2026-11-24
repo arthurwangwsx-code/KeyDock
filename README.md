@@ -4,7 +4,7 @@
 
 **当前阶段：第一阶段实现中，已有可构建的 macOS 内测预览；完整日用验收尚未完成。** 本仓库独立于 AiBox，未迁入其源码、个人截图或历史数据。
 
-已发布 [v0.1.0-alpha.1](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.1)：macOS arm64，Developer ID签名、App／DMG公证与装订。下载包、完整源SHA和摘要随Release提供；这是早期预览，已知限制见发行说明。
+已发布 [v0.1.0-alpha.2](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.2)：macOS arm64，Developer ID签名、App／DMG公证与装订。下载包、完整源SHA和摘要随Release提供；这是早期预览，已知限制见发行说明。
 
 ## 首版方向
 

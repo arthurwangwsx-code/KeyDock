@@ -38,4 +38,16 @@
 
 物理⌥Space、IME、多屏／全屏、VoiceOver／降低透明度等系统矩阵、用户视觉评审、AX授权／撤销与选区替换、真实Terminal仍未完成。物理按键和由用户手动授权的询问已发出，等待答复；不绕过系统权限。外部兼容API按用户决定稍后配置，模型质量仍NOT_RUN。
 
-alpha.2候选已更新版本与发行说明；签名、公证、安装和公开资产以独立流水线结果为准。alpha.1的既有标签和字节不变。
+## alpha.2交付结果
+
+源提交 `ace56efdf67faae0f8dd2df3f0871b8e61a7829f`，版本 `0.1.0-alpha.2`／build2。经本地全量检查、独立评审与[远端完整原生CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45327538178)通过后，受控fast-forward到master并建立精确tag；[同源master原生CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45328234945)随后也通过。无worktree或第二checkout，alpha.1的标签和字节保持不变。
+
+- 正式Release构建／Developer ID／Hardened Runtime通过，编译测量 `e6c4d9ab-4686-4fc2-86ff-66d4255b5fbe`。
+- App公证 `9c5e14f0-6de5-48db-9202-5e10bd3f97e2`、DMG公证 `3709fc03-9620-460e-bf44-947c715d788c` 均Accepted，装订、Gatekeeper和本地资产验证通过；打包测量 `2931fc59-bcd9-43ed-8b9b-613eb3afc7c4`。
+- 正式alpha.1正在运行时，经脚本正常退出、原子替换成alpha.2。安装测量 `700e2d3f-5f30-41df-a178-c7fe7995bc09`；旧版原包、资源摘要与回退回执保留在本机，未执行降级回退，也未更改TCC。
+- CUA在已安装alpha.2上确认完整AI工作区、原生⌘Return的未配置提示、新增按钮打开命令编辑器，以及设置窗口中运行／停止菜单禁用。取消测试编辑器后恢复空白草稿，未发出外部请求。进入工作区时又有一次CUA超时，随后重读成功，保留为工具／交互稳定性待观察项。
+- [公开alpha.2](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.2)含ZIP、DMG、manifest和摘要四项资产；draft上传、两次回下载复核再公开通过，发布测量 `8f7c782b-1c5c-4d61-9009-967d136875cd`。[GitHub公开资产审计](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45328281923)通过。
+
+ZIP SHA-256：`2df61f0bfe612219b7b0ec27f9b2af5ea22aff407f1b3f10b6afea5b84fff2af`。DMG SHA-256：`ac0fd294bf4334b6bb5fb9ef762e7f82e5c5fc2572290837d50a0cc6dc134c35`。
+
+安装后额外核验脚本首轮误将包含executable／binary hash／architecture的完整检查结果与精简安装回执做全字典比较，产生误报；检查差异后确认共有字段及bundle摘要无变化，失败测量 `6bd000d7-222f-4e6d-8689-3e7068c3d874` 保留。更正为逐项验证全部回执字段并单独验证架构，不豁免任何资源摘要或签名检查。复跑测量 `23d9c8c2-b23d-4507-b7f2-6a8bcda8be94` 通过，确认启动中的唯一生产进程位于canonical App、当前alpha.2及保留alpha.1均与安装回执资源摘要一致。

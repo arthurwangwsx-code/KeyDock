@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "date": "2026-11-24",
-  "branch": "fix/native-actions-and-ci",
+  "branch": "chore/alpha2-delivery-evidence",
   "overall": "PARTIAL",
   "goal": "P0+P1 daily-use macOS internal version; scope unchanged",
   "environment": {
@@ -185,7 +185,7 @@
     "No existing AiBox or Ashot source/configuration/credentials/media copied",
     "No real external model request or billable warmup",
     "No worktree or secondary checkout",
-    "User-authorized public repository arthurwangwsx-code/KeyDock; alpha.1 published with signed/notarized assets",
+    "User-authorized public repository arthurwangwsx-code/KeyDock; alpha.1 and alpha.2 published with signed/notarized assets",
     "Generated build products, private logs and test data remain ignored"
   ],
   "visualAcceptance": {
@@ -244,7 +244,7 @@
   },
   "currentNativeVerification": {
     "state": "PARTIAL",
-    "scope": "Unlocked Mac formal alpha.1 basic windows/languages and repaired Preview command/AI/Agent flow observed",
+    "scope": "Unlocked Mac formal alpha.1 baseline, repaired Preview command/AI/Agent flow, and installed alpha.2 native CmdReturn/new-command editor/settings-keyboard isolation observed",
     "permissionBypassAttempted": false,
     "review": "docs/implementation/native-actions-2026-11-24.md",
     "wireCounters": {
@@ -262,7 +262,8 @@
         "23c30853-4be5-4155-b49c-35edd4468415",
         "73b0cb87-9acb-410e-bcae-b1580e8c2c91"
       ]
-    }
+    },
+    "installedVersion": "0.1.0-alpha.2 build2"
   },
   "visibleAIUsage": {
     "state": "PARTIAL",
@@ -345,11 +346,25 @@
   "workflowEvidence": {
     "state": "PARTIAL",
     "currentApplyAttempt": "0622d277-f905-4369-8189-b16c918e8b2b",
-    "finalVerification": "serial CLI commands with independent native receipts",
+    "finalVerification": "serial CLI measurements; all this-turn receipt hashes and apply/attempt identities checked",
     "incident": "parallel lint writes replaced the unprofiled shared state; old raw logs and earlier metrics snapshots preserved",
     "historyReconstructed": false,
     "oldSnapshot": ".local/p1-usage-launcher-metrics.json",
-    "businessAcceptance": "not granted by command receipts"
+    "businessAcceptance": "not granted by command receipts",
+    "currentTurnAudit": {
+      "state": "PASS for this-turn receipt linkage only",
+      "count": 15,
+      "passed": 12,
+      "failed": 3,
+      "globalAuditComplete": false,
+      "globalLegacyIssueIds": [
+        "4f490ac0-5ed8-484b-b07f-c5668cbfb7f5",
+        "3b8d5cc9-345f-49b8-bc98-950dcb7832c6"
+      ],
+      "businessAcceptance": "PARTIAL; not evaluated by receipts",
+      "snapshotAt": "2026-11-24T04:46:00.907Z",
+      "scope": "Measurements available through this snapshot; final CLI audit retained locally"
+    }
   },
   "interfaceRefinement": {
     "state": "PARTIAL",
@@ -368,12 +383,24 @@
     "realVisualAndAXAcceptance": "PARTIAL: unlocked basic native visuals and shortcuts inspected Nov24; AX, IME, multiple screens, VoiceOver and user visual review pending"
   },
   "releaseEngineering": {
-    "state": "PASS within alpha.1 engineering scope",
+    "state": "PASS within alpha.2 engineering scope; complete product PARTIAL",
     "publicRepository": "https://github.com/arthurwangwsx-code/KeyDock",
-    "currentRelease": "v0.1.0-alpha.1",
-    "sourceCommit": "44ace89decd96a19746c9cf66829b708ec71a4f8",
+    "currentRelease": "v0.1.0-alpha.2",
+    "sourceCommit": "ace56efdf67faae0f8dd2df3f0871b8e61a7829f",
     "installedApp": "/Applications/KeyDock.app",
-    "newCandidate": "v0.1.0-alpha.2 build2; release verification pending",
-    "priorNativeCI": "45202054398 PASS at cb74c41; 45205239086 FAIL at faaa9d6 fixture drain timeout; new source run pending"
+    "priorNativeCI": "45202054398 PASS at cb74c41; 45205239086 FAIL at faaa9d6 fixture drain timeout; diagnosed with retained complete logs",
+    "installedBuild": "2",
+    "currentNativeCI": "45327538178 PASS",
+    "publicAssetAudit": "45328281923 PASS",
+    "publicRelease": "https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.2",
+    "rollback": "Retained notarized alpha.1 bundle and matching receipt; actual downgrade not performed",
+    "oldTagAndAssetsUnchanged": true,
+    "launchedAppIdentityCheck": {
+      "state": "PASS",
+      "measurementID": "23d9c8c2-b23d-4507-b7f2-6a8bcda8be94",
+      "scope": "All persisted receipt fields and bundle hashes of alpha.2 and retained alpha.1 match; exactly one canonical production GUI process",
+      "earlierVerifierFailure": "6bd000d7-222f-4e6d-8689-3e7068c3d874 compared full inspection against compact receipt; no shared field or bundle-hash drift"
+    },
+    "masterNativeCI": "45328234945 PASS at exact release source ace56ef"
   }
 }

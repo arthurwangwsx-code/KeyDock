@@ -15,7 +15,7 @@
 | AI质量 | PARTIAL | 20条合成质量样本已准备，全部NOT_RUN；未进行真实模型调用与人工质量验收 |
 | 最小任务与回执 | PARTIAL | CLI/AI网络前intent、终态元数据与退出围栏通过；三个AI入口的专用子进程SIGKILL+Store恢复通过且不重放；当前新版原生App带sleep退出已验证；Terminal交接有界/unknown/迟到隔离的合成测试通过，完整GUI崩溃和真实Terminal仍待验收 |
 | 性能 | PARTIAL | 2000条合成命令100次采样，Release排序p95 20.47ms、生产缓存查询链路p95 20.85ms；Panel热唤起150ms和长期耗电尚未证明 |
-| 公开托管/发行 | PASS（alpha工程） | public／master与v0.1.0-alpha.1已公开；Developer ID、App/DMG公证、Gatekeeper、本地安装、GitHub资产复核及cb74c41完整原生CI通过；完整日用仍PARTIAL |
+| 公开托管/发行 | PASS（alpha工程） | public／master与v0.1.0-alpha.2已公开；ace56ef原生CI、Developer ID、App/DMG公证、Gatekeeper、运行中正式App升级、回退凭据与GitHub公开资产审计通过；完整日用仍PARTIAL |
 
 详见 [第一阶段进度](implementation/phase-one-progress.md)、[验收方案](technical/validation.md) 和 [iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选任务表示对应实现/定向验证完成，不替代本表更广范围的真实验收。
 
@@ -29,6 +29,8 @@ canonical checkout 仍唯一，当前开发分支 fix/native-actions-and-ci 从m
 
 本轮新增调试／安装／发行流水线与合成、真实签名App验证，详见[发行工程实查](implementation/release-engineering-2026-11-23.md)。源码已推送，首个签名公证alpha已公开并安装。此前最终复验时Mac锁屏；2026-11-24已在解锁后观察正式alpha.1三窗口和基本语言／外观，修复后Preview完成原生运行与停止、命令到合成Agent链路；完整系统矩阵仍未验收。
 
-远端原生CI在44ace89曾出现WorkbenchFeatureTests失败，旧摘要未包含具体用例；加入完整诊断后，cb74c41的同一组248项Swift／32项Python检查及ReleasePreview构建通过。未放宽断言或增加超时。后续faaa9d6原生CI再失败，现完整日志定位为用量展示夹具drain超时，已隔离语义测试与大响应压力，仍须新提交远端CI验证；不能将44ace89旧失败直接认定同一根因。[远端通过记录](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45202054398)。
+远端原生CI在44ace89曾出现WorkbenchFeatureTests失败，旧摘要未包含具体用例；加入完整诊断后，cb74c41的同一组248项Swift／32项Python检查及ReleasePreview构建通过。未放宽断言或增加超时。后续faaa9d6原生CI再失败，现完整日志定位为用量展示夹具drain超时，已隔离语义测试与大响应压力；ace56ef的新提交251项测试及ReleasePreview远端CI通过，不能将44ace89旧失败直接认定同一根因。[本轮原生CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45327538178)。
 
-2026-11-24新增3项回归与原生AppKit运行／停止菜单、设置页原生新增图标、恢复任务默认选择。定向40项和全量251项Swift通过；Mac已解锁，确认原生⌘Return发出合成流、⌘.取消、只读Agent两轮和报告30/10用量，Preview配置已还原。两次临时计数验证脚本失败分别来自断言误读和服务已停止，均保留FAIL回执，不伪报E2E通过。alpha.2候选已准备，最终签名公证／升级／公开结果待本轮发行记录；alpha.1标签资产不变。
+2026-11-24新增3项回归与原生AppKit运行／停止菜单、设置页原生新增图标、恢复任务默认选择。定向40项和全量251项Swift通过；Mac已解锁，确认原生⌘Return发出合成流、⌘.取消、只读Agent两轮和报告30/10用量，Preview配置已还原。两次临时计数验证脚本失败分别来自断言误读和服务已停止，均保留FAIL回执，不伪报E2E通过。alpha.2已签名公证、从运行中alpha.1原子升级并公开；原生CI与公开资产审计均通过，alpha.1标签资产不变。
+
+当前安装 `/Applications/KeyDock.app` 为0.1.0-alpha.2／build2，源ace56ef；正式包原生⌘Return、命令新增编辑器与设置窗口快捷键禁用已观察。完整系统矩阵仍PARTIAL，外部API仍待用户配置。后续尚未实现完整窗口布局／跨屏恢复、使用情况AI分析、多步通用Agent、MCP／ACP、截图OCR和用户工作流；不能将开源发行与只读工具回路当作这些功能完成。详见[alpha.2交付记录](implementation/native-actions-2026-11-24.md)。
