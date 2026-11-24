@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import AppKit
 @testable import MacAdapters
 
 private enum ApplicationFixtureError: Error { case deadline, missingCall }
@@ -204,12 +205,16 @@ private func makeSyntheticApplication(_ name: String, in root: URL, identifier: 
             defer { gate.release(); gate.release(); catalog.stop() }
             var started = ContinuousClock.now
             catalog.start()
-            #expect(started.duration(to: .now) < .milliseconds(100))
+            let startDuration = started.duration(to: .now)
+            print("KEYDOCK_CATALOG_RESPONSE operation=start elapsed=\(startDuration)")
+            #expect(startDuration < .milliseconds(100))
             try await eventually { gate.calls == 1 }
             #expect(!gate.ranOnMainThread && catalog.items.isEmpty)
             gate.release(); try await eventually { catalog.items.count == 1 }
             started = .now; catalog.refreshIfStale(maxAge: .zero)
-            #expect(started.duration(to: .now) < .milliseconds(100))
+            let refreshDuration = started.duration(to: .now)
+            print("KEYDOCK_CATALOG_RESPONSE operation=refresh elapsed=\(refreshDuration)")
+            #expect(refreshDuration < .milliseconds(100))
             try await eventually { gate.calls == 2 }
             #expect(!gate.ranOnMainThread)
             gate.release()
@@ -228,6 +233,91 @@ private func makeSyntheticApplication(_ name: String, in root: URL, identifier: 
             catalog.start()
             try await eventually { catalog.items.count == 2 }
         }
+    }
+
+    @Test func volumeCenterPreparationCannotBlockStartOrStaleRefresh() async throws {
+        try await withFixture { root in
+            _ = try makeSyntheticApplication("Owned", in: root)
+            let gate = ObservationPreparationGate(), center = NotificationCenter()
+            let catalog = ApplicationCatalog(roots: [root], observationFactory: { _, _ in nil }, workspaceCenter: { gate.prepare(); return center })
+            defer { gate.release(); gate.release(); catalog.stop() }
+            var started = ContinuousClock.now; catalog.start()
+            #expect(started.duration(to: .now) < .milliseconds(100))
+            try await eventually { gate.calls == 1 }
+            #expect(!gate.ranOnMainThread && catalog.items.isEmpty)
+            gate.release(); try await eventually { catalog.items.count == 1 }
+            started = .now; catalog.refreshIfStale(maxAge: .zero)
+            #expect(started.duration(to: .now) < .milliseconds(100))
+            try await eventually { gate.calls == 2 }
+            #expect(!gate.ranOnMainThread)
+            gate.release()
+        }
+    }
+
+    @Test func stoppingDuringVolumePreparationRejectsTheLateCandidate() async throws {
+        try await withFixture { root in
+            _ = try makeSyntheticApplication("Owned", in: root)
+            let gate = ObservationPreparationGate(), center = NotificationCenter()
+            let catalog = ApplicationCatalog(roots: [root], observationFactory: { _, _ in nil }, workspaceCenter: { gate.prepare(); return center })
+            defer { gate.release(); catalog.stop() }
+            var changes = 0; catalog.onChange = { _ in changes += 1 }
+            catalog.start(); try await eventually { gate.calls == 1 }
+            catalog.stop(); gate.release(); try await eventually { gate.finishedCalls == 1 }
+            center.post(name: NSWorkspace.didMountNotification, object: nil)
+            await Task.yield()
+            #expect(catalog.items.isEmpty && changes == 0 && !gate.ranOnMainThread)
+        }
+    }
+
+    @Test func stoppedVolumeSignalsCannotRefreshARestartedCatalog() async throws {
+        try await withFixture { root in
+            _ = try makeSyntheticApplication("Owned", in: root)
+            let oldCenter = NotificationCenter(), newCenter = NotificationCenter(), centers = SyntheticWorkspaceCenters()
+            let catalog = ApplicationCatalog(roots: [root], observationFactory: { _, _ in nil }, workspaceCenter: {
+                centers.next() == 1 ? oldCenter : newCenter
+            })
+            defer { catalog.stop() }
+            var publications = 0; catalog.onChange = { _ in publications += 1 }
+            catalog.start(); try await eventually { publications == 1 && centers.calls == 1 }
+            // 先排队旧信号，再停止和重启；原代次回调不能取消新准备或触发额外扫描。
+            oldCenter.post(name: NSWorkspace.didMountNotification, object: nil)
+            catalog.stop(); catalog.start()
+            try await eventually { publications == 2 && centers.calls == 2 }
+            oldCenter.post(name: NSWorkspace.didUnmountNotification, object: nil)
+            try await Task.sleep(for: .milliseconds(350))
+            #expect(centers.calls == 2)
+            _ = try makeSyntheticApplication("New", in: root)
+            newCenter.post(name: NSWorkspace.didMountNotification, object: nil)
+            try await eventually { catalog.items.count == 2 && centers.calls == 3 }
+        }
+    }
+
+    @Test func volumeInvalidationSurvivesDirectoryPreparationFailure() async throws {
+        try await withFixture { root in
+            _ = try makeSyntheticApplication("Owned", in: root)
+            let center = NotificationCenter()
+            let catalog = ApplicationCatalog(roots: [root], observationFactory: { _, _ in throw ApplicationDirectoryObserverError.unavailable }, workspaceCenter: { center })
+            defer { catalog.stop() }
+            var failures = 0; catalog.onFailure = { failures += 1 }
+            catalog.start(); try await eventually { catalog.items.count == 1 && failures == 1 }
+            _ = try makeSyntheticApplication("AfterFailure", in: root)
+            center.post(name: NSWorkspace.didMountNotification, object: nil)
+            try await eventually { catalog.items.count == 2 && failures == 2 }
+        }
+    }
+
+    @Test func stoppingVolumeObservationRejectsAlreadyQueuedAndFutureSignals() async throws {
+        let center = NotificationCenter(); var calls = 0
+        let stopped = ApplicationVolumeObservation(center: center) { calls += 1 }
+        center.post(name: NSWorkspace.didMountNotification, object: nil)
+        stopped.stop(); stopped.stop(); await Task.yield()
+        #expect(calls == 0)
+        let active = ApplicationVolumeObservation(center: center) { calls += 1 }
+        defer { active.stop() }
+        center.post(name: NSWorkspace.didUnmountNotification, object: nil)
+        try await eventually { calls == 1 }
+        active.stop(); center.post(name: NSWorkspace.didMountNotification, object: nil); await Task.yield()
+        #expect(calls == 1)
     }
 
     @Test func realDirectoryEventsRefreshNestedChangesAndRecreatedRoot() async throws {
@@ -263,14 +353,24 @@ private final class ObservationPreparationGate: @unchecked Sendable {
     private let lock = NSLock()
     private let semaphore = DispatchSemaphore(value: 0)
     private var count = 0
+    private var finished = 0
     private var mainThread = false
     var calls: Int { lock.withLock { count } }
+    var finishedCalls: Int { lock.withLock { finished } }
     var ranOnMainThread: Bool { lock.withLock { mainThread } }
     func prepare() {
         lock.withLock { count += 1; mainThread = mainThread || Thread.isMainThread }
         _ = semaphore.wait(timeout: .now() + 2)
+        lock.withLock { finished += 1 }
     }
     func release() { semaphore.signal() }
+}
+
+private final class SyntheticWorkspaceCenters: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+    var calls: Int { lock.withLock { count } }
+    func next() -> Int { lock.withLock { count += 1; return count } }
 }
 
 private actor HeldApplicationScanner: ApplicationScanning {

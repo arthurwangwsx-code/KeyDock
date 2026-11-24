@@ -12,6 +12,8 @@ AI配置前置增量已实现：配置不完整时以设置入口替代运行，
 
 工作流快捷入口已修补固定空输入问题：依赖初始文本时打开指定工作流的独立输入页，保留原编辑稿；专用快捷键跳过通用Launcher捕获，固定流程仍直接运行。18项定向执行、中文浅色／英文深色输入页、取消／Esc、主窗口菜单围栏和实际纯变换任务子集通过。干净源`9cd6d10`本机cloud-core为508 Swift／46 Python／615 key通过；[同源CI与优化构建45493283966](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45493283966)实际结果单独以该run为准，OCR仍NOT_QUALIFIED。见[本轮复查](implementation/workflow-launch-input-2026-11-25.md)及[输入合同](technical/workflow-launch-input.md)。
 
+该同源CI实际FAIL：应用目录原start小于100ms断言失败，优化构建未执行，旧run未重试。复查发现卷通知注册／清理仍同步调用NSWorkspace，现已移入后台观察生命周期，保留目录失败后的卷恢复、取消／旧代次围栏和原100ms断言。23项定向执行及原生刷新／搜索子集通过；新源码完整core和新CI另录。失败和未确认唯一根因保留在[目录观察复查](implementation/catalog-volume-lifecycle-2026-11-25.md)。
+
 只读完整范围复查还确认了**代码层待实现义务**：多应用桌面工作区、自定义AI动作／保存命令的删除与引用收口，以及Agent／工作流保存失败的当前页面反馈。它们在任务20／21保留，不能把目前的Workspace页面或命令集合视作多窗口工作区完成。设计见[桌面工作区方案](technical/desktop-workspaces.md)；完整目标并非只剩权限或实机检查。
 
 本轮已发布并安装alpha.7：有序多选合并、完整预览与可配置主动作，最多20项／1MiB。中文浅色／英文深色、跨查询、重排、空行与Shift-Return、偏好重启保留及实际合并复制均已观察。AI生成成功但复制失败会保留完整结果和成功回执。当前源472项Swift、46项Python、583条文案、同源CI及公证／公开回下载通过；真实自动插入仍依10.1验收。详见[本轮证据](implementation/clipboard-composition-2026-11-25.md)及[合并合同](technical/clipboard-composition.md)。

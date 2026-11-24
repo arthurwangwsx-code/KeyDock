@@ -103,8 +103,9 @@ public struct FileSystemApplicationScanner: ApplicationScanning {
     private let scanner: any ApplicationScanning
     private let roots: [URL]
     private var references: [String: ApplicationReference] = [:]
-    private var observer: ApplicationDirectoryObserver?
+    private var observer: ApplicationCatalogObservation?
     private let observationFactory: ObservationFactory
+    private let workspaceCenter: @Sendable () -> NotificationCenter
     private var observationTask: Task<Void, Never>?
     private var observationGeneration: UInt64 = 0
     private var observing = false
@@ -113,21 +114,16 @@ public struct FileSystemApplicationScanner: ApplicationScanning {
     private var scanTask: Task<Void, Never>?
     private var debounceTask: Task<Void, Never>?
     private var refreshedAt: ContinuousClock.Instant?
-    private var volumeObservers: [NSObjectProtocol] = []
 
     public init(scanner: (any ApplicationScanning)? = nil, roots: [URL] = FileSystemApplicationScanner.defaultRoots,
-                observationFactory: @escaping ObservationFactory = { try ApplicationDirectoryObserver(roots: $0, onInvalidation: $1) }) {
+                observationFactory: @escaping ObservationFactory = { try ApplicationDirectoryObserver(roots: $0, onInvalidation: $1) },
+                workspaceCenter: @escaping @Sendable () -> NotificationCenter = { NSWorkspace.shared.notificationCenter }) {
         self.scanner = scanner ?? FileSystemApplicationScanner(roots: roots); self.roots = roots
-        self.observationFactory = observationFactory
+        self.observationFactory = observationFactory; self.workspaceCenter = workspaceCenter
     }
     public func start(observing: Bool = true) {
         if observing && !self.observing {
             self.observing = true
-            for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification] {
-                volumeObservers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                    Task { @MainActor in self?.invalidate() }
-                })
-            }
             if running { refresh() } // 观察就绪后重新扫描，覆盖初始缓存到监听建立之间的变化。
         }
         guard !running else { return }
@@ -137,7 +133,6 @@ public struct FileSystemApplicationScanner: ApplicationScanning {
         running = false; observing = false; generation &+= 1
         observationGeneration &+= 1; observationTask?.cancel(); observationTask = nil
         if let previous = observer { Task.detached(priority: .utility) { previous.stop() } }; observer = nil
-        for token in volumeObservers { NSWorkspace.shared.notificationCenter.removeObserver(token) }; volumeObservers = []
         debounceTask?.cancel(); debounceTask = nil; scanTask?.cancel(); scanTask = nil
     }
     public func refreshIfStale(maxAge: Duration = .seconds(30)) {
@@ -185,17 +180,23 @@ public struct FileSystemApplicationScanner: ApplicationScanning {
     }
     @discardableResult private func armObserver() -> Task<Void, Never>? {
         observationTask?.cancel(); observationGeneration &+= 1
-        let request = observationGeneration, previous = observer, roots = roots, factory = observationFactory
+        let request = observationGeneration, previous = observer, roots = roots, factory = observationFactory, workspaceCenter = workspaceCenter
         observer = nil
         // 路径解析、卷查询、open及旧stream收尾均不在唤起面板的主线程片段执行。
-        let worker = Task.detached(priority: .utility) { [weak self] () throws -> ApplicationDirectoryObserver? in
+        let worker = Task.detached(priority: .utility) { [weak self] () throws -> ApplicationCatalogObservation? in
             previous?.stop(); try Task.checkCancellation()
             guard !roots.isEmpty else { return nil }
-            let candidate = try factory(roots) { [weak self] in
-                guard let self, self.observationGeneration == request else { return }
+            let center = workspaceCenter(); try Task.checkCancellation()
+            let onInvalidation: @MainActor @Sendable () -> Void = { [weak self] in
+                guard let self, self.running, self.observing, self.observationGeneration == request else { return }
                 self.invalidate()
             }
-            if Task.isCancelled { candidate?.stop(); throw CancellationError() }
+            let volumes = ApplicationVolumeObservation(center: center, onInvalidation: onInvalidation)
+            let directory: ApplicationDirectoryObserver?, preparationFailed: Bool
+            do { directory = try factory(roots, onInvalidation); preparationFailed = false }
+            catch { directory = nil; preparationFailed = true }
+            let candidate = ApplicationCatalogObservation(directory: directory, volumes: volumes, directoryPreparationFailed: preparationFailed)
+            if Task.isCancelled { candidate.stop(); throw CancellationError() }
             return candidate
         }
         let task = Task { [weak self] in
@@ -205,6 +206,7 @@ public struct FileSystemApplicationScanner: ApplicationScanning {
                     if let candidate { await Task.detached(priority: .utility) { candidate.stop() }.value }; return
                 }
                 self.observer = candidate
+                if candidate?.directoryPreparationFailed == true { self.onFailure?() }
             } catch {
                 guard let self, self.running, self.observationGeneration == request, !Task.isCancelled else { return }
                 self.onFailure?() // 唤起时TTL刷新仍可用，不扩大监听范围。
@@ -213,4 +215,37 @@ public struct FileSystemApplicationScanner: ApplicationScanning {
         observationTask = task
         return task
     }
+}
+
+/// 一个后台准备代次的完整所有权；目录监听失败时仍保留卷通知恢复通道。
+private final class ApplicationCatalogObservation: Sendable {
+    let directory: ApplicationDirectoryObserver?
+    let volumes: ApplicationVolumeObservation
+    let directoryPreparationFailed: Bool
+    init(directory: ApplicationDirectoryObserver?, volumes: ApplicationVolumeObservation, directoryPreparationFailed: Bool) {
+        self.directory = directory; self.volumes = volumes; self.directoryPreparationFailed = directoryPreparationFailed
+    }
+    func stop() { volumes.stop(); directory?.stop() }
+}
+
+/// center和token均由创建时的后台代次持有；清理不重新访问NSWorkspace。
+final class ApplicationVolumeObservation: @unchecked Sendable {
+    private let lock = NSLock()
+    private let center: NotificationCenter
+    private let state: ApplicationDirectorySignal
+    private var tokens: [NSObjectProtocol] = []
+    init(center: NotificationCenter, onInvalidation: @escaping @MainActor @Sendable () -> Void) {
+        self.center = center; state = ApplicationDirectorySignal(onInvalidation)
+        for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification] {
+            tokens.append(center.addObserver(forName: name, object: nil, queue: nil) { [state] _ in state.enqueue() })
+        }
+    }
+    func stop() {
+        lock.withLock {
+            state.deactivate()
+            for token in tokens { center.removeObserver(token) }
+            tokens.removeAll()
+        }
+    }
+    deinit { stop() }
 }
