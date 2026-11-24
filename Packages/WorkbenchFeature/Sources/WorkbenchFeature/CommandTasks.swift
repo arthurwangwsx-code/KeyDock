@@ -16,6 +16,10 @@ extension WorkbenchModel {
             tasks[tasks.count - 1].noticeMessage = noticeKey("Quit was requested once. The application may be waiting for you to save; check it before retrying.")
         } else if receipt.message == "desktop.windowsRequested" {
             tasks[tasks.count - 1].noticeMessage = noticeKey("macOS accepted the request to bring all application windows forward. Check their arrangement; minimized windows and Spaces were not individually verified.")
+        } else if receipt.message.hasPrefix("desktop.declined.systemRequest") {
+            tasks[tasks.count - 1].noticeMessage = noticeKey("macOS declined the application request. Check the target application before trying again.")
+        } else if receipt.message.hasPrefix("desktop.declined") {
+            tasks[tasks.count - 1].noticeMessage = noticeKey("The desktop target is unavailable or changed. Refresh it and try again.")
         } else if receipt.state == .interrupted { tasks[tasks.count - 1].noticeMessage = noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
     }
     @discardableResult public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user, showWorkspace: Bool = true) -> UUID? {

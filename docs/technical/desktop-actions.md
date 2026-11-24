@@ -24,6 +24,8 @@
 
 显示／隐藏先检查系统返回值，再观察目标状态。正常退出只发一次`terminate()`，等待目标实例实际结束才确认；超过观察期限显示“已请求”，保留应用自己的保存界面。没有强退、kill或自动关闭保存提示。将全部窗口置前使用公开的activateAllWindows选项；只能报告请求接受，不将“应用已激活”当作所有窗口、最小化与Spaces均已逐项确认。
 
+显示中的unhide与activate分别请求，中间重验lease及实例，不因unhide的负返回提前跳过已批准的激活。若最终状态达成可以确认；若只观察到部分变化则保留unknown。两个步骤都不自动重试，固定原生操作枚举仅用于本地最小回执分类，不记录跨进程原始错误或正文。
+
 实际契约依据Apple官方文档：[hide](https://developer.apple.com/documentation/appkit/nsrunningapplication/hide%28%29)、[unhide](https://developer.apple.com/documentation/appkit/nsrunningapplication/unhide%28%29)、[terminate](https://developer.apple.com/documentation/appkit/nsrunningapplication/terminate%28%29)、[activateAllWindows](https://developer.apple.com/documentation/appkit/nsapplication/activationoptions/activateallwindows)、[启动配置](https://developer.apple.com/documentation/appkit/nsworkspace/openconfiguration/allowsrunningapplicationsubstitution)。外部应用没有NSApplication.unhideWithoutActivation接口，不能声称后台显示绝不激活。
 
 ## 单次执行与恢复

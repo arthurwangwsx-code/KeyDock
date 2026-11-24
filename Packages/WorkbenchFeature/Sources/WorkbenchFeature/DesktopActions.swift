@@ -105,7 +105,7 @@ extension WorkbenchModel {
                 }
             case .declined:
                 state = .failed
-                message = "desktop.declined." + (lease.didSubmit ? "systemRequest" : failureReason)
+                message = "desktop.declined." + (lease.didSubmit ? "systemRequest" + (lease.lastNativeOperation.map { "." + $0.rawValue } ?? "") : failureReason)
                 notice = lease.didSubmit ? noticeKey("macOS declined the application request. Check the target application before trying again.") : noticeKey("The desktop target is unavailable or changed. Refresh it and try again.")
             case .cancelledBeforeDispatch: state = .cancelled; message = "desktop.cancelled"; notice = noticeKey("Cancelled before execution")
             case .outcomeUnknown: state = .interrupted; message = "desktop.unknown"; notice = noticeKey("A desktop request may already have taken effect. Check the target application before retrying.")

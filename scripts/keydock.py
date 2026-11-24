@@ -26,6 +26,18 @@ BUILD = ROOT / "build/pipeline"
 DIST = ROOT / "build/releases" / CONFIG["version"]
 RUN_DIR = ROOT / ".local/pipeline" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
 TERMINAL_TIMING_SUITES = r"^(WorkbenchFeatureTests\.TerminalLifecycleTests|MacAdaptersTests\.TerminalHandoffAdapterTests)/"
+MINIMUM_BUILD_FREE_BYTES = 2 * 1024 ** 3
+
+
+def build_storage_status():
+    free = shutil.disk_usage(ROOT).free
+    return {"freeBytes": free, "minimumFreeBytes": MINIMUM_BUILD_FREE_BYTES, "ready": free >= MINIMUM_BUILD_FREE_BYTES}
+
+
+def require_build_space():
+    status = build_storage_status()
+    if not status["ready"]:
+        raise PipelineError("Build requires at least 2 GiB free; available %.2f GiB. Reclaim rebuildable caches before retrying." % (status["freeBytes"] / 1024 ** 3))
 
 
 def stage(name, command, timeout=None):
@@ -91,7 +103,9 @@ def desktop_fixture():
 def check(ci=False):
     source = source_identity(False)
     attempt = quality.begin_check(RUN_DIR, source, ci)
-    try: _check(ci, source, quality.host_facts())
+    try:
+        require_build_space()
+        _check(ci, source, quality.host_facts())
     except BaseException:
         quality.finish_check(attempt, False)
         raise
@@ -129,6 +143,7 @@ def require_swift_tests(log):
 def build(profile="preview", configuration=None, allow_dirty=False, identity=None):
     if platform.system() != "Darwin" or platform.machine() != CONFIG["architecture"]:
         raise PipelineError("This pipeline currently qualifies macOS arm64 only")
+    require_build_space()
     source = source_identity(require_clean=not allow_dirty)
     qualification = quality.require_local(source, current_host=True) if profile == "release" else None
     xcode = run(["xcrun", "xcodebuild", "-version"], capture=True).strip()
@@ -529,7 +544,7 @@ def main():
     if args.command == "doctor":
         print(json.dumps({"source": source_identity(False), "platform": platform.system(), "architecture": platform.machine(), "version": CONFIG["version"],
                           "repository": CONFIG["repository"], "tools": {tool: shutil.which(tool) is not None for tool in ["xcrun", "xcodegen", "gh", "codesign", "hdiutil"]},
-                          "notaryProfileConfigured": bool(os.environ.get("KEYDOCK_NOTARY_PROFILE"))}, indent=2))
+                          "notaryProfileConfigured": bool(os.environ.get("KEYDOCK_NOTARY_PROFILE")), "buildStorage": build_storage_status()}, indent=2))
     elif args.command == "desktop-fixture": desktop_fixture()
     elif args.command == "check": check(args.ci)
     elif args.command == "build": build(args.profile, args.configuration, args.allow_dirty)

@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 import zipfile
 
@@ -17,6 +18,27 @@ from keydock_common import CONFIG, PipelineError, atomic_json, sha256, signature
 
 
 class ReleasePipelineTests(unittest.TestCase):
+    def test_build_storage_boundary_and_refusal_use_available_space(self):
+        minimum = keydock.MINIMUM_BUILD_FREE_BYTES
+        for free, ready in [(minimum - 1, False), (minimum, True), (minimum + 1, True)]:
+            with self.subTest(free=free), patch.object(keydock.shutil, "disk_usage", return_value=SimpleNamespace(free=free)):
+                self.assertEqual(keydock.build_storage_status(), {"freeBytes": free, "minimumFreeBytes": minimum, "ready": ready})
+                if ready: keydock.require_build_space()
+                else:
+                    with self.assertRaisesRegex(PipelineError, "at least 2 GiB"): keydock.require_build_space()
+
+    def test_low_space_check_records_failure_before_running_any_stage(self):
+        attempt = Path("/synthetic/check-attempt.json")
+        with patch.object(keydock, "require_build_space", side_effect=PipelineError("synthetic low space")), patch.object(keydock.quality, "begin_check", return_value=attempt), patch.object(keydock.quality, "finish_check") as finish, patch.object(keydock, "stage") as stage:
+            with self.assertRaises(PipelineError): keydock.check(ci=True)
+            stage.assert_not_called()
+            finish.assert_called_once_with(attempt, False)
+
+    def test_low_space_build_does_not_start_xcodegen_or_reuse_qualification(self):
+        with patch.object(keydock.platform, "system", return_value="Darwin"), patch.object(keydock.platform, "machine", return_value=CONFIG["architecture"]), patch.object(keydock, "require_build_space", side_effect=PipelineError("synthetic low space")), patch.object(keydock, "stage") as stage, patch.object(keydock.quality, "require_local") as qualification:
+            with self.assertRaises(PipelineError): keydock.build("release")
+            stage.assert_not_called(); qualification.assert_not_called()
+
     def test_check_requires_both_complementary_swift_partitions_before_helper(self):
         for failed_stage in (None, "swift-tests", "swift-terminal-lifecycle"):
             with self.subTest(failed_stage=failed_stage), tempfile.TemporaryDirectory() as temporary:
@@ -27,7 +49,7 @@ class ReleasePipelineTests(unittest.TestCase):
                     stages.append((name, command))
                     if name == failed_stage: raise PipelineError("synthetic failure")
                     return log
-                with patch.object(keydock, "stage", side_effect=stage), patch.object(keydock, "helper") as helper, patch.object(keydock.quality, "record_check"), patch.object(keydock.quality,"host_facts",return_value=HOST):
+                with patch.object(keydock, "stage", side_effect=stage), patch.object(keydock, "helper") as helper, patch.object(keydock.quality, "record_check"), patch.object(keydock.quality,"host_facts",return_value=HOST), patch.object(keydock, "require_build_space"):
                     if failed_stage:
                         with self.assertRaises(PipelineError): keydock.check(ci=True)
                         helper.assert_not_called()

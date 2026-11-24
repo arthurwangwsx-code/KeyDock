@@ -9,14 +9,16 @@ import MacAdapters
 struct DesktopActionHostTests {
     @Test func restoredRequestsKeepTheirMeaningWithoutReplaying() async throws {
         let fixture = try RetentionFixture()
-        let cases: [(String, LocalizedNotice)] = [
-            ("desktop.quitRequested", noticeKey("Quit was requested once. The application may be waiting for you to save; check it before retrying.")),
-            ("desktop.windowsRequested", noticeKey("macOS accepted the request to bring all application windows forward. Check their arrangement; minimized windows and Spaces were not individually verified.")),
-            ("desktop.unknown", noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed."))
+        let cases: [(String, ExecutionState, LocalizedNotice)] = [
+            ("desktop.quitRequested", .interrupted, noticeKey("Quit was requested once. The application may be waiting for you to save; check it before retrying.")),
+            ("desktop.windowsRequested", .interrupted, noticeKey("macOS accepted the request to bring all application windows forward. Check their arrangement; minimized windows and Spaces were not individually verified.")),
+            ("desktop.unknown", .interrupted, noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed.")),
+            ("desktop.declined.systemRequest.unhide", .failed, noticeKey("macOS declined the application request. Check the target application before trying again.")),
+            ("desktop.declined.applicationChanged", .failed, noticeKey("The desktop target is unavailable or changed. Refresh it and try again."))
         ]
-        for (message, expected) in cases {
+        for (message, state, expected) in cases {
             let id = UUID()
-            fixture.store.restoreReceipt(InvocationReceipt(id: id, name: "Desktop action", state: .interrupted, finishedAt: Date(), message: message))
+            fixture.store.restoreReceipt(InvocationReceipt(id: id, name: "Desktop action", state: state, finishedAt: Date(), message: message))
             let row = try #require(fixture.store.tasks.first { $0.id == id })
             #expect(row.titleKey == "Desktop action" && row.noticeMessage == expected)
             #expect(!row.canCancel && row.restoredFromReceipt && row.output.isEmpty)

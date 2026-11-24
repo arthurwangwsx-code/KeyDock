@@ -169,3 +169,8 @@ Statistics MUST default off, store only bounded metadata, preserve explicit cove
 - **GIVEN** 云端core检查不运行系统OCR资格用例
 - **WHEN** 生成检查summary
 - **THEN** 显示NOT_QUALIFIED，精确清单覆盖其余core与Terminal分区，不能据此单独授权发行或改写已有VM失败
+
+#### Scenario: 构建磁盘空间不足
+- **GIVEN** 工程所在卷可用空间少于2GiB
+- **WHEN** 执行统一check或build
+- **THEN** 编译前报告空间不足，check记录失败且不生成该次资格；不自动删除源码、发行资产或用户内容

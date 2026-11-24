@@ -77,4 +77,10 @@ struct ApplicationControlTransactionTests {
             #expect(result == (acknowledgement == .accepted ? .requestSubmitted : .outcomeUnknown))
         }
     }
+    @Test func observedPartialChangeCannotBeReportedAsAnUnchangedRejection() async throws {
+        var hidden = true
+        let port = ApplicationControlTransaction(validate: {}, state: { .init(exists: true, hidden: hidden, active: false) }, dispatch: { _ in hidden = false; return .rejected })
+        let result = try await port.run(.show, wasFrontmost: false, lease: DesktopOperationLease(), timeout: .milliseconds(1))
+        #expect(result == .outcomeUnknown)
+    }
 }

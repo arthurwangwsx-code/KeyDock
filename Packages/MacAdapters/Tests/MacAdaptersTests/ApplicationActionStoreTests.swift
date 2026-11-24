@@ -58,8 +58,8 @@ struct ApplicationActionStoreTests {
     }
     @Test func leaseCannotBeginTwiceOrDispatchAfterRevocation() throws {
         let lease = DesktopOperationLease()
-        try lease.begin(); try lease.markSubmission()
-        #expect(lease.didSubmit)
+        try lease.begin(); try lease.markSubmission(operation: .hide)
+        #expect(lease.didSubmit && lease.lastNativeOperation == .hide)
         #expect(throws: (any Error).self) { try lease.begin() }
         lease.revoke()
         #expect(throws: (any Error).self) { try lease.markSubmission() }

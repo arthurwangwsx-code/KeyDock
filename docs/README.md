@@ -8,6 +8,7 @@
 | [扩展能力使用说明](product/expanded-tools-guide.md) | Agent、MCP、工作流、调度、OCR和常用工具的实际入口 |
 | [完整快捷操作建设与验收](product/quick-actions-completion.md) | 独立剪贴板面板、快捷键分类、竞品能力和完整目标验收矩阵 |
 | [稳定窗口与应用动作](technical/desktop-actions.md) | 直接快捷键、窗口循环、应用行为、独立配置及合成宿主；alpha.6开发中 |
+| [窗口与应用控制增量复查](implementation/desktop-controls-2026-11-25.md) | 模型／事务回归、原生双语编辑、显示失败与修补及alpha.6待验收门禁 |
 | [产品需求](product/requirements.md) | 统一能力模型、AI 快捷动作和核心流程 |
 | [竞品调研](product/competitive-research.md) | 官方来源支持的能力矩阵与产品判断 |
 | [建设路线](product/roadmap.md) | 每阶段闭环、依赖、验收与投入估算 |
@@ -25,6 +26,7 @@
 | [GitHub 托管](governance/github-publication.md) | 公开范围、目标账号、分支与发布准备 |
 | [alpha.4发行说明](releases/v0.1.0-alpha.4.md) | 扩展能力、系统资格与验收边界；实际发布状态见Releases及状态总账 |
 | [alpha.5发行说明](releases/v0.1.0-alpha.5.md) | 独立剪贴板快捷面板与快捷键分类；实际发行状态见状态总账 |
+| [alpha.6发行说明](releases/v0.1.0-alpha.6.md) | 稳定窗口动作、命名应用控制与最小回执；实际发行状态见状态总账 |
 | [剪贴板原生交互复查](implementation/clipboard-panel-2026-11-24.md) | 查询／选择／插入围栏、快捷键定制和中英深浅色实查 |
 | [开源参考目录](../references/README.md) | 13 个参考工程及固定版本登记 |
 | [第一阶段进度](implementation/phase-one-progress.md) | 实现、测试、真实验收与下一步 |

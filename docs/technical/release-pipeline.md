@@ -32,6 +32,8 @@ flowchart LR
 | `make publish` | 核对源／master可达性／tag，补齐draft，回下载通过后公开 |
 | `make verify-release` | 下载当前版本，核对摘要、tag、实际签名／公证与Gatekeeper |
 
+check与build要求工程所在卷至少2GiB可用空间，doctor的buildStorage返回实际值与准备状态。容量不足时在编译前失败，check仍记录失败attempt；不会自动删除缓存、修改源码或复用该次失败为发行资格。临时调试缓存只能在确认无本工程活动构建后按准确目录清理，保留发行资产、回退包和验证证据。
+
 `python3 scripts/keydock.py release --install --publish`可组合正式流程。首次开源先建立并核对仓库、受控fast-forward并推送master与tag；发布入口不会隐式创建tag或修改分支。每步退出码、耗时和日志留在忽略的 `.local/pipeline/<run>/`；package／publish可独立重试。已存在版本只复用相同源和摘要；签名时间戳会使重复构建字节不同，不承诺逐位可复现。
 
 Swift检查采用互补独立阶段：主体、Terminal生命周期和生产Vision OCR。原有两秒退出／回执时限断言不变；完整本机任一阶段失败或没有匹配用例都会停止。`--jobs 2`仅限制构建并发，不会串行Swift Testing的MainActor套件；拆分避免大批合成磁盘／主线程工作污染时间测量，不表示繁忙系统具备硬实时保证。完整本机合并覆盖全部Swift用例，云端scope另行标识，禁止失败后自动fallback或重试变绿。

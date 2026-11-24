@@ -31,10 +31,12 @@ public enum ApplicationDispatchResult: Equatable { case accepted, rejected, part
         if (resolved == .show || resolved == .launchOrActivate) && before.active && !before.hidden { return .noOp }
         try lease.markSubmission()
         let acknowledgement = dispatch(resolved)
+        var observedMutation = false
         let deadline = ContinuousClock.now.advanced(by: min(.seconds(2), max(.milliseconds(1), timeout)))
         repeat {
             try lease.check()
             let current = state()
+            if current.exists != before.exists || current.hidden != before.hidden || current.active != before.active { observedMutation = true }
             let confirmed = switch resolved {
             case .requestQuit: !current.exists
             case .hide: current.exists && current.hidden
@@ -48,7 +50,7 @@ public enum ApplicationDispatchResult: Equatable { case accepted, rejected, part
             try await Task.sleep(for: .milliseconds(20))
         } while ContinuousClock.now < deadline
         // 正常退出可能仍在等待用户保存；不再发第二次terminate。
-        if acknowledgement == .rejected { return .declined }
+        if acknowledgement == .rejected { return observedMutation ? .outcomeUnknown : .declined }
         return resolved == .requestQuit && acknowledgement == .accepted ? .requestSubmitted : .outcomeUnknown
     }
 }
@@ -75,7 +77,7 @@ public enum ApplicationControlError: Error { case unavailable, changed, ambiguou
                   try instance(at: expectedPath)?.processIdentifier == frozenPID else { throw ApplicationControlError.changed }
         } else if behavior.mayLaunch {
             guard try instance(at: expectedPath) == nil else { throw ApplicationControlError.changed }
-            try lease.markSubmission()
+            try lease.markSubmission(operation: .launch)
             let opened = await launch(url)
             try lease.check()
             guard let opened, let app = NSRunningApplication(processIdentifier: opened.pid), app.launchDate == opened.date,
@@ -93,14 +95,22 @@ public enum ApplicationControlError: Error { case unavailable, changed, ambiguou
         }, dispatch: { action in
             guard (try? lease.check()) != nil else { return .rejected }
             switch action {
-            case .hide: return app.hide() ? .accepted : .rejected
-            case .requestQuit: return app.terminate() ? .accepted : .rejected
+            case .hide:
+                guard (try? lease.markSubmission(operation: .hide)) != nil else { return .rejected }
+                return app.hide() ? .accepted : .rejected
+            case .requestQuit:
+                guard (try? lease.markSubmission(operation: .quit)) != nil else { return .rejected }
+                return app.terminate() ? .accepted : .rejected
             default:
-                var unhidden = false
-                if app.isHidden { guard app.unhide() else { return .rejected }; unhidden = true }
-                guard (try? lease.check()) != nil else { return unhidden ? .partial : .rejected }
-                let accepted = app.activate(options: action == .showAllWindows ? [.activateAllWindows] : [])
-                return accepted ? .accepted : (unhidden ? .partial : .rejected)
+                return ApplicationPresentationSteps.perform(needsUnhide: app.isHidden, validate: {
+                    (try? lease.check()) != nil && !app.isTerminated && app.launchDate == launchDate && app.processIdentifier == pid && app.bundleURL?.path == expectedPath
+                }, unhide: {
+                    guard (try? lease.markSubmission(operation: .unhide)) != nil else { return false }
+                    return app.unhide()
+                }, activate: {
+                    guard (try? lease.markSubmission(operation: .activate)) != nil else { return false }
+                    return app.activate(options: action == .showAllWindows ? [.activateAllWindows] : [])
+                })
             }
         })
         return try await transaction.execute(behavior, wasFrontmost: wasFrontmost, lease: lease, timeout: .milliseconds(650))
