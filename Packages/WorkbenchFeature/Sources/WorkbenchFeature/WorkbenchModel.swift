@@ -5,6 +5,9 @@ import ExecutionCore
 import AICore
 import MacAdapters
 import KeyDockUI
+import AgentCore
+import AutomationCore
+import MCPAdapters
 
 enum WorkbenchLifecycleError: Error { case shuttingDown }
 
@@ -69,6 +72,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public var onOpenShortcutSettings: ((CommandItem) -> Void)?
     public var onOpenWorkspace: ((WorkspaceRoute) -> Void)?
     public var onAIAction: ((AIDraftDocument, ExecutionCaller) -> Void)?
+    public var onCaptureRequested: (() -> Void)?
     public var onReviewCommand: ((SavedCommand) -> Void)?
     public var onLanguageChanged: (() -> Void)?
     public var onAppearanceChanged: (() -> Void)?
@@ -81,6 +85,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         settingsNoticeMessage = message; launcherNoticeMessage = message
     }
     public let desktop: DesktopService
+    let windowLayouts = WindowLayoutController()
     public var target: TargetSnapshot?
     public let clipboardStore: ClipboardStore
     let monitor: ClipboardMonitor
@@ -88,6 +93,39 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     let terminalHandoff: TerminalHandoffAdapter
     let invocationStore: InvocationStore
     let aiInvocationStore: InvocationStore
+    let agentToolStore: InvocationStore
+    let scheduleLedger: ScheduleLedger
+    @Published public internal(set) var schedules: [ScheduleSnapshot] = []
+    @Published public internal(set) var scheduleBusy = false
+    var scheduleTimer: Task<Void,Never>?
+    var scheduleSuspended: Set<UUID> = []
+    var scheduledRuns: [UUID:UUID] = [:]
+    let activityLedger: ActivityLedger
+    @Published public internal(set) var activityReport: ActivityReport?
+    @Published public internal(set) var activityChanging = false
+    var activityGeneration: UInt64 = 0
+    var activityIsClearing = false
+    var taskActivity: [UUID: (String, ActivityCategory)] = [:]
+    @Published public internal(set) var workflowCheckpoints: [UUID: WorkflowCheckpoint] = [:]
+    @Published public internal(set) var pendingWorkflowInputs: [PendingWorkflowInput] = []
+    var workflowInputContinuations: [UUID: CheckedContinuation<String?, Never>] = [:]
+    @Published public internal(set) var mcpCatalogs: [UUID: MCPToolCatalog] = [:]
+    @Published public internal(set) var mcpResources: [UUID: MCPResourceCatalog] = [:]
+    @Published public internal(set) var mcpPrompts: [UUID: MCPPromptCatalog] = [:]
+    @Published public internal(set) var mcpBusy = false
+    @Published public internal(set) var mcpSettingsChanging = false
+    @Published public internal(set) var mcpCapabilities: [UUID: Set<String>] = [:]
+    var mcpSessionDisabled: Set<UUID> = []
+    var mcpClients: [UUID: MCPHTTPClient] = [:]
+    var mcpRunClients: [UUID: [MCPHTTPClient]] = [:]
+    var mcpRunScopes: [UUID: Set<UUID>] = [:]
+    var mcpGeneration = UUID()
+    var mcpConnectionTask: Task<Void,Never>?
+    var timedOutTaskIDs: Set<UUID> = []
+    var pausedAgentIDs: Set<UUID> = []
+    var agentRunDefinitions: [UUID: AgentDefinition] = [:]
+    @Published public internal(set) var pendingApprovals: [AgentToolApproval] = []
+    var approvalContinuations: [UUID: CheckedContinuation<Bool, Never>] = [:]
     let directory: URL
     var taskHandles: [UUID: Task<Void, Never>] = [:]
     var aiTaskIDs: Set<UUID> = []
@@ -138,10 +176,12 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         directory = try dataDirectory ?? PrivateFiles.applicationDirectory()
         usageMetadataStore = AIUsageMetadataStore(directory: directory.appendingPathComponent("usage"))
         let url = directory.appendingPathComponent("configuration.json")
+        var statisticsEnabled = false
         if FileManager.default.fileExists(atPath: url.path) {
             let decoded = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: url))
             guard decoded.schemaVersion == 1 else { throw CocoaError(.coderReadCorrupt) }
             configuration = decoded
+            statisticsEnabled = decoded.activityEnabled
         } else {
             var c = AppConfiguration()
             c.aiActions = AppConfiguration.builtins
@@ -151,6 +191,14 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         monitor = ClipboardMonitor(store: clipboardStore, source: clipboardCaptureSource)
         invocationStore = try InvocationStore(directory: directory.appendingPathComponent("invocations"))
         aiInvocationStore = try InvocationStore(directory: directory.appendingPathComponent("ai-invocations"))
+        agentToolStore = try InvocationStore(directory: directory.appendingPathComponent("agent-tool-invocations"))
+        let scheduler = try ScheduleLedger(directory:directory.appendingPathComponent("schedules"),now:Date())
+        scheduleLedger = scheduler; _schedules = Published(initialValue:scheduler.initialSnapshots)
+        do { activityLedger = try ActivityLedger(directory:directory.appendingPathComponent("activity"),enabled:statisticsEnabled) }
+        catch {
+            activityLedger = try ActivityLedger(persistence:.init(load:{nil},save:{_ in throw ActivityError.invalidStorage}))
+            configuration.activityEnabled = false
+        }
         languageApplier(configuration.language)
         monitor.enabled = allowContextCapture && configuration.clipboardEnabled
         monitor.excludedApplications = Set(configuration.clipboardExclusions)
@@ -179,14 +227,19 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             guard !isShuttingDown, historyGeneration == restoreGeneration else { return }
             restoreHistorySnapshot(cli: cli, ai: ai, generation: restoreGeneration)
             await invocationStore.acknowledgeRecovery(); await aiInvocationStore.acknowledgeRecovery()
+            await agentToolStore.acknowledgeRecovery()
             await maintainTaskHistory()
             guard !isShuttingDown else { return }
             guard !isShuttingDown else { return }; rebuildCatalog()
         }
+        startSchedules()
         startReceiptMaintenance() // 恢复快照过时不能取消每日保留维护。
     }
     public func shutdown() {
         isShuttingDown = true; monitor.stop(); desktop.applicationCatalog.stop()
+        windowLayouts.close()
+        scheduleTimer?.cancel()
+        mcpConnectionTask?.cancel()
         receiptMaintenanceTask?.cancel(); receiptMaintenanceTask = nil
         let usage = usageMetadataStore; Task { await usage.stop() }
         // 退出围栏与现有工作的取消同步生效，不能等异步终止回调开始后才取消网络。
@@ -195,6 +248,11 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public func shutdownAndWait() async {
         shutdown(); let handles = taskHandles
         for handle in handles.values { await handle.value }
+        await scheduleTimer?.value
+        await mcpConnectionTask?.value
+        let clients = Array(mcpClients.values) + mcpRunClients.values.flatMap{$0}
+        for client in clients { await client.invalidate() }
+        mcpClients.removeAll(); mcpRunClients.removeAll(); mcpRunScopes.removeAll()
         await usageMetadataStore.stop()
     }
     public func startApplicationUpdates() { guard !isShuttingDown else { return }; desktop.applicationCatalog.start() }
@@ -214,8 +272,16 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     private func commandItems() -> [CommandItem] {
         let saved = configuration.savedCommands.map { CommandItem(id: "command." + $0.id.uuidString, title: $0.name, subtitle: $0.executable, kind: .command, payload: $0.id.uuidString) }
         let ai = configuration.aiActions.map { CommandItem(id: "ai." + $0.id.uuidString, title: $0.displayName, subtitle: L("AI action"), kind: .ai, payload: $0.id.uuidString) }
-        let builtins = [("clipboard", L("Clipboard history")), ("tasks", L("Running tasks")), ("commands", L("Saved commands")), ("ai", L("AI workspace")), ("settings", L("Settings"))].map { CommandItem(id: "utility." + $0.0, title: $0.1, kind: .utility, payload: $0.0) }
-        return saved + ai + builtins
+        let builtins = [("clipboard", L("Clipboard history")), ("tasks", L("Running tasks")), ("commands", L("Saved commands")), ("ai", L("AI workspace")), ("agent", L("Agent workspace")), ("settings", L("Settings"))].map { CommandItem(id: "utility." + $0.0, title: $0.1, kind: .utility, payload: $0.0) }
+        let layouts = WindowLayout.allCases.map { layout in
+            CommandItem(id: "utility.window-layout." + layout.rawValue, title: L(layout.titleKey), subtitle: L("Original window"), keywords: ["window", "layout", "窗口", "布局"], kind: .utility, payload: "window-layout." + layout.rawValue)
+        }
+        let additional = [("activity",L("Usage insights")),("workflows",L("Workflows")),("tools",L("Tools")),("capture",L("Capture a region"))].map { CommandItem(id:"utility."+$0.0,title:$0.1,kind:.utility,payload:$0.0) }
+        let workflows = configuration.workflows.map { CommandItem(id:"workflow."+$0.id.uuidString,title:$0.name,subtitle:L("Workflow"),kind:.utility,payload:"workflow."+$0.id.uuidString) }
+        let snippets = configuration.snippets.map { CommandItem(id:"snippet."+$0.id.uuidString,title:$0.name,subtitle:L("Snippet"),kind:.utility,payload:"snippet."+$0.id.uuidString) }
+        let web = configuration.webActions.map { CommandItem(id:"web."+$0.id.uuidString,title:$0.name,subtitle:L("URL action"),kind:.utility,payload:"web."+$0.id.uuidString) }
+        let collections = configuration.collections.map { CommandItem(id:"collection."+$0.id.uuidString,title:$0.name,subtitle:L("Command collection"),kind:.utility,payload:"collection."+$0.id.uuidString) }
+        return saved + ai + builtins + layouts + additional + workflows + snippets + web + collections
     }
     private func rebuildCatalog() { catalog = catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
     public func execute(_ item: CommandItem, caller: ExecutionCaller = .user) {
@@ -225,26 +291,29 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         switch item.kind {
         case .application:
             do { try authorizeHostItem(item, caller: caller) } catch { showError(error); return }
-            let replyGeneration = launcherReplyGeneration
+            let replyGeneration = launcherReplyGeneration, actionStarted = Date()
             Task {
                 do {
                     let launch = try await applicationLauncher(item)
                     guard !isShuttingDown, launcherReplyGeneration == replyGeneration else { return }
                     guard launch.activate() else {
+                        recordDirectActivity(commandID:item.id,category:.application,outcome:.failed,startedAt:actionStarted)
                         launcherNoticeMessage = noticeKey("The application opened, but macOS could not bring it to the front.")
                         return
                     }
+                    recordDirectActivity(commandID:item.id,category:.application,outcome:.succeeded,startedAt:actionStarted)
                     onDismiss?(false)
                 }
                 catch {
                     guard !isShuttingDown else { return }
+                    recordDirectActivity(commandID:item.id,category:.application,outcome:.failed,startedAt:actionStarted)
                     refreshApplications()
                     guard launcherReplyGeneration == replyGeneration else { return }
                     launcherNoticeMessage = noticeKey("Application could not be opened. It may have moved or changed; refreshing the list.")
                 }
             }
         case .window:
-            do { try authorizeHostItem(item, caller: caller); try desktop.activateWindow(item.payload); onDismiss?(false) } catch { showError(error) }
+            do { try authorizeHostItem(item, caller: caller); try desktop.activateWindow(item.payload); recordDirectActivity(commandID:item.id,category:.window,outcome:.succeeded); onDismiss?(false) } catch { showError(error) }
         case .command:
             if let command = configuration.savedCommands.first(where: { $0.id.uuidString == item.payload }), runCommand(command, caller: caller, showWorkspace: false) != nil { onDismiss?(true) }
         case .ai:
@@ -255,10 +324,29 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             onAIAction?(draft, caller)
         case .utility:
             do { try authorizeHostItem(item, caller: caller) } catch { showError(error); return }
+            if item.payload.hasPrefix("web."), let id = UUID(uuidString:String(item.payload.dropFirst(4))), let action = configuration.webActions.first(where:{$0.id == id}) { if action.requiresQuery { onOpenWorkspace?(.web(id)) } else { openWebAction(id,caller:caller) }; return }
+            if item.payload.hasPrefix("collection."),let id = UUID(uuidString:String(item.payload.dropFirst(11))) { onOpenWorkspace?(.collection(id)); return }
+            if item.payload.hasPrefix("snippet."), let id = UUID(uuidString:String(item.payload.dropFirst(8))) { copySnippet(id,caller:caller); onDismiss?(true); return }
+            if item.payload.hasPrefix("calculate.") { do { try copyAuthorizedText(String(item.payload.dropFirst(10)),caller:caller); onDismiss?(true) } catch { showError(error) }; return }
+            if item.payload.hasPrefix("window-layout."), let layout = WindowLayout(rawValue: String(item.payload.dropFirst("window-layout.".count))) {
+                guard allowContextCapture, let snapshot = target else { launcherNoticeMessage = noticeKey("No original window is available"); return }
+                Task { [weak self] in
+                    guard let self else { return }
+                    do { try await windowLayouts.apply(layout, target: snapshot); recordDirectActivity(commandID:item.id,category:.window,outcome:.succeeded); if !isShuttingDown { onDismiss?(false) } }
+                    catch { if !isShuttingDown { launcherNoticeMessage = noticeKey("Window layout could not be applied. Check permission, target and window size.") } }
+                }
+                return
+            }
+            if item.payload.hasPrefix("workflow."), let id = UUID(uuidString:String(item.payload.dropFirst("workflow.".count))), let workflow = configuration.workflows.first(where:{$0.id == id}) { _ = runWorkflow(workflow,input:""); return }
             switch item.payload {
+            case "activity": onOpenWorkspace?(.activity)
+            case "workflows": onOpenWorkspace?(.workflows)
+            case "tools": onOpenWorkspace?(.tools)
+            case "capture": onCaptureRequested?()
             case "settings": onOpenSettings?(nil)
             case "commands": onOpenSettings?(.commands)
             case "clipboard": onOpenWorkspace?(.clipboard)
+            case "agent": onOpenWorkspace?(.agent)
             case "ai": let draft = createDraft(); if ownsDraft(draft) { onOpenWorkspace?(.ai(draft.id)) }
             default: onOpenWorkspace?(.tasks(nil))
             }
@@ -391,7 +479,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         do { try copyAuthorizedText(task.output) } catch { resultError(error, id: id) }
     }
     public func copyClipboardText(_ text: String) {
-        do { try copyAuthorizedText(text) } catch { workspaceNoticeMessage = errorNotice(error) }
+        do { try copyAuthorizedText(text); recordDirectActivity(commandID:"clipboard.copy",category:.clipboard,outcome:.succeeded) } catch { workspaceNoticeMessage = errorNotice(error) }
     }
     func copyAuthorizedText(_ text: String, caller: ExecutionCaller = .user) throws {
         try authorizeHostAction(id: "result.copy", operation: .copyText, resource: "general|" + fingerprint(text), caller: caller)

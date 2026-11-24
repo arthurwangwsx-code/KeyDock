@@ -23,6 +23,7 @@ from keydock_common import CONFIG, ROOT, PipelineError, atomic_json, inspect_app
 BUILD = ROOT / "build/pipeline"
 DIST = ROOT / "build/releases" / CONFIG["version"]
 RUN_DIR = ROOT / ".local/pipeline" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+TERMINAL_TIMING_SUITES = r"^(WorkbenchFeatureTests\.TerminalLifecycleTests|MacAdaptersTests\.TerminalHandoffAdapterTests)/"
 
 
 def stage(name, command):
@@ -56,8 +57,18 @@ def check(ci=False):
     stage("documents", [sys.executable, ROOT / "scripts/validate-docs.py"])
     stage("localizations", [sys.executable, ROOT / "scripts/update-localizations.py", "--check"])
     stage("pipeline-tests", [sys.executable, "-m", "unittest", "discover", "-s", "scripts/tests", "-v"])
-    stage("swift-tests", ["xcrun", "swift", "test"])
+    # Swift Testing默认并行套件；时限合同在独立进程验证，不能被其余主线程负载污染。
+    # 两个互补阶段都强制成功，既不删除用例，也不通过失败后重试掩盖问题。
+    tests = ["xcrun", "swift", "test", "--jobs", "2"]
+    require_swift_tests(stage("swift-tests", tests + ["--skip", TERMINAL_TIMING_SUITES]))
+    require_swift_tests(stage("swift-terminal-lifecycle", tests + ["--filter", TERMINAL_TIMING_SUITES]))
     helper()
+
+
+def require_swift_tests(log):
+    counts = re.findall(r"Test run with (\d+) tests?\b[^\n]*\bpassed\b", Path(log).read_text(errors="replace"))
+    if not counts or sum(map(int, counts)) == 0:
+        raise PipelineError("Swift test stage ran no cases; check its selector and log: " + str(log))
 
 
 def build(profile="preview", configuration=None, allow_dirty=False, identity=None):
@@ -78,7 +89,7 @@ def build(profile="preview", configuration=None, allow_dirty=False, identity=Non
     output.mkdir(parents=True, exist_ok=True)
     stage("xcodegen-" + profile, ["xcodegen", "generate", "--spec", ROOT / "project.yml"])
     command = ["xcrun", "xcodebuild", "-project", ROOT / "KeyDock.xcodeproj", "-scheme", "KeyDock", "-configuration", build_configuration,
-               "-derivedDataPath", output / "DerivedData", "CODE_SIGNING_ALLOWED=NO", "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES",
+               "-jobs", "2", "-derivedDataPath", output / "DerivedData", "CODE_SIGNING_ALLOWED=NO", "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES",
                "MARKETING_VERSION=" + validate_version(CONFIG["version"]), "CURRENT_PROJECT_VERSION=" + CONFIG["buildNumber"],
                "SWIFT_SERIALIZE_DEBUGGING_OPTIONS=NO", "COPY_PHASE_STRIP=YES", "STRIP_INSTALLED_PRODUCT=YES",
                "OTHER_SWIFT_FLAGS=$(inherited) -debug-prefix-map " + str(ROOT) + "=/KeyDock"]

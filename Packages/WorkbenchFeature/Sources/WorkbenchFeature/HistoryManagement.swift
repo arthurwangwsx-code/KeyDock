@@ -2,6 +2,12 @@ import Foundation
 import ExecutionCore
 
 extension WorkbenchModel {
+    func protectedChildIDs(_ receipts: [InvocationReceipt], parents: Set<UUID>) -> Set<UUID> {
+        Set(receipts.filter { value in
+            guard let parent = value.commandID?.split(separator:".").last, let id = UUID(uuidString:String(parent)) else { return false }
+            return parents.contains(id)
+        }.map(\.id))
+    }
     func restoreHistorySnapshot(cli: [InvocationReceipt], ai: [InvocationReceipt], generation: UInt64) {
         guard !isShuttingDown, !isClearingHistory, historyGeneration == generation else { return }
         let aiIDs = Set(ai.map(\.id))
@@ -31,8 +37,10 @@ extension WorkbenchModel {
         let protected = executionReservations.union(taskHandles.keys)
         let cli = await invocationStore.maintain(protecting: protected)
         let ai = await aiInvocationStore.maintain(protecting: protected)
+        let currentParents = executionReservations.union(taskHandles.keys)
+        let tools = await agentToolStore.maintain(protectingParents:currentParents)
         guard !isShuttingDown, !isClearingHistory else { return }
-        if cli.failure != nil || ai.failure != nil || !cli.limitsSatisfied || !ai.limitsSatisfied {
+        if cli.failure != nil || ai.failure != nil || tools.failure != nil || !tools.limitsSatisfied || !cli.limitsSatisfied || !ai.limitsSatisfied {
             workspaceNoticeMessage = noticeKey("Some task records could not be maintained. Running and unconfirmed tasks were kept.")
         }
     }
@@ -43,8 +51,8 @@ extension WorkbenchModel {
         let generation = historyGeneration
         let protected = executionReservations.union(taskHandles.keys)
         let candidates = tasks.filter { $0.finishedAt != nil && !protected.contains($0.id) }
-        let memoryCLI = Set(candidates.filter { $0.aiUsageSummary == nil }.map(\.id))
-        let memoryAI = Set(candidates.filter { $0.aiUsageSummary != nil }.map(\.id))
+        let memoryCLI = Set(candidates.filter { $0.aiUsageSummary == nil && !$0.receiptIsAI }.map(\.id))
+        let memoryAI = Set(candidates.filter { $0.aiUsageSummary != nil || $0.receiptIsAI }.map(\.id))
         let activeDrafts = Set(tasks.filter { protected.contains($0.id) }.compactMap(\.draftID))
         let idleDrafts = Dictionary(uniqueKeysWithValues: drafts.values.filter { !activeDrafts.contains($0.id) }.map { ($0.id, $0.revision) })
         defer { isClearingHistory = false }
@@ -55,6 +63,8 @@ extension WorkbenchModel {
         let aiIDs = Set(aiSnapshot.filter { $0.state.isTerminal }.map(\.id)).union(memoryAI).subtracting(protected)
         let cli = await invocationStore.clearFinished(onlyIDs: cliIDs, excluding: protected)
         let ai = await aiInvocationStore.clearFinished(onlyIDs: aiIDs, excluding: protected)
+        await agentToolStore.acknowledgeRecovery()
+        let tools = await agentToolStore.clearFinished(protectingParents:executionReservations.union(taskHandles.keys))
         guard !isShuttingDown, historyGeneration == generation else { return }
         var removed: Set<UUID> = []
         if cli.failure == nil { removed.formUnion(cliIDs.subtracting(cli.remainingIDs)) }
@@ -65,7 +75,7 @@ extension WorkbenchModel {
         restoreHistorySnapshot(cli: cliSnapshot.filter { cli.remainingIDs.contains($0.id) },
             ai: aiSnapshot.filter { ai.remainingIDs.contains($0.id) }, generation: generation)
         let remainingCandidates = cliIDs.intersection(cli.remainingIDs).union(aiIDs.intersection(ai.remainingIDs))
-        if cli.failure != nil || ai.failure != nil || !remainingCandidates.isEmpty {
+        if cli.failure != nil || ai.failure != nil || tools.failure != nil || !remainingCandidates.isEmpty {
             settingsNoticeMessage = noticeKey("History was only partly cleared. Some tasks are still finishing or records could not be removed. Try again later.")
         } else if editedDrafts > 0 {
             settingsNoticeMessage = noticeKey("Finished history cleared. Drafts edited while clearing were kept.")

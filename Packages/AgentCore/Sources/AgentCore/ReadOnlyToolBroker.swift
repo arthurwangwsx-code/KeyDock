@@ -8,7 +8,11 @@ public protocol ReadOnlyAITool: Sendable {
     func call(arguments: [String: JSONValue]) async throws -> String
 }
 
-public actor ToolBroker {
+public protocol AgentToolRouting: Sendable {
+    func definitions() async -> [AIToolDefinition]
+    func invoke(_ call: AIToolCall, allowed: Set<String>) async throws -> String
+}
+public actor ToolBroker: AgentToolRouting {
     private let tools: [String: any ReadOnlyAITool]
     private let callerInstanceID = UUID().uuidString
     private let frozenDefinitions: [String: AIToolDefinition]

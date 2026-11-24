@@ -1,7 +1,7 @@
 # KeyDock 工程协作规范
 
 ## 入口与事实来源
-- canonical checkout 为本仓库，代号 KeyDock，当前交付范围是用户已授权的第一阶段实现（P0+P1）；不能把局部编译/模拟验证表述为完整日用验收。
+- canonical checkout 为本仓库，代号 KeyDock；用户于2026-11-24授权参考AiBox拆解并继续实现全部后续功能（P0–P4）。按可运行增量交付，不能把局部编译/模拟验证表述为完整日用验收。
 - 开始前读本文件、docs/README.md、docs/status.md 和对应 iSpec change；执行 `git status --short`、`git branch --show-current`、`git worktree list`，核查 master 和未合并差异。
 - 日常开发使用从 master 创建的 feature/*、fix/*、chore/*、spike/* 或 integration/* 分支；新建必须使用 scripts/new-feature-branch.sh，已有分支需核对起点与未合并差异。测试和评审后只用受控 fast-forward 晋升 master。禁止覆盖用户 WIP、强推、自动删远端分支。
 - 禁止 git worktree add、复制/克隆 checkout 绕过写入互斥，禁止 reset --hard、clean -fdx、stash 丢弃他人内容。
@@ -10,7 +10,7 @@
 ## 规格工作流
 - 优先本地 iSpec；配置在 ispec/config.yaml。新 change 先产 proposal/specs/design/tasks，按 CLI 返回的 start/update 门禁记录，不手改内部状态。
 - 产品愿景在 docs/product，技术真值在 docs/technical；iSpec change 保存增量合同。实现时逐项记录 PASS/PARTIAL/FAIL/BLOCKED 与证据，不用 Git 或 mock 测试替代 macOS 实机验收。
-- 当前 change 是 keydock-foundation；当前执行P0/P1及用户于2026-11-23新增的开源、预发行和安装流水线任务；其他P2–P4能力保留后续。
+- 当前 change 是 keydock-foundation；P0/P1验收缺口继续保留，同时按2026-11-24追加授权实现P2–P4，使用docs/technical/capability-expansion.md的能力合同与状态总账。AiBox只读参考，未核验权属的代码不得进入公开工程。
 - 同一 change 的 iSpec start/update/measure 与最终 metrics 审计串行执行，不能把共享索引写入当作独立验证并行。索引异常时保留旧日志/快照，通过 CLI 开始新 attempt 并串行复核，不手工伪造旧开始或成功记录。
 - 本机生成的 .codex/skills 不提交；新开发环境按 CONTRIBUTING.md 安装。
 

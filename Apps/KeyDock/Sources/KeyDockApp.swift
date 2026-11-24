@@ -16,14 +16,22 @@ import KeyDockUI
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
     private var coordinator: WindowCoordinator?
     private var terminating = false
+    private var dataLease: RuntimeDirectoryLease?
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
             let smoke = (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true) || ProcessInfo.processInfo.arguments.contains("--safe-smoke")
-            let store = try WorkbenchModel(dataDirectory: smoke ? FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Smoke") : nil, allowContextCapture: !smoke)
+            if let id = Bundle.main.bundleIdentifier, NSRunningApplication.runningApplications(withBundleIdentifier:id).contains(where:{$0.processIdentifier != ProcessInfo.processInfo.processIdentifier && !$0.isTerminated}) { throw RuntimeDirectoryLeaseError.alreadyOwned }
+            let directory: URL
+            if smoke { directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Smoke") }
+            else { directory = try PrivateFiles.applicationDirectory() }
+            dataLease = try RuntimeDirectoryLease(directory:directory)
+            let store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: !smoke)
             coordinator = WindowCoordinator(store: store, safeSmoke: smoke)
             coordinator?.start()
         } catch {
-            let alert = NSAlert(); alert.messageText = "KeyDock"; alert.informativeText = AppL("Local data could not be opened. Existing files were preserved."); alert.runModal(); NSApp.terminate(nil)
+            let alert = NSAlert(); alert.messageText = "KeyDock"
+            alert.informativeText = error as? RuntimeDirectoryLeaseError == .alreadyOwned ? AppL("Another KeyDock instance owns this data directory. Close it before opening this copy.") : AppL("Local data could not be opened. Existing files were preserved.")
+            alert.runModal(); NSApp.terminate(nil)
         }
     }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { coordinator?.presentLauncher(); return true }
@@ -69,7 +77,7 @@ import KeyDockUI
         launcherSession.onExecute = { [weak self] item in
             guard let self else { return }
             store.invalidateLauncherReplies()
-            if self.capturePending && item.kind == .ai { self.pendingCommandID = item.id }
+            if self.capturePending && (item.kind == .ai || item.payload.hasPrefix("window-layout.")) { self.pendingCommandID = item.id }
             else { store.execute(item) }
         }
         store.onDismiss = { [weak self] in self?.dismissLauncher(restore: $0) }
@@ -78,6 +86,9 @@ import KeyDockUI
             self?.settingsSession.focusShortcut(item); self?.openSettings(.shortcuts)
         }
         store.onOpenWorkspace = { [weak self] in self?.openWorkspace($0) }
+        store.onCaptureRequested = { [weak self] in
+            guard let self else { return }; self.openWorkspace(.tools); store.captureRegion(session:self.workspaceSession)
+        }
         store.onAIAction = { [weak self] draft, caller in
             guard let self, store.ownsDraft(draft) else { return }
             self.launcherSession.draft = draft
@@ -256,7 +267,19 @@ import KeyDockUI
         return store.tasks.first { $0.id == id && $0.canCancel }?.id
     }
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-        if menuItem.action == #selector(runAIAction) { return store.canRunAIFromInput(keyboardDraft) }
+        if menuItem.action == #selector(runCurrentAction) {
+            // Return只有一个菜单owner；同一keyEquivalent的禁用项仍可能挡住后续项。
+            if NSApp.keyWindow === workspace, workspaceSession.page == .agent {
+                menuItem.title = AppL("Run agent")
+                return !store.isShuttingDown && !workspaceSession.agentInput.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty
+            }
+            if NSApp.keyWindow === workspace, workspaceSession.page == .workflows {
+                menuItem.title = AppL("Run workflow")
+                return !store.isShuttingDown && !workspaceSession.workflowDraft.name.isEmpty
+            }
+            menuItem.title = AppL("Run AI action")
+            return store.canRunAIFromInput(keyboardDraft)
+        }
         if menuItem.action == #selector(stopCurrentTaskAction) { return !store.isShuttingDown && keyboardCancellationID != nil }
         return !store.isShuttingDown
     }
@@ -280,7 +303,8 @@ import KeyDockUI
         appItem.submenu = appMenu; main.addItem(appItem)
         let fileMenu = NSMenu(title: AppL("File"))
         let newAI = NSMenuItem(title: AppL("New AI task"), action: #selector(newAITaskAction), keyEquivalent: "n"); newAI.target = self; fileMenu.addItem(newAI)
-        let runAI = NSMenuItem(title: AppL("Run AI action"), action: #selector(runAIAction), keyEquivalent: "\r"); runAI.target = self; fileMenu.addItem(runAI)
+        let run = NSMenuItem(title:AppL("Run AI action"),action:#selector(runCurrentAction),keyEquivalent:"\r")
+        run.target = self; run.keyEquivalentModifierMask = .command; fileMenu.addItem(run)
         let stop = NSMenuItem(title: AppL("Stop current task"), action: #selector(stopCurrentTaskAction), keyEquivalent: "."); stop.target = self; fileMenu.addItem(stop)
         fileMenu.addItem(.separator())
         let close = NSMenuItem(title: AppL("Close Window"), action: #selector(closeWindowAction), keyEquivalent: "w"); close.target = self; fileMenu.addItem(close)
@@ -298,7 +322,21 @@ import KeyDockUI
     @objc private func newAITaskAction() { workspaceSession.createDraft(in: store); openWorkspace() }
     @objc private func newCommandAction() { settingsSession.beginNewCommand() }
     @objc private func newAIAction() { settingsSession.beginNewAction() }
+    @objc private func runCurrentAction() {
+        guard !store.isShuttingDown else { return }
+        if NSApp.keyWindow === workspace, workspaceSession.page == .agent { runAgentAction() }
+        else if NSApp.keyWindow === workspace, workspaceSession.page == .workflows { runWorkflowAction() }
+        else { runAIAction() }
+    }
     @objc private func runAIAction() { store.runAIFromInput(keyboardDraft) }
+    @objc private func runAgentAction() {
+        guard NSApp.keyWindow === workspace, workspaceSession.page == .agent else { return }
+        store.runAgent(workspaceSession.agentProfile, input: workspaceSession.agentInput)
+    }
+    @objc private func runWorkflowAction() {
+        guard NSApp.keyWindow === workspace, workspaceSession.page == .workflows else { return }
+        store.runWorkflow(workspaceSession.workflowDraft,input:workspaceSession.workflowInput)
+    }
     @objc private func stopCurrentTaskAction() { if let id = keyboardCancellationID { store.cancelTask(id) } }
     @objc private func openAboutAction() { openSettings(.about) }
     @objc private func closeWindowAction() { if NSApp.keyWindow === launcher { dismissLauncher(restore: true) } else { NSApp.keyWindow?.performClose(nil) } }

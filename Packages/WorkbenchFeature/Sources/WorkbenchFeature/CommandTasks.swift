@@ -28,6 +28,7 @@ extension WorkbenchModel {
         } catch { showError(error); return nil }
         guard reserveExecution(id) else { return nil }
         tasks.insert(RunningTaskItem(id: id, title: command.name, state: .queued), at: 0)
+        registerActivity(id,commandID:"command."+command.id.uuidString,category:.command)
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
             do {
@@ -85,6 +86,8 @@ extension WorkbenchModel {
         guard tasks.first(where: { $0.id == id })?.canCancel == true else { return }
         // CLI 消费任务继续等待 finished 回执；AI 则通过取消网络任务终止。
         cancelledTaskIDs.insert(id)
+        cancelApprovals(runID: id)
+        cancelWorkflowInputs(runID: id)
         if aiTaskIDs.contains(id) { taskHandles[id]?.cancel() }
         else { Task { await processRunner.cancel(id) } }
     }
@@ -92,7 +95,7 @@ extension WorkbenchModel {
         guard let i = tasks.firstIndex(where: { $0.id == id }) else { return }
         tasks[i].status = state
         if let output { tasks[i].output = output }
-        if finished { tasks[i].finishedAt = Date(); tasks[i].exitCode = exitCode }
+        if finished { tasks[i].finishedAt = Date(); tasks[i].exitCode = exitCode; completeActivity(id,state:state) }
     }
     func stateLabel(_ state: ExecutionState) -> TaskStatus {
         switch state { case .queued: .queued; case .running: .running; case .succeeded: .completed; case .failed: .failed; case .cancelled: .cancelled; case .timedOut: .timedOut; case .interrupted: .interrupted }

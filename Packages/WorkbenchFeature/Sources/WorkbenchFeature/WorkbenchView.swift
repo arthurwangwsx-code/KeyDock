@@ -7,12 +7,17 @@ public struct WorkspaceView: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: WorkspaceSession
     @State private var confirmClear = false
+    @State private var restartID: UUID?
     public init(store: WorkbenchModel, session: WorkspaceSession) { self.store = store; self.session = session }
     public var body: some View {
         NavigationSplitView {
             List(selection: Binding<WorkspaceSession.Page?>(get: { session.page }, set: { if let value = $0 { session.page = value } })) {
                 Label(L("Tasks"), systemImage: "rectangle.stack").tag(WorkspaceSession.Page.tasks)
                 Label(L("AI workspace"), systemImage: "sparkles").tag(WorkspaceSession.Page.ai)
+                Label(L("Agent workspace"), systemImage: "person.crop.rectangle.stack").tag(WorkspaceSession.Page.agent)
+                Label(L("Workflows"),systemImage:"point.3.connected.trianglepath.dotted").tag(WorkspaceSession.Page.workflows)
+                Label(L("Usage insights"),systemImage:"chart.bar").tag(WorkspaceSession.Page.activity)
+                Label(L("Tools"),systemImage:"wrench.and.screwdriver").tag(WorkspaceSession.Page.tools)
                 Label(L("Clipboard history"), systemImage: "clipboard").tag(WorkspaceSession.Page.clipboard)
             }.listStyle(.sidebar).navigationSplitViewColumnWidth(min: 170, ideal: 190, max: 230)
         } detail: {
@@ -31,10 +36,17 @@ public struct WorkspaceView: View {
                         VStack { KDEmptyState(symbol: "sparkles", title: L("Ready when you are"), detail: L("Choose an action and add text. Only this input is sent to your model.")); Button(L("New AI task"), action: newAI).buttonStyle(.borderedProminent).padding(.bottom, 60) }
                     }
                 case .clipboard: clipboardContent
+                case .agent: AgentWorkspaceView(store:store,session:session)
+                case .activity: ActivityView(store:store)
+                case .workflows: WorkflowWorkspaceView(store:store,session:session)
+                case .tools: ToolsWorkspaceView(store:store,session:session)
                 }
                 }
             }
         }.frame(minWidth: 820, minHeight: 560).environment(\.locale, KDLocalizer.locale)
+            .confirmationDialog(L("Start a new attempt?"),isPresented:Binding(get:{restartID != nil},set:{if !$0 {restartID = nil}})) {
+                Button(L("Start new attempt")) { if let id = restartID { store.restartAgent(id) }; restartID = nil }
+            } message: { Text(L("A new attempt rechecks current scope and may repeat completed work. Unknown effects must be checked first.")) }
     }
     private func newAI() { session.createDraft(in: store) }
     private var taskContent: some View {
@@ -54,10 +66,15 @@ public struct WorkspaceView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 7) { Text(task.displayTitle).font(.system(size: 20, weight: .semibold)); Text(task.state).font(.system(size: 12)).foregroundStyle(.secondary) }
                         Spacer()
+                        if task.canCancel, store.agentRunDefinitions[task.id] != nil { Button(L("Pause")) { store.pauseAgent(task.id) } }
                         if task.canCancel { Button(L("Stop")) { store.cancelTask(task.id) } }
+                        if !task.isRunning, store.agentRunDefinitions[task.id] != nil, let draftID = task.draftID, store.drafts[draftID] != nil { Button(L("Start new attempt")) { restartID = task.id } }
                         KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }.disabled(task.output.isEmpty)
                     }
                     if !task.notice.isEmpty { KDInlineNotice(task.notice) }
+                    AgentApprovalView(store:store,runID:task.id)
+                    if let checkpoint = store.workflowCheckpoints[task.id] { Text(L("Step")+" \(checkpoint.stepIndex+1) · "+workflowPhaseTitle(checkpoint.phase)).font(.caption).foregroundStyle(.secondary) }
+                    ForEach(store.pendingWorkflowInputs.filter{$0.runID == task.id}) { request in WorkflowInputView(store:store,request:request) }
                     if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary) }
                     if let code = task.exitCode { Text(L("Exit code") + ": \(code)").font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary) }
                     ScrollView { Text(task.output.isEmpty ? (task.restoredFromReceipt ? L("Output is not retained after restarting KeyDock.") : L("No output")) : task.output).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(16) }

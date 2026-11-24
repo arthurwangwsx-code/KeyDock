@@ -73,3 +73,40 @@ P3 系统 SHALL 在用户选择范围并满足屏幕权限后获取截图，OCR 
 #### Scenario: 无屏幕录制权限
 - **WHEN** 用户未授权截图但仍使用窗口标题搜索
 - **THEN** 标题搜索的可用性只按其所需权限判断，不被截图权限连带阻止
+
+### Requirement: Safe workflow and schedule ownership
+
+The host MUST compile typed workflow steps against a frozen reference snapshot, preserve child receipts while their parent runs, and claim each scheduled attempt durably before dispatch.
+
+#### Scenario: Dynamic command input
+
+- **WHEN** a whole argv argument is bound to workflow input
+- **THEN** the complete resolved command needs one user approval, shell syntax remains literal, and unattended execution is rejected.
+
+#### Scenario: Scheduled references change
+
+- **WHEN** a workflow, referenced command or AI target differs from the approved fingerprint
+- **THEN** its schedule pauses before dispatch and requires new review; unknown attempts are never replayed.
+
+### Requirement: Explicit bounded local context
+
+The application MUST limit OCR/document input and search only explicitly chosen file-name roots without reading file bodies; file reveal must revalidate the current root and target identity.
+
+#### Scenario: Removed scope or changed file
+
+- **WHEN** a cached result is selected after its allowed root or file identity changes
+- **THEN** Finder reveal fails closed and the user is asked to search again.
+
+#### Scenario: Clear a context preview
+
+- **WHEN** an import is pending and the user clears the preview
+- **THEN** late extraction cannot repopulate it and no AI request is made.
+
+### Requirement: Optional local activity analysis
+
+Statistics MUST default off, store only bounded metadata, preserve explicit coverage and offer pause, clear and aggregate export independently from AI usage.
+
+#### Scenario: Pause and clear
+
+- **WHEN** the user pauses or clears activity recording
+- **THEN** queued older events do not backfill the cleared interval and raw text never enters the report.

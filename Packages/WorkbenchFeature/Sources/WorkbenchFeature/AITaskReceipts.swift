@@ -6,6 +6,9 @@ enum AITaskReceiptKind: String {
     case text = "AI action"
     case proposal = "Command proposal"
     case readOnlyAgent = "Read-only agent"
+    case agent = "Agent run"
+    case workflow = "Workflow run"
+    case context = "Text import"
 }
 
 enum AITaskReceiptError: Error { case intentUnavailable }
@@ -16,7 +19,7 @@ extension WorkbenchModel {
             try await aiInvocationStore.begin(id: id, name: kind.rawValue,
                 commandID: authorization.commandID, commandVersion: authorization.commandVersion,
                 caller: authorization.caller.rawValue)
-        } catch { throw AITaskReceiptError.intentUnavailable }
+        } catch { await aiInvocationStore.abandonUndispatched(id); throw AITaskReceiptError.intentUnavailable }
     }
 
     func finishAIReceipt(_ id: UUID) async {
@@ -26,7 +29,7 @@ extension WorkbenchModel {
         case .completed, .draftReady: state = .succeeded
         case .cancelled: state = .cancelled
         case .timedOut: state = .timedOut
-        case .interrupted: state = .interrupted
+        case .interrupted, .paused: state = .interrupted
         default: state = .failed
         }
         let message = task.status == .draftReady ? "ai.proposal.draftReady" : "ai." + task.status.rawValue
@@ -46,16 +49,17 @@ extension WorkbenchModel {
         guard !tasks.contains(where: { $0.id == receipt.id }) else { return }
         guard !isShuttingDown, !isClearingHistory, makeSessionRoom(taskSlots: 1) else { return }
         let kind = AITaskReceiptKind(rawValue: receipt.name) ?? .text
-        let status: TaskStatus = receipt.message == "ai.proposal.draftReady" ? .draftReady : stateLabel(receipt.state)
+        let status: TaskStatus = receipt.message == "ai.proposal.draftReady" ? .draftReady : (receipt.message == "ai.paused" ? .paused : stateLabel(receipt.state))
         var task = RunningTaskItem(id: receipt.id, title: L(kind.rawValue), state: status,
             output: "",
             startedAt: receipt.startedAt, finishedAt: receipt.finishedAt, titleKey: kind.rawValue)
         task.restoredFromReceipt = true
-        task.aiUsageSummary = .unknown
+        task.receiptIsAI = true
+        if kind != .context && kind != .workflow { task.aiUsageSummary = .unknown }
         task.outputIsIncomplete = status == .interrupted
         if status == .interrupted { task.noticeMessage = noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
         // 没有 draft、Task、resultTarget 或 callback；恢复只展示，不重发、不复制、不审阅。
         tasks.append(task)
-        loadRestoredAIUsage(receipt.id, interrupted: status == .interrupted)
+        if kind != .context && kind != .workflow { loadRestoredAIUsage(receipt.id, interrupted: status == .interrupted) }
     }
 }

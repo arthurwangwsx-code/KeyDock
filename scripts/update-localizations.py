@@ -25,6 +25,11 @@ for name, folders in targets.items():
             keys.update(re.findall(r'\b(?:L|AppL|noticeKey)\("([^"\\]*(?:\\.[^"\\]*)*)"', text))
             keys.update(re.findall(r'String\(localized: "([^"\\]*(?:\\.[^"\\]*)*)"\)', text))
             keys.update(re.findall(r'(?:builtinKey|titleKey): "([^"\\]+)"', text))
+    if 'WorkbenchFeature/' in name:
+        geometry = (root / 'Packages/CommandCore/Sources/CommandCore/WindowGeometry.swift').read_text()
+        keys.update(re.findall(r'case \.[A-Za-z]+: "([^"\\]+)"', geometry))
+        receipts = (root / 'Packages/WorkbenchFeature/Sources/WorkbenchFeature/AITaskReceipts.swift').read_text()
+        keys.update(re.findall(r'case [A-Za-z]+ = "([^"\\]+)"', receipts))
     keys.discard('')
     total += len(keys)
     path = root / name

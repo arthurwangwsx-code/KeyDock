@@ -1,36 +1,45 @@
 # 当前状态总账
 
-更新：2026-11-24。当前范围为第一阶段 P0+P1 实现，目标保持“首个可日用 macOS 内测版”。整体状态 **PARTIAL**：已有可构建、可运行预览，完整日用验收尚未完成。最新增量见[解锁后原生交互复查](implementation/native-actions-2026-11-24.md)。
+更新：2026-11-24。用户已授权在保留P0/P1验收义务的同时推进P2–P4。**完整产品仍为PARTIAL**；当前源码、真实系统验收、已发布版本分别记录，不能用代码或CI绿测替代日用验收。
+
+## 当前源码
+
+canonical目录唯一；当前分支`feature/desktop-capability-expansion`从master `a147e3c`创建。主Agent独占写入／集成／提交／设备，子Agent只读研究评审或提供/tmp原创提案。未新建worktree或修改AiBox／Ashot。
 
 | 范围 | 状态 | 当前证据与限制 |
 |---|---|---|
-| 产品/竞品/参考规划 | PASS | 三路调研与评审、13项固定revision参考，历史规划回执保留 |
-| 原生工程与模块 | PASS | 根SwiftPM多target、原生App薄壳、XcodeGen、macOS14目标、Swift6编译；只验证当前27.2/arm64主机 |
-| 命令/搜索核心 | PARTIAL | 排序/别名/收藏/最近使用、异步generation测试通过；执行策略已贯通宿主动作与只读工具，宿主授权消费动作声明，真实边界仍待验收 |
-| 视觉与窗口职责 | PARTIAL | 新版三窗口、原生Liquid Glass、双语切换、基本深浅色和AI焦点已实际观察并修正；辅助功能／IME／多屏完整矩阵及用户视觉评审仍待完成 |
-| 原生界面与CLI | PARTIAL | CUA已验证搜索启动计算器、保存命令、搜索执行、输出、取消及输出进入AI；全局物理快捷键、IME/多屏/全屏仍待验收 |
-| 窗口与选区 | PARTIAL | AX异步快照/身份/失效/替换/精确窗口恢复代码已实现；真实辅助功能授权后验收尚未执行 |
-| 剪贴板 | PARTIAL | SQLite与敏感类型过滤、稳定快照、暂停/排除/过期/固定/清除及合成测试；actor全文搜索、单项预览/复制、独立行按钮已用合成数据实查；新增容量预检/事务回滚与生产采集惰性读取门槛回归；未启用个人采集 |
-| AI API/动作/Agent基础 | PARTIAL | Provider和真实URLSession loopback通过；新增Store全链路覆盖任务／用量／取消／建议不执行／过期隔离／只读工具两轮／脱敏；输入/输出预算、空响应与取消、过期复制围栏通过；结果与任务详情展示待报告/已报告/部分/未知用量，缺报Agent轮次保留unknown；外部API按用户决定稍后配置 |
-| AI质量 | PARTIAL | 20条合成质量样本已准备，全部NOT_RUN；未进行真实模型调用与人工质量验收 |
-| 最小任务与回执 | PARTIAL | CLI/AI网络前intent、终态元数据与退出围栏通过；三个AI入口的专用子进程SIGKILL+Store恢复通过且不重放；当前新版原生App带sleep退出已验证；Terminal交接有界/unknown/迟到隔离的合成测试通过，完整GUI崩溃和真实Terminal仍待验收 |
-| 性能 | PARTIAL | 2000条合成命令100次采样，Release排序p95 20.47ms、生产缓存查询链路p95 20.85ms；Panel热唤起150ms和长期耗电尚未证明 |
-| 公开托管/发行 | PASS（alpha工程） | public／master与v0.1.0-alpha.2已公开；ace56ef原生CI、Developer ID、App/DMG公证、Gatekeeper、运行中正式App升级、回退凭据与GitHub公开资产审计通过；完整日用仍PARTIAL |
+| 产品／架构／开源参考 | PASS（工程） | 原生模块化单体、13项固定revision参考；AiBox只读设计对照，新代码独立编写 |
+| 构建与模块 | PASS（本机） | Swift6／macOS14目标，当前27.2 arm64原生构建；最低系统未真实验证 |
+| 启动台／设置／工作区 | PARTIAL | 独立窗口、菜单栏入口、KeyDockUI、系统玻璃材料和中英；基本深浅色／焦点已观察，完整视觉／辅助功能矩阵未完成 |
+| 搜索与快捷键 | PARTIAL | 目录／generation／过期结果和注册事务测试；物理全局快捷键、IME／全屏／多屏未完整验收 |
+| 窗口切换与布局 | PARTIAL | 13项布局、窗口identity恢复、最大交集选屏、负坐标／断屏clamp纯测试、AX写后读回；真实AX授权／撤销／多屏矩阵待验收 |
+| CLI与任务 | PARTIAL | executable+argv、有限输出／超时、真实进程组取消与回收、durable intent／result／unknown不重放；Terminal GUI继续尊重既有工具拒绝，未计真实通过 |
+| 剪贴板 | PARTIAL | 默认关闭、敏感类型先过滤、惰性正文、暂停／排除／TTL／容量／固定／清除和合成UI验证；未启用个人采集 |
+| AI服务与快捷动作 | PARTIAL | 自定义兼容API、Keychain事务、重定向保护、翻译／总结／命令建议／选区输出、loopback全链路；真实外部API按用户决定稍后配置 |
+| AI质量 | NOT_RUN | 20条合成质量样本已准备；真实模型质量与人工评阅未执行 |
+| 多步Agent | PARTIAL | 保存命令／MCP工具allowlist、冻结范围、schema／预算、逐次审批、暂停／新attempt与unknown回归；真实外部模型／工具组合未全面验收 |
+| 工作流与App内计划 | PARTIAL | 编辑／输入输出绑定、完整动态argv审批、快照冻结、child drain、durable claim／指纹／revision／DST／睡眠合并／unknown检查；真实长期驻留仍待验收 |
+| MCP与扩展 | PARTIAL | HTTP／stdio、两个显式协议版本、tools／resources／prompts及21项合成协议回归；第三方兼容未全面验收，ACP仅评估、无OS沙箱或扩展市场承诺 |
+| OCR与文件文本 | PARTIAL | 真实合成Vision OCR、UTF-8／PDF文本层、预算／取消；区域截图入口已实现，Screen Recording由用户手动授予；未声称多模态原图发送 |
+| 常用工具 | PARTIAL | Snippets、选定目录文件名搜索／Finder显示、算式／单位、URL模板、命令集合；核心回归和部分原生交互已通过，完整入口矩阵待验收 |
+| 使用分析 | PARTIAL | 默认关闭、最小metadata、30天聚合、暂停／清除／导出与明确用户触发AI总结；只有工具内部分覆盖，无整机追踪 |
+| 回执／历史／容量 | PARTIAL | 8管理任务／200历史／32草稿／32MiB逻辑预算、90天元数据维护、原子父子保护、显式清除；崩溃后不重放，长期／完整GUI矩阵待验收 |
+| 性能 | PARTIAL | 早期2000命令Release排序／缓存链p95约21ms；新增无计划时不启动调度循环；热唤起150ms、真实RSS／耗电与长期驻留尚未证明 |
 
-详见 [第一阶段进度](implementation/phase-one-progress.md)、[验收方案](technical/validation.md) 和 [iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选任务表示对应实现/定向验证完成，不替代本表更广范围的真实验收。
+本轮最终统一检查通过382项Swift（主体373＋独立Terminal生命周期9）、34项Python、503条UI key中英覆盖及lifecycle helper编译。此前两次混合套件检查的两秒退出断言FAIL保留；第二次实际shutdown为2.087s，3.688s是整个用例耗时。并发MainActor合成夹具含同步poll／usleep，现将Terminal套件作为互补且强制的独立阶段，时限不变、空匹配拒绝；提交时捕获绝对deadline并独立计时。见`expansion-unified-check-v3`，不把繁忙系统视为硬实时系统。
 
-canonical checkout 仍唯一，当前开发分支 fix/native-actions-and-ci 从master创建，主Agent串行写入，子Agent只提供/tmp独立补丁和只读评审；未创建worktree、未改旧AiBox/Ashot工程。支持/隐私联系 arthur.wang.wsx@gmail.com。
+详见[扩展能力证据](implementation/capability-expansion-2026-11-24.md)、[使用说明](product/expanded-tools-guide.md)、[技术合同](technical/capability-expansion.md)和[iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选仅表示对应实现／定向验证，不关闭本表更广的真实验收。
 
-当前251项Swift测试与32项Python流水线测试通过；273条UI key中英文静态覆盖通过。查询合同进入生产Launcher与QueryCoordinator，迟到请求不能取消新请求，Return不能执行旧批次。最新实际检查与边界记录见[界面与任务复查](implementation/native-ui-hardening-2026-11-23.md)，早前画面和查询记录保留。终端UI由工具明确禁止访问，旧适配路径未产生合成marker；新的有界回调适配器已编译并通过合成验证，真实交接不计通过。CUA注入alt+space未触发可观察切换，物理快捷键仍未验收。
+## 已发布与安装
 
-此前GUI复验曾因Mac锁屏未执行；应用目录更新、快捷键事务、迟到启动回调与用量状态的最新合成证据见[本轮复查](implementation/application-shortcuts-2026-11-23.md)。本轮已实现任务/草稿总预算、90天元数据维护与两类独立清除，合成验证通过；原生清除交互与长期驻留仍待验收，32MiB为逻辑文本预算而非进程RSS承诺。
+公开仓库为[arthurwangwsx-code/KeyDock](https://github.com/arthurwangwsx-code/KeyDock)，默认分支master。用户已授权公开此项目源码、Release本地打包上传、流水线及本地安装替换。
 
-本轮细化玻璃／控件／正文分层与高对比度、共享按钮、快捷键精确深链接和可返回AI草稿；语言／外观／命令候选保存失败回滚，应用提示运行时双语解析，剪贴板写入失败保持本次暂停。代码与合成验证通过；当时Mac锁屏；本轮已解锁，新增实机证据见发行工程实查。
+- 已发布并安装alpha.2／build2，App源`ace56efdf67faae0f8dd2df3f0871b8e61a7829f`；当时251项Swift／32项Python／273条文案、原生CI、Developer ID／App与DMG公证、Gatekeeper、运行中升级、回退与公开资产审计通过。见[alpha.2证据](implementation/native-actions-2026-11-24.md)。
+- alpha.3／build3为当前候选，扩展功能已在独立Preview观察；正式版本尚待最终干净源构建、签名公证、CI、安装与公开回下载核验。Preview的dirty源码构建不是正式分发包。
+- alpha.1／alpha.2原tag和资产字节保持不变。个人配置、bookmark、密钥、截图、剪贴板、正文和本机日志不进入公开资产。
 
-本轮新增调试／安装／发行流水线与合成、真实签名App验证，详见[发行工程实查](implementation/release-engineering-2026-11-23.md)。源码已推送，首个签名公证alpha已公开并安装。此前最终复验时Mac锁屏；2026-11-24已在解锁后观察正式alpha.1三窗口和基本语言／外观，修复后Preview完成原生运行与停止、命令到合成Agent链路；完整系统矩阵仍未验收。
+## 历史证据与边界
 
-远端原生CI在44ace89曾出现WorkbenchFeatureTests失败，旧摘要未包含具体用例；加入完整诊断后，cb74c41的同一组248项Swift／32项Python检查及ReleasePreview构建通过。未放宽断言或增加超时。后续faaa9d6原生CI再失败，现完整日志定位为用量展示夹具drain超时，已隔离语义测试与大响应压力；ace56ef的新提交251项测试及ReleasePreview远端CI通过，不能将44ace89旧失败直接认定同一根因。[本轮原生CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45327538178)。
+此前第一阶段／视觉／任务／发行检查记录保留在[文档总览](README.md)。旧日志中的“尚未实现”仅描述当时alpha.2源码，不能套到本轮扩展源码；既有FAIL也不因后来通过被删除。
 
-2026-11-24新增3项回归与原生AppKit运行／停止菜单、设置页原生新增图标、恢复任务默认选择。定向40项和全量251项Swift通过；Mac已解锁，确认原生⌘Return发出合成流、⌘.取消、只读Agent两轮和报告30/10用量，Preview配置已还原。两次临时计数验证脚本失败分别来自断言误读和服务已停止，均保留FAIL回执，不伪报E2E通过。alpha.2已签名公证、从运行中alpha.1原子升级并公开；原生CI与公开资产审计均通过，alpha.1标签资产不变。
-
-当前安装 `/Applications/KeyDock.app` 为0.1.0-alpha.2／build2，源ace56ef；正式包原生⌘Return、命令新增编辑器与设置窗口快捷键禁用已观察。完整系统矩阵仍PARTIAL，外部API仍待用户配置。后续尚未实现完整窗口布局／跨屏恢复、使用情况AI分析、多步通用Agent、MCP／ACP、截图OCR和用户工作流；不能将开源发行与只读工具回路当作这些功能完成。详见[alpha.2交付记录](implementation/native-actions-2026-11-24.md)。
+真实API仍按用户决定稍后配置，AX／屏幕权限不能代为绕过。物理快捷键、系统／多屏／IME／辅助功能、模型质量、完整视觉评审和长期性能尚未关闭，因此不报告“全部功能与验收已完成”。支持与隐私请求：arthur.wang.wsx@gmail.com。

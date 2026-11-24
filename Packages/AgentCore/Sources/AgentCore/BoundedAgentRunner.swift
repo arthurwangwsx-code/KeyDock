@@ -14,14 +14,16 @@ public enum AgentEvent: Sendable {
 
 public struct BoundedAgentRunner: Sendable {
     private let provider: any AIProvider
-    private let broker: ToolBroker
+    private let broker: any AgentToolRouting
     private let maxToolCalls: Int
     private let maxTurns: Int
     private let wallTimeout: Duration
-    public init(provider: any AIProvider, broker: ToolBroker, maxToolCalls: Int = 20,
-                maxTurns: Int = 8, wallTimeout: Duration = .seconds(300)) {
+    private let maxOutputBytes: Int
+    public init(provider: any AIProvider, broker: any AgentToolRouting, maxToolCalls: Int = 20,
+                maxTurns: Int = 8, wallTimeout: Duration = .seconds(300), maxOutputBytes: Int = 16_777_216) {
         self.provider = provider; self.broker = broker
         self.maxToolCalls = maxToolCalls; self.maxTurns = maxTurns; self.wallTimeout = wallTimeout
+        self.maxOutputBytes = min(16_777_216,max(1,maxOutputBytes))
     }
     public func run(messages: [AIMessage], allowedTools: Set<String>) -> AsyncThrowingStream<AgentEvent, any Error> {
         AsyncThrowingStream { continuation in
@@ -52,6 +54,7 @@ public struct BoundedAgentRunner: Sendable {
         let definitions = available.filter { allowedTools.contains($0.name) }
         var history = messages
         var toolCount = 0
+        var outputBytes = 0
         for _ in 0..<maxTurns {
             try Task.checkCancellation()
             var text = ""
@@ -64,7 +67,10 @@ public struct BoundedAgentRunner: Sendable {
                 try Task.checkCancellation()
                 guard !completed else { throw AIProviderError.malformedEvent }
                 switch event {
-                case .text(let delta): text += delta; continuation.yield(.text(delta))
+                case .text(let delta):
+                    outputBytes += delta.utf8.count
+                    guard outputBytes <= maxOutputBytes else { throw AIProviderError.outputLimit }
+                    text += delta; continuation.yield(.text(delta))
                 case .toolCall(let call): calls.append(call)
                 case .usage(let usage): receivedUsage = true; continuation.yield(.usage(usage))
                 case .completed: completed = true
@@ -80,9 +86,13 @@ public struct BoundedAgentRunner: Sendable {
             history.append(.init(role: "assistant", content: text, toolCalls: calls))
             for call in calls {
                 try Task.checkCancellation()
+                outputBytes += call.name.utf8.count + 4
+                guard outputBytes <= maxOutputBytes else { throw AIProviderError.outputLimit }
                 continuation.yield(.toolStarted(call))
                 let result = try await broker.invoke(call, allowed: allowedTools)
                 try Task.checkCancellation()
+                outputBytes += result.utf8.count + 1
+                guard outputBytes <= maxOutputBytes else { throw AIProviderError.outputLimit }
                 continuation.yield(.toolFinished(id: call.id, result: result))
                 history.append(.init(role: "tool", content: result, toolCallID: call.id))
             }

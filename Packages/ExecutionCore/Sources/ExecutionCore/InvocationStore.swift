@@ -45,6 +45,7 @@ public actor InvocationStore {
     private var receipts: [UUID: InvocationReceipt]
     private var recoveredProtection: Set<UUID>
     private var liveProtectedIDs: Set<UUID> = []
+    private var liveParentIDs: Set<UUID> = []
     private var pendingPersistence = false
     // finish仅增加固定元数据；begin为每个intent预留结果空间，避免正常完成被自身预算卡住。
     private static let completionReserveBytes = 4_096
@@ -111,14 +112,16 @@ public actor InvocationStore {
         guard (commandID?.utf8.count ?? 0) <= 512, (configurationFingerprint?.utf8.count ?? 0) <= 256,
               (caller?.utf8.count ?? 0) <= 128, initialMessage.utf8.count <= 512,
               commandVersion.map({ $0 > 0 }) != false else { throw InvocationStoreError.invalidMetadata }
+        let parent = Self.parentID(commandID)
+        guard parent == nil || liveParentIDs.contains(parent!) || liveParentIDs.count < 64 else { throw InvocationStoreError.capacityExceeded }
         let now = try currentTime()
         var next = receipts
         next[id] = .init(id: id, name: String(Self.boundedName(name).prefix(256)), state: .running,
             startedAt: now, message: initialMessage, commandID: commandID, commandVersion: commandVersion,
             configurationFingerprint: configurationFingerprint, caller: caller)
-        do { try commit(next); liveProtectedIDs.insert(id) }
+        do { try commit(next); liveProtectedIDs.insert(id); if let parent { liveParentIDs.insert(parent) } }
         catch {
-            if receipts[id] != nil { liveProtectedIDs.insert(id) }
+            if receipts[id] != nil { liveProtectedIDs.insert(id); if let parent { liveParentIDs.insert(parent) } }
             throw error
         }
     }
@@ -147,9 +150,15 @@ public actor InvocationStore {
     public func acknowledgeRecovery() { recoveredProtection.removeAll() }
     /// handle/reservation与结果消费已收口后，由宿主显式释放；不解除旧恢复证据的保护。
     public func releaseProtection(for id: UUID) { liveProtectedIDs.remove(id) }
+    public func releaseParentProtection(for id:UUID) { liveParentIDs.remove(id) }
+    /// begin可能已rename后才抛错；尚未派发时尽力结束intent，并始终解除本进程lease。
+    public func abandonUndispatched(_ id:UUID) {
+        if receipts[id]?.state.isTerminal == false { try? finish(id:id,result:.init(state:.cancelled,message:"invocation.notDispatched")) }
+        liveProtectedIDs.remove(id)
+    }
 
-    public func maintain(protecting ids: Set<UUID> = []) -> InvocationCleanupReport {
-        let protected = protectedIDs(ids)
+    public func maintain(protecting ids: Set<UUID> = [], protectingParents parents: Set<UUID> = []) -> InvocationCleanupReport {
+        let protected = protectedIDs(ids.union(children(of: parents)))
         do {
             let now = try currentTime()
             let next = try Self.pruned(receipts, retention: retention, now: now, protecting: protected)
@@ -160,8 +169,8 @@ public actor InvocationStore {
     }
 
     /// onlyIDs固定本次UI候选，避免await间新完成任务被顺带清除；进行中intent永不删除。
-    public func clearFinished(onlyIDs: Set<UUID>? = nil, excluding ids: Set<UUID> = []) -> InvocationCleanupReport {
-        let protected = protectedIDs(ids)
+    public func clearFinished(onlyIDs: Set<UUID>? = nil, excluding ids: Set<UUID> = [], protectingParents parents: Set<UUID> = []) -> InvocationCleanupReport {
+        let protected = protectedIDs(ids.union(children(of: parents)))
         let candidates = onlyIDs ?? Set(receipts.keys)
         let removed = candidates.subtracting(protected).intersection(receipts.keys)
         var next = receipts
@@ -169,13 +178,25 @@ public actor InvocationStore {
         return applyCleanup(next, protected: protected)
     }
 
+    /// 与清理共享actor事务，避免宿主快照之后新完成的子回执失去父运行保护。
+    private static func parentID(_ commandID:String?) -> UUID? {
+        guard let commandID else { return nil }
+        for prefix in ["keydock.agent.","keydock.workflow-run."] where commandID.hasPrefix(prefix) {
+            let suffix = String(commandID.dropFirst(prefix.count))
+            if suffix.count == 36 { return UUID(uuidString:suffix) }
+        }
+        return nil
+    }
+    private func children(of parents: Set<UUID>) -> Set<UUID> {
+        Set(receipts.values.filter { value in Self.parentID(value.commandID).map(parents.contains) ?? false }.map(\.id))
+    }
     private func currentTime() throws -> Date {
         let now = clock()
         guard now.timeIntervalSinceReferenceDate.isFinite else { throw InvocationStoreError.invalidClock }
         return now
     }
     private func protectedIDs(_ supplied: Set<UUID>) -> Set<UUID> {
-        supplied.union(recoveredProtection).union(liveProtectedIDs).union(receipts.values.filter { !$0.state.isTerminal }.map(\.id))
+        supplied.union(recoveredProtection).union(liveProtectedIDs).union(children(of:liveParentIDs)).union(receipts.values.filter { !$0.state.isTerminal }.map(\.id))
     }
     private func commit(_ next: [UUID: InvocationReceipt]) throws {
         let data = try Self.encoded(next)

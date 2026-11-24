@@ -60,6 +60,8 @@ public struct PolicyGrant: Sendable {
     public let allowedEffects: Set<ExecutionEffect>
     public let expiresAt: Date
     public let sideEffectsApproved: Bool
+    /// 仅限真实用户逐次批准的Agent调用；P1只读路径从不设置，且必须绑定invocationID。
+    public let agentInvocationApproved: Bool
     /// nil 用于已保存的可重复动作；非 nil 只匹配指定调用身份。消费/防重放仍由 invocation 回执层管理。
     public let invocationID: UUID?
 
@@ -68,13 +70,14 @@ public struct PolicyGrant: Sendable {
         commandID: String, commandVersion: Int, toolID: String, toolVersion: Int,
         resourceScope: ExecutionResourceScope, allowedEffects: Set<ExecutionEffect> = [],
         expiresAt: Date, sideEffectsApproved: Bool = false, invocationID: UUID? = nil,
-        actionID: String? = nil, actionVersion: Int? = nil
+        actionID: String? = nil, actionVersion: Int? = nil, agentInvocationApproved: Bool = false
     ) {
         self.id = id; self.caller = caller; self.callerInstanceID = callerInstanceID
         self.commandID = commandID; self.commandVersion = commandVersion
         self.actionID = actionID ?? commandID; self.actionVersion = actionVersion ?? commandVersion
         self.toolID = toolID; self.toolVersion = toolVersion; self.resourceScope = resourceScope
         self.allowedEffects = allowedEffects; self.expiresAt = expiresAt
+        self.agentInvocationApproved = agentInvocationApproved
         self.sideEffectsApproved = sideEffectsApproved; self.invocationID = invocationID
     }
 }
@@ -118,8 +121,8 @@ public enum ExecutionPolicy {
             throw ExecutionPolicyError.invocationMismatch
         }
         let hasSideEffect = request.effects.contains { !$0.isReadOnly }
-        // 第一阶段的 Agent 只允许只读工具；即使收到误配的写 grant，也不能扩大范围。
-        guard request.caller != .agent || !hasSideEffect else { throw ExecutionPolicyError.agentWriteUnsupported }
+        // P1默认保持只读；P2授权必须精确绑定本次调用，不能把一次确认变为长期grant。
+        guard request.caller != .agent || !hasSideEffect || (grant.agentInvocationApproved && grant.invocationID == request.invocationID) else { throw ExecutionPolicyError.agentWriteUnsupported }
         guard !hasSideEffect || grant.sideEffectsApproved else { throw ExecutionPolicyError.sideEffectApprovalRequired }
     }
 

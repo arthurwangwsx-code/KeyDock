@@ -1,6 +1,70 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "A new attempt rechecks current scope and may repeat completed work. Unknown effects must be checked first.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新的尝试会重新检查当前授权范围，并可能重复已完成的操作。请先核实结果不明的操作是否已产生影响。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A new attempt rechecks current scope and may repeat completed work. Unknown effects must be checked first."
+          }
+        }
+      }
+    },
+    "A schedule was paused because its workflow, command or AI target changed. Review it before enabling again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作流、命令或 AI 目标已更改，此计划已暂停。请检查后再重新启用。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A schedule was paused because its workflow, command or AI target changed. Review it before enabling again."
+          }
+        }
+      }
+    },
+    "A tool may have effects. Check the result before starting a new run; nothing was replayed.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具可能已产生实际影响。开始新运行前请先核实结果；未自动重放任何操作。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tool may have effects. Check the result before starting a new run; nothing was replayed."
+          }
+        }
+      }
+    },
+    "A workflow step may have effects. Check the result before starting a new run; nothing was replayed.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作流步骤可能已产生实际影响。开始新运行前请先核实结果；未自动重放任何操作。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A workflow step may have effects. Check the result before starting a new run; nothing was replayed."
+          }
+        }
+      }
+    },
     "AI": {
       "localizations": {
         "en": {
@@ -401,6 +465,22 @@
         }
       }
     },
+    "Action": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "动作"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action"
+          }
+        }
+      }
+    },
     "Actions": {
       "localizations": {
         "en": {
@@ -445,6 +525,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "添加收藏"
+          }
+        }
+      }
+    },
+    "Add search folder": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加搜索文件夹"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add search folder"
+          }
+        }
+      }
+    },
+    "Add step": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加步骤"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add step"
+          }
+        }
+      }
+    },
+    "Agent configuration is invalid": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent 配置无效"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent configuration is invalid"
+          }
+        }
+      }
+    },
+    "Agent paused. A new attempt rechecks scope and may repeat completed work; nothing resumes automatically.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent 已暂停。新的尝试会重新检查授权范围，并可能重复已完成的操作；不会自动恢复运行。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent paused. A new attempt rechecks scope and may repeat completed work; nothing resumes automatically."
+          }
+        }
+      }
+    },
+    "Agent profile": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent 配置"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent profile"
+          }
+        }
+      }
+    },
+    "Agent run": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent 任务"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent run"
+          }
+        }
+      }
+    },
+    "Agent workspace": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent 工作台"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent workspace"
           }
         }
       }
@@ -577,6 +769,54 @@
         }
       }
     },
+    "Approve once": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅批准本次"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve once"
+          }
+        }
+      }
+    },
+    "Approve this tool call?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "批准这次工具调用？"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve this tool call?"
+          }
+        }
+      }
+    },
+    "Approve unattended workflow": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允许工作流无人值守运行"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve unattended workflow"
+          }
+        }
+      }
+    },
     "Arguments (JSON array)": {
       "localizations": {
         "en": {
@@ -625,6 +865,102 @@
         }
       }
     },
+    "Arguments are passed individually. The server receives a minimal environment, not your model credentials or terminal environment.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "参数会逐项传入。服务器仅获得最小环境，不会获得模型凭据或终端环境。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arguments are passed individually. The server receives a minimal environment, not your model credentials or terminal environment."
+          }
+        }
+      }
+    },
+    "Arithmetic expression": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "算术表达式"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arithmetic expression"
+          }
+        }
+      }
+    },
+    "Arithmetic only: +, −, ×, / and parentheses. No scripts or functions are executed.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅支持算术运算：+、−、×、/ 和括号。不执行脚本或函数。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arithmetic only: +, −, ×, / and parentheses. No scripts or functions are executed."
+          }
+        }
+      }
+    },
+    "Ask for input": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请求输入"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask for input"
+          }
+        }
+      }
+    },
+    "Available tools": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可用工具"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available tools"
+          }
+        }
+      }
+    },
+    "Average duration": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均耗时"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average duration"
+          }
+        }
+      }
+    },
     "Back": {
       "localizations": {
         "en": {
@@ -641,6 +977,54 @@
         }
       }
     },
+    "Bearer key · leave blank to keep": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearer 密钥 · 留空以保留现有密钥"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearer key · leave blank to keep"
+          }
+        }
+      }
+    },
+    "Calculate": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计算"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculate"
+          }
+        }
+      }
+    },
+    "Calculator": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计算器"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculator"
+          }
+        }
+      }
+    },
     "Cancel": {
       "localizations": {
         "en": {
@@ -653,6 +1037,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "取消"
+          }
+        }
+      }
+    },
+    "Cancel editing": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消编辑"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel editing"
           }
         }
       }
@@ -689,6 +1089,22 @@
         }
       }
     },
+    "Capture a region": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "截取屏幕区域"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture a region"
+          }
+        }
+      }
+    },
     "Check name, absolute paths, arguments, environment and timeout": {
       "localizations": {
         "en": {
@@ -705,6 +1121,54 @@
         }
       }
     },
+    "Choose a source": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择来源"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a source"
+          }
+        }
+      }
+    },
+    "Choose a workflow": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择工作流"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a workflow"
+          }
+        }
+      }
+    },
+    "Choose actions": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择动作"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose actions"
+          }
+        }
+      }
+    },
     "Choose an action and add text. Only this input is sent to your model.": {
       "localizations": {
         "en": {
@@ -717,6 +1181,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "选择动作并输入文本。仅将这些内容发送至所选模型。"
+          }
+        }
+      }
+    },
+    "Choose text, PDF or image": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择文本、PDF 或图片"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose text, PDF or image"
           }
         }
       }
@@ -769,6 +1249,22 @@
         }
       }
     },
+    "Clear all recorded statistics?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除所有已记录的统计数据？"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear all recorded statistics?"
+          }
+        }
+      }
+    },
     "Clear finished history": {
       "localizations": {
         "en": {
@@ -797,6 +1293,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "清除已结束任务和闲置草稿？"
+          }
+        }
+      }
+    },
+    "Clear input": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清空输入"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear input"
+          }
+        }
+      }
+    },
+    "Clear statistics": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除统计数据"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear statistics"
           }
         }
       }
@@ -929,6 +1457,54 @@
         }
       }
     },
+    "Collection": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "集合"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collection"
+          }
+        }
+      }
+    },
+    "Collection could not be saved. Choose up to 32 available actions.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存集合，请选择最多 32 个可用动作。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collection could not be saved. Choose up to 32 available actions."
+          }
+        }
+      }
+    },
+    "Collection name": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "集合名称"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collection name"
+          }
+        }
+      }
+    },
     "Command": {
       "localizations": {
         "en": {
@@ -941,6 +1517,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "命令"
+          }
+        }
+      }
+    },
+    "Command collection": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令集合"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command collection"
+          }
+        }
+      }
+    },
+    "Command collections": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令集合"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command collections"
           }
         }
       }
@@ -1105,6 +1713,54 @@
         }
       }
     },
+    "Confirm review": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确认已检查"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm review"
+          }
+        }
+      }
+    },
+    "Confirm that you checked any effects. This does not retry the unknown run.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请确认已核实操作产生的影响。这不会重试结果不明的运行。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm that you checked any effects. This does not retry the unknown run."
+          }
+        }
+      }
+    },
+    "Connect / refresh": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接／刷新"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect / refresh"
+          }
+        }
+      }
+    },
     "Connection": {
       "localizations": {
         "en": {
@@ -1121,6 +1777,38 @@
         }
       }
     },
+    "Connection type": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接方式"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection type"
+          }
+        }
+      }
+    },
+    "Content is loaded only after you choose it, then shown as text for review. Prompts cannot change permissions or become system instructions. Nothing is sent to your AI service automatically.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅在选择后加载内容，并以文本形式展示供检查。提示词不能更改权限或成为系统指令。不会自动将内容发送至 AI 服务。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content is loaded only after you choose it, then shown as text for review. Prompts cannot change permissions or become system instructions. Nothing is sent to your AI service automatically."
+          }
+        }
+      }
+    },
     "Context capture is disabled in isolated smoke mode": {
       "localizations": {
         "en": {
@@ -1133,6 +1821,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "隔离冒烟测试模式已禁用上下文采集"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        }
+      }
+    },
+    "Convert": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "换算"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convert"
           }
         }
       }
@@ -1217,6 +1937,22 @@
         }
       }
     },
+    "Credentials are stored in Keychain and bound to this server and endpoint. Changing the endpoint does not reuse the old key.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "凭据保存在 Keychain 中，并绑定到此服务器及端点。更改端点后不会沿用旧密钥。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credentials are stored in Keychain and bound to this server and endpoint. Changing the endpoint does not reuse the old key."
+          }
+        }
+      }
+    },
     "Current clipboard": {
       "localizations": {
         "en": {
@@ -1229,6 +1965,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "当前剪贴板"
+          }
+        }
+      }
+    },
+    "Current time · read only": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前时间 · 只读"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current time · read only"
+          }
+        }
+      }
+    },
+    "Daily at a local time": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每天按当地时间运行"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily at a local time"
+          }
+        }
+      }
+    },
+    "Daily counts use UTC. Paused and unrecorded actions are outside this report.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每日次数按 UTC 统计。暂停期间或未记录的操作不在报告中。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily counts use UTC. Paused and unrecorded actions are outside this report."
           }
         }
       }
@@ -1293,6 +2077,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "删除全部剪贴板历史？"
+          }
+        }
+      }
+    },
+    "Deny": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拒绝"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deny"
+          }
+        }
+      }
+    },
+    "Disable": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable"
+          }
+        }
+      }
+    },
+    "Disabled": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已停用"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disabled"
+          }
+        }
+      }
+    },
+    "Disconnect": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "断开连接"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect"
           }
         }
       }
@@ -1377,6 +2225,54 @@
         }
       }
     },
+    "Enable schedule": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用计划"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable schedule"
+          }
+        }
+      }
+    },
+    "Enable when saved": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存后启用"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable when saved"
+          }
+        }
+      }
+    },
+    "Enabled": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已启用"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enabled"
+          }
+        }
+      }
+    },
     "Environment (JSON object)": {
       "localizations": {
         "en": {
@@ -1389,6 +2285,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "环境变量（JSON 对象）"
+          }
+        }
+      }
+    },
+    "Every %d minutes": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每 %d 分钟"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every %d minutes"
+          }
+        }
+      }
+    },
+    "Example: 10 km to mi": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "示例：10 km to mi"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Example: 10 km to mi"
+          }
+        }
+      }
+    },
+    "Example: https://example.com/search?q={query}. Query text is percent-encoded; scripts and custom URL schemes are rejected.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例如：https://example.com/search?q={query}。搜索内容会进行百分号编码，不接受脚本和自定义 URL 协议。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Example: https://example.com/search?q={query}. Query text is percent-encoded; scripts and custom URL schemes are rejected."
           }
         }
       }
@@ -1505,6 +2449,38 @@
         }
       }
     },
+    "Export aggregates": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出汇总数据"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export aggregates"
+          }
+        }
+      }
+    },
+    "Export was cancelled or could not be saved": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出已取消或无法保存"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export was cancelled or could not be saved"
+          }
+        }
+      }
+    },
     "Failed": {
       "localizations": {
         "en": {
@@ -1517,6 +2493,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "失败"
+          }
+        }
+      }
+    },
+    "File name": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件名"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File name"
+          }
+        }
+      }
+    },
+    "File search": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件搜索"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File search"
+          }
+        }
+      }
+    },
+    "Find an action": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查找动作"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find an action"
           }
         }
       }
@@ -1565,6 +2589,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "已清除已结束任务和闲置 AI 草稿，正在运行的任务已保留。"
+          }
+        }
+      }
+    },
+    "Fixed text": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定文本"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed text"
+          }
+        }
+      }
+    },
+    "Folder could not be added. Choose a readable directory.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法添加文件夹。请选择可读取的目录。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder could not be added. Choose a readable directory."
           }
         }
       }
@@ -1633,6 +2689,38 @@
         }
       }
     },
+    "Group related actions into a named workspace. Each action runs only when selected; opening a collection does not run every command.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将相关动作归入命名工作区。每个动作都需单独选择；打开集合不会批量执行命令。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group related actions into a named workspace. Each action runs only when selected; opening a collection does not run every command."
+          }
+        }
+      }
+    },
+    "HTTP endpoint": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP 端点"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP endpoint"
+          }
+        }
+      }
+    },
     "History is being cleared. Try again when it finishes.": {
       "localizations": {
         "en": {
@@ -1661,6 +2749,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "历史记录仅部分清除。有些任务仍在保存结果，或记录未能删除，请稍后重试。"
+          }
+        }
+      }
+    },
+    "Hour: %d": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小时：%d"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hour: %d"
+          }
+        }
+      }
+    },
+    "I checked the unknown result": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我已核实结果不明的运行"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the unknown result"
+          }
+        }
+      }
+    },
+    "Imported text": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导入的文本"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported text"
           }
         }
       }
@@ -1773,6 +2909,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "已中断／结果未知"
+          }
+        }
+      }
+    },
+    "Invalid conversion. Use a supported unit and the format: 10 km to mi.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "换算无效。请使用支持的单位，格式如：10 km to mi。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid conversion. Use a supported unit and the format: 10 km to mi."
+          }
+        }
+      }
+    },
+    "Invalid or unsupported expression": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表达式无效或不受支持"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid or unsupported expression"
           }
         }
       }
@@ -1905,6 +3073,38 @@
         }
       }
     },
+    "Last 30 days": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近 30 天"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 30 days"
+          }
+        }
+      }
+    },
+    "Last 7 days": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近 7 天"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 7 days"
+          }
+        }
+      }
+    },
     "Launcher": {
       "localizations": {
         "en": {
@@ -1921,6 +3121,22 @@
         }
       }
     },
+    "Length, mass, absolute temperature and data bytes. MB and MiB use different scales. Approximate results.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持长度、质量、绝对温度和数据字节单位。MB 与 MiB 的换算比例不同。结果为近似值。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Length, mass, absolute temperature and data bytes. MB and MiB use different scales. Approximate results."
+          }
+        }
+      }
+    },
     "Light": {
       "localizations": {
         "en": {
@@ -1933,6 +3149,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "浅色"
+          }
+        }
+      }
+    },
+    "List prompts": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "列出提示词"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List prompts"
+          }
+        }
+      }
+    },
+    "List resources": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "列出资源"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List resources"
           }
         }
       }
@@ -1969,6 +3217,166 @@
         }
       }
     },
+    "Local process": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地进程"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local process"
+          }
+        }
+      }
+    },
+    "Lowercase": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "转为小写"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lowercase"
+          }
+        }
+      }
+    },
+    "MCP connection failed. Check source, protocol and schema support.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP 连接失败。请检查来源、协议和 schema 支持情况。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP connection failed. Check source, protocol and schema support."
+          }
+        }
+      }
+    },
+    "MCP content could not be loaded. Refresh the source and try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法加载 MCP 内容。请刷新来源后重试。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP content could not be loaded. Refresh the source and try again."
+          }
+        }
+      }
+    },
+    "MCP endpoint URL": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP 端点 URL"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP endpoint URL"
+          }
+        }
+      }
+    },
+    "MCP resources and prompts": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP 资源与提示词"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP resources and prompts"
+          }
+        }
+      }
+    },
+    "MCP server could not be saved. Check configuration and trust settings.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存 MCP 服务器。请检查配置和信任设置。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP server could not be saved. Check configuration and trust settings."
+          }
+        }
+      }
+    },
+    "MCP servers": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP 服务器"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP servers"
+          }
+        }
+      }
+    },
+    "MCP settings were not saved and the previous credential could not be restored. Check the stored key.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP 设置未保存，且无法恢复原凭据。请检查已保存的密钥。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP settings were not saved and the previous credential could not be restored. Check the stored key."
+          }
+        }
+      }
+    },
+    "Manage MCP servers": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理 MCP 服务器"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage MCP servers"
+          }
+        }
+      }
+    },
     "Manual input": {
       "localizations": {
         "en": {
@@ -1981,6 +3389,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "手动输入"
+          }
+        }
+      }
+    },
+    "Minute: %d": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分钟：%d"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minute: %d"
           }
         }
       }
@@ -2033,6 +3457,70 @@
         }
       }
     },
+    "Model turns": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模型轮次"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model turns"
+          }
+        }
+      }
+    },
+    "Most used actions": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最常用动作"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most used actions"
+          }
+        }
+      }
+    },
+    "Move step down": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下移步骤"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move step down"
+          }
+        }
+      }
+    },
+    "Move step up": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上移步骤"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move step up"
+          }
+        }
+      }
+    },
     "Name": {
       "localizations": {
         "en": {
@@ -2065,34 +3553,98 @@
         }
       }
     },
-    "New action": {
+    "New URL action": {
       "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New action"
-          }
-        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "新建动作"
+            "value": "新建 URL 动作"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New URL action"
           }
         }
       }
     },
-    "New command": {
+    "New collection": {
       "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New command"
-          }
-        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "新建命令"
+            "value": "新建集合"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New collection"
+          }
+        }
+      }
+    },
+    "New profile": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建配置"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New profile"
+          }
+        }
+      }
+    },
+    "New server": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建服务器"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New server"
+          }
+        }
+      }
+    },
+    "New snippet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建文本片段"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New snippet"
+          }
+        }
+      }
+    },
+    "New workflow": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建工作流"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New workflow"
           }
         }
       }
@@ -2161,6 +3713,22 @@
         }
       }
     },
+    "No original window is available": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原窗口不可用"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No original window is available"
+          }
+        }
+      }
+    },
     "No output": {
       "localizations": {
         "en": {
@@ -2209,6 +3777,38 @@
         }
       }
     },
+    "OCR runs locally. Files are limited to 16 MiB, images to 20 million pixels and PDFs to 30 pages. Text is limited to 128 KiB. Nothing is sent to AI until you choose an action.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCR 在本地运行。文件上限为 16 MiB，图片上限为 2000 万像素，PDF 上限为 30 页，文本上限为 128 KiB。选择动作之前，不会向 AI 发送任何内容。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCR runs locally. Files are limited to 16 MiB, images to 20 million pixels and PDFs to 30 pages. Text is limited to 128 KiB. Nothing is sent to AI until you choose an action."
+          }
+        }
+      }
+    },
+    "Only enable sources you trust. Local servers run as your user and can access files or run commands outside KeyDock. This is not an OS sandbox. Connections start only when you connect or start an allowed Agent run.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅启用信任的来源。本地服务器以当前用户身份运行，可访问文件或在 KeyDock 之外执行命令；不受操作系统沙箱隔离。仅在主动连接或开始已获允许的 Agent 运行时建立连接。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only enable sources you trust. Local servers run as your user and can access files or run commands outside KeyDock. This is not an OS sandbox. Connections start only when you connect or start an allowed Agent run."
+          }
+        }
+      }
+    },
     "Open": {
       "localizations": {
         "en": {
@@ -2237,6 +3837,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "打开 KeyDock"
+          }
+        }
+      }
+    },
+    "Open URL": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 URL"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open URL"
           }
         }
       }
@@ -2305,6 +3921,22 @@
         }
       }
     },
+    "Optional, local statistics for KeyDock actions only. Stores command IDs, outcomes, durations and dates for 30 days. No window titles, arguments, clipboard text or model input is recorded. This is partial coverage, not whole-computer tracking.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可选的本地统计，仅记录 KeyDock 内的操作。命令 ID、结果、耗时和日期保留 30 天；不记录窗口标题、参数、剪贴板文本或模型输入。统计仅覆盖已记录的操作，不追踪整台电脑。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional, local statistics for KeyDock actions only. Stores command IDs, outcomes, durations and dates for 30 days. No window titles, arguments, clipboard text or model input is recorded. This is partial coverage, not whole-computer tracking."
+          }
+        }
+      }
+    },
     "Original selection is unavailable": {
       "localizations": {
         "en": {
@@ -2333,6 +3965,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "原目标已变化，未替换任何文本"
+          }
+        }
+      }
+    },
+    "Original window": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原窗口"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original window"
           }
         }
       }
@@ -2401,6 +4049,54 @@
         }
       }
     },
+    "Partial results: a scope or search budget limited this search.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结果不完整：搜索范围或预算限制了本次搜索。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial results: a scope or search budget limited this search."
+          }
+        }
+      }
+    },
+    "Pause": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        }
+      }
+    },
+    "Paused · new attempt required": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已暂停 · 需开始新的尝试"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused · new attempt required"
+          }
+        }
+      }
+    },
     "Pin item": {
       "localizations": {
         "en": {
@@ -2449,6 +4145,38 @@
         }
       }
     },
+    "Preview prompt": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览提示词"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview prompt"
+          }
+        }
+      }
+    },
+    "Preview text": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览文本"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview text"
+          }
+        }
+      }
+    },
     "Previous execution was interrupted. Outcome is unknown; it was not replayed.": {
       "localizations": {
         "en": {
@@ -2461,6 +4189,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "上次执行已中断，结果未知；系统未重新执行该任务。"
+          }
+        }
+      }
+    },
+    "Previous output": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一步输出"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous output"
           }
         }
       }
@@ -2493,6 +4237,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "提示词"
+          }
+        }
+      }
+    },
+    "Prompt arguments (JSON object of strings)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示词参数（值为字符串的 JSON 对象）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prompt arguments (JSON object of strings)"
+          }
+        }
+      }
+    },
+    "Protocol version": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "协议版本"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protocol version"
           }
         }
       }
@@ -2561,6 +4337,22 @@
         }
       }
     },
+    "Record KeyDock usage": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记录 KeyDock 使用情况"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record KeyDock usage"
+          }
+        }
+      }
+    },
     "Record clipboard": {
       "localizations": {
         "en": {
@@ -2593,6 +4385,22 @@
         }
       }
     },
+    "Recorded activity": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已记录的活动"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded activity"
+          }
+        }
+      }
+    },
     "Recording is optional. Sensitive marked content is skipped.": {
       "localizations": {
         "en": {
@@ -2605,6 +4413,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "剪贴板记录可自行开启，带有敏感标记的内容会被跳过。"
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh"
           }
         }
       }
@@ -2641,6 +4465,22 @@
         }
       }
     },
+    "Remove": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        }
+      }
+    },
     "Remove API key": {
       "localizations": {
         "en": {
@@ -2653,6 +4493,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "移除 API 密钥"
+          }
+        }
+      }
+    },
+    "Remove collection": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除集合"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove collection"
           }
         }
       }
@@ -2685,6 +4541,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "移除快捷键"
+          }
+        }
+      }
+    },
+    "Remove this Agent profile? Running tasks keep their original snapshot.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除这个 Agent 配置？正在运行的任务保留原始快照。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this Agent profile? Running tasks keep their original snapshot."
+          }
+        }
+      }
+    },
+    "Remove this MCP source?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除此 MCP 来源？"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this MCP source?"
+          }
+        }
+      }
+    },
+    "Remove this saved item?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this saved item?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除这个已保存的项目？"
+          }
+        }
+      }
+    },
+    "Remove this schedule?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除此计划？"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this schedule?"
+          }
+        }
+      }
+    },
+    "Remove this snippet?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除此文本片段？"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this snippet?"
+          }
+        }
+      }
+    },
+    "Remove this workflow? Its schedules will pause and running tasks keep their snapshot.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除这个工作流？相关计划将暂停，正在运行的任务保留原始快照。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this workflow? Its schedules will pause and running tasks keep their snapshot."
+          }
+        }
+      }
+    },
+    "Remove unavailable actions": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除不可用的动作"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove unavailable actions"
           }
         }
       }
@@ -2801,6 +4769,22 @@
         }
       }
     },
+    "Reveal in Finder": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Finder 中显示"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reveal in Finder"
+          }
+        }
+      }
+    },
     "Review": {
       "localizations": {
         "en": {
@@ -2813,6 +4797,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "审阅"
+          }
+        }
+      }
+    },
+    "Review and enable": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查并启用"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review and enable"
           }
         }
       }
@@ -2849,6 +4849,38 @@
         }
       }
     },
+    "Run agent": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运行 Agent"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run agent"
+          }
+        }
+      }
+    },
+    "Run workflow": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运行工作流"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run workflow"
+          }
+        }
+      }
+    },
     "Running": {
       "localizations": {
         "en": {
@@ -2881,6 +4913,22 @@
         }
       }
     },
+    "Runs only while KeyDock is open. Missed times after sleep merge into one run. Interactive steps and dynamic command arguments cannot run unattended. Changed commands or AI targets require a new approval.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅在 KeyDock 运行时执行。睡眠期间错过的计划时间会合并为一次运行。交互步骤和带动态参数的命令不能无人值守运行。命令或 AI 目标更改后，需要重新批准。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Runs only while KeyDock is open. Missed times after sleep merge into one run. Interactive steps and dynamic command arguments cannot run unattended. Changed commands or AI targets require a new approval."
+          }
+        }
+      }
+    },
     "Save API configuration": {
       "localizations": {
         "en": {
@@ -2893,6 +4941,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "保存 API 配置"
+          }
+        }
+      }
+    },
+    "Save URL action": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存 URL 动作"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save URL action"
           }
         }
       }
@@ -2929,6 +4993,22 @@
         }
       }
     },
+    "Save collection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save collection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存集合"
+          }
+        }
+      }
+    },
     "Save command": {
       "localizations": {
         "en": {
@@ -2941,6 +5021,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "保存命令"
+          }
+        }
+      }
+    },
+    "Save disabled schedule": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存为停用的计划"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save disabled schedule"
           }
         }
       }
@@ -2961,6 +5057,70 @@
         }
       }
     },
+    "Save profile": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存配置"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save profile"
+          }
+        }
+      }
+    },
+    "Save server": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存服务器"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save server"
+          }
+        }
+      }
+    },
+    "Save snippet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存文本片段"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save snippet"
+          }
+        }
+      }
+    },
+    "Save workflow": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存工作流"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save workflow"
+          }
+        }
+      }
+    },
     "Saved commands": {
       "localizations": {
         "en": {
@@ -2973,6 +5133,182 @@
           "stringUnit": {
             "state": "translated",
             "value": "已保存的命令"
+          }
+        }
+      }
+    },
+    "Scanned %d entries · %d results": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已扫描 %d 个条目 · %d 个结果"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanned %d entries · %d results"
+          }
+        }
+      }
+    },
+    "Schedule completion could not be saved. Check the run before enabling it again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存计划的完成状态。重新启用前请先检查这次运行。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule completion could not be saved. Check the run before enabling it again."
+          }
+        }
+      }
+    },
+    "Schedule could not be changed. Check its current revision.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法更改计划。请检查当前版本。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule could not be changed. Check its current revision."
+          }
+        }
+      }
+    },
+    "Schedule could not be changed. It remains paused for this session; check saved settings before restarting.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法更改计划。本次会话中将保持暂停；重启前请检查已保存的设置。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule could not be changed. It remains paused for this session; check saved settings before restarting."
+          }
+        }
+      }
+    },
+    "Schedule could not be saved. Check its name, time zone and interval.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存计划。请检查名称、时区和间隔。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule could not be saved. Check its name, time zone and interval."
+          }
+        }
+      }
+    },
+    "Schedule name": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计划名称"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule name"
+          }
+        }
+      }
+    },
+    "Schedule storage failed. No failed schedule is automatically retried.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计划存储失败。不会自动重试失败的计划。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule storage failed. No failed schedule is automatically retried."
+          }
+        }
+      }
+    },
+    "Schedules": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计划任务"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedules"
+          }
+        }
+      }
+    },
+    "Screen Recording permission is required. Enable it in macOS Settings, then try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要屏幕录制权限。请在 macOS 设置中启用后重试。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Recording permission is required. Enable it in macOS Settings, then try again."
+          }
+        }
+      }
+    },
+    "Screen Recording settings": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕录制设置"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Recording settings"
+          }
+        }
+      }
+    },
+    "Search": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
           }
         }
       }
@@ -3041,6 +5377,54 @@
         }
       }
     },
+    "Search file names only in chosen folders. Hidden files, packages and symbolic links are skipped. Results open their location in Finder.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅在所选文件夹中搜索文件名。跳过隐藏文件、软件包和符号链接。选择结果可在 Finder 中显示其位置。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search file names only in chosen folders. Hidden files, packages and symbolic links are skipped. Results open their location in Finder."
+          }
+        }
+      }
+    },
+    "Search query": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索内容"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search query"
+          }
+        }
+      }
+    },
+    "Search scope is unavailable or changed. Choose the folder again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索范围不可用或已更改。请重新选择文件夹。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search scope is unavailable or changed. Choose the folder again."
+          }
+        }
+      }
+    },
     "Select": {
       "localizations": {
         "en": {
@@ -3073,6 +5457,22 @@
         }
       }
     },
+    "Selected screen region": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所选屏幕区域"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected screen region"
+          }
+        }
+      }
+    },
     "Selected text": {
       "localizations": {
         "en": {
@@ -3085,6 +5485,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "选中文本"
+          }
+        }
+      }
+    },
+    "Server configuration": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器配置"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server configuration"
           }
         }
       }
@@ -3249,6 +5665,86 @@
         }
       }
     },
+    "Snippet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文本片段"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snippet"
+          }
+        }
+      }
+    },
+    "Snippet could not be saved. Check its name and text size.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存文本片段。请检查名称和文本大小。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snippet could not be saved. Check its name and text size."
+          }
+        }
+      }
+    },
+    "Snippet text": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "片段文本"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snippet text"
+          }
+        }
+      }
+    },
+    "Snippets": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文本片段"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snippets"
+          }
+        }
+      }
+    },
+    "Snippets are copied only when you choose them. KeyDock does not listen to your typing or expand hidden templates.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅在主动选择时复制文本片段。KeyDock 不监听键盘输入，也不会展开隐藏模板。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snippets are copied only when you choose them. KeyDock does not listen to your typing or expand hidden templates."
+          }
+        }
+      }
+    },
     "Some AI usage records could not be maintained. Review or clear usage history in Privacy settings.": {
       "localizations": {
         "en": {
@@ -3281,6 +5777,118 @@
         }
       }
     },
+    "Some tool schemas are unsupported and cannot be called. These tools are excluded from Agent runs.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分工具的 schema 不受支持，无法调用。这些工具不会提供给 Agent 运行。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some tool schemas are unsupported and cannot be called. These tools are excluded from Agent runs."
+          }
+        }
+      }
+    },
+    "Source": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来源"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        }
+      }
+    },
+    "Start a new attempt?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始新的尝试？"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a new attempt?"
+          }
+        }
+      }
+    },
+    "Start new attempt": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始新的尝试"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start new attempt"
+          }
+        }
+      }
+    },
+    "Statistics are paused for this session. Settings could not be saved.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存设置。本次会话中的统计已暂停。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistics are paused for this session. Settings could not be saved."
+          }
+        }
+      }
+    },
+    "Step": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步骤"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step"
+          }
+        }
+      }
+    },
+    "Steps use a frozen snapshot of saved commands and AI actions. Review commands before starting. Only a whole {{input}} argument passes this step's input; shell-mode commands cannot use that placeholder.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步骤使用已保存命令和 AI 动作的固定快照。开始前请检查命令。只有将整个参数写为 {{input}}，才会传入本步骤的输入；Shell 模式命令不能使用此占位符。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps use a frozen snapshot of saved commands and AI actions. Review commands before starting. Only a whole {{input}} argument passes this step's input; shell-mode commands cannot use that placeholder."
+          }
+        }
+      }
+    },
     "Stop": {
       "localizations": {
         "en": {
@@ -3293,6 +5901,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "停止"
+          }
+        }
+      }
+    },
+    "Success rate (known outcomes)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "成功率（仅含已知结果）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Success rate (known outcomes)"
           }
         }
       }
@@ -3341,6 +5965,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "总结"
+          }
+        }
+      }
+    },
+    "Summarize with AI": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 AI 总结"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarize with AI"
           }
         }
       }
@@ -3457,6 +6097,70 @@
         }
       }
     },
+    "Text and OCR": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文本与 OCR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text and OCR"
+          }
+        }
+      }
+    },
+    "Text could not be copied": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法复制文本"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text could not be copied"
+          }
+        }
+      }
+    },
+    "Text could not be imported. Use a readable text, PDF or single image within the size limit.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法导入文本。请选择可读取且符合大小限制的文本、PDF 或单张图片。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text could not be imported. Use a readable text, PDF or single image within the size limit."
+          }
+        }
+      }
+    },
+    "Text import": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文本导入"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text import"
+          }
+        }
+      }
+    },
     "Text only · 24 hours · 500 items · 1 MiB per item · 32 MiB of text. Pinned items count toward capacity and stay until removed. When they leave too little room, new items are skipped without deleting existing history. Concealed and transient types are skipped; some applications do not mark secrets.": {
       "localizations": {
         "en": {
@@ -3517,6 +6221,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "此剪贴板记录已不可用"
+          }
+        }
+      }
+    },
+    "The file or search scope changed. Search again before revealing it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件或搜索范围已更改。请重新搜索后再显示其位置。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file or search scope changed. Search again before revealing it."
           }
         }
       }
@@ -3649,6 +6369,22 @@
         }
       }
     },
+    "This executable can act with your user permissions whenever the enabled source is connected. Review its path, arguments and working directory before trusting it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用的来源建立连接后，此可执行文件便可使用当前用户权限执行操作。信任前请检查其路径、参数和工作目录。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This executable can act with your user permissions whenever the enabled source is connected. Review its path, arguments and working directory before trusting it."
+          }
+        }
+      }
+    },
     "This removes stored usage metadata. Running requests keep their current usage and may create new records when they finish. AI actions and API credentials are kept.": {
       "localizations": {
         "en": {
@@ -3661,6 +6397,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "这会删除已保存的用量元数据。正在运行的请求保留本次用量，结束后可能产生新记录。AI 动作和 API 凭据会保留。"
+          }
+        }
+      }
+    },
+    "This saved workflow may launch commands and send its input or output to the displayed AI service without another prompt at each scheduled time. Review every command and destination.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此已保存的工作流可在每个计划时间执行命令，并将输入或输出发送至所显示的 AI 服务，届时不会再次询问。请检查所有命令和发送目标。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved workflow may launch commands and send its input or output to the displayed AI service without another prompt at each scheduled time. Review every command and destination."
           }
         }
       }
@@ -3693,6 +6445,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "此文本动作不能执行工具"
+          }
+        }
+      }
+    },
+    "This tool may change your computer. Review its full arguments. Output may be sent to AI by this run.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工具可能更改电脑上的内容。请检查完整参数；本次运行可能将工具输出发送至 AI。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This tool may change your computer. Review its full arguments. Output may be sent to AI by this run."
+          }
+        }
+      }
+    },
+    "This workflow is unavailable for unattended execution. Check its steps and AI configuration.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工作流无法无人值守运行。请检查步骤和 AI 配置。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workflow is unavailable for unattended execution. Check its steps and AI configuration."
+          }
+        }
+      }
+    },
+    "Time budget (seconds)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时间预算（秒）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time budget (seconds)"
+          }
+        }
+      }
+    },
+    "Time range": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时间范围"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time range"
+          }
+        }
+      }
+    },
+    "Time zone identifier": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时区标识符"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time zone identifier"
           }
         }
       }
@@ -3761,6 +6593,102 @@
         }
       }
     },
+    "Tool call was denied. No further step was run.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具调用已被拒绝。未执行后续步骤。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool call was denied. No further step was run."
+          }
+        }
+      }
+    },
+    "Tool calls": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具调用次数"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool calls"
+          }
+        }
+      }
+    },
+    "Tool output was received, but its receipt could not be saved. Check effects before retrying.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已收到工具输出，但无法保存运行回执。重试前请先核实已产生的影响。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool output was received, but its receipt could not be saved. Check effects before retrying."
+          }
+        }
+      }
+    },
+    "Tool scope is frozen when a run starts. Every command call needs approval; its output is sent to the selected model. Cancelling does not undo effects already completed.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具授权范围在运行开始时固定。每次命令调用都需批准，其输出会发送至所选模型。取消不会撤销已完成的操作。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool scope is frozen when a run starts. Every command call needs approval; its output is sent to the selected model. Cancelling does not undo effects already completed."
+          }
+        }
+      }
+    },
+    "Tools": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools"
+          }
+        }
+      }
+    },
+    "Tools and budgets": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具与预算"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools and budgets"
+          }
+        }
+      }
+    },
     "Translate to Chinese": {
       "localizations": {
         "en": {
@@ -3773,6 +6701,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "翻译成中文"
+          }
+        }
+      }
+    },
+    "Trim text": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去除首尾空白"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trim text"
+          }
+        }
+      }
+    },
+    "Trust and save": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信任并保存"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trust and save"
+          }
+        }
+      }
+    },
+    "Trust this local server?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信任此本地服务器？"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trust this local server?"
           }
         }
       }
@@ -3793,6 +6769,70 @@
         }
       }
     },
+    "URL action": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL 动作"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL action"
+          }
+        }
+      }
+    },
+    "URL actions": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL 动作"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL actions"
+          }
+        }
+      }
+    },
+    "URL could not be opened. Check the saved address and query.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法打开 URL，请检查保存的地址和搜索内容。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL could not be opened. Check the saved address and query."
+          }
+        }
+      }
+    },
+    "URL or template": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL 或模板"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL or template"
+          }
+        }
+      }
+    },
     "Unavailable action": {
       "localizations": {
         "en": {
@@ -3804,7 +6844,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "不可用的操作"
+            "value": "动作不可用"
           }
         }
       }
@@ -3821,6 +6861,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "不可用的操作"
+          }
+        }
+      }
+    },
+    "Unavailable tools": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不可用工具"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable tools"
+          }
+        }
+      }
+    },
+    "Unit conversion": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "单位换算"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit conversion"
           }
         }
       }
@@ -3857,6 +6929,38 @@
         }
       }
     },
+    "Unsaved profile": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未保存的配置"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsaved profile"
+          }
+        }
+      }
+    },
+    "Unsaved workflow": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未保存的工作流"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsaved workflow"
+          }
+        }
+      }
+    },
     "Untitled draft": {
       "localizations": {
         "en": {
@@ -3869,6 +6973,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "未命名草稿"
+          }
+        }
+      }
+    },
+    "Uppercase": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "转为大写"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uppercase"
+          }
+        }
+      }
+    },
+    "Usage insights": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用分析"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage insights"
           }
         }
       }
@@ -3937,6 +7073,70 @@
         }
       }
     },
+    "Usage statistics could not be cleared": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法清除使用统计数据"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage statistics could not be cleared"
+          }
+        }
+      }
+    },
+    "Usage statistics could not be read": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法读取使用统计数据"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage statistics could not be read"
+          }
+        }
+      }
+    },
+    "Usage statistics could not be saved": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存使用统计数据"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage statistics could not be saved"
+          }
+        }
+      }
+    },
+    "Usage summary": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用情况总结"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage summary"
+          }
+        }
+      }
+    },
     "Usage unknown": {
       "localizations": {
         "en": {
@@ -3953,6 +7153,38 @@
         }
       }
     },
+    "Use": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use"
+          }
+        }
+      }
+    },
+    "Use a valid HTTP or HTTPS URL. One {query} placeholder is allowed in the query section.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入有效的 HTTP 或 HTTPS URL，查询部分最多允许一个 {query} 占位符。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a valid HTTP or HTTPS URL. One {query} placeholder is allowed in the query section."
+          }
+        }
+      }
+    },
     "Use clipboard": {
       "localizations": {
         "en": {
@@ -3965,6 +7197,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "使用剪贴板内容"
+          }
+        }
+      }
+    },
+    "Waiting for approval": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等待批准"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for approval"
           }
         }
       }
@@ -3997,6 +7245,342 @@
           "stringUnit": {
             "state": "translated",
             "value": "窗口"
+          }
+        }
+      }
+    },
+    "Window layout could not be applied. Check permission, target and window size.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法应用窗口布局。请检查权限、目标窗口和窗口大小。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window layout could not be applied. Check permission, target and window size."
+          }
+        }
+      }
+    },
+    "Window: Bottom half": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：下半屏"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Bottom half"
+          }
+        }
+      }
+    },
+    "Window: Bottom left": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：左下角"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Bottom left"
+          }
+        }
+      }
+    },
+    "Window: Bottom right": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：右下角"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Bottom right"
+          }
+        }
+      }
+    },
+    "Window: Center": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：居中"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Center"
+          }
+        }
+      }
+    },
+    "Window: Left half": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：左半屏"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Left half"
+          }
+        }
+      }
+    },
+    "Window: Maximize": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：最大化"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Maximize"
+          }
+        }
+      }
+    },
+    "Window: Next display": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：移至下一显示器"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Next display"
+          }
+        }
+      }
+    },
+    "Window: Previous display": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：移至上一显示器"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Previous display"
+          }
+        }
+      }
+    },
+    "Window: Restore": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：还原"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Restore"
+          }
+        }
+      }
+    },
+    "Window: Right half": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：右半屏"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Right half"
+          }
+        }
+      }
+    },
+    "Window: Top half": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：上半屏"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Top half"
+          }
+        }
+      }
+    },
+    "Window: Top left": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：左上角"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Top left"
+          }
+        }
+      }
+    },
+    "Window: Top right": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口：右上角"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window: Top right"
+          }
+        }
+      }
+    },
+    "Workflow": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作流"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workflow"
+          }
+        }
+      }
+    },
+    "Workflow could not start. Check its steps and AI configuration.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法启动工作流。请检查步骤和 AI 配置。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workflow could not start. Check its steps and AI configuration."
+          }
+        }
+      }
+    },
+    "Workflow input": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作流输入"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workflow input"
+          }
+        }
+      }
+    },
+    "Workflow is invalid. Check names, inputs, references and budgets.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作流无效。请检查名称、输入、引用和预算。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workflow is invalid. Check names, inputs, references and budgets."
+          }
+        }
+      }
+    },
+    "Workflow needs input": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作流需要输入"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workflow needs input"
+          }
+        }
+      }
+    },
+    "Workflow run": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作流任务"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workflow run"
+          }
+        }
+      }
+    },
+    "Workflows": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作流"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workflows"
           }
         }
       }
@@ -4045,6 +7629,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "键盘操作工作台"
+          }
+        }
+      }
+    },
+    "Your task": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务要求"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your task"
           }
         }
       }

@@ -4,7 +4,7 @@ import CommandCore
 /// 只由编译期宿主入口选择；外部内容不能注册动作或覆盖执行效果。
 enum HostOperation: String, Hashable, Sendable, CaseIterable {
     case openApplication, activateWindow, runCommand, prepareAI, generateText
-    case proposeCommand, runReadOnlyAgent, copyText, replaceSelection, readClipboard, navigate
+    case proposeCommand, runReadOnlyAgent, runAgent, copyText, replaceSelection, readClipboard, navigate, layoutWindow, importContext, captureScreen, revealFile, openURL
 }
 
 /// 同一份声明同时供目录展示和真实执行使用，版本、效果与执行引用只在此定义。
@@ -41,9 +41,13 @@ enum HostActionCatalog {
         let context: Set<CommandContextRequirement>
         let effects: Set<CommandEffect>
         switch operation {
+        case .openURL:
+            input = .structuredData; output = .none; context = []; effects = [.network,.activateApplication]
+        case .revealFile:
+            input = .structuredData; output = .none; context = []; effects = [.activateApplication]
         case .openApplication:
             input = .application; output = .none; context = []; effects = [.activateApplication]
-        case .activateWindow:
+        case .activateWindow, .layoutWindow:
             input = .window; output = .none; context = [.window]; effects = [.activateWindow]
         case .runCommand:
             input = .structuredData; output = .text; context = [.workingDirectory]; effects = [.executeProcess]
@@ -54,7 +58,7 @@ enum HostActionCatalog {
             input = .text; output = .text; context = [.explicitInput]; effects = [.network]
         case .proposeCommand:
             input = .text; output = .commandProposal; context = [.explicitInput]; effects = [.network]
-        case .runReadOnlyAgent:
+        case .runReadOnlyAgent, .runAgent:
             // 此动作批准用户发起的模型请求，工具仍由只读 Broker 逐次授权。
             input = .text; output = .text; context = [.explicitInput]; effects = [.network]
         case .copyText:
@@ -65,6 +69,8 @@ enum HostActionCatalog {
             input = .clipboardItem; output = .text; context = [.clipboard]; effects = [.read]
         case .navigate:
             input = .none; output = .none; context = []; effects = [.read]
+        case .importContext, .captureScreen:
+            input = .structuredData; output = .text; context = [.explicitInput]; effects = [.read]
         }
         return try ActionDescriptor(
             id: "keydock.action." + operation.rawValue, version: 1, title: title,

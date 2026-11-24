@@ -46,6 +46,7 @@ public struct SettingsRootView: View {
     }
     @ViewBuilder private var content: some View {
         switch session.pane {
+        case .mcp: MCPSettingsContent(store:store,session:session)
         case .general:
             if !store.allowContextCapture { Section { Text(L("Isolated preview: clipboard and selected-text capture, permission requests and credential storage are disabled.")).font(.caption).foregroundStyle(.secondary) } }
             Section(L("Appearance & language")) {

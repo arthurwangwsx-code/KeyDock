@@ -155,6 +155,18 @@ import KeyDockUI
         }
     }
 
+    @Test func restoredExpandedTaskTitlesUseSelectedLanguage() throws {
+        try withStore { store,_,_ in
+            #expect(store.setLanguage("zh-Hans"))
+            let receipt = InvocationReceipt(id:UUID(),name:AITaskReceiptKind.workflow.rawValue,state:.succeeded,startedAt:Date(),finishedAt:Date())
+            store.restoreAIReceipt(receipt)
+            let task = try #require(store.tasks.first(where:{$0.id == receipt.id}))
+            #expect(task.displayTitle == "工作流任务")
+            #expect(L(AITaskReceiptKind.agent.rawValue) == "Agent 任务")
+            #expect(store.setLanguage("en")); #expect(task.displayTitle == "Workflow run")
+        }
+    }
+
     @Test func noticeStorageAndRenderingStayBoundedWithoutTruncatingLocalizationKeys() throws {
         try withStore { store, _, _ in
             let draft = store.createDraft(input: "Synthetic")

@@ -54,6 +54,7 @@ extension WorkbenchModel {
     func finishExecutionReservation(_ id: UUID) {
         taskHandles[id] = nil; executionReservations.remove(id)
         aiTaskIDs.remove(id); cancelledTaskIDs.remove(id)
+        timedOutTaskIDs.remove(id); pausedAgentIDs.remove(id)
         let cli = invocationStore, ai = aiInvocationStore
         Task { [weak self] in
             await cli.releaseProtection(for: id); await ai.releaseProtection(for: id)
@@ -134,7 +135,7 @@ extension WorkbenchModel {
         for id in draftIDs { drafts[id]?.discard(); drafts[id] = nil }
         draftOrder.removeAll { draftIDs.contains($0) }
         tasks.removeAll { taskIDs.contains($0.id) }
-        for id in taskIDs { resultTargets[id] = nil; aiTaskIDs.remove(id); cancelledTaskIDs.remove(id); usageSummaryGenerations[id] = nil; invalidatedUsageRuns.remove(id) }
+        for id in taskIDs { resultTargets[id] = nil; aiTaskIDs.remove(id); cancelledTaskIDs.remove(id); usageSummaryGenerations[id] = nil; invalidatedUsageRuns.remove(id); workflowCheckpoints[id] = nil; agentRunDefinitions[id] = nil; taskActivity[id] = nil; timedOutTaskIDs.remove(id); pausedAgentIDs.remove(id) }
         for draft in drafts.values where draft.latestRunID.map(taskIDs.contains) == true { draft.latestRunID = nil }
         proposalRequests = proposalRequests.filter { !draftIDs.contains($0.key) && !taskIDs.contains($0.value) }
         pendingCommandReviews.removeAll { taskIDs.contains($0.id) }

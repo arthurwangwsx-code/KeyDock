@@ -3,6 +3,8 @@ import Combine
 import CommandCore
 import ExecutionCore
 import MacAdapters
+import AgentCore
+import AutomationCore
 
 /// 当前缓存目录作为真实 Provider 接入统一查询链路，不再在 UI 旁路调用 rank。
 private struct LauncherCatalogProvider: CommandProviding {
@@ -10,6 +12,14 @@ private struct LauncherCatalogProvider: CommandProviding {
     let items: [CommandItem]
     func commands(matching query: String) async throws -> [CommandItem] {
         try Task.checkCancellation()
+        if query.utf8.count <= 256, let value = try? UtilityExpression.evaluate(query) {
+            let result = String(format:"%.12g",value)
+            return [CommandItem(id:"utility.calculator.result",title:result,subtitle:query,keywords:[query],kind:.utility,payload:"calculate."+result)] + items
+        }
+        if let value = try? UnitConversion.convert(query) {
+            let result = String(format:"%.12g",value.value)+" "+value.targetUnit
+            return [CommandItem(id:"utility.calculator.result",title:result,subtitle:query,keywords:[query],kind:.utility,payload:"calculate."+result)] + items
+        }
         return items
     }
 }
@@ -30,6 +40,7 @@ private struct LauncherCatalogProvider: CommandProviding {
     private var visible = false
     private let store: WorkbenchModel
     private let coordinator = QueryCoordinator()
+    private let fileService = try? FileSearchService()
     private var generation: UInt64 = 0
     private var searchTask: Task<Void, Never>?
     private var subscriptions: Set<AnyCancellable> = []
@@ -39,7 +50,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         store.$configuration.sink { [weak self] _ in Task { @MainActor in self?.search() } }.store(in: &subscriptions)
     }
     public var selection: CommandItem? { results.first { $0.id == selectedID } }
-    public func setVisible(_ value: Bool) { visible = value; updateVisibleReferences() }
+    public func setVisible(_ value: Bool) { visible = value; if !value { searchTask?.cancel(); queryRequest = nil; resultBatch = nil }; updateVisibleReferences() }
     private func updateVisibleReferences() {
         if visible { store.setVisibleReferences(owner: visibilityOwner, draftID: draft?.id, taskID: nil) }
         else { store.releaseVisibleReferences(owner: visibilityOwner) }
@@ -54,7 +65,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         let provider = LauncherCatalogProvider(items: items), preferences = store.configuration.preferences
         searchTask = Task { [weak self] in
             guard let self, !Task.isCancelled else { return }
-            let stream = await coordinator.search(request: request, providers: [provider], preferences: preferences)
+            let stream = await coordinator.search(request: request, providers: [provider] + ((!store.configuration.searchFolders.isEmpty && query.trimmingCharacters(in:.whitespacesAndNewlines).count >= 2 ? fileService.map { [FileSearchCommandProvider(service:$0,folders:store.configuration.searchFolders) as any CommandProviding] } : nil) ?? []), preferences: preferences)
             for await batch in stream {
                 guard !Task.isCancelled, queryRequest?.queryID == batch.queryID,
                       queryRequest?.generation == batch.generation else { return }
@@ -77,11 +88,18 @@ private struct LauncherCatalogProvider: CommandProviding {
         guard let request = queryRequest, let batch = resultBatch,
               request.queryID == batch.queryID, request.generation == batch.generation,
               let selection else { return }
-        if let onExecute { onExecute(selection) } else { store.execute(selection) }
+        if selection.id.hasPrefix("file."), let service = fileService {
+            let captured = request.queryID
+            Task { [weak self] in
+                guard let self, let report = await service.currentReport(), let result = report.results.first(where:{"file."+$0.id == selection.id}), result.objectRevision == selection.objectRevision else { return }
+                await store.revealFile(result,service:service,stillCurrent:{ [weak self] in self?.visible == true && self?.queryRequest?.queryID == captured && self?.selectedID == selection.id })
+            }
+        } else if let onExecute { onExecute(selection) } else { store.execute(selection) }
     }
 }
 
 @MainActor public final class SettingsSession: ObservableObject {
+    @Published public var mcpDraft = MCPServerDraft()
     @Published public var pane: SettingsPane = .general { didSet { UserDefaults.standard.set(pane.rawValue, forKey: panePreferenceKey); onPaneChanged?() } }
     private var panePreferenceKey = "KeyDock.SettingsPane"
     public var onPaneChanged: (() -> Void)?
@@ -138,14 +156,36 @@ private struct LauncherCatalogProvider: CommandProviding {
 }
 
 @MainActor public final class WorkspaceSession: ObservableObject {
-    public enum Page: String, CaseIterable { case tasks, ai, clipboard }
-    @Published public var page: Page = .tasks
+    public enum Page: String, CaseIterable { case tasks, ai, clipboard, agent, activity, workflows, tools }
+    @Published public var page: Page = .tasks { didSet { if page != .tools { files.cancel() } } }
     @Published public var selectedTaskID: UUID? { didSet { updateVisibleReferences() } }
     @Published public var draft: AIDraftDocument? { didSet { updateVisibleReferences() } }
+    @Published public var agentInput = ""
+    @Published public var agentProfile = AgentDefinition()
+    var agentProfileLoaded = false
+    @Published public var workflowDraft = WorkflowDefinition(name:"",steps:[.init(operation:.transform(.trim))])
+    @Published public var workflowInput = ""
+    var workflowLoaded = false
+    @Published public var toolsText = ""
+    @Published public var toolsSourceName = ""
+    @Published public var selectedWebActionID: UUID?
+    @Published public var selectedCollectionID: UUID?
+    @Published public var webQuery = ""
+    @Published public var unitInput = ""
+    @Published public var unitResult = ""
+    @Published public var calculatorInput = ""
+    @Published public var calculatorResult = ""
+    @Published public var snippetName = ""
+    @Published public var snippetText = ""
+    @Published public var selectedSnippetID: UUID?
+    @Published public var selectedMCPSourceID: UUID?
+    @Published public var mcpPromptArguments = "{}"
+    var contextGeneration = UUID()
     private weak var store: WorkbenchModel?
     private let visibilityOwner = UUID()
     private var visible = false
     public let clipboard = ClipboardBrowserSession()
+    public let files = FileSearchSession()
     public var clipboardQuery: String {
         get { clipboard.query }
         set { clipboard.query = newValue }
@@ -154,7 +194,7 @@ private struct LauncherCatalogProvider: CommandProviding {
     public init() {
         clipboardChanges = clipboard.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
     }
-    public func setVisible(_ value: Bool, in store: WorkbenchModel) { self.store = store; visible = value; updateVisibleReferences() }
+    public func setVisible(_ value: Bool, in store: WorkbenchModel) { self.store = store; visible = value; if !value { files.cancel() }; updateVisibleReferences() }
     public func present(_ route: WorkspaceRoute? = nil, in store: WorkbenchModel) {
         setVisible(true, in: store)
         if let route { navigate(route, store: store) }
@@ -174,6 +214,12 @@ private struct LauncherCatalogProvider: CommandProviding {
         case .tasks(let id): page = .tasks; if let id { selectedTaskID = id } else if selectedTaskID == nil { selectedTaskID = store.tasks.first?.id }
         case .ai(let id): page = .ai; draft = store.drafts[id]
         case .clipboard: page = .clipboard
+        case .agent: page = .agent
+        case .activity: page = .activity
+        case .workflows: page = .workflows
+        case .tools: page = .tools
+        case .web(let id): page = .tools; selectedWebActionID = id
+        case .collection(let id): page = .tools; selectedCollectionID = id
         }
     }
     public func createDraft(in store: WorkbenchModel) {

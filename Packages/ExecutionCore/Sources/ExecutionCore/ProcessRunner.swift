@@ -5,6 +5,7 @@ import Foundation
 /// 一次性命令的生命周期所有者；交互命令应交给终端 adapter。
 public actor ProcessRunner {
     private var sessions: [UUID: ProcessSession] = [:]
+    private var completionWaiters: [UUID: [CheckedContinuation<Void, Never>]] = [:]
     private let outputLimitBytes: Int
 
     public init(outputLimitBytes: Int = 1_048_576) {
@@ -39,7 +40,17 @@ public actor ProcessRunner {
         sessions[id]?.requestStop(.cancelled)
     }
 
-    private func remove(_ id: UUID) { sessions[id] = nil }
+    /// 取消流后仍等待真实worker回收，避免把Swift任务取消误报为进程已退出。
+    public func waitForCompletion(_ id: UUID) async {
+        guard sessions[id] != nil else { return }
+        await withCheckedContinuation { continuation in completionWaiters[id,default:[]].append(continuation) }
+    }
+
+    private func remove(_ id: UUID) {
+        sessions[id] = nil
+        let waiters = completionWaiters.removeValue(forKey:id) ?? []
+        for waiter in waiters { waiter.resume() }
+    }
 
     deinit {
         for session in sessions.values { session.requestStop(.cancelled) }
@@ -299,7 +310,7 @@ private final class ProcessSession: @unchecked Sendable {
         if let reason = requestedStop {
             finish(.init(state: reason, exitCode: code, message: reason == .timedOut ? "process.timedOut" : "process.cancelled"))
         } else if waitFailed || waited != child.pid {
-            finish(.init(state: .failed, message: "process.waitFailed"))
+            finish(.init(state: .interrupted, message: "process.waitFailed"))
         } else if drainIncomplete {
             finish(.init(state: .failed, exitCode: code, message: "process.outputDrainIncomplete"))
         } else {

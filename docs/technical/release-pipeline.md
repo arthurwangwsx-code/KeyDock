@@ -33,6 +33,8 @@ flowchart LR
 
 `python3 scripts/keydock.py release --install --publish`可组合正式流程。首次开源先建立并核对仓库、受控fast-forward并推送master与tag；发布入口不会隐式创建tag或修改分支。每步退出码、耗时和日志留在忽略的 `.local/pipeline/<run>/`；package／publish可独立重试。已存在版本只复用相同源和摘要；签名时间戳会使重复构建字节不同，不承诺逐位可复现。
 
+Swift检查分为两个互补的强制阶段：主体排除Terminal生命周期套件，随后在独立进程运行这两个套件。原有两秒退出／回执时限断言不变；任一阶段失败或没有匹配用例都会停止。`--jobs 2`仅限制构建并发，不会串行Swift Testing的MainActor套件；拆分避免大批合成磁盘／主线程工作污染时间测量，不表示繁忙系统具备硬实时保证。两阶段合并覆盖全部Swift用例，禁止失败后自动fallback或重试变绿。
+
 发行后的证据文档可以追加提交，发行tag仍固定在原始构建源。复核已有版本使用`make verify-release`；再次发行先更新version／build，不从新HEAD覆盖旧版本。若确需重试未完成的同版发布，先回到对应干净源提交。
 
 ## 调试与正式身份

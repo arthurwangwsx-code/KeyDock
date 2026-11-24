@@ -31,3 +31,31 @@ P3 系统 SHALL 区分 MCP 工具适配与 ACP 外部 Agent 适配，不将进�
 #### Scenario: 导入 MCP server
 - **WHEN** 用户启用外部 MCP server
 - **THEN** 系统展示来源与实际进程权限边界，远端 annotations 不提升本机权限
+
+### Requirement: Frozen effectful Agent tools
+
+The Agent runtime MUST freeze the selected command and MCP tool scopes, validate arguments before dispatch, obtain invocation-bound approval for effects, persist intent first and retain unknown outcomes without replay.
+
+#### Scenario: Cancelled approval arrives late
+
+- **WHEN** a user cancels while a tool awaits approval and a late approval arrives
+- **THEN** no intent or tool dispatch occurs, and the closed run cannot accept another call.
+
+#### Scenario: Tool completed but receipt failed
+
+- **WHEN** a tool may have effects and result persistence fails after dispatch
+- **THEN** the parent run preserves an unknown outcome and cannot silently retry the tool.
+
+### Requirement: Explicit external sources
+
+The host MUST keep MCP source transport, protocol version, catalog revision and tool selection independent from model instructions and must recheck invalidation after asynchronous connection cleanup.
+
+#### Scenario: Source revoked during cleanup
+
+- **WHEN** a source is disabled while an older connection is closing
+- **THEN** a late discovery result cannot reinstall its client or tools, and a cancelled stdio launch cannot start another process.
+
+#### Scenario: Resource preview
+
+- **WHEN** the user selects a listed resource or prompt
+- **THEN** bounded text enters the selected preview as data and is not sent to AI automatically.

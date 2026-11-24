@@ -16,6 +16,34 @@ from keydock_common import CONFIG, PipelineError, atomic_json, sha256, signature
 
 
 class ReleasePipelineTests(unittest.TestCase):
+    def test_check_requires_both_complementary_swift_partitions_before_helper(self):
+        for failed_stage in (None, "swift-tests", "swift-terminal-lifecycle"):
+            with self.subTest(failed_stage=failed_stage), tempfile.TemporaryDirectory() as temporary:
+                log = Path(temporary) / "synthetic.log"
+                log.write_text("✔ Test run with 4 tests in 1 suite passed after 0.3 seconds.\n")
+                stages = []
+                def stage(name, command):
+                    stages.append((name, command))
+                    if name == failed_stage: raise PipelineError("synthetic failure")
+                    return log
+                with patch.object(keydock, "stage", side_effect=stage), patch.object(keydock, "helper") as helper:
+                    if failed_stage:
+                        with self.assertRaises(PipelineError): keydock.check(ci=True)
+                        helper.assert_not_called()
+                    else:
+                        keydock.check(ci=True)
+                        commands = dict(stages)
+                        primary, timing = commands["swift-tests"], commands["swift-terminal-lifecycle"]
+                        self.assertEqual(primary[primary.index("--skip") + 1], timing[timing.index("--filter") + 1])
+                        helper.assert_called_once()
+
+    def test_empty_or_missing_swift_test_summary_cannot_pass_a_partition(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            log = Path(temporary) / "synthetic.log"
+            for output in ("warning: No matching test cases were run", "✔ Test run with 0 tests passed."):
+                log.write_text(output)
+                with self.assertRaises(PipelineError): keydock.require_swift_tests(log)
+
     def test_dmg_verification_rejects_other_signing_team_before_trust_checks(self):
         manifest = {"assets": [{"name": "synthetic.dmg"}]}
         details = subprocess.CompletedProcess([], 0, stderr="Authority=Developer ID Application: Synthetic\nTeamIdentifier=OTHER\n")

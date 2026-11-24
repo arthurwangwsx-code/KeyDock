@@ -31,7 +31,7 @@ extension WorkbenchModel {
               let action = configuration.aiActions.first(where: { $0.id == draft.actionID }) else { return nil }
         return runAI(action: action, draft: draft)
     }
-    private func provider(override: String = "") throws -> ChatCompletionsProvider {
+    func provider(override: String = "") throws -> ChatCompletionsProvider {
         guard let url = URL(string: configuration.endpoint), !configuration.endpoint.isEmpty else { throw AIProviderError.invalidConfiguration }
         let selectedModel = override.isEmpty ? configuration.model : override
         let config = AIProviderConfiguration(endpoint: url, model: selectedModel, allowsLocalHTTP: configuration.localHTTP, tokenLimitParameter: TokenLimitParameter(rawValue: configuration.tokenLimitParameter) ?? .maxCompletionTokens)
@@ -55,6 +55,7 @@ extension WorkbenchModel {
         tasks[0].source = draft.source; tasks[0].sourceApplication = draft.sourceTarget.map { TaskTextLimits.prefix($0.applicationName, maximumBytes: 1_024) }
         tasks[0].aiUsageSummary = .pending
         aiTaskIDs.insert(id)
+        registerActivity(id,commandID:"ai.run",category:.ai)
         let request = AIRequest(messages: [.init(role: "system", content: action.prompt), .init(role: "user", content: input)], tools: [])
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
@@ -115,6 +116,7 @@ extension WorkbenchModel {
         tasks.insert(RunningTaskItem(id: id, title: L("Command proposal"), state: .running, draftID: draft.id, titleKey: "Command proposal"), at: 0)
         tasks[0].aiUsageSummary = .pending
         aiTaskIDs.insert(id)
+        registerActivity(id,commandID:"ai.run",category:.ai)
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
             var observations = AIUsageAccumulator(), outcome = "failed", receiptStarted = false
@@ -164,6 +166,7 @@ extension WorkbenchModel {
         tasks.insert(RunningTaskItem(id: id, title: L("Read-only agent"), state: .running, draftID: draft.id, titleKey: "Read-only agent"), at: 0)
         tasks[0].aiUsageSummary = .pending
         aiTaskIDs.insert(id)
+        registerActivity(id,commandID:"ai.run",category:.ai)
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
             var usage = AIUsageAccumulator(), outcome = "failed", receiptStarted = false
@@ -203,7 +206,7 @@ extension WorkbenchModel {
         }
         onOpenWorkspace?(.tasks(id))
     }
-    private func validatedAIInput(_ draft: AIDraftDocument) -> String? {
+    func validatedAIInput(_ draft: AIDraftDocument) -> String? {
         guard ownsDraft(draft) else { if draft.notice.isEmpty { draft.noticeMessage = noticeKey("This draft is no longer available. Create a new draft to continue.") }; return nil }
         guard !isShuttingDown else { draft.noticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return nil }
         let input = draft.input
@@ -211,17 +214,17 @@ extension WorkbenchModel {
         guard input.utf8.count <= TaskTextLimits.inputBytes else { draft.noticeMessage = noticeKey("Input is too long. Split it into smaller parts; nothing was sent."); return nil }
         return input
     }
-    private func taskError(_ error: Error, id: UUID, draft: AIDraftDocument, revision: UUID) {
+    func taskError(_ error: Error, id: UUID, draft: AIDraftDocument, revision: UUID) {
         let text = aiErrorNotice(error)
         if let index = tasks.firstIndex(where: { $0.id == id }) { tasks[index].noticeMessage = text }
         if draft.revision == revision && (draft.latestRunID == id || proposalRequests[draft.id] == id) { draft.noticeMessage = text }
     }
-    private func mergeUsage(_ usage: AIUsage, into accumulator: inout AIUsageAccumulator, id: UUID) {
+    func mergeUsage(_ usage: AIUsage, into accumulator: inout AIUsageAccumulator, id: UUID) {
         do { try accumulator.observe(usage) }
         catch { accumulator.markUnknown(attemptID: usage.attemptID) }
         publishAIUsage(id, facts: AIUsageFacts(accumulator: accumulator, outcome: "running"))
     }
-    private func recordUsage(id: UUID, endpoint: URL, model: String, purpose: String, observations: AIUsageAccumulator, outcome: String) async {
+    func recordUsage(id: UUID, endpoint: URL, model: String, purpose: String, observations: AIUsageAccumulator, outcome: String) async {
         let facts = AIUsageFacts(accumulator: observations, outcome: outcome)
         publishAIUsage(id, facts: facts)
         let receipt = UsageReceipt(runID: id, endpointHost: endpoint.host ?? "", model: model, purpose: purpose, recordedAt: Date(), observations: facts.observations, unknownAttempts: facts.unknownAttempts, hasUnknownUsage: facts.hasUnknownUsage, outcome: outcome, costBasis: "unknown")
@@ -230,7 +233,7 @@ extension WorkbenchModel {
             if !result.stored { workspaceNoticeMessage = noticeKey("Usage metadata could not be saved") }
         } catch { workspaceNoticeMessage = noticeKey("Usage metadata could not be saved") }
     }
-    private func aiErrorNotice(_ error: Error) -> LocalizedNotice {
+    func aiErrorNotice(_ error: Error) -> LocalizedNotice {
         switch error {
         case SessionAdmissionError.capacity: noticeKey("KeyDock is at its task or text limit. Finish a task or clear older history, then try again.")
         case AITextResultError.empty: noticeKey("The model returned no output. Nothing was copied or replaced.")
@@ -238,6 +241,7 @@ extension WorkbenchModel {
         case HostDescriptorPolicyError.unavailable(let reasonKey): noticeKey(reasonKey)
         case HostDescriptorPolicyError.missingContext: noticeKey("Select text or enter input; context was not expanded")
         case AIProviderError.invalidConfiguration: noticeKey("Configure a valid API endpoint and model in Settings")
+        case AgentToolError.receiptUnavailable: noticeKey("Tool output was received, but its receipt could not be saved. Check effects before retrying.")
         case AIProviderError.httpStatus(429): noticeKey("API rate limit reached; retry later")
         case AIProviderError.httpStatus(401), AIProviderError.httpStatus(403): noticeKey("API authentication failed; check the stored key")
         case AIProviderError.unexpectedToolCall: noticeKey("This text action cannot execute tools")

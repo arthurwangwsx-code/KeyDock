@@ -5,6 +5,7 @@
 | 文档 | 用途 |
 |---|---|
 | [产品愿景](product/vision.md) | 用户、定位、产品原则、成功指标 |
+| [扩展能力使用说明](product/expanded-tools-guide.md) | Agent、MCP、工作流、调度、OCR和常用工具的实际入口 |
 | [产品需求](product/requirements.md) | 统一能力模型、AI 快捷动作和核心流程 |
 | [竞品调研](product/competitive-research.md) | 官方来源支持的能力矩阵与产品判断 |
 | [建设路线](product/roadmap.md) | 每阶段闭环、依赖、验收与投入估算 |
@@ -12,6 +13,8 @@
 | [界面与交互规范](product/interface-design.md) | 三窗口职责、Liquid Glass、中英文与视觉验收 |
 | [UI架构与组件库](technical/ui-architecture.md) | 状态所有权、KeyDockUI与本地化边界 |
 | [AI 与自动化](technical/ai-and-automation.md) | Provider、快捷 AI、CLI、分析、Agent/MCP/ACP |
+| [后续能力与AiBox设计参考](technical/capability-expansion.md) | P2–P4产品目标、模块拆分、实现合同与完整验收义务 |
+| [Agent与外部协议边界](technical/agent-protocol-boundaries.md) | MCP版本、来源授权、回路与ACP评估结果 |
 | [数据与权限](technical/data-and-permissions.md) | TCC、上下文、存储、采集与执行策略 |
 | [P1会话保留](technical/session-retention.md) | 已实现的总预算、元数据维护、清除和恢复围栏及待验收边界 |
 | [复用评估](technical/reuse-assessment.md) | AiBox/Ashot 可借鉴模块与迁移条件 |
@@ -28,6 +31,7 @@
 | [玻璃界面与双语复查](implementation/interface-refinement-2026-11-23.md) | 组件分层、导航上下文、可返回草稿、动态提示与设置失败边界 |
 | [发行工程实查](implementation/release-engineering-2026-11-23.md) | 统一流水线、真实安装／替换／回退、启动问题与发布证据 |
 | [解锁后原生交互复查](implementation/native-actions-2026-11-24.md) | 原生运行／停止快捷键、新增工具栏、命令到Agent的合成服务实查与CI失败定位 |
+| [扩展能力实现与验收](implementation/capability-expansion-2026-11-24.md) | P2–P4新增实现、合成回归、原生观察与剩余真实验收 |
 | [状态总账](status.md) | PASS/PARTIAL/FAIL/BLOCKED、证据与未完成义务 |
 | [iSpec 提案](../ispec/changes/keydock-foundation/10-proposal.md) | proposal、design、五个能力规范和分阶段 tasks |
 

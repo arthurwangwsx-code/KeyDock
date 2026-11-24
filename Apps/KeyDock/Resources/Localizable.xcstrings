@@ -17,6 +17,22 @@
         }
       }
     },
+    "Another KeyDock instance owns this data directory. Close it before opening this copy.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "另一个 KeyDock 实例正在使用此数据目录。请先将其关闭，再打开当前副本。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another KeyDock instance owns this data directory. Close it before opening this copy."
+          }
+        }
+      }
+    },
     "Close Window": {
       "localizations": {
         "en": {
@@ -113,6 +129,54 @@
         }
       }
     },
+    "New AI task": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New AI task"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建AI任务"
+          }
+        }
+      }
+    },
+    "New action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建动作"
+          }
+        }
+      }
+    },
+    "New command": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New command"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建命令"
+          }
+        }
+      }
+    },
     "Open KeyDock": {
       "localizations": {
         "en": {
@@ -177,6 +241,54 @@
         }
       }
     },
+    "Run AI action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run AI action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运行AI动作"
+          }
+        }
+      }
+    },
+    "Run agent": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运行 Agent"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run agent"
+          }
+        }
+      }
+    },
+    "Run workflow": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运行工作流"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run workflow"
+          }
+        }
+      }
+    },
     "Select All": {
       "localizations": {
         "en": {
@@ -209,6 +321,22 @@
         }
       }
     },
+    "Stop current task": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop current task"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止当前任务"
+          }
+        }
+      }
+    },
     "Undo": {
       "localizations": {
         "en": {
@@ -237,86 +365,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "工作区"
-          }
-        }
-      }
-    },
-    "New AI task": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New AI task"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新建AI任务"
-          }
-        }
-      }
-    },
-    "Run AI action": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Run AI action"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "运行AI动作"
-          }
-        }
-      }
-    },
-    "Stop current task": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stop current task"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "停止当前任务"
-          }
-        }
-      }
-    },
-    "New command": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New command"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新建命令"
-          }
-        }
-      }
-    },
-    "New action": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New action"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新建动作"
           }
         }
       }

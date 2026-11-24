@@ -30,7 +30,11 @@ extension WorkbenchModel {
     }
 
     func descriptor(for item: CommandItem) throws -> CommandDescriptor {
-        let operation = HostActionCatalog.operation(for: item.kind)
+        let operation: HostOperation
+        if item.kind == .utility && item.payload.hasPrefix("window-layout.") { operation = .layoutWindow }
+        else if item.kind == .utility && item.payload.hasPrefix("web.") { operation = .openURL }
+        else if item.kind == .utility && (item.payload.hasPrefix("snippet.") || item.payload.hasPrefix("calculate.")) { operation = .copyText }
+        else { operation = HostActionCatalog.operation(for:item.kind) }
         // AI 默认动作只打开输入界面；执行动作另声明并使用相同目录定义。
         let operations: [HostOperation] = item.kind == .ai ? [.prepareAI, .generateText] : [operation]
         let override = configuration.aiActions.first { "ai." + $0.id.uuidString == item.id }?.modelOverride ?? ""
@@ -40,7 +44,7 @@ extension WorkbenchModel {
     /// 使用同一个实际目录描述执行；不会先检查一个描述，再重建另一套 effect/version。
     @discardableResult func authorizeHostItem(_ item: CommandItem, caller: ExecutionCaller) throws -> ExecutionRequest {
         guard !isShuttingDown else { throw WorkbenchLifecycleError.shuttingDown }
-        let context: Set<CommandContextRequirement> = item.kind == .window ? [.window] : []
+        let context: Set<CommandContextRequirement> = item.kind == .window || (item.payload.hasPrefix("window-layout.") && target != nil) ? [.window] : []
         return try HostDescriptorPolicy.authorize(
             descriptor: descriptor(for: item), availableContext: context,
             resourceScope: .exact(namespace: "keydock.resource", identifier: fingerprint(item.payload + (item.objectRevision.map { "|" + $0 } ?? ""))),
@@ -60,9 +64,9 @@ extension WorkbenchModel {
 
     private func hostAvailability(for operation: HostOperation, modelOverride: String) -> CommandAvailability {
         switch operation {
-        case .activateWindow, .replaceSelection:
+        case .activateWindow, .replaceSelection, .layoutWindow:
             return desktop.accessibilityGranted ? .available : .unavailable(reasonKey: "Accessibility permission is required")
-        case .generateText, .proposeCommand, .runReadOnlyAgent:
+        case .generateText, .proposeCommand, .runReadOnlyAgent, .runAgent:
             guard let endpoint = URL(string: configuration.endpoint), !configuration.endpoint.isEmpty else {
                 return .unavailable(reasonKey: "Configure a valid API endpoint and model in Settings")
             }

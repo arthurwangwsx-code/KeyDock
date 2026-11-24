@@ -30,8 +30,10 @@ public enum TerminalHandoffOutcome: Equatable, Sendable {
         guard !Task.isCancelled, beforeSubmission() else { return .notSubmitted }
         return await withCheckedContinuation { continuation in
             let gate = TerminalAcknowledgementGate(continuation)
-            let deadline = Task { @MainActor in
-                do { try await Task.sleep(for: acknowledgementTimeout) }
+            // 从提交片段起计绝对期限；计时不再等待主线程空闲后才开始。
+            let expiresAt = ContinuousClock.now.advanced(by: acknowledgementTimeout)
+            let deadline = Task.detached {
+                do { try await Task.sleep(until: expiresAt, clock: .continuous) }
                 catch { return }
                 gate.resolve(.unknown)
             }

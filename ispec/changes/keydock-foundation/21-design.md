@@ -38,3 +38,7 @@
 ## 2026-11-23 范围追加
 
 用户明确要求完整应用GitHub开源、本地Release上传及本地安装替换流水线。当前追加release-engineering合同与任务8.x，技术细节以docs/technical/release-pipeline.md为准。master在编译／测试／审查通过后受控fast-forward，alpha发行与完整P1日用资格分别记录；其余P2–P4产品能力继续后置。签名凭据由系统钥匙串引用，公开源码与发行物不含私钥、API配置或个人数据。
+
+## 2026-11-24 全部后续能力追加
+
+用户明确要求参考AiBox继续实现全部后续功能。P2–P4进入实施范围，产品切片、技术合同和逐项验收见[后续能力方案](../../../docs/technical/capability-expansion.md)。第一阶段未完成的权限／物理快捷键／IME／外部API／质量／兼容性义务不变。采用设计借鉴与独立实现，当前没有迁移AiBox源码的许可receipt。
