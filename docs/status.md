@@ -2,6 +2,8 @@
 
 更新：2026-11-24。用户已授权在保留P0/P1验收义务的同时推进P2–P4。**完整产品仍为PARTIAL**；当前源码、真实系统验收、已发布版本分别记录，不能用代码或CI绿测替代日用验收。
 
+后续完整目标已继续推进至`feature/clipboard-command-panels`的alpha.5候选：独立剪贴板面板、键盘搜索／预览／复制／受控插入、快捷键分类和视觉修补。定向回归与Preview原生观察已完成，最终统一检查／发行尚未完成；正式安装仍为下文alpha.4。见[本轮实查](implementation/clipboard-panel-2026-11-24.md)及[完整目标矩阵](product/quick-actions-completion.md)，不将此增量代替原P0–P4或关闭真实插入／物理热键／AI质量验收。
+
 ## 当前源码
 
 canonical目录唯一；扩展分支从master `a147e3c`创建，验收后的`fea2bee`已受控fast-forward到master并标记`v0.1.0-alpha.4`。发行证据在从master创建的`chore/alpha4-release-evidence`补齐，不修改已发布字节。主Agent独占写入／集成／提交／设备，子Agent只读研究评审或提供/tmp原创提案。未新建worktree或修改AiBox／Ashot。

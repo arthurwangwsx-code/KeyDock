@@ -71,6 +71,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public var onOpenSettings: ((SettingsPane?) -> Void)?
     public var onOpenShortcutSettings: ((CommandItem) -> Void)?
     public var onOpenWorkspace: ((WorkspaceRoute) -> Void)?
+    public var onOpenClipboard: (() -> Void)?
     public var onAIAction: ((AIDraftDocument, ExecutionCaller) -> Void)?
     public var onCaptureRequested: (() -> Void)?
     public var onReviewCommand: ((SavedCommand) -> Void)?
@@ -345,7 +346,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             case "capture": onCaptureRequested?()
             case "settings": onOpenSettings?(nil)
             case "commands": onOpenSettings?(.commands)
-            case "clipboard": onOpenWorkspace?(.clipboard)
+            case "clipboard": onOpenClipboard?()
             case "agent": onOpenWorkspace?(.agent)
             case "ai": let draft = createDraft(); if ownsDraft(draft) { onOpenWorkspace?(.ai(draft.id)) }
             default: onOpenWorkspace?(.tasks(nil))

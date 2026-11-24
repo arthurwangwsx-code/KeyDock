@@ -118,15 +118,21 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var localHTTP = false
     @Published public var tokenParameter = "max_completion_tokens"
     @Published public var shortcutQuery = ""
+    @Published public var shortcutCategory: ShortcutCategory = .all {
+        didSet { if shortcutCategory != oldValue { shortcutTargetID = nil; shortcutQuery = "" } }
+    }
     @Published public private(set) var shortcutTargetID: String?
     public func focusShortcut(_ item: CommandItem) {
-        shortcutQuery = item.title; shortcutTargetID = item.id; pane = .shortcuts
+        if item.id == "utility.clipboard" { shortcutCategory = .all; shortcutQuery = ""; shortcutTargetID = nil; pane = .shortcuts; return }
+        shortcutCategory = .all; shortcutQuery = item.title; shortcutTargetID = item.id; pane = .shortcuts
     }
     public func editShortcutQuery(_ query: String) { shortcutTargetID = nil; shortcutQuery = query }
     public func shortcutItems(in catalog: [CommandItem], preferences: CommandPreferences) -> [CommandItem] {
-        if let shortcutTargetID, let target = catalog.first(where: { $0.id == shortcutTargetID }) { return [target] }
-        if !shortcutQuery.isEmpty { return Array(CommandSearch.rank(query: shortcutQuery, items: catalog, preferences: preferences).prefix(20)) }
-        return catalog.filter { $0.kind == .ai || $0.kind == .command || preferences.favorites.contains($0.id) || store?.shortcut(for: $0.id) != nil }
+        // 具体窗口ID含PID与AX对象身份，不能作为持久快捷键；只绑定稳定窗口动作。
+        let stable = catalog.filter { $0.kind != .window && $0.id != "utility.clipboard" && shortcutCategory.contains($0) }
+        if let shortcutTargetID, let target = stable.first(where: { $0.id == shortcutTargetID }) { return [target] }
+        if !shortcutQuery.isEmpty { return Array(CommandSearch.rank(query: shortcutQuery, items: stable, preferences: preferences).prefix(40)) }
+        return Array(stable.filter { shortcutCategory != .all || $0.kind != .application || preferences.favorites.contains($0.id) || store?.shortcut(for: $0.id) != nil }.prefix(150))
     }
     public init(store: WorkbenchModel) {
         self.store = store

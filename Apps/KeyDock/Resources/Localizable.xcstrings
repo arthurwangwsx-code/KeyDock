@@ -33,6 +33,22 @@
         }
       }
     },
+    "Clipboard history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clipboard history"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剪贴板历史"
+          }
+        }
+      }
+    },
     "Close Window": {
       "localizations": {
         "en": {
@@ -61,6 +77,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "复制"
+          }
+        }
+      }
+    },
+    "Copy clipboard item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy clipboard item"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制剪贴板条目"
           }
         }
       }
@@ -209,6 +241,22 @@
         }
       }
     },
+    "Preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览"
+          }
+        }
+      }
+    },
     "Quit KeyDock": {
       "localizations": {
         "en": {
@@ -285,6 +333,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Run workflow"
+          }
+        }
+      }
+    },
+    "Sample clipboard history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample clipboard history"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "示例剪贴板历史"
           }
         }
       }

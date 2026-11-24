@@ -70,8 +70,21 @@ public struct SettingsRootView: View {
             }
             Section { Text(L("Search and quick actions live in the launcher. Configuration stays here, while long tasks continue in Workspace.")).font(.caption).foregroundStyle(.secondary) }
         case .shortcuts:
-            Section { TextField(L("Find an action to customize"), text: Binding(get: { session.shortcutQuery }, set: { session.editShortcutQuery($0) })) }
-            Section(L("Global shortcut")) { HStack { Text(L("Open KeyDock")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.setLauncherShortcut($0) })) } }
+            Section {
+                Picker(L("Action category"), selection: $session.shortcutCategory) {
+                    ForEach(ShortcutCategory.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                TextField(L("Find an action to customize"), text: Binding(get: { session.shortcutQuery }, set: { session.editShortcutQuery($0) }))
+                Text(L("Choose Applications to assign app shortcuts. Window layouts and tools can be configured without adding favorites.")).font(.caption).foregroundStyle(.secondary)
+            }
+            Section(L("Global shortcut")) {
+                HStack { Text(L("Open KeyDock")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.setLauncherShortcut($0) })) }
+                HStack { Text(L("Clipboard history")); Spacer(); recorder(Binding(get: { store.shortcut(for: "utility.clipboard") }, set: { store.setShortcut($0, for: "utility.clipboard") })) }
+                HStack {
+                    TextField(L("Clipboard search alias"), text: Binding(get: { aliases["utility.clipboard"] ?? store.configuration.preferences.aliases["utility.clipboard"] ?? "" }, set: { aliases["utility.clipboard"] = $0 }))
+                    Button(L("Save alias")) { store.setAlias(aliases["utility.clipboard"] ?? store.configuration.preferences.aliases["utility.clipboard"] ?? "", for: "utility.clipboard") }
+                }.controlSize(.small)
+            }
             Section(L("Actions & aliases")) {
                 ForEach(shortcutItems) { item in
                     VStack(alignment: .leading, spacing: 10) {
@@ -185,7 +198,7 @@ public struct SettingsRootView: View {
         return (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0") + " · " + L("Internal Preview")
     }
     private var unavailableShortcutIDs: [String] {
-        let current = Set(store.catalog.map(\.id))
+        let current = Set(store.catalog.filter { $0.kind != .window }.map(\.id))
         return store.configuration.commandShortcuts.keys.filter { !current.contains($0) }.sorted()
     }
     private func unavailableActionName(_ id: String) -> String {

@@ -8,13 +8,15 @@ public struct KDSearchField: NSViewRepresentable {
     let onMove: (Int) -> Void
     let onSubmit: () -> Void
     let onCancel: () -> Void
-    public init(text: Binding<String>, focusRequest: UUID, placeholder: String, onMove: @escaping (Int) -> Void, onSubmit: @escaping () -> Void, onCancel: @escaping () -> Void) {
+    let onAlternateSubmit: (() -> Void)?
+    public init(text: Binding<String>, focusRequest: UUID, placeholder: String, onMove: @escaping (Int) -> Void, onSubmit: @escaping () -> Void, onCancel: @escaping () -> Void, onAlternateSubmit: (() -> Void)? = nil) {
         _text = text; self.focusRequest = focusRequest; self.placeholder = placeholder
         self.onMove = onMove; self.onSubmit = onSubmit; self.onCancel = onCancel
+        self.onAlternateSubmit = onAlternateSubmit
     }
     public func makeCoordinator() -> Coordinator { Coordinator(self) }
     public func makeNSView(context: Context) -> NSTextField {
-        let field = NSTextField(); field.placeholderString = placeholder; field.font = .systemFont(ofSize: 22)
+        let field = FocusedSearchField(); field.placeholderString = placeholder; field.font = .systemFont(ofSize: 22)
         field.isBezeled = false; field.drawsBackground = false; field.focusRingType = .none
         field.delegate = context.coordinator
         field.setAccessibilityLabel(placeholder)
@@ -40,12 +42,25 @@ public struct KDSearchField: NSViewRepresentable {
             // 输入法正在组合时，把 Return/Esc/方向键交回输入法。
             guard !textView.hasMarkedText() else { return false }
             switch selector {
-            case #selector(NSResponder.insertNewline(_:)): parent.onSubmit(); return true
+            case #selector(NSResponder.insertNewline(_:)):
+                if NSApp.currentEvent?.modifierFlags.contains(.command) == true, let alternate = parent.onAlternateSubmit { alternate() }
+                else { parent.onSubmit() }
+                return true
             case #selector(NSResponder.moveDown(_:)): parent.onMove(1); return true
             case #selector(NSResponder.moveUp(_:)): parent.onMove(-1); return true
             case #selector(NSResponder.cancelOperation(_:)): parent.onCancel(); return true
             default: return false
             }
         }
+    }
+}
+
+/// SwiftUI可能在window连接之前创建控件；不能依赖一次nil window的异步请求。
+@MainActor private final class FocusedSearchField: NSTextField {
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard let window else { return }
+        window.initialFirstResponder = self
+        window.makeFirstResponder(self)
     }
 }

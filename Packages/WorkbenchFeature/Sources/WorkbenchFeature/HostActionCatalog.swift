@@ -4,7 +4,7 @@ import CommandCore
 /// 只由编译期宿主入口选择；外部内容不能注册动作或覆盖执行效果。
 enum HostOperation: String, Hashable, Sendable, CaseIterable {
     case openApplication, activateWindow, runCommand, prepareAI, generateText
-    case proposeCommand, runReadOnlyAgent, runAgent, copyText, replaceSelection, readClipboard, navigate, layoutWindow, importContext, captureScreen, revealFile, openURL
+    case proposeCommand, runReadOnlyAgent, runAgent, copyText, replaceSelection, pasteClipboard, readClipboard, navigate, layoutWindow, importContext, captureScreen, revealFile, openURL
 }
 
 /// 同一份声明同时供目录展示和真实执行使用，版本、效果与执行引用只在此定义。
@@ -65,6 +65,8 @@ enum HostActionCatalog {
             input = .text; output = .none; context = []; effects = [.writeClipboard]
         case .replaceSelection:
             input = .text; output = .none; context = [.selection]; effects = [.replaceText]
+        case .pasteClipboard:
+            input = .text; output = .none; context = [.window, .explicitInput]; effects = [.writeClipboard, .replaceText, .activateApplication]
         case .readClipboard:
             input = .clipboardItem; output = .text; context = [.clipboard]; effects = [.read]
         case .navigate:

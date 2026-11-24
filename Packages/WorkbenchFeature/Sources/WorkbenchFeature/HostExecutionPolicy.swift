@@ -64,7 +64,7 @@ extension WorkbenchModel {
 
     private func hostAvailability(for operation: HostOperation, modelOverride: String) -> CommandAvailability {
         switch operation {
-        case .activateWindow, .replaceSelection, .layoutWindow:
+        case .activateWindow, .replaceSelection, .layoutWindow, .pasteClipboard:
             return desktop.accessibilityGranted ? .available : .unavailable(reasonKey: "Accessibility permission is required")
         case .generateText, .proposeCommand, .runReadOnlyAgent, .runAgent:
             guard let endpoint = URL(string: configuration.endpoint), !configuration.endpoint.isEmpty else {

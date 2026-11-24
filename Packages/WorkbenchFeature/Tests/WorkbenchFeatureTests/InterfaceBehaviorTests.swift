@@ -107,6 +107,27 @@ import KeyDockUI
         }
     }
 
+    @Test func shortcutCategoriesExposeStableWindowActionsAndRejectEphemeralWindowIDs() throws {
+        try withStore { store, _, _ in
+            let session = SettingsSession(store: store)
+            let app = CommandItem(id: "app./synthetic.app", title: "Synthetic App", kind: .application, payload: "/synthetic.app")
+            let ephemeral = CommandItem(id: "window.123.456", title: "Synthetic Window", kind: .window, payload: "window.123.456")
+            let catalog = store.catalog + [app, ephemeral]
+            session.shortcutCategory = .windows
+            let layouts = session.shortcutItems(in: catalog, preferences: .init())
+            #expect(layouts.count == 13 && layouts.allSatisfy { $0.payload.hasPrefix("window-layout.") })
+            session.shortcutCategory = .applications
+            #expect(session.shortcutItems(in: catalog, preferences: .init()).map(\.id) == [app.id])
+            session.shortcutCategory = .all; session.editShortcutQuery("Synthetic Window")
+            #expect(!session.shortcutItems(in: catalog, preferences: .init()).contains { $0.id == ephemeral.id })
+            session.shortcutCategory = .tools
+            #expect(session.shortcutQuery.isEmpty)
+            #expect(session.shortcutItems(in: catalog, preferences: .init()).contains { $0.id == "utility.tools" })
+            session.focusShortcut(try #require(store.catalog.first { $0.id == "utility.clipboard" }))
+            #expect(session.shortcutQuery.isEmpty && session.shortcutTargetID == nil && session.pane == .shortcuts)
+        }
+    }
+
     @Test func newAIDraftPreservesPreviousDocumentAndOtherWindowSession() throws {
         try withStore { store, _, _ in
             let workspace = WorkspaceSession(), launcher = LauncherSession(store: store)

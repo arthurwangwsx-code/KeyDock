@@ -481,6 +481,22 @@
         }
       }
     },
+    "Action category": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action category"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "动作分类"
+          }
+        }
+      }
+    },
     "Actions": {
       "localizations": {
         "en": {
@@ -637,6 +653,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agent workspace"
+          }
+        }
+      }
+    },
+    "All actions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部动作"
           }
         }
       }
@@ -1121,6 +1153,22 @@
         }
       }
     },
+    "Choose Applications to assign app shortcuts. Window layouts and tools can be configured without adding favorites.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Applications to assign app shortcuts. Window layouts and tools can be configured without adding favorites."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择“应用”可配置应用快捷键。窗口布局与工具无需添加收藏即可配置。"
+          }
+        }
+      }
+    },
     "Choose a source": {
       "localizations": {
         "zh-Hans": {
@@ -1405,6 +1453,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法保存设置，本次运行已暂停剪贴板采集。重新启动后可能恢复之前的采集设置，请在重启前重新保存设置。"
+          }
+        }
+      }
+    },
+    "Clipboard search alias": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clipboard search alias"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剪贴板搜索别名"
+          }
+        }
+      }
+    },
+    "Clipboard shortcut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clipboard shortcut"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剪贴板快捷键"
           }
         }
       }
@@ -2225,6 +2305,22 @@
         }
       }
     },
+    "Enable clipboard history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable clipboard history"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用剪贴板历史"
+          }
+        }
+      }
+    },
     "Enable schedule": {
       "localizations": {
         "zh-Hans": {
@@ -2845,6 +2941,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "输入用量（token）"
+          }
+        }
+      }
+    },
+    "Insert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "插入"
+          }
+        }
+      }
+    },
+    "Insertion needs Accessibility permission and an unchanged text target. You can still copy the item.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insertion needs Accessibility permission and an unchanged text target. You can still copy the item."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "插入需要辅助功能权限和未变化的文本目标。你仍然可以复制条目。"
+          }
+        }
+      }
+    },
+    "Insertion was not sent. The original target, permission or clipboard changed. Copy the item or open history again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insertion was not sent. The original target, permission or clipboard changed. Copy the item or open history again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未发送插入请求：原目标、权限或剪贴板已变化。请复制条目或重新打开历史。"
           }
         }
       }
@@ -4113,6 +4257,22 @@
         }
       }
     },
+    "Plain text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plain text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纯文本"
+          }
+        }
+      }
+    },
     "Press shortcut · Esc cancel · Delete clear": {
       "localizations": {
         "en": {
@@ -4765,6 +4925,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "重试注册快捷键"
+          }
+        }
+      }
+    },
+    "Return inserts into the original app. The selected plain text stays on the clipboard.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return inserts into the original app. The selected plain text stays on the clipboard."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按 Return 向原应用插入。所选纯文本会保留在当前剪贴板。"
           }
         }
       }
@@ -5453,6 +5629,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "选择"
+          }
+        }
+      }
+    },
+    "Select an item to preview its full text.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an item to preview its full text."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择条目以预览完整文本。"
           }
         }
       }
@@ -6817,6 +7009,22 @@
         }
       }
     },
+    "Try another word or clear the search.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try another word or clear the search."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请更换关键词或清空搜索。"
+          }
+        }
+      }
+    },
     "URL action": {
       "localizations": {
         "zh-Hans": {
@@ -7309,6 +7517,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Window layout could not be applied. Check permission, target and window size."
+          }
+        }
+      }
+    },
+    "Window management": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window management"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口管理"
           }
         }
       }

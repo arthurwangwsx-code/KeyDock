@@ -26,11 +26,13 @@ struct ClipboardPreviewSheet: View {
     }
 }
 
-private struct ClipboardReadOnlyText: NSViewRepresentable {
+struct ClipboardReadOnlyText: NSViewRepresentable {
     let text: String
+    var transparent = false
     func makeNSView(context: Context) -> NSScrollView {
         let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 600, height: 400))
         scroll.hasVerticalScroller = true; scroll.hasHorizontalScroller = false
+        scroll.drawsBackground = !transparent
         let view = NSTextView(frame: scroll.contentView.bounds)
         view.isEditable = false; view.isSelectable = true
         view.isVerticallyResizable = true; view.isHorizontallyResizable = false
@@ -41,6 +43,7 @@ private struct ClipboardReadOnlyText: NSViewRepresentable {
         view.layoutManager?.allowsNonContiguousLayout = true
         view.font = .systemFont(ofSize: 13)
         view.backgroundColor = .textBackgroundColor
+        view.drawsBackground = !transparent
         view.setAccessibilityLabel(L("Preview"))
         scroll.documentView = view
         return scroll

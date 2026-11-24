@@ -28,6 +28,10 @@ import KeyDockUI
             let store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: !smoke)
             coordinator = WindowCoordinator(store: store, safeSmoke: smoke)
             coordinator?.start()
+            // 仅隔离Preview可用：使用明确的合成夹具做界面验收，不启用系统采集。
+            if smoke && ProcessInfo.processInfo.arguments.contains("--demo-clipboard") {
+                coordinator?.loadClipboardDemo()
+            }
         } catch {
             let alert = NSAlert(); alert.messageText = "KeyDock"
             alert.informativeText = error as? RuntimeDirectoryLeaseError == .alreadyOwned ? AppL("Another KeyDock instance owns this data directory. Close it before opening this copy.") : AppL("Local data could not be opened. Existing files were preserved.")
@@ -58,11 +62,19 @@ import KeyDockUI
     let launcherSession: LauncherSession
     let settingsSession: SettingsSession
     let workspaceSession = WorkspaceSession()
+    let clipboardSession = ClipboardPanelSession()
     private let hotkeys = HotkeyCenter()
     private let safeSmoke: Bool
     private var launcher: LauncherPanel?
     private var settings: NSWindow?
     private var workspace: NSWindow?
+    private var clipboardPanel: LauncherPanel?
+    private var clipboardGeneration = UUID()
+    private var clipboardCapture: Task<Void, Never>?
+    private var clipboardPaste: Task<Void, Never>?
+    private var clipboardTarget: ClipboardPasteTarget?
+    private var clipboardFence: ClipboardPasteActivationFence?
+    private var clipboardActivationObserver: NSObjectProtocol?
     private var statusItem: NSStatusItem?
     private var generation = UUID()
     private var captureTask: Task<Void, Never>?
@@ -86,6 +98,20 @@ import KeyDockUI
             self?.settingsSession.focusShortcut(item); self?.openSettings(.shortcuts)
         }
         store.onOpenWorkspace = { [weak self] in self?.openWorkspace($0) }
+        store.onOpenClipboard = { [weak self] in self?.presentClipboard() }
+        clipboardSession.onCopy = { [weak self] text in
+            guard let self else { return }; self.store.copyClipboardText(text); self.dismissClipboard(restore: true)
+        }
+        clipboardSession.onInsert = { [weak self] text, token in self?.insertClipboard(text, token: token) }
+        clipboardActivationObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] notification in
+            guard let application = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
+            let pid = application.processIdentifier
+            MainActor.assumeIsolated {
+                guard let self, let fence = self.clipboardFence else { return }
+                fence.observeActivation(pid: pid)
+                if fence.revoked { self.dismissClipboard(restore: false) }
+            }
+        }
         store.onCaptureRequested = { [weak self] in
             guard let self else { return }; self.openWorkspace(.tools); store.captureRegion(session:self.workspaceSession)
         }
@@ -143,6 +169,7 @@ import KeyDockUI
     }
     func presentLauncher(commandID: String? = nil) {
         guard !store.isShuttingDown else { return }
+        dismissClipboard(restore: false)
         if launcher == nil { launcher = buildLauncher() }
         guard let launcher else { return }
         if launcher.isKeyWindow {
@@ -191,6 +218,7 @@ import KeyDockUI
     }
     func openSettings(_ pane: SettingsPane? = nil) {
         guard !store.isShuttingDown else { return }
+        dismissClipboard(restore: false)
         settingsSession.setVisible(true)
         dismissLauncher(restore: false); if let pane { settingsSession.pane = pane }
         if settings == nil {
@@ -205,6 +233,7 @@ import KeyDockUI
     }
     func openWorkspace(_ route: WorkspaceRoute? = nil) {
         guard !store.isShuttingDown else { return }
+        dismissClipboard(restore: false)
         workspaceSession.present(route, in: store)
         dismissLauncher(restore: false)
         if workspace == nil {
@@ -215,6 +244,79 @@ import KeyDockUI
             installToolbar("KeyDock.Workspace.Toolbar", in: window)
         }
         refreshTitles(); NSApp.activate(ignoringOtherApps: true); workspace?.makeKeyAndOrderFront(nil)
+    }
+    func presentClipboard() {
+        guard !store.isShuttingDown else { return }
+        if clipboardPanel?.isKeyWindow == true { dismissClipboard(restore: true); return }
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        let inherited = launcher?.isKeyWindow == true && NSWorkspace.shared.frontmostApplication?.processIdentifier == ownPID ? store.target : nil
+        let identity = safeSmoke ? nil : store.desktop.frontmostTarget()
+        let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
+        dismissClipboard(restore: false)
+        let request = clipboardGeneration
+        clipboardCapture = Task { [weak self] in
+            guard let self else { return }
+            let captured: ClipboardPasteTarget?
+            if let inherited { captured = await store.desktop.pasteTarget(from: inherited) }
+            else if let identity { captured = await store.desktop.capturePasteTarget(identity) }
+            else { captured = nil }
+            // 抢焦点前完成元数据捕获；用户已经转去另一应用时不迟到抢回焦点。
+            guard !Task.isCancelled, clipboardGeneration == request, !store.isShuttingDown,
+                  NSWorkspace.shared.frontmostApplication?.processIdentifier == frontPID else { return }
+            dismissLauncher(restore: false)
+            clipboardTarget = captured
+            if clipboardPanel == nil {
+                let panel = LauncherPanel(contentRect: NSRect(x: 0, y: 0, width: 860, height: 540), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+                panel.title = AppL("Clipboard history"); panel.backgroundColor = .clear; panel.isOpaque = false
+                panel.hasShadow = true; panel.isReleasedWhenClosed = false; panel.hidesOnDeactivate = false
+                panel.isFloatingPanel = true; panel.level = .floating
+                panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]; panel.delegate = self
+                panel.isMovableByWindowBackground = true
+                panel.contentView = KDLauncherSurface.make(root: ClipboardPanelView(store: store, session: clipboardSession, dismiss: { [weak self] in self?.dismissClipboard(restore: true) }))
+                panel.onEscape = { [weak self] in self?.dismissClipboard(restore: true) }
+                clipboardPanel = panel
+            }
+            clipboardSession.present(access: store.clipboardStore, onMutation: { [weak self] in self?.store.refreshClipboard() })
+            clipboardSession.canInsert = captured != nil && !safeSmoke && store.desktop.clipboardInsertionAvailable
+            clipboardSession.targetName = captured?.identity.name ?? ""
+            if let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main, let panel = clipboardPanel {
+                var frame = panel.frame; frame.origin.x = screen.visibleFrame.midX - frame.width / 2
+                frame.origin.y = max(screen.visibleFrame.minY + 24, screen.visibleFrame.midY - frame.height / 2)
+                panel.setFrame(frame, display: false)
+            }
+            NSApp.activate(ignoringOtherApps: true); clipboardPanel?.makeKeyAndOrderFront(nil)
+        }
+    }
+    private func dismissClipboard(restore: Bool) {
+        let identity = clipboardTarget?.identity
+        clipboardGeneration = UUID(); clipboardCapture?.cancel(); clipboardCapture = nil
+        clipboardPaste?.cancel(); clipboardPaste = nil
+        clipboardPanel?.orderOut(nil); clipboardSession.dismiss(); clipboardTarget = nil; clipboardFence = nil
+        if restore, let identity { store.desktop.restore(identity: identity) }
+    }
+    private func insertClipboard(_ text: String, token: UUID) {
+        guard !store.isShuttingDown, clipboardPaste == nil, let target = clipboardTarget, !safeSmoke, clipboardSession.acceptsCommit(token) else { return }
+        let request = clipboardGeneration
+        let fence = ClipboardPasteActivationFence(ownPID: ProcessInfo.processInfo.processIdentifier, targetPID: target.identity.pid)
+        clipboardFence = fence
+        // 提交期间只隐藏，不触发用户dismiss；事务有独立nonce，新入口会撤销它。
+        clipboardPanel?.orderOut(nil)
+        clipboardPaste = Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await store.insertClipboardText(text, target: target, isCurrent: { [weak self] in
+                    guard let self else { return false }
+                    return self.clipboardGeneration == request && !self.store.isShuttingDown && self.clipboardSession.acceptsCommit(token) && !fence.revoked
+                })
+                if clipboardGeneration == request { dismissClipboard(restore: false) }
+            } catch {
+                guard clipboardGeneration == request, !Task.isCancelled, !store.isShuttingDown else { return }
+                clipboardPaste = nil; clipboardTarget = nil; clipboardFence = nil; clipboardSession.canInsert = false
+                clipboardSession.reportInsertionFailure()
+                // 失败提示不抢回其他应用的键盘焦点，也不会自动重试。
+                clipboardPanel?.orderFrontRegardless()
+            }
+        }
     }
     private func installContent<Content: View>(_ content: Content, in window: NSWindow) {
         let hosting = NSHostingController(rootView: content)
@@ -246,6 +348,7 @@ import KeyDockUI
         item.target = self; item.action = command ? #selector(newCommandAction) : #selector(newAIAction)
     }
     private func refreshTitles() {
+        clipboardPanel?.title = AppL("Clipboard history")
         settings?.title = settingsSession.pane.title + " — KeyDock"
         if let item = settings?.toolbar?.items.first(where: { $0.itemIdentifier.rawValue == "KeyDock.Controls" }) {
             configureSettingsToolbarItem(item)
@@ -268,6 +371,10 @@ import KeyDockUI
     }
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         if menuItem.action == #selector(runCurrentAction) {
+            if NSApp.keyWindow === clipboardPanel {
+                menuItem.title = AppL("Copy clipboard item")
+                return !store.isShuttingDown && clipboardSession.selection != nil && !clipboardSession.isCommitting && !clipboardHasMarkedText
+            }
             // Return只有一个菜单owner；同一keyEquivalent的禁用项仍可能挡住后续项。
             if NSApp.keyWindow === workspace, workspaceSession.page == .agent {
                 menuItem.title = AppL("Run agent")
@@ -287,7 +394,7 @@ import KeyDockUI
         let item = statusItem ?? NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "command.square", accessibilityDescription: "KeyDock")
         let menu = NSMenu()
-        for (title, action, key) in [(AppL("Open KeyDock"), #selector(openLauncherAction), ""), (AppL("Workspace"), #selector(openWorkspaceAction), ""), (AppL("Settings…"), #selector(openSettingsAction), ",")] {
+        for (title, action, key) in [(AppL("Open KeyDock"), #selector(openLauncherAction), ""), (AppL("Clipboard history"), #selector(openClipboardAction), ""), (AppL("Workspace"), #selector(openWorkspaceAction), ""), (AppL("Settings…"), #selector(openSettingsAction), ",")] {
             let entry = NSMenuItem(title: title, action: action, keyEquivalent: key); entry.target = self; menu.addItem(entry)
         }
         menu.addItem(.separator())
@@ -314,9 +421,28 @@ import KeyDockUI
             editMenu.addItem(NSMenuItem(title: title, action: selector, keyEquivalent: key))
         }
         let editItem = NSMenuItem(); editItem.submenu = editMenu; main.addItem(editItem)
+        if safeSmoke {
+            let previewMenu = NSMenu(title: AppL("Preview"))
+            let demo = NSMenuItem(title: AppL("Sample clipboard history"), action: #selector(openClipboardDemoAction), keyEquivalent: "")
+            demo.target = self; previewMenu.addItem(demo)
+            let previewItem = NSMenuItem(); previewItem.submenu = previewMenu; main.addItem(previewItem)
+        }
         NSApp.mainMenu = main
     }
+    @objc private func openClipboardDemoAction() { loadClipboardDemo() }
+    func loadClipboardDemo() {
+        guard safeSmoke, !store.isShuttingDown else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            for text in ["KeyDock clipboard demo\nSearch with arrow keys. Copy with Command-Return.\nSynthetic text only.", "会议摘要示例\n核对快捷键、窗口控制与中英文界面。\n这是一段合成验收文本。", "https://example.com/search?q=KeyDock"] {
+                _ = try? await store.clipboardStore.insert(text: text, source: "KeyDock Synthetic Demo")
+            }
+            guard !store.isShuttingDown else { return }
+            presentClipboard()
+        }
+    }
     @objc private func openLauncherAction() { presentLauncher() }
+    @objc private func openClipboardAction() { presentClipboard() }
     @objc private func openSettingsAction() { openSettings(settingsSession.pane) }
     @objc private func openWorkspaceAction() { openWorkspace() }
     @objc private func newAITaskAction() { workspaceSession.createDraft(in: store); openWorkspace() }
@@ -324,7 +450,8 @@ import KeyDockUI
     @objc private func newAIAction() { settingsSession.beginNewAction() }
     @objc private func runCurrentAction() {
         guard !store.isShuttingDown else { return }
-        if NSApp.keyWindow === workspace, workspaceSession.page == .agent { runAgentAction() }
+        if NSApp.keyWindow === clipboardPanel { if !clipboardHasMarkedText { clipboardSession.commit(insert: false) } }
+        else if NSApp.keyWindow === workspace, workspaceSession.page == .agent { runAgentAction() }
         else if NSApp.keyWindow === workspace, workspaceSession.page == .workflows { runWorkflowAction() }
         else { runAIAction() }
     }
@@ -339,15 +466,21 @@ import KeyDockUI
     }
     @objc private func stopCurrentTaskAction() { if let id = keyboardCancellationID { store.cancelTask(id) } }
     @objc private func openAboutAction() { openSettings(.about) }
-    @objc private func closeWindowAction() { if NSApp.keyWindow === launcher { dismissLauncher(restore: true) } else { NSApp.keyWindow?.performClose(nil) } }
+    @objc private func closeWindowAction() {
+        if NSApp.keyWindow === clipboardPanel { dismissClipboard(restore: true) }
+        else if NSApp.keyWindow === launcher { dismissLauncher(restore: true) }
+        else { NSApp.keyWindow?.performClose(nil) }
+    }
     @objc private func quitAction() { NSApp.terminate(nil) }
+    private var clipboardHasMarkedText: Bool { (clipboardPanel?.firstResponder as? NSTextView)?.hasMarkedText() == true }
     private func installShortcuts(configuration: AppConfiguration) throws {
         guard !store.isShuttingDown else { throw HotkeyRegistrationError(status: -50) }
         let entries = ShortcutPlan.entries(configuration)
         let definitions = entries.map { entry in
             HotkeyDefinition(id: entry.id, binding: entry.binding) { [weak self] in
                 guard let self else { return }
-                if let command = entry.commandID { self.presentLauncher(commandID: command) }
+                if entry.commandID == "utility.clipboard" { self.presentClipboard() }
+                else if let command = entry.commandID { self.presentLauncher(commandID: command) }
                 else if self.launcher?.isKeyWindow == true { self.dismissLauncher(restore: true) }
                 else { self.presentLauncher() }
             }
@@ -360,20 +493,31 @@ import KeyDockUI
             throw error
         }
     }
-    func deactivate() { if launcher?.isVisible == true { dismissLauncher(restore: false) } }
+    func deactivate() {
+        if launcher?.isVisible == true { dismissLauncher(restore: false) }
+        if clipboardPanel?.isVisible == true && clipboardPaste == nil { dismissClipboard(restore: false) }
+    }
     func windowDidResignKey(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window === clipboardPanel {
+            if clipboardPanel?.isVisible == true && clipboardPaste == nil { dismissClipboard(restore: false) }
+            return
+        }
         guard let window = notification.object as? NSWindow, window === launcher, !launcherSession.actionsVisible else { return }
         dismissLauncher(restore: false)
     }
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         if sender === workspace { workspaceSession.setVisible(false, in: store) }
         if sender === launcher { dismissLauncher(restore: true); return false }
+        if sender === clipboardPanel { dismissClipboard(restore: true); return false }
         if sender === settings { settingsSession.apiKey = ""; settingsSession.setVisible(false) }
         return true
     }
-    func beginShutdown() { hotkeys.suspend(); store.shutdown() }
+    func beginShutdown() { dismissClipboard(restore: false); hotkeys.suspend(); store.shutdown() }
     func prepareForQuit() async { await store.shutdownAndWait() }
-    func shutdown() { hotkeys.shutdown(); store.shutdown(); settingsSession.apiKey = "" }
+    func shutdown() {
+        if let observer = clipboardActivationObserver { NSWorkspace.shared.notificationCenter.removeObserver(observer) }; clipboardActivationObserver = nil
+        hotkeys.shutdown(); store.shutdown(); settingsSession.apiKey = ""
+    }
 }
 
 private func AppL(_ key: String) -> String { KDLocalizer.string(key, bundle: .main) }
