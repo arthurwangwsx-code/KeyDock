@@ -2929,6 +2929,22 @@
         }
       }
     },
+    "Enter input for this workflow. Nothing runs until you choose Run workflow.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter input for this workflow. Nothing runs until you choose Run workflow."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请为此工作流输入文本。点击“运行工作流”前不会执行任何步骤。"
+          }
+        }
+      }
+    },
     "Environment (JSON object)": {
       "localizations": {
         "en": {
@@ -3213,6 +3229,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "查找要自定义的动作"
+          }
+        }
+      }
+    },
+    "Finish or cancel the current workflow input before opening another.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish or cancel the current workflow input before opening another."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先完成或取消当前工作流输入，再打开另一个。"
           }
         }
       }
@@ -5505,6 +5537,22 @@
         }
       }
     },
+    "Reload saved workflow": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload saved workflow"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新载入保存的工作流"
+          }
+        }
+      }
+    },
     "Remove": {
       "localizations": {
         "zh-Hans": {
@@ -6237,6 +6285,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save workflow"
+          }
+        }
+      }
+    },
+    "Saved command": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved command"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存命令"
           }
         }
       }
@@ -7697,6 +7761,22 @@
         }
       }
     },
+    "The saved workflow changed. Reload it and review the steps before running.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved workflow changed. Reload it and review the steps before running."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存的工作流已更改。请重新载入并检查步骤后再运行。"
+          }
+        }
+      }
+    },
     "The shortcut target is no longer available": {
       "localizations": {
         "en": {
@@ -7821,6 +7901,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "这会删除已保存的用量元数据。正在运行的请求保留本次用量，结束后可能产生新记录。AI 动作和 API 凭据会保留。"
+          }
+        }
+      }
+    },
+    "This saved workflow is no longer available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved workflow is no longer available."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此保存工作流已不可用。"
           }
         }
       }

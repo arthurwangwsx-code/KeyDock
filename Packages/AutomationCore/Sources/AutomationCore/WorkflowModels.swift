@@ -51,6 +51,30 @@ public struct WorkflowPlan: Sendable, Equatable {
     init(definition: WorkflowDefinition, limits: WorkflowLimits, allowsInteraction: Bool) {
         self.definition = definition; self.limits = limits; self.allowsInteraction = allowsInteraction
     }
+
+    /// 追踪初始输入是否会被宿主消费或成为最终输出；固定命令和人工输入形成数据屏障。
+    public func requiresInitialInput(commandsUsingInput: Set<UUID>) -> Bool {
+        var previousDependsOnInitial = false
+        for step in definition.steps {
+            let dependsOnInitial: Bool
+            switch step.input {
+            case .workflowInput: dependsOnInitial = true
+            case .previousOutput: dependsOnInitial = previousDependsOnInitial
+            case .literal: dependsOnInitial = false
+            }
+            switch step.operation {
+            case .transform: previousDependsOnInitial = dependsOnInitial
+            case .aiAction:
+                if dependsOnInitial { return true }
+                previousDependsOnInitial = false
+            case .savedCommand(let id):
+                if commandsUsingInput.contains(id) && dependsOnInitial { return true }
+                previousDependsOnInitial = false
+            case .manualInput: previousDependsOnInitial = false
+            }
+        }
+        return previousDependsOnInitial
+    }
 }
 public enum WorkflowCompileError: Error, Sendable, Equatable {
     case invalidName, invalidVersion, emptySteps, invalidLimits, tooManySteps, duplicateStepID

@@ -171,6 +171,7 @@ private struct LauncherCatalogProvider: CommandProviding {
     var agentProfileLoaded = false
     @Published public var workflowDraft = WorkflowDefinition(name:"",steps:[.init(operation:.transform(.trim))])
     @Published public var workflowInput = ""
+    @Published var workflowLaunch: WorkflowLaunchDraft?
     var workflowLoaded = false
     @Published public var toolsText = ""
     @Published public var toolsSourceName = ""
@@ -225,6 +226,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         case .agent: page = .agent
         case .activity: page = .activity
         case .workflows: page = .workflows
+        case .workflowInput(let id): prepareWorkflowLaunch(id, in: store)
         case .tools: page = .tools
         case .web(let id): page = .tools; selectedWebActionID = id
         case .collection(let id): page = .tools; selectedCollectionID = id

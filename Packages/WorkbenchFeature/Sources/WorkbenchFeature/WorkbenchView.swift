@@ -44,6 +44,7 @@ public struct WorkspaceView: View {
                 }
             }
         }.frame(minWidth: 820, minHeight: 560).environment(\.locale, KDLocalizer.locale)
+            .sheet(item: $session.workflowLaunch) { launch in WorkflowLaunchView(store: store, session: session, launch: launch) }
             .confirmationDialog(L("Start a new attempt?"),isPresented:Binding(get:{restartID != nil},set:{if !$0 {restartID = nil}})) {
                 Button(L("Start new attempt")) { if let id = restartID { store.restartAgent(id) }; restartID = nil }
             } message: { Text(L("A new attempt rechecks current scope and may repeat completed work. Unknown effects must be checked first.")) }

@@ -169,5 +169,5 @@ public enum SettingsPane: String, CaseIterable { case general, shortcuts, applic
     public var title: String { switch self { case .general: L("General"); case .shortcuts: L("Shortcuts"); case .applications: L("Application actions"); case .aiService: L("AI Service"); case .aiActions: L("AI Actions"); case .commands: L("Commands"); case .mcp: L("MCP servers"); case .clipboard: L("Clipboard"); case .privacy: L("Privacy & Permissions"); case .about: L("About") } }
     public var icon: String { switch self { case .general: "slider.horizontal.3"; case .shortcuts: "command"; case .applications: "app.badge"; case .aiService: "network"; case .aiActions: "sparkles"; case .commands: "terminal"; case .mcp: "puzzlepiece.extension"; case .clipboard: "clipboard"; case .privacy: "hand.raised"; case .about: "info.circle" } }
 }
-public enum WorkspaceRoute { case tasks(UUID?), ai(UUID), clipboard, agent, activity, workflows, tools, web(UUID), collection(UUID) }
+public enum WorkspaceRoute { case tasks(UUID?), ai(UUID), clipboard, agent, activity, workflows, workflowInput(UUID), tools, web(UUID), collection(UUID) }
 func L(_ key: String) -> String { KDLocalizer.string(key, bundle: .module) }

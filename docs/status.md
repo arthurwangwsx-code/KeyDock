@@ -10,6 +10,10 @@
 
 AI配置前置增量已实现：配置不完整时以设置入口替代运行，原生菜单共用Provider结构校验，检查不读密钥／不联网。动作模型覆盖与两个辅助动作的全局模型分别判断。21项定向检查通过；中文浅色工作区／紧凑入口、未配置⌘Return及设置往返保留输入已观察。干净源`6633d70`本机cloud-core为496 Swift／46 Python／609 key通过；[同源CI与优化构建45486089503](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45486089503)的实际结果单独以该run为准。OCR仍NOT_QUALIFIED，真实API仍未配置，见[配置引导复查](implementation/ai-setup-guidance-2026-11-25.md)。
 
+工作流快捷入口已修补固定空输入问题：依赖初始文本时打开指定工作流的独立输入页，保留原编辑稿；专用快捷键跳过通用Launcher捕获，固定流程仍直接运行。18项定向执行、中文浅色／英文深色输入页、取消／Esc、主窗口菜单围栏和实际纯变换任务子集通过；最新完整core另录。见[本轮复查](implementation/workflow-launch-input-2026-11-25.md)及[输入合同](technical/workflow-launch-input.md)。
+
+只读完整范围复查还确认了**代码层待实现义务**：多应用桌面工作区、自定义AI动作／保存命令的删除与引用收口，以及Agent／工作流保存失败的当前页面反馈。它们在任务20／21保留，不能把目前的Workspace页面或命令集合视作多窗口工作区完成。设计见[桌面工作区方案](technical/desktop-workspaces.md)；完整目标并非只剩权限或实机检查。
+
 本轮已发布并安装alpha.7：有序多选合并、完整预览与可配置主动作，最多20项／1MiB。中文浅色／英文深色、跨查询、重排、空行与Shift-Return、偏好重启保留及实际合并复制均已观察。AI生成成功但复制失败会保留完整结果和成功回执。当前源472项Swift、46项Python、583条文案、同源CI及公证／公开回下载通过；真实自动插入仍依10.1验收。详见[本轮证据](implementation/clipboard-composition-2026-11-25.md)及[合并合同](technical/clipboard-composition.md)。
 
 2026-11-25交付增量：alpha.6已加入直接窗口／应用动作、独立应用动作设置与事务存储；457项Swift、46项Python、556个中英UI key、同源CI及发行门禁通过，并已替换正式alpha.5。首次编辑和显示提前短路已修补，合成应用真实隐藏→显示、退出只请求一次和正常结束得到确认。原生双语视觉仅通过已观察子集，完整目标仍未关闭。详见[本轮增量复查](implementation/desktop-controls-2026-11-25.md)。
@@ -26,7 +30,7 @@ canonical目录唯一；合并分支从master `2fe35b6`创建，验收后的`59d
 | 构建与模块 | PASS（本机） | Swift6／macOS14目标，当前27.2 arm64原生构建；最低系统未真实验证 |
 | 启动台／设置／工作区 | PARTIAL | 独立窗口、菜单栏入口、KeyDockUI、系统玻璃材料和中英；基本深浅色／焦点已观察，完整视觉／辅助功能矩阵未完成 |
 | 搜索与快捷键 | PARTIAL | 动作分类、剪贴板专用绑定／别名、目录／generation／过期结果和注册事务测试；Preview录制与重启持久化已观察，物理全局快捷键、IME／全屏／多屏未完整验收 |
-| 窗口切换与布局 | PARTIAL | 13项布局、稳定上一／下一窗口与最小化、窗口identity恢复、最大交集选屏、负坐标／断屏clamp纯测试、AX写后读回；真实AX授权／撤销／多屏矩阵待验收 |
+| 窗口切换与布局 | PARTIAL | 13项单窗口布局、循环／最小化与identity恢复；多应用桌面工作区尚未实现；真实AX授权／撤销／多屏矩阵仍待验收 |
 | 应用控制与定制 | PARTIAL | 命名动作、显示／隐藏／前台切换／正常退出、独立存储与直接快捷键；合成原生宿主隐藏→显示及单次正常退出请求通过，真实保存界面／Spaces／物理热键仍待验收 |
 | CLI与任务 | PARTIAL | executable+argv、有限输出／超时、真实进程组取消与回收、durable intent／result／unknown不重放；Terminal GUI继续尊重既有工具拒绝，未计真实通过 |
 | 剪贴板 | PARTIAL | 独立两栏Panel、搜索／↑↓／预览、20项／1MiB有序合并、主动作与分隔符偏好、复制／受控插入及取消／竞争围栏；中文浅色／英文深色、Shift-Return、重排与实际合并复制已观察。记录默认关闭，真实自动插入、物理热键及完整矩阵仍待验收 |

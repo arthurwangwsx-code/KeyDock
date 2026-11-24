@@ -17,6 +17,29 @@ public struct PendingWorkflowInput: Identifiable, Sendable {
 }
 
 extension WorkbenchModel {
+    /// 专用工作流快捷键不需要原选区，跳过Launcher的通用目标捕获。
+    public func performWorkflowShortcut(id: String) {
+        guard !isShuttingDown else { return }
+        launcherNoticeMessage = .none
+        if id.hasPrefix("workflow."), let item = catalog.first(where: { $0.id == id && $0.kind == .utility && $0.payload == id }) {
+            execute(item, caller: .shortcut)
+        } else { launcherNoticeMessage = noticeKey("This saved workflow is no longer available.") }
+        if !launcherNotice.isEmpty { workspaceNoticeMessage = launcherNoticeMessage; onOpenWorkspace?(.workflows) }
+    }
+
+    func launchSavedWorkflow(_ id: UUID) {
+        guard !isShuttingDown else { return }
+        guard let definition = configuration.workflows.first(where: { $0.id == id }) else {
+            launcherNoticeMessage = noticeKey("This saved workflow is no longer available."); return
+        }
+        do {
+            let plan = try compileWorkflow(definition)
+            let commandsUsingInput = Set(configuration.savedCommands.filter { $0.arguments.contains("{{input}}") }.map(\.id))
+            if plan.requiresInitialInput(commandsUsingInput: commandsUsingInput) { onOpenWorkspace?(.workflowInput(id)) }
+            else if runWorkflow(definition, input: "") == nil { launcherNoticeMessage = noticeKey("Workflow could not start. Check its steps and AI configuration.") }
+        } catch { launcherNoticeMessage = noticeKey("Workflow could not start. Check its steps and AI configuration.") }
+    }
+
     @discardableResult public func removeWorkflow(_ id:UUID) -> Bool {
         var next = configuration; next.workflows.removeAll{$0.id == id}; return commitSettingsConfiguration(next)
     }

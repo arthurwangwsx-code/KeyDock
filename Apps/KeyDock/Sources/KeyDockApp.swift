@@ -421,14 +421,18 @@ import KeyDockUI
         settings?.toolbar?.isVisible = settingsSession.pane == .commands || settingsSession.pane == .aiActions
         workspace?.title = AppL("Workspace") + " — KeyDock"
     }
+    private var workspaceSheetOwnsKeyboard: Bool {
+        guard let workspace, let sheet = workspace.attachedSheet, let key = NSApp.keyWindow else { return false }
+        return key === workspace || key === sheet || key.sheetParent === sheet
+    }
     private var keyboardDraft: AIDraftDocument? {
-        guard let keyWindow = NSApp.keyWindow else { return nil }
+        guard !workspaceSheetOwnsKeyboard, let keyWindow = NSApp.keyWindow else { return nil }
         if keyWindow === workspace, workspaceSession.page == .ai { return workspaceSession.draft }
         if keyWindow === launcher { return launcherSession.draft }
         return nil
     }
     private var keyboardCancellationID: UUID? {
-        guard let keyWindow = NSApp.keyWindow else { return nil }
+        guard !workspaceSheetOwnsKeyboard, let keyWindow = NSApp.keyWindow else { return nil }
         let id: UUID?
         if keyWindow === workspace, workspaceSession.page == .tasks { id = workspaceSession.selectedTaskID }
         else { id = keyboardDraft?.latestRunID }
@@ -440,6 +444,8 @@ import KeyDockUI
             return visualReview.allowsChanges && safeSmoke && !store.isShuttingDown
         }
         if menuItem.action == #selector(runCurrentAction) {
+            // 模态输入拥有键盘；不能让主窗口的快捷键运行被遮住的编辑稿。
+            if workspaceSheetOwnsKeyboard { return false }
             if NSApp.keyWindow === clipboardPanel {
                 let alternate = clipboardSession.preferences.primaryAction.alternate
                 menuItem.title = alternate == .copy ? AppL("Copy clipboard selection") : AppL("Insert clipboard selection")
@@ -537,7 +543,7 @@ import KeyDockUI
     @objc private func newCommandAction() { settingsSession.beginNewCommand() }
     @objc private func newAIAction() { settingsSession.beginNewAction() }
     @objc private func runCurrentAction() {
-        guard !store.isShuttingDown else { return }
+        guard !store.isShuttingDown, !workspaceSheetOwnsKeyboard else { return }
         if NSApp.keyWindow === clipboardPanel { if !clipboardHasMarkedText { clipboardSession.commitAlternate() } }
         else if NSApp.keyWindow === workspace, workspaceSession.page == .agent { runAgentAction() }
         else if NSApp.keyWindow === workspace, workspaceSession.page == .workflows { runWorkflowAction() }
@@ -569,6 +575,10 @@ import KeyDockUI
                 guard let self else { return }
                 if entry.commandID == "utility.clipboard" { self.presentClipboard() }
                 else if let command = entry.commandID, self.store.isDesktopCommand(command) { self.store.desktopShortcut(command) }
+                else if let command = entry.commandID, command.hasPrefix("workflow.") {
+                    self.revokeDesktopInvocations(); self.dismissClipboard(restore: false); self.dismissLauncher(restore: false)
+                    self.store.performWorkflowShortcut(id: command)
+                }
                 else if let command = entry.commandID { self.presentLauncher(commandID: command) }
                 else if self.launcher?.isKeyWindow == true { self.dismissLauncher(restore: true) }
                 else { self.presentLauncher() }

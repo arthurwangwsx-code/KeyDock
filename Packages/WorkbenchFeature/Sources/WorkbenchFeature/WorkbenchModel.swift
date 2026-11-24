@@ -352,7 +352,10 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             if item.payload.hasPrefix("collection."),let id = UUID(uuidString:String(item.payload.dropFirst(11))) { onOpenWorkspace?(.collection(id)); return }
             if item.payload.hasPrefix("snippet."), let id = UUID(uuidString:String(item.payload.dropFirst(8))) { copySnippet(id,caller:caller); onDismiss?(true); return }
             if item.payload.hasPrefix("calculate.") { do { try copyAuthorizedText(String(item.payload.dropFirst(10)),caller:caller); onDismiss?(true) } catch { showError(error) }; return }
-            if item.payload.hasPrefix("workflow."), let id = UUID(uuidString:String(item.payload.dropFirst("workflow.".count))), let workflow = configuration.workflows.first(where:{$0.id == id}) { _ = runWorkflow(workflow,input:""); return }
+            if item.payload.hasPrefix("workflow.") {
+                if let id = UUID(uuidString:String(item.payload.dropFirst("workflow.".count))) { launchSavedWorkflow(id) }
+                return
+            }
             switch item.payload {
             case "activity": onOpenWorkspace?(.activity)
             case "workflows": onOpenWorkspace?(.workflows)
