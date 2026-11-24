@@ -46,6 +46,7 @@
 | [保存动作生命周期复查](implementation/saved-item-lifecycle-2026-11-25.md) | 精确事务／引用／恢复、保留的测试失败与在途结果回归 |
 | [桌面工作区建设方案](technical/desktop-workspaces.md) | 独立定义管理、仍待实现的冻结／焦点／两阶段执行合同 |
 | [桌面工作区定义管理复查](implementation/desktop-workspace-definitions-2026-11-25.md) | 共用存储回归、版本与外部变化围栏、中英编辑原生子集 |
+| [桌面工作区执行内核复查](implementation/desktop-workspace-kernel-2026-11-25.md) | 冻结计划／Restore、专用焦点交接和取消收口；执行组合根仍待接通 |
 | [开源参考目录](../references/README.md) | 13 个参考工程及固定版本登记 |
 | [第一阶段进度](implementation/phase-one-progress.md) | 实现、测试、真实验收与下一步 |
 | [新版界面实机复查](implementation/native-ui-review-2026-11-22.md) | 三窗口、语言、外观、输入焦点和终端验收边界 |
