@@ -10,7 +10,7 @@ CommandCore保持纯命令与几何／工具模型；ExecutionCore统一策略�
 
 ## 已验证证据
 
-- 最终统一检查`expansion-unified-check-v3`通过382项Swift（主体373＋独立Terminal生命周期9）、34项Python、503条中英key、文档与lifecycle helper编译；测量`5bd6e3e6-99e7-4858-a000-e2f4e5c6b505`，2026-11-24T11:34:13Z–11:35:13Z，退出码0。
+- 早期统一检查`expansion-unified-check-v3`通过382项Swift（主体373＋独立Terminal生命周期9）、34项Python、503条中英key、文档与lifecycle helper编译；测量`5bd6e3e6-99e7-4858-a000-e2f4e5c6b505`，2026-11-24T11:34:13Z–11:35:13Z，退出码0。最终alpha.4同源结果见发行段。
 - 合成Vision图片实际识别；UTF-8、PDF文本层、输入限制、取消与排他目录owner测试通过。
 - 真实owned子进程忽略TERM的取消／回收回归通过；Broker关闭等实际调用收口，派发后异常与回执保存未知不伪报普通无副作用失败。
 - 工作流真实printf→文本变换、字面`$()`、逐次动态argv审批、在途冻结、拒绝／NUL零派发、最终checkpoint通过。
@@ -22,7 +22,7 @@ iSpec当前apply attempt为`d3f5e2a2-0c44-46b6-850a-5dbc8619e906`，CLI测量均
 
 两次混合套件check的退出时限失败原日志保留（`expansion-unified-check-v1/v2`）。第二次shutdown实际2.087s，3.688s是完整用例时间；并发MainActor合成夹具同步poll／usleep会污染墙钟。现将两个Terminal套件作为独立且强制的互补阶段，保留原两秒断言和全部用例，空匹配也失败；没有失败后自动重试。Adapter改为提交时捕获绝对deadline，detached计时经线程安全gate收口。最终该用例0.279s通过；不承诺繁忙系统硬实时。另保留仅在有启用计划时启动调度循环的节能修补。
 
-最终公开性静态复核覆盖260个tracked／未忽略候选，未发现凭据、个人媒体、机器home路径、额外邮箱或AiBox迁入源码；不替代最终资产检查。
+早期公开性静态复核覆盖260个tracked／未忽略候选，最终`fea2bee`复核覆盖266个tracked文件，未发现凭据、个人媒体、机器home路径、额外邮箱或AiBox迁入源码。公开manifest只含系统／工具链／源码和测试摘要，日志及合成图片原件留本地；不替代实际资产检查。
 
 干净提交`5e6c70b`的首次release在检查阶段停止（`expansion-release-alpha3-v1`，退出码1，未生成发行资产）。`oversizedTextFailsExplicitlyAndNeverAutomaticallyCopies`的五秒drain超时，当时只消费524288字节、状态running；其他并发合成进程夹具在主线程同步startup／cleanup。诊断显式使用`--no-parallel`，19项集成用例8.943s通过且顶层套件不再重叠（`expansion-serial-diagnosis-v1`）。流水线现显式串行两个Swift阶段，不调整五秒等待、一MiB输出上限或原断言；新版全量结果随后记录。
 
@@ -62,6 +62,30 @@ CUA首次typeText丢失×，改用保留UTF-8的输入后结果正确；这不�
 
 ## 发行和未关闭义务
 
-候选为0.1.0-alpha.3／build3。Preview是dirty源码验证，不作为正式分发包。正式包须在最终干净提交上重新构建、Developer ID签名／公证、Gatekeeper、安装与回下载核对；alpha.1／alpha.2不改tag或资产。
+最终发行是[0.1.0-alpha.4／build4](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.4)，源`fea2beeadd8e820e525bc3c4f2a27e7f1612b26d`，tag及master通过受控fast-forward推送后回查。文档证据另从干净master创建chore分支，不修改已发布源码或字节。alpha.3未公开候选和alpha.1／alpha.2原tag／资产保留。
+
+| 验证 | 最终实际结果 |
+|---|---|
+| 同源本机全检＋Release构建 | PASS，测量`e9d8ff61-92b8-4e5e-9cc2-53ba21806fa0`，13:20:11Z–13:25:39Z；384项Swift执行、43项Python、506条中英文案 |
+| 测试分区 | core374＋Terminal9＋OCR1；363个声明ID，参数化额外执行21次；串行互补阶段，无空匹配 |
+| 生产OCR资格 | PASS，macOS27.2／26B123、Apple M1 Pro arm64、Swift6.4.2、Xcode27.2／27B52、SDK27.2／26B118；独立进程和重复提取均实际识别 |
+| OCR配置 | accurate、revision3、自动语言及纠正启用、支持CPU的阶段已赋值；未使用诊断legacy或fast配置 |
+| 同源远端core | [45402218386](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45402218386) PASS，383项Swift及优化版Preview；云端系统OCR为NOT_QUALIFIED |
+| 资格摘要 | `1f9511252731c401d3dcbb24a6fd67f64db6869dff87f1c2d7ec1aec35bbb380`，App／manifest／源码与原始日志绑定；最新完整检查失败可撤销旧PASS的可用性 |
+| App／DMG公证 | Accepted，分别`9e29b5a1-4763-4dce-a27f-4a403735755e`／`f7358ad1-f6a1-4b0b-9d70-2cbaf1112d63`；Developer ID、Hardened Runtime、装订及Gatekeeper PASS |
+| 包制作 | PASS，测量`f2a8f126-363c-4ef2-83ca-69fc8003ef90`，13:30:52Z–13:32:05Z；只读挂载DMG并核对与ZIP的整个App及资格后正常卸载 |
+| 正式安装 | PASS，测量`be5dea04-6fff-4e24-92d3-c9006122558e`，13:32:30Z–13:32:49Z；运行中alpha.2正常退出后原子替换 |
+| 公开发布／回下载 | PASS，发布测量`ae26656d-c667-4cda-9043-058112d80125`；公开后独立回下载`21b55bc7-1a89-40ff-8d5c-e2403edd223f`，13:34:06Z–13:34:23Z，源／摘要／签名／资格／指定CI／DMG内部App一致 |
+| GitHub发行审计 | [45404703556](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45404703556) PASS，13:34:18Z–13:35:00Z，从精确tag实际下载并核验；不执行或声称云端生产OCR资格 |
+
+本地四项发行资产位于`build/releases/0.1.0-alpha.4`，摘要如下：
+
+- ZIP：`4e9a490ae9e108b5a5b9594907d6a91796b94c5d22e2a2bcaba9f147a39fc592`。
+- DMG：`599f2298576cbb4ce4f6e3d4faa3b03eac9cffb1bfb4dc1b7a7fdd490cba6bee`。
+- manifest：`f78f607fe0fdcbf7bd919acdfcb78a3a9d0ccbb010843b20e7f8dcdd4c541bcd`。
+
+安装事务为`69d321df-feaf-4833-9bbc-30e8c86bf7c3`；回退凭据在本机`.local/pipeline/20261124T133230322613Z/install-receipt.json`，旧alpha.2 App为`/Applications/.KeyDock.app.keydock-backup-69d321df-feaf-4833-9bbc-30e8c86bf7c3.app`。可用`python3 scripts/keydock.py rollback .local/pipeline/20261124T133230322613Z/install-receipt.json --quit-running`恢复；本次保留新版，未实际执行回退。安装包及已装App的bundle摘要一致为`002437b5f79cc7c2d1ee46778dd4b2c5f8a12446a82798a7be27036f4e17e684`。
+
+正式App实际启动后「关于」显示`0.1.0-alpha.4 (4)`和统一支持邮箱，中文启动台／独立设置／MCP本地进程的独立启动与请求预算可见。仅切换未保存的连接方式，没有保存来源或启动进程。隔离Preview正常退出；正式App当时PID71511仅为瞬时观察值。⌥Space尝试未观察到界面变化，因此全局物理快捷键仍未计PASS；不能以注册提示或App已启动替代真实唤起验收。
 
 整体产品仍PARTIAL：真实外部API按用户决定稍后配置；真实模型质量样本未评阅，AX／Screen Recording需用户手动授予，物理快捷键、跨屏／全屏、权限撤销、IME、辅助功能、长期驻留／耗电和完整视觉矩阵尚未关闭。文本上下文不等于多模态图片发送，普通CLI不等于ACP／PTY，可信进程不等于OS沙箱，App内计划不等于后台daemon。整机活动分析与自动更新器没有宣称实现。

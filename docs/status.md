@@ -4,7 +4,7 @@
 
 ## 当前源码
 
-canonical目录唯一；当前分支`feature/desktop-capability-expansion`从master `a147e3c`创建。主Agent独占写入／集成／提交／设备，子Agent只读研究评审或提供/tmp原创提案。未新建worktree或修改AiBox／Ashot。
+canonical目录唯一；扩展分支从master `a147e3c`创建，验收后的`fea2bee`已受控fast-forward到master并标记`v0.1.0-alpha.4`。发行证据在从master创建的`chore/alpha4-release-evidence`补齐，不修改已发布字节。主Agent独占写入／集成／提交／设备，子Agent只读研究评审或提供/tmp原创提案。未新建worktree或修改AiBox／Ashot。
 
 | 范围 | 状态 | 当前证据与限制 |
 |---|---|---|
@@ -26,15 +26,11 @@ canonical目录唯一；当前分支`feature/desktop-capability-expansion`从mas
 | 回执／历史／容量 | PARTIAL | 8管理任务／200历史／32草稿／32MiB逻辑预算、90天元数据维护、原子父子保护、显式清除；崩溃后不重放，长期／完整GUI矩阵待验收 |
 | 性能 | PARTIAL | 早期2000命令Release排序／缓存链p95约21ms；新增无计划时不启动调度循环；热唤起150ms、真实RSS／耗电与长期驻留尚未证明 |
 
-本轮最终统一检查通过382项Swift（主体373＋独立Terminal生命周期9）、34项Python、503条UI key中英覆盖及lifecycle helper编译。此前两次混合套件检查的两秒退出断言FAIL保留；第二次实际shutdown为2.087s，3.688s是整个用例耗时。并发MainActor合成夹具含同步poll／usleep，现将Terminal套件作为互补且强制的独立阶段，时限不变、空匹配拒绝；提交时捕获绝对deadline并独立计时。见`expansion-unified-check-v3`，不把繁忙系统视为硬实时系统。
+干净源`fea2beeadd8e820e525bc3c4f2a27e7f1612b26d`的完整本机检查与Release构建通过：384项Swift执行（core374＋Terminal生命周期9＋生产OCR1，两轮实际识别）、43项Python、506个中英UI key、文档及lifecycle helper。测试清单包含363个声明ID，参数化执行次数另计。测量`e9d8ff61-92b8-4e5e-9cc2-53ba21806fa0`，13:20:11Z–13:25:39Z。
 
-干净源首次release随后因超长AI输出的五秒drain超时停止，未生成发行资产。显式`--no-parallel`的19项集成诊断通过，日志确认套件不再重叠；两个Swift阶段均已追加显式串行，原预算／等待／断言不变。最终新版发行检查尚在进行，失败日志继续保留。
+同源[core CI 45402218386](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45402218386)通过383项Swift、流水线检查及优化版Preview构建；云端系统OCR明确NOT_QUALIFIED。完整本机资格在macOS27.2 arm64／Xcode27.2，强制生产accurate／revision3／自动语言／纠正／支持CPU阶段配置，两轮识别通过。资格摘要`1f9511252731c401d3dcbb24a6fd67f64db6869dff87f1c2d7ec1aec35bbb380`同时封入App和manifest；不是第三方硬件认证或完整真实场景验收。
 
-显式串行check-v4已通过全382／34／503。干净源`bf3267b`的完整本地发行检查、签名及App／DMG公证均通过；远端第二轮`45387890552`只剩Vision合成图失败，诊断域`TextRecognition.CRImageReaderError`／code9。CPU选择尚未解决远端问题，不把该错误擅自定性为VM硬件缺失。alpha.3候选保留在本地，未晋升master、安装或公开，正在执行独立OCR诊断。
-
-独立远端诊断全部准确场景仍失败；原生产路径在本机独立测试进程0.560s通过。alpha.4／build4正在建立云端core与完整本机系统资格分层：云端OCR明确NOT_QUALIFIED；构建／打包／发布仍强制生产配置实际OCR、同源日志／图片／源码摘要和指定core CI。原断言与真实识别继续保留，新门禁及最终验收待记录。
-
-alpha.4资格与DMG内容门禁已实现，43项离线回归、原生产OCR两轮记录、旧alpha.2 ZIP／DMG实际回下载一致性通过；本地stdio启动／整轮发现与调用预算分离、延迟启动后1秒调用超时和设置保存7项定向回归通过。中英覆盖新增为506个key。完整同源384项Swift（云端383＋本机OCR1）及最终CI／签名公证／安装／发布正在推进，未将定向通过计为最终通过。
+先前Terminal超时、并发HTTP等待与远端Vision失败均保留。现强制串行互补分区、独立服务准备与stdio启动预算，原退出／drain／普通调用时限不放宽。远端Vision仍为TextRecognition code9等诊断失败，未认定特定硬件根因。alpha.3已公证候选保持原字节、未安装／未公开；alpha.4增加了同源系统资格和精确CI门禁。详细失败、修复与回归见扩展能力证据。
 
 详见[扩展能力证据](implementation/capability-expansion-2026-11-24.md)、[使用说明](product/expanded-tools-guide.md)、[技术合同](technical/capability-expansion.md)和[iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选仅表示对应实现／定向验证，不关闭本表更广的真实验收。
 
@@ -42,8 +38,10 @@ alpha.4资格与DMG内容门禁已实现，43项离线回归、原生产OCR两�
 
 公开仓库为[arthurwangwsx-code/KeyDock](https://github.com/arthurwangwsx-code/KeyDock)，默认分支master。用户已授权公开此项目源码、Release本地打包上传、流水线及本地安装替换。
 
-- 已发布并安装alpha.2／build2，App源`ace56efdf67faae0f8dd2df3f0871b8e61a7829f`；当时251项Swift／32项Python／273条文案、原生CI、Developer ID／App与DMG公证、Gatekeeper、运行中升级、回退与公开资产审计通过。见[alpha.2证据](implementation/native-actions-2026-11-24.md)。
-- alpha.3／build3为当前候选，扩展功能已在独立Preview观察；干净源`bf3267b37bd3979a15420364406debd6c08acb37`已完成本地签名公证，尚待OCR远端门禁、安装与公开回下载。若继续修改源码则递增版本，原候选字节保留；Preview的dirty源码构建不是正式分发包。
+- [alpha.4／build4](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.4)已公开并安装至`/Applications/KeyDock.app`，App源为上述`fea2bee`。Developer ID／Hardened Runtime、App与DMG公证装订、Gatekeeper、只读DMG内部App一致性、公开后实际回下载均通过。运行中的alpha.2正常退出后原子替换，旧App及回退receipt保留；未force kill或改TCC。
+- [GitHub发行资产审计45404703556](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45404703556)已通过，审计从精确发行tag下载并核验资产；不是云端OCR识别验收。
+- 正式App已实际启动，「关于」显示`0.1.0-alpha.4 (4)`；中文启动台／独立设置及MCP请求／启动预算界面已观察。发送⌥Space后未观察到启动台变化，因此该次不能计作物理全局快捷键PASS。没有保存MCP来源、运行外部服务或配置真实API。
+- alpha.2／build2为可回退旧版，源`ace56efdf67faae0f8dd2df3f0871b8e61a7829f`；历史发行／安装验收见[alpha.2证据](implementation/native-actions-2026-11-24.md)。alpha.3／build3仅保留本地候选；Preview的dirty源码构建不作为正式分发包。
 - alpha.1／alpha.2原tag和资产字节保持不变。个人配置、bookmark、密钥、截图、剪贴板、正文和本机日志不进入公开资产。
 
 ## 历史证据与边界
