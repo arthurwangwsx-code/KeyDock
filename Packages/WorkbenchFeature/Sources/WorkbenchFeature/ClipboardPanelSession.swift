@@ -11,6 +11,7 @@ import MacAdapters
     @Published public private(set) var isCommitting = false
     @Published public var canInsert = false
     @Published public var targetName = ""
+    public private(set) var returnTarget: TargetIdentity?
     @Published public var noticeMessage: LocalizedNotice = .none
     public var onInsert: (@MainActor (String, UUID) -> Void)?
     public var onCopy: (@MainActor (String) -> Void)?
@@ -33,14 +34,16 @@ import MacAdapters
         canInsert = false
         noticeMessage = noticeKey("Insertion was not sent. The original target, permission or clipboard changed. Copy the item or open history again.")
     }
-    public func present(access: any ClipboardAccess, onMutation: @escaping @MainActor () -> Void) {
+    public func present(access: any ClipboardAccess, returnTarget: TargetIdentity? = nil, onMutation: @escaping @MainActor () -> Void) {
         invalidate(); visible = true; selectedID = nil; noticeMessage = .none
+        self.returnTarget = returnTarget
         browser.query = ""; browser.connect(to: access, onMutation: onMutation)
         focusRequest = UUID()
     }
     public func dismiss() {
         visible = false; invalidate(); browser.disconnect(); selectedID = nil
         canInsert = false; targetName = ""; noticeMessage = .none
+        returnTarget = nil
     }
     public func editQuery(_ value: String) {
         let bounded = TaskTextLimits.prefix(value, maximumBytes: 4_096)

@@ -113,4 +113,15 @@ struct ClipboardPanelSessionTests {
             session.dismiss()
         }
     }
+    @Test func copyOnlyPresentationKeepsReturnAppWithoutAnInsertionTarget() async {
+        let session = ClipboardPanelSession(), access = PaletteClipboardAccess()
+        let origin = TargetIdentity(pid: 1234, launchDate: Date(timeIntervalSince1970: 100), name: "Synthetic editor")
+        session.present(access: access, returnTarget: origin, onMutation: {})
+        await session.browser.searchTask?.value
+        #expect(!session.canInsert && session.returnTarget == origin)
+        session.editQuery("beta"); await session.browser.searchTask?.value
+        #expect(session.returnTarget == origin)
+        session.dismiss()
+        #expect(session.returnTarget == nil)
+    }
 }

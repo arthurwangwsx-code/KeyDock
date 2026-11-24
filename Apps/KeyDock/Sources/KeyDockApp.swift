@@ -249,8 +249,10 @@ import KeyDockUI
         guard !store.isShuttingDown else { return }
         if clipboardPanel?.isKeyWindow == true { dismissClipboard(restore: true); return }
         let ownPID = ProcessInfo.processInfo.processIdentifier
-        let inherited = launcher?.isKeyWindow == true && NSWorkspace.shared.frontmostApplication?.processIdentifier == ownPID ? store.target : nil
-        let identity = safeSmoke ? nil : store.desktop.frontmostTarget()
+        let fromLauncher = launcher?.isKeyWindow == true && NSWorkspace.shared.frontmostApplication?.processIdentifier == ownPID
+        let inherited = fromLauncher ? store.target : nil
+        // 复制/Esc只需应用身份；不能因为没有AX输入权限就丢失返回路径。
+        let identity = safeSmoke ? nil : (fromLauncher ? originalIdentity : store.desktop.frontmostTarget())
         let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
         dismissClipboard(restore: false)
         let request = clipboardGeneration
@@ -258,7 +260,7 @@ import KeyDockUI
             guard let self else { return }
             let captured: ClipboardPasteTarget?
             if let inherited { captured = await store.desktop.pasteTarget(from: inherited) }
-            else if let identity { captured = await store.desktop.capturePasteTarget(identity) }
+            else if !fromLauncher, let identity { captured = await store.desktop.capturePasteTarget(identity) }
             else { captured = nil }
             // 抢焦点前完成元数据捕获；用户已经转去另一应用时不迟到抢回焦点。
             guard !Task.isCancelled, clipboardGeneration == request, !store.isShuttingDown,
@@ -276,7 +278,7 @@ import KeyDockUI
                 panel.onEscape = { [weak self] in self?.dismissClipboard(restore: true) }
                 clipboardPanel = panel
             }
-            clipboardSession.present(access: store.clipboardStore, onMutation: { [weak self] in self?.store.refreshClipboard() })
+            clipboardSession.present(access: store.clipboardStore, returnTarget: identity ?? captured?.identity, onMutation: { [weak self] in self?.store.refreshClipboard() })
             clipboardSession.canInsert = captured != nil && !safeSmoke && store.desktop.clipboardInsertionAvailable
             clipboardSession.targetName = captured?.identity.name ?? ""
             if let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main, let panel = clipboardPanel {
@@ -288,7 +290,7 @@ import KeyDockUI
         }
     }
     private func dismissClipboard(restore: Bool) {
-        let identity = clipboardTarget?.identity
+        let identity = clipboardSession.returnTarget
         clipboardGeneration = UUID(); clipboardCapture?.cancel(); clipboardCapture = nil
         clipboardPaste?.cancel(); clipboardPaste = nil
         clipboardPanel?.orderOut(nil); clipboardSession.dismiss(); clipboardTarget = nil; clipboardFence = nil
