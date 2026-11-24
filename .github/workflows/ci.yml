@@ -5,13 +5,20 @@ on:
   pull_request:
     branches: [master]
   workflow_dispatch:
+    inputs:
+      diagnose_ocr:
+        description: Run isolated synthetic OCR diagnostics (not product acceptance)
+        type: boolean
+        required: false
+        default: false
 permissions:
   contents: read
 concurrency:
-  group: native-${{ github.ref }}
+  group: native-${{ github.ref }}-${{ inputs.diagnose_ocr && 'diagnostic' || 'acceptance' }}
   cancel-in-progress: true
 jobs:
   native:
+    if: github.event_name != 'workflow_dispatch' || inputs.diagnose_ocr != true
     runs-on: xcode-27
     timeout-minutes: 35
     env:
@@ -43,6 +50,32 @@ jobs:
         with:
           name: KeyDock-CI-logs-${{ github.sha }}-${{ github.run_attempt }}
           path: .local/pipeline/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn
+  ocr-diagnostic:
+    name: OCR diagnostics (not acceptance)
+    if: github.event_name == 'workflow_dispatch' && inputs.diagnose_ocr == true
+    runs-on: xcode-27
+    timeout-minutes: 8
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile synthetic diagnostic tool
+        run: |
+          mkdir -p .local/ocr-diagnostics
+          xcrun swiftc -parse-as-library -swift-version 6 -warnings-as-errors Tools/Fixtures/vision_diagnostic.swift -o .local/ocr-diagnostics/vision-diagnostic
+      - name: Compare accurate OCR language configurations
+        run: .local/ocr-diagnostics/vision-diagnostic > .local/ocr-diagnostics/results.ndjson
+      - name: Preserve diagnostic observations
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: KeyDock-OCR-diagnostic-${{ github.sha }}-${{ github.run_id }}
+          path: .local/ocr-diagnostics/results.ndjson
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: warn

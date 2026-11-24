@@ -30,7 +30,7 @@ canonical目录唯一；当前分支`feature/desktop-capability-expansion`从mas
 
 干净源首次release随后因超长AI输出的五秒drain超时停止，未生成发行资产。显式`--no-parallel`的19项集成诊断通过，日志确认套件不再重叠；两个Swift阶段均已追加显式串行，原预算／等待／断言不变。最终新版发行检查尚在进行，失败日志继续保留。
 
-显式串行check-v4已通过全382／34／503；首轮远端CI另有Vision unknownError。OCR现按Apple API为各阶段选择其声明支持的CPU，本机六项上下文测试（含真实合成图识别）通过；新版完整本机发行／远端复验结果待记录，不把unknownError擅自定性为VM硬件缺失。
+显式串行check-v4已通过全382／34／503。干净源`bf3267b`的完整本地发行检查、签名及App／DMG公证均通过；远端第二轮`45387890552`只剩Vision合成图失败，诊断域`TextRecognition.CRImageReaderError`／code9。CPU选择尚未解决远端问题，不把该错误擅自定性为VM硬件缺失。alpha.3候选保留在本地，未晋升master、安装或公开，正在执行独立OCR诊断。
 
 详见[扩展能力证据](implementation/capability-expansion-2026-11-24.md)、[使用说明](product/expanded-tools-guide.md)、[技术合同](technical/capability-expansion.md)和[iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选仅表示对应实现／定向验证，不关闭本表更广的真实验收。
 
@@ -39,7 +39,7 @@ canonical目录唯一；当前分支`feature/desktop-capability-expansion`从mas
 公开仓库为[arthurwangwsx-code/KeyDock](https://github.com/arthurwangwsx-code/KeyDock)，默认分支master。用户已授权公开此项目源码、Release本地打包上传、流水线及本地安装替换。
 
 - 已发布并安装alpha.2／build2，App源`ace56efdf67faae0f8dd2df3f0871b8e61a7829f`；当时251项Swift／32项Python／273条文案、原生CI、Developer ID／App与DMG公证、Gatekeeper、运行中升级、回退与公开资产审计通过。见[alpha.2证据](implementation/native-actions-2026-11-24.md)。
-- alpha.3／build3为当前候选，扩展功能已在独立Preview观察；正式版本尚待最终干净源构建、签名公证、CI、安装与公开回下载核验。Preview的dirty源码构建不是正式分发包。
+- alpha.3／build3为当前候选，扩展功能已在独立Preview观察；干净源`bf3267b37bd3979a15420364406debd6c08acb37`已完成本地签名公证，尚待OCR远端门禁、安装与公开回下载。若继续修改源码则递增版本，原候选字节保留；Preview的dirty源码构建不是正式分发包。
 - alpha.1／alpha.2原tag和资产字节保持不变。个人配置、bookmark、密钥、截图、剪贴板、正文和本机日志不进入公开资产。
 
 ## 历史证据与边界

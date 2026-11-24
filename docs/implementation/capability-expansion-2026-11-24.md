@@ -30,6 +30,12 @@ iSpec当前apply attempt为`d3f5e2a2-0c44-46b6-850a-5dbc8619e906`，CLI测量均
 
 CPU设备配置后本机ContextAndLeaseTests六项通过，其中实际Vision合成图识别1.004s（`c9904375-9421-4cea-9446-faa945191b12`）。这只证明本机结果；首轮CI的unknownError不能据此定性为已确认的VM硬件缺失，新版远端结果另记。
 
+干净源`bf3267b37bd3979a15420364406debd6c08acb37`的本地release-v2完整检查、Developer ID、Hardened Runtime、App／DMG公证装订及Gatekeeper通过（`a439c7ef-3fab-4407-a4bb-7edeef0faa3e`，11:50:56Z–11:55:43Z）。App公证`a5c331b9-08ea-4b35-9d3e-c24155f59d06`；DMG公证`b742e8df-5a88-40ab-9b68-4ca83c7881a4`。本地alpha.3 ZIP摘要`fc23da928db593946e2941512bca2b57f0496688f0c4a362e7fc59b02d5d6c7e`，DMG摘要`87c4e6b4f1bad18542b89f0dd7e5a8258b0274e52f17368411c9012c86b54e95`。
+
+第二轮原生CI `45387890552`已解决并发HTTP／Terminal问题，只剩真实OCR失败；完整artifact记录`TextRecognition.CRImageReaderError`／code9、无underlying。CPU修补不能被表述为远端OCR已通过。未晋升master、推alpha.3 tag、安装或公开该候选；继续隔离准确模式的语言／执行环境差异，若修改源码则递增发行版本，不覆盖已有候选。
+
+新增独立合成OCR诊断入口，保持五个场景均为accurate，结果不代表产品验收。首版探针被主动终止并保留失败；第二版对齐后台识别、完整读取输入及隔离CI并发组。第二版本机五场景的中文优先中英配置识别成功，其他场景达到45秒时限；owned子进程sample显示等待TextRecognition／ANE服务，主线程未阻塞，不能据此归因为管道或主线程。诊断失败回执`ea017625-75c7-47a8-92a7-34f56baa5dd5`保留，继续对比远端结果，不静默改变产品默认语言。
+
 ## 原生观察
 
 Preview由统一debug流水线构建、原子替换并启动，与正式App数据／bundleID分离。已实际观察中文Agent／Tools／Workflow页面、独立MCP设置、英文深色设置以及语言／外观恢复。工具页算式`2×(3+4)`得到14，`1 GiB to MiB`得到1024 MiB；按钮和原生菜单均可运行合成trim工作流。

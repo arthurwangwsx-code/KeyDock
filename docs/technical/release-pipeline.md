@@ -37,6 +37,8 @@ Swift检查分为两个互补的强制阶段：主体排除Terminal生命周期�
 
 两个阶段均显式传入`--no-parallel`，因为CLI帮助中的默认值未让Swift Testing顶层套件串行。集成夹具的合成进程startup／cleanup含同步poll／usleep，并发时会延迟另一套件的SSE消费，导致五秒drain时限误触发。明确串行后日志按套件顺序执行；保留原等待时间、输出上限、真实进程／网络和全部断言。
 
+`gh workflow run ci.yml --ref <已推送功能分支> -f diagnose_ocr=true`只运行独立的OCR诊断job，不替代native验收，也不会取消该分支的native job。探针`Tools/Fixtures/vision_diagnostic.swift`只生成自己的同一张合成PNG，五个准确模式场景分别使用自动语言、英语、两种中英顺序和无语言纠正；每场景独占子进程45秒时限，记录设备／revision／原始NSError及PNG摘要。识别错误、超时或结果不匹配返回非零，artifact照常保留，不回退fast，也不读取个人文件或下载模型。
+
 发行后的证据文档可以追加提交，发行tag仍固定在原始构建源。复核已有版本使用`make verify-release`；再次发行先更新version／build，不从新HEAD覆盖旧版本。若确需重试未完成的同版发布，先回到对应干净源提交。
 
 ## 调试与正式身份
