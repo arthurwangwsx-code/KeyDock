@@ -27,7 +27,14 @@ struct AgentWorkspaceView: View {
             DisclosureGroup(L("Tools and budgets")) {
                 Label(L("Current time · read only"),systemImage:"clock")
                 ForEach(store.configuration.savedCommands) { command in
-                    Toggle(command.name,isOn:Binding(get:{session.agentProfile.allowedCommandIDs.contains(command.id)},set:{ if $0 { session.agentProfile.allowedCommandIDs.insert(command.id) } else { session.agentProfile.allowedCommandIDs.remove(command.id) } })).disabled(command.interactive)
+                    Toggle(command.name,isOn:Binding(get:{session.agentProfile.allowedCommandIDs.contains(command.id)},set:{ if $0 { session.agentProfile.allowedCommandIDs.insert(command.id) } else { session.agentProfile.allowedCommandIDs.remove(command.id) } })).disabled(command.interactive && !session.agentProfile.allowedCommandIDs.contains(command.id))
+                }
+                ForEach(session.agentProfile.allowedCommandIDs.filter { id in !store.configuration.savedCommands.contains(where: { $0.id == id }) }.sorted(by: { $0.uuidString < $1.uuidString }), id: \.self) { id in
+                    HStack {
+                        Text(L("Unavailable saved command") + ": " + id.uuidString).font(.caption)
+                        Spacer()
+                        Button(L("Remove unavailable tool")) { session.agentProfile.allowedCommandIDs.remove(id) }
+                    }
                 }
                 ForEach(store.configuration.mcpServers) { source in
                     Toggle(source.name,isOn:Binding(get:{session.agentProfile.allowedMCPServerIDs.contains(source.id)},set:{ enabled in

@@ -21,3 +21,5 @@ Preview构建／正常替换测量`751cd401-4d5b-495e-83ad-96da4d415dca`通过�
 其中首次工作流成功保存后的活动窗口观察为Launcher；重新打开工作流确认定义、版本1和输入均已保存。后续相同编辑／保存版本2停留在工作区。单次窗口切换的来源未确认，保留此观察，不宣称全部窗口可见性矩阵通过。
 
 切到英文深色后，Agent版本2与原输入、Workflow版本2→Unsaved changes均可见；两个原生截图已检查状态行与编辑区。之后语言与外观均恢复Follow System，未改变OS偏好。写入故障由上述单元测试注入，原生只检查验证失败；不是磁盘故障GUI验收或完整视觉／VoiceOver／IME矩阵。
+
+干净源`7a8b264046f931ebc411e49d31434df2f833c691`的完整cloud-core测量`dbed9723-447e-4777-ab52-981491da21b4`通过，22:17:05Z–22:20:08Z：518 Swift／46 Python／618 key。摘要`.local/pipeline/20261124T221705768702Z/check-summary.json`清单498个声明ID（core488／Terminal9／OCR1），inventory SHA256为`ad9d0085141f9c449ee8eb3e4e15424d1568f693ee86a06fd8bfda7660c99442`。[同源CI与优化Preview构建45499490689](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45499490689)通过。两者系统OCR均NOT_QUALIFIED，不改变发行与真实系统验收门禁。

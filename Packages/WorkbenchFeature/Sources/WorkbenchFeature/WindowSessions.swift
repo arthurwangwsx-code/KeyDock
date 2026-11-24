@@ -111,6 +111,9 @@ private struct LauncherCatalogProvider: CommandProviding {
     private var visible = false
     @Published public var editedCommand: SavedCommand?
     @Published public var editedAction: AIActionPreset?
+    var editedCommandExistingID: UUID?
+    var editedActionExistingID: UUID?
+    @Published var savedItemRemoval: SavedItemRemovalPresentation?
     @Published public var apiKey = ""
     @Published public var keyStored = false
     @Published public var endpoint = ""
@@ -142,13 +145,13 @@ private struct LauncherCatalogProvider: CommandProviding {
         localHTTP = store.configuration.localHTTP; tokenParameter = store.configuration.tokenLimitParameter
     }
     public func beginNewCommand() {
-        guard store?.isShuttingDown == false, editedCommand == nil, editedAction == nil else { return }
-        editedCommandSourceRunID = nil
+        guard store?.isShuttingDown == false, editedCommand == nil, editedAction == nil, savedItemRemoval == nil else { return }
+        editedCommandSourceRunID = nil; editedCommandExistingID = nil
         editedCommand = SavedCommand(name: "", executable: "/usr/bin/printf")
     }
     public func beginNewAction() {
-        guard store?.isShuttingDown == false, editedCommand == nil, editedAction == nil else { return }
-        editedAction = AIActionPreset(name: "", prompt: "")
+        guard store?.isShuttingDown == false, editedCommand == nil, editedAction == nil, savedItemRemoval == nil else { return }
+        editedActionExistingID = nil; editedAction = AIActionPreset(name: "", prompt: "")
     }
     public func setVisible(_ value: Bool) { visible = value; updateVisibleReferences() }
     private func updateVisibleReferences() {

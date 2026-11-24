@@ -34,8 +34,12 @@ struct AIContentView: View {
                 Text("·"); Text(task?.modelName ?? (action?.modelOverride.isEmpty == false ? action!.modelOverride : (store.configuration.model.isEmpty ? L("No model configured") : store.configuration.model)))
             }.font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
             if needsConfiguration && task == nil { KDInlineNotice(L("Add an API endpoint and model in Settings. Your draft will stay here.")) }
+            if action == nil { KDInlineNotice(L("This AI action is unavailable. Existing tasks keep their settings. Choose an action for your next task.")) }
             if !compact {
-                Picker(L("AI action"), selection: Binding(get: { draft.actionID }, set: { draft.selectAction($0) })) { ForEach(store.configuration.aiActions) { Text($0.displayName).tag(Optional($0.id)) } }.id(store.configuration.language).labelsHidden().frame(maxWidth: 320, alignment: .leading)
+                Picker(L("AI action"), selection: Binding(get: { draft.actionID }, set: { draft.selectAction($0) })) {
+                    if action == nil { Text(L("Choose an AI action")).tag(draft.actionID) }
+                    ForEach(store.configuration.aiActions) { Text($0.displayName).tag(Optional($0.id)) }
+                }.id(store.configuration.language).labelsHidden().frame(maxWidth: 320, alignment: .leading)
             }
             if task == nil || !compact {
                 TextEditor(text: Binding(get: { draft.input }, set: { draft.editInput($0) })).focused($inputFocused).font(.system(size: 13)).frame(minHeight: 70, maxHeight: compact ? 100 : 150).scrollContentBackground(.hidden).padding(10).modifier(KDReadingSurface()).accessibilityLabel(L("AI input"))

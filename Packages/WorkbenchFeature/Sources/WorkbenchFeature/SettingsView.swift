@@ -26,12 +26,13 @@ public struct SettingsRootView: View {
                         Button(L("Retry shortcuts")) { store.retryShortcuts() }
                     }
                 }
-                if !store.pendingCommandReviews.isEmpty { Section { HStack { Text(L("Command draft ready for review")); Spacer(); Button(L("Review")) { if let review = store.takeNextCommandReview() { session.editedCommandSourceRunID = review.id; session.editedCommand = review.command } }.disabled(session.editedCommand != nil || session.editedAction != nil) } } }
+                if !store.pendingCommandReviews.isEmpty { Section { HStack { Text(L("Command draft ready for review")); Spacer(); Button(L("Review")) { if let review = store.takeNextCommandReview() { session.reviewCommand(review.command, sourceRunID: review.id) } }.disabled(session.editedCommand != nil || session.editedAction != nil) } } }
                 content
             }.formStyle(.grouped)
         }.frame(minWidth: 740, minHeight: 530).environment(\.locale, KDLocalizer.locale)
-            .sheet(item: $session.editedCommand, onDismiss: { session.editedCommandSourceRunID = nil }) { command in CommandEditor(command: command, failureMessage: { store.settingsNoticeMessage }) { store.saveCommand($0) } }
-            .sheet(item: $session.editedAction) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureMessage: { store.settingsNoticeMessage }) { store.saveAction($0) } }
+            .sheet(item: $session.editedCommand, onDismiss: { session.editedCommandSourceRunID = nil; session.editedCommandExistingID = nil }) { command in CommandEditor(command: command, failureMessage: { store.settingsNoticeMessage }) { session.saveEditedCommand($0, in: store) } }
+            .sheet(item: $session.editedAction, onDismiss: { session.editedActionExistingID = nil }) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureMessage: { store.settingsNoticeMessage }) { session.saveEditedAction($0, in: store) } }
+            .sheet(item: $session.savedItemRemoval) { presentation in SavedItemRemovalView(store: store, session: session, presentation: presentation) }
             .onAppear { exclusions = store.configuration.clipboardExclusions.joined(separator: "\n"); session.keyStored = store.credentialExists() }
             .confirmationDialog(L("Clear finished tasks and idle drafts?"), isPresented: $confirmTaskClear) {
                 Button(L("Clear finished history"), role: .destructive) { Task { await store.clearFinishedHistory() } }
@@ -130,7 +131,8 @@ public struct SettingsRootView: View {
                         Image(systemName: "sparkles").foregroundStyle(.tint)
                         VStack(alignment: .leading, spacing: 4) { Text(action.displayName).fontWeight(.medium); Text(action.modelOverride.isEmpty ? L("Default model") : action.modelOverride).font(.caption).foregroundStyle(.secondary) }
                         Spacer(); if let key = action.shortcut { KDKeycap(key.display) }
-                        Button(L("Edit")) { session.editedAction = action }
+                        Button(L("Edit")) { session.editAction(action) }
+                        Button(L("Remove"), role: .destructive) { session.prepareRemoval(.aiAction(action.id), in: store) }.accessibilityLabel(L("Remove") + " " + action.displayName)
                     }.padding(.vertical, 7)
                 }
             }
@@ -144,7 +146,8 @@ public struct SettingsRootView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "terminal").foregroundStyle(.secondary)
                         VStack(alignment: .leading, spacing: 4) { Text(command.name).fontWeight(.medium); Text(command.executable).font(.caption.monospaced()).foregroundStyle(.secondary) }
-                        Spacer(); Button(L("Edit")) { session.editedCommand = command }; Button(L("Run")) { store.runCommand(command) }
+                        Spacer(); Button(L("Edit")) { session.editCommand(command) }; Button(L("Run")) { if let current = store.configuration.savedCommands.first(where: { $0.id == command.id }) { store.runCommand(current) } }
+                        Button(L("Remove"), role: .destructive) { session.prepareRemoval(.command(command.id), in: store) }.accessibilityLabel(L("Remove") + " " + command.name)
                     }.padding(.vertical, 7)
                 }
             }

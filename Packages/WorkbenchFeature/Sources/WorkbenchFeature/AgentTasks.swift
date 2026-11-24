@@ -13,6 +13,9 @@ extension WorkbenchModel {
         do {
             var next = configuration, agent = value
             try agent.validate()
+            guard agent.allowedCommandIDs.isSubset(of: Set(configuration.savedCommands.map(\.id))) else {
+                workspaceNoticeMessage = noticeKey("Some allowed commands are unavailable. Remove them in Tools and budgets before saving."); return false
+            }
             agent.version = (next.agents.first { $0.id == agent.id }?.version ?? 0) + 1
             if let index = next.agents.firstIndex(where:{ $0.id == agent.id }) { next.agents[index] = agent }
             else { guard next.agents.count < 32 else { throw AgentToolError.invalidDefinition }; next.agents.append(agent) }

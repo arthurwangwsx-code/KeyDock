@@ -1521,6 +1521,22 @@
         }
       }
     },
+    "Choose an AI action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an AI action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择 AI 动作"
+          }
+        }
+      }
+    },
     "Choose an action and add text. Only this input is sent to your model.": {
       "localizations": {
         "en": {
@@ -1891,16 +1907,16 @@
     },
     "Collection": {
       "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "集合"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Collection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "集合"
           }
         }
       }
@@ -5649,6 +5665,22 @@
         }
       }
     },
+    "Remove saved item?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved item?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除已保存的项目？"
+          }
+        }
+      }
+    },
     "Remove shortcut": {
       "localizations": {
         "en": {
@@ -5773,6 +5805,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove unavailable actions"
+          }
+        }
+      }
+    },
+    "Remove unavailable tool": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove unavailable tool"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除不可用工具"
           }
         }
       }
@@ -5965,6 +6013,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "审阅"
+          }
+        }
+      }
+    },
+    "Review again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review again"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新检查"
           }
         }
       }
@@ -7153,6 +7217,22 @@
         }
       }
     },
+    "Some allowed commands are unavailable. Remove them in Tools and budgets before saving.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some allowed commands are unavailable. Remove them in Tools and budgets before saving."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分已允许的命令不可用。请在“工具与预算”中移除后再保存。"
+          }
+        }
+      }
+    },
     "Some task records could not be maintained. Running and unconfirmed tasks were kept.": {
       "localizations": {
         "en": {
@@ -7825,6 +7905,38 @@
         }
       }
     },
+    "This AI action is unavailable. Existing tasks keep their settings. Choose an action for your next task.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This AI action is unavailable. Existing tasks keep their settings. Choose an action for your next task."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 AI 动作不可用。现有任务保留原设置，请为下一项任务选择动作。"
+          }
+        }
+      }
+    },
+    "This AI action was removed or changed. Keep this draft and create a new action to save it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This AI action was removed or changed. Keep this draft and create a new action to save it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 AI 动作已移除或更改。请保留草稿，并新建动作后保存。"
+          }
+        }
+      }
+    },
     "This URL action no longer exists. Start a new action to save this draft.": {
       "localizations": {
         "en": {
@@ -7869,6 +7981,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "此集合已不存在。请新建集合后保存此草稿。"
+          }
+        }
+      }
+    },
+    "This command was removed or changed. Keep this draft and create a new command to save it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This command was removed or changed. Keep this draft and create a new command to save it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此命令已移除或更改。请保留草稿，并新建命令后保存。"
           }
         }
       }
@@ -7921,6 +8049,38 @@
         }
       }
     },
+    "This item is still in use. Remove its references, then review again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This item is still in use. Remove its references, then review again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此项目仍被引用。请先移除相关引用，再重新检查。"
+          }
+        }
+      }
+    },
+    "This removes its shortcut, favorite and alias. Running tasks and history keep their original data.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes its shortcut, favorite and alias. Running tasks and history keep their original data."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同时移除它的快捷键、收藏和别名。运行中的任务与历史记录保留原有数据。"
+          }
+        }
+      }
+    },
     "This removes stored usage metadata. Running requests keep their current usage and may create new records when they finish. AI actions and API credentials are kept.": {
       "localizations": {
         "en": {
@@ -7933,6 +8093,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "这会删除已保存的用量元数据。正在运行的请求保留本次用量，结束后可能产生新记录。AI 动作和 API 凭据会保留。"
+          }
+        }
+      }
+    },
+    "This saved item changed. Review it again before removing it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved item changed. Review it again before removing it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此已保存项目已更改。请重新检查后再移除。"
+          }
+        }
+      }
+    },
+    "This saved item is no longer available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved item is no longer available."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此已保存项目已不可用。"
           }
         }
       }
@@ -8445,6 +8637,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "不可用的操作"
+          }
+        }
+      }
+    },
+    "Unavailable saved command": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable saved command"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不可用的已保存命令"
           }
         }
       }
