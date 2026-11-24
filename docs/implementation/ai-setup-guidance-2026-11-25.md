@@ -26,4 +26,8 @@
 
 ## 未完成
 
-以上不替代实际Keychain、外部服务认证／联通／流式质量和四组合完整视觉验收。运行中compact配置入口由静态复核和loopback取消回归覆盖，未在真实云请求上做原生操作。完整当前源码core结果另录；系统OCR复发与正式发行保持未放行，见[OCR记录](ocr-recurrence-2026-11-25.md)。
+干净源`6633d70e8820243f84ee1dce52c6177fca3260fa`本机cloud-core测量`e2575431-72f2-4fff-a48a-2164132f1124`通过，20:57:09Z–21:00:41Z，496 Swift／46 Python／609 key；476个声明ID，inventory摘要`81309c3b69b2f19af87b8864d07cf36f60ef05d81df6a9aa7fc52468805c19d2`。已提交[同源core CI与优化构建45486089503](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45486089503)，实际结果单独以该run为准。此范围的系统OCR明确NOT_QUALIFIED，不是发行资格。
+
+截至该core检查，当前apply attempt有108个完成测量，94零退出、14非零退出；收据文件摘要与测量字段逐项核对无不一致。历史失败保留，全局两条旧格式缺失start记录也未重建；该核对不宣称所有未包装命令或业务验收已覆盖。
+
+以上不替代实际Keychain、外部服务认证／联通／流式质量和四组合完整视觉验收。运行中compact配置入口由静态复核和loopback取消回归覆盖，未在真实云请求上做原生操作。系统OCR复发与正式发行保持未放行，见[OCR记录](ocr-recurrence-2026-11-25.md)。
