@@ -12,6 +12,8 @@ public struct MCPServerDraft {
     public var executable = ""
     public var arguments = "[]"
     public var directory = NSHomeDirectory()
+    public var startupTimeout = "30"
+    public var requestTimeout = "30"
     public var enabled = false
     public var allowsLocalHTTP = false
     public var version: MCPProtocolVersion = .modern20260728
@@ -20,8 +22,10 @@ public struct MCPServerDraft {
     public init(_ source: MCPServerConfiguration) {
         id = source.id; name = source.name; kind = source.transportKind; endpoint = source.endpoint.absoluteString
         enabled = source.enabled; allowsLocalHTTP = source.allowsLocalHTTP; version = source.protocolVersion
+        requestTimeout = String(source.timeoutSeconds)
         if let launch = source.stdioLaunch {
             executable = launch.executable; directory = launch.workingDirectory
+            startupTimeout = String(launch.startupTimeoutSeconds)
             arguments = (try? String(data:JSONEncoder().encode(launch.arguments),encoding:.utf8)) ?? "[]"
         }
     }
@@ -42,16 +46,18 @@ extension WorkbenchModel {
         var account: String?, oldKey: String?, keyChanged = false
         do {
             let old = configuration.mcpServers.first{$0.id == draft.id}
+            guard let requestTimeout = TimeInterval(draft.requestTimeout) else { throw MCPClientError.invalidConfiguration }
             let source: MCPServerConfiguration
             if draft.kind == .stdio {
                 guard !draft.enabled || trusted else { throw MCPClientError.disabled }
                 let arguments = try JSONDecoder().decode([String].self,from:Data(draft.arguments.utf8))
-                source = MCPServerConfiguration(id:draft.id,name:draft.name,stdio:.init(executable:draft.executable,arguments:arguments,workingDirectory:draft.directory),enabled:draft.enabled,protocolVersion:draft.version)
+                guard let startup = TimeInterval(draft.startupTimeout) else { throw MCPClientError.invalidConfiguration }
+                source = MCPServerConfiguration(id:draft.id,name:draft.name,stdio:.init(executable:draft.executable,arguments:arguments,workingDirectory:draft.directory,startupTimeoutSeconds:startup),enabled:draft.enabled,protocolVersion:draft.version,timeoutSeconds:requestTimeout)
             } else {
                 guard let endpoint = URL(string:draft.endpoint) else { throw MCPClientError.invalidConfiguration }
                 let reference = mcpKeyReference(id:draft.id,endpoint:endpoint)
                 let retained = old?.transportKind == .http && old?.endpoint == endpoint ? old?.secretReference:nil
-                source = MCPServerConfiguration(id:draft.id,name:draft.name,endpoint:endpoint,allowsLocalHTTP:draft.allowsLocalHTTP,enabled:draft.enabled,protocolVersion:draft.version,secretReference:draft.apiKey.isEmpty ? retained:reference)
+                source = MCPServerConfiguration(id:draft.id,name:draft.name,endpoint:endpoint,allowsLocalHTTP:draft.allowsLocalHTTP,enabled:draft.enabled,protocolVersion:draft.version,secretReference:draft.apiKey.isEmpty ? retained:reference,timeoutSeconds:requestTimeout)
                 try source.validate()
                 if !draft.apiKey.isEmpty {
                     guard allowContextCapture else { throw MCPClientError.missingCredential }

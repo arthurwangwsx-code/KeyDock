@@ -61,7 +61,8 @@ final class StoreSSEServer {
         throw StoreHTTPError.missingScript
     }
     private static func readPort(_ descriptor: Int32) throws -> Int {
-        let deadline = DispatchTime.now().uptimeNanoseconds + 5_000_000_000
+        // 仅放宽隔离Python夹具的准备预算；应用任务的五秒drain断言保持不变。
+        let deadline = DispatchTime.now().uptimeNanoseconds + 20_000_000_000
         var bytes = Data()
         while bytes.count < 16 {
             let now = DispatchTime.now().uptimeNanoseconds
@@ -70,6 +71,7 @@ final class StoreSSEServer {
             let milliseconds = Int32(min((deadline - now) / 1_000_000, 5000))
             let ready = Darwin.poll(&item, 1, milliseconds)
             if ready < 0 && errno == EINTR { continue }
+            if ready == 0 { continue }
             guard ready > 0 else { throw StoreHTTPError.startupFailed }
             var byte: UInt8 = 0
             let count = Darwin.read(descriptor, &byte, 1)
@@ -105,7 +107,7 @@ final class StoreSSEServer {
         let flags = Int16(POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_CLOEXEC_DEFAULT | POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETSIGDEF)
         try check(posix_spawnattr_setflags(&attributes, flags))
         try check(posix_spawnattr_setpgroup(&attributes, 0))
-        let argumentStrings: [String] = ["env", "python3", "-I", "-u", script.path]
+        let argumentStrings: [String] = ["env", "python3", "-I", "-S", "-u", script.path]
         let environmentStrings: [String] = ["PATH=/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin"]
         var arguments: [UnsafeMutablePointer<CChar>?] = argumentStrings.map { strdup($0) }
         var environment: [UnsafeMutablePointer<CChar>?] = environmentStrings.map { strdup($0) }

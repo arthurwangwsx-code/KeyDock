@@ -4689,6 +4689,22 @@
         }
       }
     },
+    "Request timeout (seconds)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request timeout (seconds)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请求超时（秒）"
+          }
+        }
+      }
+    },
     "Requests go directly to this endpoint. Input is sent only when an AI action runs. Keys are stored in Keychain, never in configuration or logs.": {
       "localizations": {
         "en": {
@@ -5505,6 +5521,22 @@
         }
       }
     },
+    "Server startup timeout (seconds)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server startup timeout (seconds)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务启动超时（秒）"
+          }
+        }
+      }
+    },
     "Settings": {
       "localizations": {
         "en": {
@@ -5837,6 +5869,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start new attempt"
+          }
+        }
+      }
+    },
+    "Startup covers connection and discovery; request timeout covers tool calls. Both accept 1–120 seconds.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startup covers connection and discovery; request timeout covers tool calls. Both accept 1–120 seconds."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启动预算涵盖连接与目录发现，请求超时涵盖工具调用；两者范围均为1–120秒。"
           }
         }
       }

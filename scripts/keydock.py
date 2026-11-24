@@ -11,6 +11,7 @@ import platform
 import plistlib
 import re
 import shutil
+import signal
 import stat
 import subprocess
 import sys
@@ -19,6 +20,7 @@ import time
 import zipfile
 
 from keydock_common import CONFIG, ROOT, PipelineError, atomic_json, inspect_app, run, sha256, source_identity, validate_version
+import release_quality as quality
 
 BUILD = ROOT / "build/pipeline"
 DIST = ROOT / "build/releases" / CONFIG["version"]
@@ -26,16 +28,28 @@ RUN_DIR = ROOT / ".local/pipeline" / datetime.now(timezone.utc).strftime("%Y%m%d
 TERMINAL_TIMING_SUITES = r"^(WorkbenchFeatureTests\.TerminalLifecycleTests|MacAdaptersTests\.TerminalHandoffAdapterTests)/"
 
 
-def stage(name, command):
+def stage(name, command, timeout=None):
     RUN_DIR.mkdir(parents=True, exist_ok=True)
     path = RUN_DIR / (name + ".log")
     started = time.monotonic()
     print("[%s] %s" % (name, path.relative_to(ROOT)), flush=True)
     with path.open("w") as stream:
-        result = subprocess.run([str(value) for value in command], cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT)
-    record = {"stage": name, "exitCode": result.returncode, "seconds": round(time.monotonic() - started, 3)}
+        if timeout is None:
+            result = subprocess.run([str(value) for value in command], cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT)
+            exit_code = result.returncode
+        else:
+            # 只结束该资格验证创建的独立进程组，不操作其他项目或真实App。
+            process = subprocess.Popen([str(value) for value in command], cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
+            try: exit_code = process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGTERM)
+                try: process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    os.killpg(process.pid, signal.SIGKILL); process.wait()
+                exit_code = 124
+    record = {"stage": name, "exitCode": exit_code, "seconds": round(time.monotonic() - started, 3)}
     atomic_json(RUN_DIR / (name + ".json"), record)
-    if result.returncode:
+    if exit_code:
         lines = path.read_text(errors="replace").splitlines()
         failures = [line for line in lines if any(marker in line for marker in ("✘", "error:", "AssertionError", "FAILED", "recorded an issue"))]
         print("\n".join(failures[-40:] + lines[-18:]), file=sys.stderr)
@@ -52,6 +66,16 @@ def helper():
 
 
 def check(ci=False):
+    source = source_identity(False)
+    attempt = quality.begin_check(RUN_DIR, source, ci)
+    try: _check(ci, source, quality.host_facts())
+    except BaseException:
+        quality.finish_check(attempt, False)
+        raise
+    quality.finish_check(attempt, True)
+
+
+def _check(ci, source, host):
     if not ci:
         stage("branch", [ROOT / "scripts/check-branch-policy.sh", "--allow-master"])
     stage("documents", [sys.executable, ROOT / "scripts/validate-docs.py"])
@@ -61,9 +85,16 @@ def check(ci=False):
     # 两个互补阶段都强制成功，既不删除用例，也不通过失败后重试掩盖问题。
     # 显式关闭套件并发；CLI默认值并未让Swift Testing套件串行，进程夹具会争用MainActor。
     tests = ["xcrun", "swift", "test", "--jobs", "2", "--no-parallel"]
-    require_swift_tests(stage("swift-tests", tests + ["--skip", TERMINAL_TIMING_SUITES]))
+    excluded = TERMINAL_TIMING_SUITES + "|" + quality.OCR_FILTER
+    require_swift_tests(stage("swift-tests", tests + ["--skip", excluded]))
     require_swift_tests(stage("swift-terminal-lifecycle", tests + ["--filter", TERMINAL_TIMING_SUITES]))
+    if not ci:
+        require_swift_tests(stage(quality.OCR_STAGE, tests + ["--filter", quality.OCR_FILTER], timeout=180))
+    stage("swift-inventory", ["xcrun", "swift", "test", "list", "--skip-build"])
     helper()
+    if source_identity(False) != source:
+        raise PipelineError("Source changed while checking; no qualification was issued")
+    quality.record_check(RUN_DIR, source, ci, TERMINAL_TIMING_SUITES, host)
 
 
 def require_swift_tests(log):
@@ -76,6 +107,7 @@ def build(profile="preview", configuration=None, allow_dirty=False, identity=Non
     if platform.system() != "Darwin" or platform.machine() != CONFIG["architecture"]:
         raise PipelineError("This pipeline currently qualifies macOS arm64 only")
     source = source_identity(require_clean=not allow_dirty)
+    qualification = quality.require_local(source, current_host=True) if profile == "release" else None
     xcode = run(["xcrun", "xcodebuild", "-version"], capture=True).strip()
     if not xcode.startswith("Xcode " + CONFIG["xcodeVersion"] + "\n"):
         raise PipelineError("Select Xcode " + CONFIG["xcodeVersion"] + " with DEVELOPER_DIR")
@@ -104,6 +136,8 @@ def build(profile="preview", configuration=None, allow_dirty=False, identity=Non
     stage("build-" + profile, command)
     if source_identity(require_clean=not allow_dirty) != source:
         raise PipelineError("Source changed while building; rerun against one reviewed commit")
+    if qualification is not None and qualification["host"] != quality.host_facts():
+        raise PipelineError("Build environment changed after qualification")
     app = output / ("KeyDock.app" if profile == "release" else "KeyDock Preview.app")
     if app.exists():
         if app.is_symlink():
@@ -119,6 +153,7 @@ def build(profile="preview", configuration=None, allow_dirty=False, identity=Non
     metadata = {"schemaVersion": 1, "version": CONFIG["version"], "buildNumber": CONFIG["buildNumber"], "profile": profile,
                 "source": source, "architecture": "arm64", "xcode": xcode.splitlines()[0],
                 "swift": run(["xcrun", "swift", "--version"], capture=True).splitlines()[0]}
+    if qualification is not None: metadata["qualificationSHA256"] = quality.digest(qualification)
     atomic_json(app / "Contents/Resources/BuildInfo.json", metadata)
     (app / "Contents/Resources/BuildInfo.json").chmod(0o644)
     shutil.copyfile(ROOT / "LICENSE", app / "Contents/Resources/LICENSE.txt")
@@ -149,14 +184,18 @@ def notarize(path, profile, name):
 
 def package(app=None, profile=None):
     identity = source_identity()
+    qualification = quality.require_local(identity)
     if DIST.exists():
         manifest = verify_assets(DIST)
-        if manifest["source"]["commit"] != identity["commit"]:
+        if manifest["source"]["commit"] != identity["commit"] or manifest["version"] != CONFIG["version"] or manifest.get("qualificationSHA256") != quality.digest(qualification):
             raise PipelineError("This release version already has different source; bump release/config.json")
+        quality.core_ci(identity, manifest["coreCI"]["id"])
         print("Reused verified immutable package: " + str(DIST), flush=True)
         return DIST
     app = Path(app or BUILD / "release/KeyDock.app")
     facts = inspect_app(app)
+    if facts.get("qualification_sha256") != quality.digest(qualification):
+        raise PipelineError("Release App was not built with the current native OCR qualification")
     if facts["profile"] != "release" or facts["safe_smoke"] or facts["source_dirty"] or facts["commit"] != identity["commit"]:
         raise PipelineError("Package only the current clean-source regular Release App")
     if facts["release_version"] != CONFIG["version"] or facts["code_signature"]["kind"] != "developer-id" or facts["code_signature"]["team_id"] != CONFIG["teamID"] or not facts["code_signature"]["hardened_runtime"]:
@@ -164,6 +203,7 @@ def package(app=None, profile=None):
     profile = profile or os.environ.get("KEYDOCK_NOTARY_PROFILE")
     if not profile:
         raise PipelineError("Set KEYDOCK_NOTARY_PROFILE to an existing notarytool Keychain profile; credentials stay in Keychain")
+    core_ci = quality.core_ci(identity)
     work = RUN_DIR / "package"
     work.mkdir(parents=True, exist_ok=True)
     payload = work / "notary-payload.zip"
@@ -190,8 +230,9 @@ def package(app=None, profile=None):
     stage("staple-dmg", ["xcrun", "stapler", "staple", dmg])
     stage("validate-dmg-ticket", ["xcrun", "stapler", "validate", dmg])
     stage("gatekeeper-dmg", ["/usr/sbin/spctl", "--assess", "--type", "open", "--context", "context:primary-signature", "--verbose=2", dmg])
-    manifest = {"schemaVersion": 1, "version": CONFIG["version"], "tag": "v" + CONFIG["version"], "source": identity,
-                "architecture": "arm64", "minimumTarget": "14.0", "qualifiedHost": "macOS 27.2 arm64",
+    manifest = {"schemaVersion": 2, "version": CONFIG["version"], "tag": "v" + CONFIG["version"], "source": identity,
+                "architecture": "arm64", "minimumTarget": "14.0", "qualifiedHost": "macOS " + qualification["host"]["osVersion"] + " arm64",
+                "qualification": qualification, "qualificationSHA256": quality.digest(qualification), "coreCI": core_ci, "cloudOCR": "NOT_QUALIFIED",
                 "bundleIdentifier": facts["bundle_id"], "bundleVersion": facts["version"], "buildNumber": facts["build_number"],
                 "signature": facts["code_signature"], "notarized": facts["notarized"], "safeSmoke": False,
                 "notarizationSubmissions": {"app": app_submission, "dmg": dmg_submission},
@@ -200,8 +241,11 @@ def package(app=None, profile=None):
     atomic_json(assets / "release-manifest.json", manifest)
     (assets / "SHA256SUMS.txt").write_text("".join(sha256(p) + "  " + p.name + "\n" for p in sorted(assets.iterdir()) if p.is_file()))
     verify_assets(assets)
+    verify_dmg(assets, manifest, expected_app=facts)
     if source_identity() != identity:
         raise PipelineError("Source changed during notarization; verified files were kept in the local staging directory")
+    if quality.digest(quality.require_local(identity)) != manifest["qualificationSHA256"]:
+        raise PipelineError("Qualification changed during packaging")
     DIST.parent.mkdir(parents=True, exist_ok=True)
     os.rename(assets, DIST)
     print("Packaged: " + str(DIST), flush=True)
@@ -211,7 +255,8 @@ def package(app=None, profile=None):
 def verify_assets(directory):
     directory = Path(directory)
     manifest = json.loads((directory / "release-manifest.json").read_text())
-    if manifest.get("schemaVersion") != 1 or manifest.get("safeSmoke") is not False or not manifest.get("notarized"):
+    legacy = manifest.get("schemaVersion") == 1 and manifest.get("version") in ("0.1.0-alpha.1", "0.1.0-alpha.2")
+    if (manifest.get("schemaVersion") != 2 and not legacy) or manifest.get("safeSmoke") is not False or not manifest.get("notarized"):
         raise PipelineError("Release manifest does not describe a notarized regular App")
     if manifest.get("tag") != "v" + manifest.get("version", "") or manifest.get("source", {}).get("dirty"):
         raise PipelineError("Release version or source identity is inconsistent")
@@ -220,6 +265,11 @@ def verify_assets(directory):
     validate_version(manifest["version"])
     if not re.fullmatch(r"[0-9a-f]{40}", manifest.get("source", {}).get("commit", "")):
         raise PipelineError("Release has no full source commit")
+    if not legacy:
+        quality.validate_public(manifest.get("qualification", {}), manifest["source"], manifest["version"], manifest.get("buildNumber"))
+        if manifest.get("qualificationSHA256") != quality.digest(manifest["qualification"]) or manifest.get("cloudOCR") != "NOT_QUALIFIED":
+            raise PipelineError("Release qualification digest or environment scope is inconsistent")
+        quality.validate_ci(manifest.get("coreCI", {}), manifest["source"])
     assets = manifest.get("assets", [])
     if len(assets) != 2 or {Path(a["name"]).suffix for a in assets} != {".zip", ".dmg"}:
         raise PipelineError("Release must contain one ZIP and one DMG")
@@ -280,6 +330,8 @@ def unpack_release(directory, destination):
     run(["/usr/bin/ditto", "-x", "-k", archive, destination])
     app = Path(destination) / "KeyDock.app"
     facts = inspect_app(app)
+    if manifest.get("qualificationSHA256") and facts.get("qualification_sha256") != manifest["qualificationSHA256"]:
+        raise PipelineError("Packaged App qualification differs from its manifest")
     if facts["commit"] != manifest["source"]["commit"] or facts["release_version"] != manifest["version"] or facts["source_dirty"] or facts["safe_smoke"] or facts["code_signature"]["team_id"] != CONFIG["teamID"] or not facts["notarized"] or not facts["code_signature"]["hardened_runtime"]:
         raise PipelineError("Packaged App identity or trust differs from its release manifest")
     run(["/usr/sbin/spctl", "--assess", "--type", "execute", app], capture=True)
@@ -295,12 +347,15 @@ def verify_remote(repository, tag):
         expected = run(["git", "rev-parse", tag + "^{commit}"], capture=True).strip()
         if manifest["source"]["commit"] != expected:
             raise PipelineError("Remote release source does not match its Git tag")
-        verify_dmg(temporary, manifest)
-        unpack_release(temporary, Path(temporary) / "unpacked")
+        if "qualification" in manifest:
+            quality.verify_source(manifest["qualification"])
+            quality.core_ci(manifest["source"], manifest["coreCI"]["id"])
+        app = unpack_release(temporary, Path(temporary) / "unpacked")
+        verify_dmg(temporary, manifest, expected_app=inspect_app(app))
     return manifest
 
 
-def verify_dmg(directory, manifest):
+def verify_dmg(directory, manifest, expected_app=None):
     dmg = Path(directory) / next(a["name"] for a in manifest["assets"] if a["name"].endswith(".dmg"))
     run(["/usr/bin/codesign", "--verify", "--strict", dmg], capture=True)
     details = subprocess.run(["/usr/bin/codesign", "-d", "--verbose=4", dmg], capture_output=True, text=True, check=True).stderr
@@ -308,6 +363,38 @@ def verify_dmg(directory, manifest):
         raise PipelineError("DMG is not signed by the configured Developer ID team")
     run(["xcrun", "stapler", "validate", dmg], capture=True)
     run(["/usr/sbin/spctl", "--assess", "--type", "open", "--context", "context:primary-signature", dmg], capture=True)
+    if expected_app is None:
+        with tempfile.TemporaryDirectory(prefix="keydock-zip-identity-") as temporary:
+            app = unpack_release(directory, temporary)
+            verify_dmg_contents(dmg, inspect_app(app))
+    else: verify_dmg_contents(dmg, expected_app)
+
+
+def compare_app_payloads(actual, expected):
+    fields = ("bundle_id", "profile", "safe_smoke", "source_dirty", "commit", "release_version", "build_number", "architecture", "qualification_sha256", "bundle_sha256", "binary_sha256", "code_signature", "notarized")
+    if any(field not in actual or field not in expected or actual[field] != expected[field] for field in fields):
+        raise PipelineError("DMG App differs from the qualified ZIP App")
+
+
+def verify_dmg_contents(dmg, expected_app):
+    # 只读挂载到独占目录；从不选择用户现有卷，也不force detach。
+    directory = Path(tempfile.mkdtemp(prefix="keydock-dmg-identity-")).resolve()
+    mount = directory / "volume"; mount.mkdir()
+    try:
+        data = run(["/usr/bin/hdiutil", "attach", "-readonly", "-nobrowse", "-mountpoint", mount, "-plist", dmg], capture=True)
+        entities = plistlib.loads(data.encode())["system-entities"]
+        owned = [item for item in entities if item.get("mount-point") and Path(item["mount-point"]).resolve() == mount.resolve()]
+        if len(owned) != 1 or not re.fullmatch(r"/dev/disk\d+(?:s\d+)*", owned[0].get("dev-entry", "")) or not mount.is_mount():
+            raise PipelineError("Image did not mount at the owned verification directory")
+        actual = inspect_app(mount / "KeyDock.app")
+        compare_app_payloads(actual, expected_app)
+        run(["/usr/sbin/spctl", "--assess", "--type", "execute", mount / "KeyDock.app"], capture=True)
+    finally:
+        if mount.is_mount():
+            result = subprocess.run(["/usr/bin/hdiutil", "detach", mount], capture_output=True, text=True)
+            if result.returncode or mount.is_mount():
+                raise PipelineError("Read-only verification volume retained for normal detach: " + str(mount))
+        shutil.rmtree(directory)
 
 
 def publish():
@@ -315,6 +402,10 @@ def publish():
     manifest = verify_assets(DIST)
     if identity != manifest["source"]:
         raise PipelineError("Publishing checkout differs from the packaged source")
+    qualification = quality.require_local(identity)
+    if manifest["version"] != CONFIG["version"] or manifest.get("qualificationSHA256") != quality.digest(qualification):
+        raise PipelineError("Publishing requires the packaged same-source native qualification")
+    quality.core_ci(identity, manifest["coreCI"]["id"])
     repo = CONFIG["repository"]
     origin = run(["git", "remote", "get-url", "origin"], capture=True).strip().removesuffix(".git")
     if origin not in ("https://github.com/" + repo, "git@github.com:" + repo):
@@ -357,6 +448,9 @@ def publish():
     verify_remote(repo, tag)
     if source_identity() != identity:
         raise PipelineError("Source changed before publication; the verified draft was preserved")
+    if quality.digest(quality.require_local(identity)) != manifest["qualificationSHA256"]:
+        raise PipelineError("Native qualification is no longer current; the draft was preserved")
+    quality.core_ci(identity, manifest["coreCI"]["id"])
     run(["gh", "release", "edit", tag, "--repo", repo, "--draft=false", "--latest=false", "--prerelease=" + ("true" if "-" in CONFIG["version"] else "false")])
     verify_remote(repo, tag)
     print(run(["gh", "release", "view", tag, "--repo", repo, "--json", "url", "--jq", ".url"], capture=True).strip())
@@ -365,6 +459,8 @@ def publish():
 def install(app, destination=None, quit_running=False, dry_run=False, receipt=None):
     app = Path(app).expanduser().resolve(strict=True)
     facts = inspect_app(app)
+    if facts["profile"] == "release" and facts.get("release_version") not in ("0.1.0-alpha.1", "0.1.0-alpha.2") and not re.fullmatch(r"[0-9a-f]{64}", facts.get("qualification_sha256") or ""):
+        raise PipelineError("Regular App has no native qualification; use a verified packaged release")
     target = Path(destination).expanduser().absolute() if destination else (Path("/Applications/KeyDock.app") if facts["profile"] == "release" else Path.home() / "Applications/KeyDock Preview.app")
     receipt = Path(receipt).expanduser().absolute() if receipt else RUN_DIR / "install-receipt.json"
     command = [sys.executable, ROOT / "scripts/install-app.py", "--app", app, "--destination", target, "--receipt", receipt, "--helper", helper(), "--create-parents"]
@@ -378,6 +474,17 @@ def install(app, destination=None, quit_running=False, dry_run=False, receipt=No
     return target
 
 
+def install_release():
+    manifest = verify_assets(DIST)
+    if manifest["version"] != CONFIG["version"]:
+        raise PipelineError("The packaged release is not the configured installation version")
+    quality.verify_source(manifest["qualification"])
+    with tempfile.TemporaryDirectory(prefix="keydock-install-release-") as temporary:
+        app = unpack_release(DIST, temporary)
+        verify_dmg(DIST, manifest, expected_app=inspect_app(app))
+        return install(app, quit_running=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -386,6 +493,7 @@ def main():
     p = sub.add_parser("build"); p.add_argument("--profile", choices=["release", "preview"], default="preview"); p.add_argument("--configuration", choices=["Release", "Debug"]); p.add_argument("--allow-dirty", action="store_true")
     p = sub.add_parser("package"); p.add_argument("--app", type=Path); p.add_argument("--notary-profile")
     sub.add_parser("publish")
+    sub.add_parser("install-release")
     p = sub.add_parser("verify-release"); p.add_argument("--repo", default=CONFIG["repository"]); p.add_argument("--tag", default="v" + CONFIG["version"])
     p = sub.add_parser("verify-assets"); p.add_argument("directory", type=Path)
     p = sub.add_parser("qualify-install"); p.add_argument("--app", type=Path, default=BUILD / "preview/KeyDock Preview.app")
@@ -402,6 +510,7 @@ def main():
     elif args.command == "build": build(args.profile, args.configuration, args.allow_dirty)
     elif args.command == "package": package(args.app, args.notary_profile)
     elif args.command == "publish": publish()
+    elif args.command == "install-release": install_release()
     elif args.command == "verify-release": print(json.dumps(verify_remote(args.repo, args.tag), indent=2))
     elif args.command == "verify-assets": print(json.dumps(verify_assets(args.directory), indent=2))
     elif args.command == "qualify-install": run([sys.executable, ROOT / "scripts/qualify-install.py", "--app", args.app.expanduser().resolve(), "--helper", helper()])
@@ -415,9 +524,7 @@ def main():
     elif args.command == "release":
         check()
         if not DIST.exists(): package(build("release"))
-        else:
-            if verify_assets(DIST)["source"] != source_identity():
-                raise PipelineError("Existing release version differs from the current source")
+        else: package()
         if args.install:
             with tempfile.TemporaryDirectory(prefix="keydock-install-release-") as temporary:
                 install(unpack_release(DIST, temporary), quit_running=True)

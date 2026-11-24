@@ -4,6 +4,9 @@ import PDFKit
 import CoreText
 import ImageIO
 import AppKit
+import Vision
+import CoreML
+import CryptoKit
 @testable import MacAdapters
 
 @Suite(.serialized) struct ContextAndLeaseTests {
@@ -71,13 +74,25 @@ extension ContextAndLeaseTests {
         CTLineDraw(line,context)
         let image = try #require(context.makeImage()), destination = try #require(CGImageDestinationCreateWithURL(url as CFURL,"public.png" as CFString,1,nil))
         CGImageDestinationAddImage(destination,image,nil); #expect(CGImageDestinationFinalize(destination))
-        let value: DocumentText
-        do { value = try await DocumentContextService.read(url) }
-        catch {
-            let failure = error as NSError, underlying = (error as NSError).userInfo[NSUnderlyingErrorKey] as? NSError
-            Issue.record("Synthetic OCR failed: domain=\(failure.domain), code=\(failure.code), underlyingDomain=\(underlying?.domain ?? "none"), underlyingCode=\(underlying?.code ?? 0)")
-            throw error
+        var rounds: [[String:Bool]] = []
+        for _ in 0..<2 {
+            let value: DocumentText
+            do { value = try await DocumentContextService.read(url) }
+            catch {
+                let failure = error as NSError, underlying = (error as NSError).userInfo[NSUnderlyingErrorKey] as? NSError
+                Issue.record("Synthetic OCR failed: domain=\(failure.domain), code=\(failure.code), underlyingDomain=\(underlying?.domain ?? "none"), underlyingCode=\(underlying?.code ?? 0)")
+                throw error
+            }
+            let outcome = ["usedOCR":value.usedOCR,"hasKeyDock":value.text.uppercased().contains("KEYDOCK"),"hasSynthetic":value.text.uppercased().contains("SYNTHETIC")]
+            #expect(outcome.values.allSatisfy{$0}); rounds.append(outcome)
         }
-        #expect(value.usedOCR && value.text.uppercased().contains("KEYDOCK") && value.text.uppercased().contains("SYNTHETIC"))
+        let request = try DocumentContextService.makeOCRRequest()
+        var cpuStages = 0, cpuMatches = true
+        for (stage,devices) in try request.supportedComputeStageDevices {
+            if let cpu = devices.first(where:{if case .cpu = $0 {return true}; return false}) { cpuStages += 1; cpuMatches = cpuMatches && request.computeDevice(for:stage) == cpu }
+        }
+        #expect(request.recognitionLevel == .accurate && request.automaticallyDetectsLanguage && request.usesLanguageCorrection && request.revision == 3 && cpuStages > 0 && cpuMatches)
+        let record: [String:Any] = ["configuration":["level":"accurate","automaticLanguage":request.automaticallyDetectsLanguage,"languageCorrection":request.usesLanguageCorrection,"revision":request.revision,"supportedCPUsAssigned":cpuStages > 0 && cpuMatches],"rounds":rounds,"fixtureSHA256":SHA256.hash(data:try Data(contentsOf:url)).map{String(format:"%02x",$0)}.joined()]
+        print("KEYDOCK_OCR_QUALIFICATION "+String(decoding:try JSONSerialization.data(withJSONObject:record,options:[.sortedKeys]),as:UTF8.self))
     }
 }

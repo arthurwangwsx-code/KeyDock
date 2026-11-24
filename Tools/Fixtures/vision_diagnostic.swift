@@ -12,12 +12,18 @@ private struct Scenario: Sendable {
     let id: String
     let languages: [String]?
     let correction: Bool
+    var revision: Int? = nil
+    var legacyCPU = false
+    var earlyCPU = false
     static let all = [
         Scenario(id: "accurate-auto", languages: nil, correction: true),
         Scenario(id: "accurate-english", languages: ["en-US"], correction: true),
         Scenario(id: "accurate-english-chinese", languages: ["en-US", "zh-Hans"], correction: true),
         Scenario(id: "accurate-chinese-english", languages: ["zh-Hans", "en-US"], correction: true),
-        Scenario(id: "accurate-english-no-correction", languages: ["en-US"], correction: false)
+        Scenario(id: "accurate-english-no-correction", languages: ["en-US"], correction: false),
+        Scenario(id: "accurate-legacy-cpu", languages: nil, correction: true, legacyCPU: true),
+        Scenario(id: "accurate-revision-two", languages: ["en-US","zh-Hans"], correction: true, revision: 2),
+        Scenario(id: "accurate-early-cpu", languages: nil, correction: true, earlyCPU: true)
     ]
 }
 
@@ -32,6 +38,7 @@ private struct VisionDiagnostic {
         do {
             let arguments = Array(CommandLine.arguments.dropFirst())
             if arguments.isEmpty { exit(try runAll() ? 0 : 1) }
+            if arguments.count == 2, arguments[0] == "--only", let scenario = Scenario.all.first(where:{$0.id == arguments[1]}) { exit(try runAll(scenarios:[scenario]) ? 0:1) }
             guard arguments.count == 3, arguments[0] == "--scenario",
                   let scenario = Scenario.all.first(where: { $0.id == arguments[1] }) else { throw ProbeError.arguments }
             // 子进程只从父进程管道接收有界的同一PNG，不接受任何文件路径。
@@ -52,7 +59,7 @@ private struct VisionDiagnostic {
         }
     }
 
-    static func runAll() throws -> Bool {
+    static func runAll(scenarios:[Scenario] = Scenario.all) throws -> Bool {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-OCR-Diagnostic-" + UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -67,7 +74,7 @@ private struct VisionDiagnostic {
               "image_version": ProcessInfo.processInfo.environment["ImageVersion"] ?? "unreported",
               "scenario_timeout_seconds": childTimeout])
         var succeeded = true
-        for scenario in Scenario.all {
+        for scenario in scenarios {
             do {
                 if try !runChild(scenario, bytes: bytes, sha: sha, directory: directory) { succeeded = false }
             } catch {
@@ -78,7 +85,7 @@ private struct VisionDiagnostic {
         }
         emit(["type": "diagnostic-summary", "product_acceptance": false,
               "status": succeeded ? "all-diagnostic-scenarios-recognized" : "diagnostic-failures-observed",
-              "scenario_count": Scenario.all.count])
+              "scenario_count": scenarios.count])
         return succeeded
     }
 
@@ -135,6 +142,8 @@ private struct VisionDiagnostic {
         var record: [String: Any] = ["type": "ocr-scenario", "scenario": scenario.id,
             "product_acceptance": false, "fixture_sha256": digest(bytes), "recognition_level": "accurate",
             "recognition_on_main_thread": Thread.isMainThread,
+            "legacy_cpu_flag": scenario.legacyCPU,
+            "cpu_before_metadata_query": scenario.earlyCPU,
             "automatically_detects_language": scenario.languages == nil, "language_correction": scenario.correction]
         var phase = "decode"
         let start = ProcessInfo.processInfo.systemUptime
@@ -142,20 +151,24 @@ private struct VisionDiagnostic {
             guard let source = CGImageSourceCreateWithData(bytes as CFData, nil), CGImageSourceGetCount(source) == 1,
                   let image = CGImageSourceCreateImageAtIndex(source, 0, nil), image.width == 1200, image.height == 200 else { throw ProbeError.image }
             let request = VNRecognizeTextRequest()
+            if let revision = scenario.revision { guard VNRecognizeTextRequest.supportedRevisions.contains(revision) else { throw ProbeError.arguments }; request.revision = revision }
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = scenario.correction
             request.automaticallyDetectsLanguage = scenario.languages == nil
             if let languages = scenario.languages { request.recognitionLanguages = languages }
+            // 只比较初始化顺序，设备仍须在perform前通过请求的支持列表校验。
+            let initialCPU = scenario.earlyCPU ? MLComputeDevice.allComputeDevices.first(where:{if case .cpu = $0 {return true}; return false}) : nil
+            if let initialCPU { request.setComputeDevice(initialCPU,for:.main) }
+            if scenario.earlyCPU && initialCPU == nil { throw ProbeError.arguments }
+            if scenario.legacyCPU { request.usesCPUOnly = true }
             record["request_revision"] = request.revision
             record["default_revision"] = VNRecognizeTextRequest.defaultRevision
             record["current_revision"] = VNRecognizeTextRequest.currentRevision
             record["supported_revisions"] = Array(VNRecognizeTextRequest.supportedRevisions)
             record["configured_languages"] = request.recognitionLanguages
-            // 查询失败单独记录；不会把失败伪装为语言已受支持。
-            do { record["supported_languages"] = try request.supportedRecognitionLanguages() }
-            catch { record["supported_languages_error"] = errorInfo(error) }
             phase = "compute-device-query"
             let stages = try request.supportedComputeStageDevices
+            if let initialCPU, stages[.main]?.contains(initialCPU) != true { request.setComputeDevice(nil,for:.main); throw ProbeError.arguments }
             var devices: [[String: Any]] = []
             for (stage, supported) in stages.sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
                 let cpu = supported.first { if case .cpu = $0 { return true }; return false }
@@ -164,6 +177,8 @@ private struct VisionDiagnostic {
                                 "selected": cpu.map(deviceInfo) ?? ["type": "vision-default"]])
             }
             record["compute_stages"] = devices
+            do { record["supported_languages"] = try request.supportedRecognitionLanguages() }
+            catch { record["supported_languages_error"] = errorInfo(error) }
             phase = "perform"
             try VNImageRequestHandler(cgImage: image).perform([request])
             let recognized = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")

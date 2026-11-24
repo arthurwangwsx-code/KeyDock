@@ -12,6 +12,7 @@ import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import keydock
+from quality_fixture import HOST, fixture_summary, fixture_ci
 from keydock_common import CONFIG, PipelineError, atomic_json, sha256, signature_has_runtime, tree_digest, validate_version
 
 
@@ -22,11 +23,11 @@ class ReleasePipelineTests(unittest.TestCase):
                 log = Path(temporary) / "synthetic.log"
                 log.write_text("✔ Test run with 4 tests in 1 suite passed after 0.3 seconds.\n")
                 stages = []
-                def stage(name, command):
+                def stage(name, command, **kwargs):
                     stages.append((name, command))
                     if name == failed_stage: raise PipelineError("synthetic failure")
                     return log
-                with patch.object(keydock, "stage", side_effect=stage), patch.object(keydock, "helper") as helper:
+                with patch.object(keydock, "stage", side_effect=stage), patch.object(keydock, "helper") as helper, patch.object(keydock.quality, "record_check"), patch.object(keydock.quality,"host_facts",return_value=HOST):
                     if failed_stage:
                         with self.assertRaises(PipelineError): keydock.check(ci=True)
                         helper.assert_not_called()
@@ -34,7 +35,9 @@ class ReleasePipelineTests(unittest.TestCase):
                         keydock.check(ci=True)
                         commands = dict(stages)
                         primary, timing = commands["swift-tests"], commands["swift-terminal-lifecycle"]
-                        self.assertEqual(primary[primary.index("--skip") + 1], timing[timing.index("--filter") + 1])
+                        self.assertIn(timing[timing.index("--filter") + 1], primary[primary.index("--skip") + 1])
+                        self.assertIn(keydock.quality.OCR_FILTER, primary[primary.index("--skip") + 1])
+                        self.assertNotIn(keydock.quality.OCR_STAGE, commands)
                         self.assertIn("--no-parallel", primary)
                         self.assertIn("--no-parallel", timing)
                         helper.assert_called_once()
@@ -66,7 +69,9 @@ class ReleasePipelineTests(unittest.TestCase):
             for name, value in entries or [("KeyDock.app/Contents/Resources/synthetic.txt", b"synthetic")]:
                 archive.writestr(name, value)
         dmg.write_bytes(b"synthetic dmg; never mounted")
-        manifest = {"schemaVersion": 1, "version": version, "tag": "v" + version,
+        qualification = fixture_summary()
+        manifest = {"schemaVersion": 2, "version": version, "tag": "v" + version, "buildNumber": CONFIG["buildNumber"],
+                    "qualification": qualification, "qualificationSHA256": keydock.quality.digest(qualification), "coreCI": fixture_ci(), "cloudOCR": "NOT_QUALIFIED",
                     "source": {"commit": "a" * 40, "dirty": False}, "safeSmoke": False,
                     "architecture": "arm64", "bundleIdentifier": CONFIG["bundleIdentifier"],
                     "signature": {"kind": "developer-id", "team_id": CONFIG["teamID"], "hardened_runtime": True},

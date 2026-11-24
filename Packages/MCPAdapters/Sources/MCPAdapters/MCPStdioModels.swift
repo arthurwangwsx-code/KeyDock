@@ -5,13 +5,24 @@ public struct MCPStdioLaunchConfiguration: Codable, Equatable, Sendable {
     public let executable: String
     public let arguments: [String]
     public let workingDirectory: String
-    public init(executable: String, arguments: [String] = [], workingDirectory: String) {
+    public let startupTimeoutSeconds: TimeInterval
+    public init(executable: String, arguments: [String] = [], workingDirectory: String, startupTimeoutSeconds: TimeInterval = 30) {
         self.executable = executable; self.arguments = arguments; self.workingDirectory = workingDirectory
+        self.startupTimeoutSeconds = startupTimeoutSeconds
+    }
+    private enum CodingKeys: String, CodingKey { case executable, arguments, workingDirectory, startupTimeoutSeconds }
+    public init(from decoder:any Decoder) throws {
+        let fields = try decoder.container(keyedBy:CodingKeys.self)
+        executable = try fields.decode(String.self,forKey:.executable)
+        arguments = try fields.decode([String].self,forKey:.arguments)
+        workingDirectory = try fields.decode(String.self,forKey:.workingDirectory)
+        startupTimeoutSeconds = try fields.decodeIfPresent(TimeInterval.self,forKey:.startupTimeoutSeconds) ?? 30
     }
     public func validate() throws {
         guard executable.hasPrefix("/"), executable.utf8.count <= 4096, !executable.contains("\0"),
               workingDirectory.hasPrefix("/"), workingDirectory.utf8.count <= 4096, !workingDirectory.contains("\0"),
               arguments.count <= 128, arguments.allSatisfy({ !$0.contains("\0") }),
+              startupTimeoutSeconds.isFinite, (1...120).contains(startupTimeoutSeconds),
               arguments.reduce(0, { $0 + $1.utf8.count }) <= 16_384,
               FileManager.default.isExecutableFile(atPath: executable) else { throw MCPClientError.invalidConfiguration }
         var directory: ObjCBool = false

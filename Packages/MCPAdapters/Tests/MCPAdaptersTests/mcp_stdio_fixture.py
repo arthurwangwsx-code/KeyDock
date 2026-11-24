@@ -9,6 +9,8 @@ import time
 
 signal.signal(signal.SIGTERM, signal.SIG_DFL)
 mode = sys.argv[1] if len(sys.argv) > 1 else "normal"
+if mode == "delayed-start-slow":
+    time.sleep(1.25)
 lock = threading.Lock()
 cancellations = 0
 pending = {}
@@ -56,7 +58,7 @@ for raw in sys.stdin:
         send(identifier, {"tools": [{"name": "echo", "description": "Synthetic echo", "inputSchema": schema}]})
     elif method == "tools/call":
         text = params.get("arguments", {}).get("text", "")
-        if mode == "slow": threading.Thread(target=respond_later, args=(identifier, text), daemon=True).start()
+        if mode in ("slow", "delayed-start-slow"): threading.Thread(target=respond_later, args=(identifier, text), daemon=True).start()
         else: send(identifier, {"content": [{"type": "text", "text": text}], "isError": False})
     elif method == "synthetic/stats":
         send(identifier, {"cancelled": cancellations, "pending": len(pending), "environmentKeys": list(os.environ.keys())})

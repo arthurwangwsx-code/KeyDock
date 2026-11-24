@@ -55,7 +55,8 @@ public actor MCPStdioTransport: MCPHTTPTransporting {
         }
         let id = id!
         guard pending.count < 32, pending[id] == nil else { throw MCPClientError.busy }
-        let timeoutSeconds = configuration.timeoutSeconds
+        // 进程冷启动与协议握手使用独立预算；工具调用继续遵守配置的请求时限。
+        let timeoutSeconds = discovery ? (configuration.stdioLaunch?.startupTimeoutSeconds ?? configuration.timeoutSeconds) : configuration.timeoutSeconds
         return try await withTaskCancellationHandler(operation: {
             let reply: MCPHTTPReply = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<MCPHTTPReply, Error>) in
                 let timeout = Task<Void, Never> { [weak self] in

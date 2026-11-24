@@ -26,18 +26,24 @@ flowchart LR
 | `make debug` | 构建隔离Preview，正常退出旧Preview，原子替换到用户Applications并启动 |
 | `make build` | 只构建允许WIP的Preview |
 | `KEYDOCK_NOTARY_PROFILE=<profile> make release` | 干净提交的Release archive、签名、公证、装订、Gatekeeper与最终资产 |
-| `make install` | 正式App安装至 `/Applications/KeyDock.app`，保留旧App与回退凭据 |
+| `make install` | 核验当前版本包的ZIP／DMG同源同字节App后安装至 `/Applications/KeyDock.app`，保留旧App与回退凭据 |
 | `make rollback RECEIPT=<receipt.json>` | 核对当前包／备份，正常退出目标后回退 |
 | `make publish` | 核对源／master可达性／tag，补齐draft，回下载通过后公开 |
 | `make verify-release` | 下载当前版本，核对摘要、tag、实际签名／公证与Gatekeeper |
 
 `python3 scripts/keydock.py release --install --publish`可组合正式流程。首次开源先建立并核对仓库、受控fast-forward并推送master与tag；发布入口不会隐式创建tag或修改分支。每步退出码、耗时和日志留在忽略的 `.local/pipeline/<run>/`；package／publish可独立重试。已存在版本只复用相同源和摘要；签名时间戳会使重复构建字节不同，不承诺逐位可复现。
 
-Swift检查分为两个互补的强制阶段：主体排除Terminal生命周期套件，随后在独立进程运行这两个套件。原有两秒退出／回执时限断言不变；任一阶段失败或没有匹配用例都会停止。`--jobs 2`仅限制构建并发，不会串行Swift Testing的MainActor套件；拆分避免大批合成磁盘／主线程工作污染时间测量，不表示繁忙系统具备硬实时保证。两阶段合并覆盖全部Swift用例，禁止失败后自动fallback或重试变绿。
+Swift检查采用互补独立阶段：主体、Terminal生命周期和生产Vision OCR。原有两秒退出／回执时限断言不变；完整本机任一阶段失败或没有匹配用例都会停止。`--jobs 2`仅限制构建并发，不会串行Swift Testing的MainActor套件；拆分避免大批合成磁盘／主线程工作污染时间测量，不表示繁忙系统具备硬实时保证。完整本机合并覆盖全部Swift用例，云端scope另行标识，禁止失败后自动fallback或重试变绿。
 
-两个阶段均显式传入`--no-parallel`，因为CLI帮助中的默认值未让Swift Testing顶层套件串行。集成夹具的合成进程startup／cleanup含同步poll／usleep，并发时会延迟另一套件的SSE消费，导致五秒drain时限误触发。明确串行后日志按套件顺序执行；保留原等待时间、输出上限、真实进程／网络和全部断言。
+从alpha.4起，测试清单分为core、Terminal和生产Vision OCR三个互补分区，发现的清单必须包含精确OCR用例，分区非空且无遗漏。参数化用例使执行数量可高于声明数量。云端`check --ci`仅运行前两个分区，summary明确`system OCR: NOT_QUALIFIED`；此前VM上的真实OCR错误保留，不宣称云端识别通过。完整本机check还必须独立运行生产OCR，先在新测试进程提取，再重复提取同一合成PNG；校验accurate／revision3／自动语言／纠正／支持CPU设备配置和实际识别结果。该阶段180秒超时即失败，只结束其独占验证进程组。
 
-`gh workflow run ci.yml --ref <已推送功能分支> -f diagnose_ocr=true`只运行独立的OCR诊断job，不替代native验收，也不会取消该分支的native job。探针`Tools/Fixtures/vision_diagnostic.swift`只生成自己的同一张合成PNG，五个准确模式场景分别使用自动语言、英语、两种中英顺序和无语言纠正；每场景独占子进程45秒时限，记录设备／revision／原始NSError及PNG摘要。识别错误、超时或结果不匹配返回非零，artifact照常保留，不回退fast，也不读取个人文件或下载模型。
+干净源的完整检查生成受控资格回执，绑定完整SHA、version/build、实际系统／芯片／工具链、测试清单摘要、生产代码／资格测试／门禁源码摘要、图片摘要及每轮判定、各阶段原始日志摘要。App BuildInfo包含资格摘要；schema2发行manifest携带对应资格和同SHA的指定push core CI记录。构建、打包、既有DIST重用、publish均重读实际本机日志和源码核对；回下载再验证App摘要、tag源文件和指定CI结果。缺资格、云端scope、模式不符、漏OCR、失败／超时、源变化或日志被改都会拒绝。摘要用于绑定证据，不是硬件远程证明；实际系统与更广产品验收仍分别报告。alpha.1／alpha.2原资产继续按旧schema复核；未公开的alpha.3候选保留原字节，不补造新资格。
+
+Release构建前后还比较资格与当前OS build／Swift／完整Xcode及SDK版本。完整clean检查记录running／failed／passed，后续失败或未结束会阻止继续消费历史PASS；新完整PASS后才恢复。资格锚点和对应原日志须保留，重复同源检查不会覆盖已装入不可变包的摘要。ZIP与DMG不仅验签：DMG只读／nobrowse挂载到独占目录，核对内部App的源、版本、build、资格及整个bundle摘要与ZIP一致，再精确正常卸载；不选择用户现有卷、不force detach。`make install`消费已核验发行包，避免误装build目录里残留的旧候选；旧alpha.3缺资格，默认安装拒绝。
+
+各阶段均显式传入`--no-parallel`，因为CLI帮助中的默认值未让Swift Testing顶层套件串行。集成夹具的合成进程startup／cleanup含同步poll／usleep，并发时会延迟另一套件的SSE消费，导致五秒drain时限误触发。明确串行后日志按套件顺序执行；应用任务的五秒drain、输出上限、真实进程／网络和全部断言保留。隔离Python合成服务使用`-I -S`，准备就绪预算20秒，不占用应用任务断言的时间。
+
+`gh workflow run ci.yml --ref <已推送功能分支> -f diagnose_ocr=true`只运行独立的OCR诊断job，不替代native验收，也不会取消该分支的native job。探针`Tools/Fixtures/vision_diagnostic.swift`只生成自己的同一张合成PNG，准确模式场景分别使用自动语言、英语、两种中英顺序、无语言纠正、旧公共CPU标志和revision2；每场景独占子进程45秒时限，记录设备／revision／原始NSError及PNG摘要。识别错误、超时或结果不匹配返回非零，artifact照常保留，不回退fast，也不读取个人文件或下载模型。诊断工具允许旧公共CPU标志的弃用警告，产品不因此使用旧标志或更改准确模式；`--only <scenario>`可只运行一个已登记场景。
 
 发行后的证据文档可以追加提交，发行tag仍固定在原始构建源。复核已有版本使用`make verify-release`；再次发行先更新version／build，不从新HEAD覆盖旧版本。若确需重试未完成的同版发布，先回到对应干净源提交。
 

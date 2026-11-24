@@ -6,7 +6,7 @@ import AICore
 @Suite(.serialized) struct MCPStdioTests {
     private func configuration(mode: String = "normal", version: MCPProtocolVersion = .modern20260728, timeout: TimeInterval = 5) -> MCPServerConfiguration {
         let script = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("mcp_stdio_fixture.py")
-        return MCPServerConfiguration(name: "Synthetic stdio", stdio: .init(executable: "/usr/bin/python3", arguments: ["-I", "-u", script.path, mode], workingDirectory: "/tmp"), enabled: true, protocolVersion: version, timeoutSeconds: timeout)
+        return MCPServerConfiguration(name: "Synthetic stdio", stdio: .init(executable: "/usr/bin/python3", arguments: ["-I", "-S", "-u", script.path, mode], workingDirectory: "/tmp"), enabled: true, protocolVersion: version, timeoutSeconds: timeout)
     }
     @Test(arguments: [MCPProtocolVersion.modern20260728, .legacy20251125])
     func discoverToolAndExplicitContextThenGracefulShutdown(_ version: MCPProtocolVersion) async throws {
@@ -62,12 +62,16 @@ import AICore
         #expect(await wire.diagnostics().exited)
     }
     @Test func requestTimeoutIsBoundedAndLaterFramesCannotReviveIt() async throws {
-        let config = configuration(mode: "slow", timeout: 1), wire = try MCPStdioTransport(configuration: config)
+        let config = configuration(mode: "delayed-start-slow", timeout: 1), wire = try MCPStdioTransport(configuration: config)
         let client = try MCPHTTPClient(configuration: config, transport: wire)
+        let connecting = ContinuousClock.now
         let catalog = try await client.discover()
+        #expect(connecting.duration(to:.now) >= .seconds(1))
+        let started = ContinuousClock.now
         await #expect(throws: MCPClientError.timeout) {
             try await client.call(modelToolName: catalog.tools[0].id, arguments: ["text": .string("Synthetic")], catalogRevision: catalog.revision)
         }
+        #expect(started.duration(to:.now) < .seconds(3))
         await client.invalidate()
         #expect(await wire.diagnostics().exited)
     }
@@ -80,5 +84,15 @@ import AICore
         value.removeValue(forKey: "transportKind"); value.removeValue(forKey: "stdioLaunch")
         let old = try JSONSerialization.data(withJSONObject: value)
         #expect(try JSONDecoder().decode(MCPServerConfiguration.self, from: old).transportKind == .http)
+    }
+    @Test func startupBudgetRoundTripsAndOldLaunchDataRetainsItsDefault() throws {
+        let launch = MCPStdioLaunchConfiguration(executable:"/usr/bin/true",workingDirectory:"/tmp",startupTimeoutSeconds:17)
+        let data = try JSONEncoder().encode(launch)
+        #expect(try JSONDecoder().decode(MCPStdioLaunchConfiguration.self,from:data) == launch)
+        var fields = try #require(JSONSerialization.jsonObject(with:data) as? [String:Any]); fields.removeValue(forKey:"startupTimeoutSeconds")
+        #expect(try JSONDecoder().decode(MCPStdioLaunchConfiguration.self,from:JSONSerialization.data(withJSONObject:fields)).startupTimeoutSeconds == 30)
+        for invalid in [0.0,121.0,Double.infinity] {
+            #expect(throws:MCPClientError.invalidConfiguration) { try MCPStdioLaunchConfiguration(executable:"/usr/bin/true",workingDirectory:"/tmp",startupTimeoutSeconds:invalid).validate() }
+        }
     }
 }

@@ -23,6 +23,15 @@ private final class OCRCancellation: @unchecked Sendable {
     func cancel() { lock.lock(); cancelled = true; let value = request; lock.unlock(); value?.cancel() }
 }
 public enum DocumentContextService {
+    // 资格测试与实际提取共用此工厂，不能以另一种识别模式冒充生产结果。
+    static func makeOCRRequest() throws -> VNRecognizeTextRequest {
+        let request = VNRecognizeTextRequest(); request.revision = VNRecognizeTextRequestRevision3
+        request.recognitionLevel = .accurate; request.usesLanguageCorrection = true; request.automaticallyDetectsLanguage = true
+        for (stage,devices) in try request.supportedComputeStageDevices {
+            if let cpu = devices.first(where:{ if case .cpu = $0 { return true }; return false }) { request.setComputeDevice(cpu,for:stage) }
+        }
+        return request
+    }
     public static func read(_ url: URL) async throws -> DocumentText {
         let cancellation = OCRCancellation()
         let task = Task.detached(priority:.userInitiated) { try extract(url,cancellation:cancellation) }
@@ -52,12 +61,9 @@ public enum DocumentContextService {
                   let width = properties[kCGImagePropertyPixelWidth] as? NSNumber, let height = properties[kCGImagePropertyPixelHeight] as? NSNumber,
                   width.doubleValue > 0, height.doubleValue > 0, width.doubleValue*height.doubleValue <= 20_000_000,
                   let pixels = CGImageSourceCreateImageAtIndex(image,0,[kCGImageSourceShouldCache:false] as CFDictionary) else { throw DocumentContextError.tooLarge }
-            let request = VNRecognizeTextRequest(); request.recognitionLevel = .accurate; request.usesLanguageCorrection = true; request.automaticallyDetectsLanguage = true
+            let request = try makeOCRRequest()
             // 有界单图文字提取优先使用各阶段明确支持的CPU，减少虚拟机／GPU驱动依赖。
             // 未声明CPU支持的阶段保持Vision默认选择；不构造或强塞不支持的设备。
-            for (stage,devices) in try request.supportedComputeStageDevices {
-                if let cpu = devices.first(where:{ if case .cpu = $0 { return true }; return false }) { request.setComputeDevice(cpu,for:stage) }
-            }
             cancellation.install(request); try Task.checkCancellation()
             try VNImageRequestHandler(cgImage:pixels).perform([request]); try Task.checkCancellation()
             text = (request.results ?? []).compactMap{$0.topCandidates(1).first?.string}.joined(separator:"\n"); ocr = true

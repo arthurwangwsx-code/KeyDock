@@ -32,6 +32,10 @@ canonical目录唯一；当前分支`feature/desktop-capability-expansion`从mas
 
 显式串行check-v4已通过全382／34／503。干净源`bf3267b`的完整本地发行检查、签名及App／DMG公证均通过；远端第二轮`45387890552`只剩Vision合成图失败，诊断域`TextRecognition.CRImageReaderError`／code9。CPU选择尚未解决远端问题，不把该错误擅自定性为VM硬件缺失。alpha.3候选保留在本地，未晋升master、安装或公开，正在执行独立OCR诊断。
 
+独立远端诊断全部准确场景仍失败；原生产路径在本机独立测试进程0.560s通过。alpha.4／build4正在建立云端core与完整本机系统资格分层：云端OCR明确NOT_QUALIFIED；构建／打包／发布仍强制生产配置实际OCR、同源日志／图片／源码摘要和指定core CI。原断言与真实识别继续保留，新门禁及最终验收待记录。
+
+alpha.4资格与DMG内容门禁已实现，43项离线回归、原生产OCR两轮记录、旧alpha.2 ZIP／DMG实际回下载一致性通过；本地stdio启动／整轮发现与调用预算分离、延迟启动后1秒调用超时和设置保存7项定向回归通过。中英覆盖新增为506个key。完整同源384项Swift（云端383＋本机OCR1）及最终CI／签名公证／安装／发布正在推进，未将定向通过计为最终通过。
+
 详见[扩展能力证据](implementation/capability-expansion-2026-11-24.md)、[使用说明](product/expanded-tools-guide.md)、[技术合同](technical/capability-expansion.md)和[iSpec任务](../ispec/changes/keydock-foundation/30-tasks.md)。勾选仅表示对应实现／定向验证，不关闭本表更广的真实验收。
 
 ## 已发布与安装

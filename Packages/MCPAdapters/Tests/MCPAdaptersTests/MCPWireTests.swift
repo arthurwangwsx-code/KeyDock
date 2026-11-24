@@ -13,7 +13,7 @@ private final class MCPLoopbackFixture {
         guard FileManager.default.fileExists(atPath: script.path) else { throw MCPClientError.invalidConfiguration }
         let process = Process(), output = Pipe()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["python3", "-I", "-u", script.path]
+        process.arguments = ["python3", "-I", "-S", "-u", script.path]
         process.environment = ["PATH": "/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin"]
         process.standardInput = FileHandle.nullDevice; process.standardError = FileHandle.nullDevice
         process.standardOutput = output

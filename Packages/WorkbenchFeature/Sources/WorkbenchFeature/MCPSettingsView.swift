@@ -47,9 +47,12 @@ struct MCPSettingsContent: View {
                 TextField(L("Executable (absolute path)"),text:$session.mcpDraft.executable)
                 TextField(L("Arguments (JSON array)"),text:$session.mcpDraft.arguments)
                 TextField(L("Working directory"),text:$session.mcpDraft.directory)
+                TextField(L("Server startup timeout (seconds)"),text:$session.mcpDraft.startupTimeout)
+                Text(L("Startup covers connection and discovery; request timeout covers tool calls. Both accept 1–120 seconds.")).font(.caption).foregroundStyle(.secondary)
                 Text(L("Arguments are passed individually. The server receives a minimal environment, not your model credentials or terminal environment.")).font(.caption).foregroundStyle(.secondary)
             }
             Picker(L("Protocol version"),selection:$session.mcpDraft.version) { ForEach(MCPProtocolVersion.allCases,id:\.self) { value in Text(value.rawValue).tag(value) } }
+            TextField(L("Request timeout (seconds)"),text:$session.mcpDraft.requestTimeout)
             Toggle(L("Enable when saved"),isOn:$session.mcpDraft.enabled)
             Button(L("Save server")) {
                 if session.mcpDraft.kind == .stdio && session.mcpDraft.enabled { confirmTrust = true } else { save(trusted:false) }

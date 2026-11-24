@@ -143,6 +143,7 @@ def inspect_app(path):
         "version": version, "release_version": release_version,
         "build_number": str(info.get("CFBundleVersion", "")), "commit": commit,
         "source_dirty": bool(metadata.get("source", {}).get("dirty")),
+        "qualification_sha256": metadata.get("qualificationSHA256"),
         "executable": str(executable), "binary_sha256": sha256(executable),
         "bundle_sha256": tree_digest(path), "notarized": notarized, "architecture": architecture,
         "code_signature": {"kind": kind, "team_id": fields.get("TeamIdentifier"),

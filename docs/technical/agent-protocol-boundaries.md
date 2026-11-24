@@ -29,3 +29,6 @@ ACP是CLI Agent会话协议，与MCP工具协议分开。已评估官方规范re
 未来adapter须包含双向JSON-RPC、session/update、逐次权限请求、pending取消、bounded buffer与deadline；客户端初始fs读写与terminal能力关闭。取消必须撤销待批权限并观察原prompt是否确认取消，超时则unknown。当前**未实现ACP，不显示已支持**。用户可将CLI Agent配置为普通保存命令；交互模式仍交给用户终端，不能声称PTY或ACP会话管理。
 
 参考[ACP v1概述](https://agentclientprotocol.com/protocol/overview)和[v2迁移说明](https://agentclientprotocol.com/protocol/v2/migration)。不把协议评估或普通Process启动算作真实ACP验收。
+## 本地进程启动与调用预算
+
+stdio来源有独立的启动／整轮连接发现预算，默认30秒，允许1–120秒；普通工具请求继续使用来源的请求超时，HTTP沿用原请求预算。外层发现计时器与stdio握手使用同一连接预算，不能被短调用预算提前覆盖。编辑来源时保留并允许分别修改两项预算；Agent整体期限仍包含连接准备。旧launch JSON缺字段时使用30秒，不自动连接或重新执行工具。确定性回归让合成进程延迟1.25秒启动，随后慢工具仍按1秒超时并忽略迟到响应。

@@ -16,6 +16,6 @@ publish:
 verify-release:
 	python3 scripts/keydock.py verify-release
 install:
-	python3 scripts/keydock.py install --app build/pipeline/release/KeyDock.app --quit-running
+	python3 scripts/keydock.py install-release
 rollback:
 	python3 scripts/keydock.py rollback "$(RECEIPT)" --quit-running

@@ -110,3 +110,18 @@ Statistics MUST default off, store only bounded metadata, preserve explicit cove
 
 - **WHEN** the user pauses or clears activity recording
 - **THEN** queued older events do not backfill the cleared interval and raw text never enters the report.
+## 发行系统资格与云端分层
+
+### Requirement: 生产OCR资格绑定发行源
+
+系统 MUST 区分云端core检查与Vision系统能力；发行必须有同一干净SHA的生产OCR实际识别资格，并绑定完整检查与指定core CI。
+
+#### Scenario: 完整本机资格才能进入分发
+- **GIVEN** 本机运行完整测试和生产OCR配置，独立进程及重复识别合成PNG均成功
+- **WHEN** 构建、打包、复用既有DIST、发布或回下载新格式发行
+- **THEN** 核对源SHA、version/build、模式、清单、实际结果、图片与日志摘要、App资格摘要和指定同源push core CI；缺失或不符则拒绝
+
+#### Scenario: 云端OCR未获资格
+- **GIVEN** 云端core检查不运行系统OCR资格用例
+- **WHEN** 生成检查summary
+- **THEN** 显示NOT_QUALIFIED，精确清单覆盖其余core与Terminal分区，不能据此单独授权发行或改写已有VM失败

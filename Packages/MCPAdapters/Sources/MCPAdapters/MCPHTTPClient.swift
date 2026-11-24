@@ -37,11 +37,12 @@ public actor MCPHTTPClient {
         guard !discovering, activeCalls == 0 else { throw MCPClientError.busy }
         discovering = true; capabilities = []; resourceCatalog = nil; promptCatalog = nil; cachedCatalog = nil; sessionID = nil; generation = UUID()
         let token = generation
+        let connectionBudget = configuration.transportKind == .stdio ? (configuration.stdioLaunch?.startupTimeoutSeconds ?? configuration.timeoutSeconds) : configuration.timeoutSeconds
         defer { discovering = false }
         return try await withThrowingTaskGroup(of: MCPToolCatalog.self) { group in
             group.addTask { try await self.loadCatalog(generation: token) }
             group.addTask {
-                try await Task.sleep(for: .seconds(self.configuration.timeoutSeconds))
+                try await Task.sleep(for: .seconds(connectionBudget))
                 throw MCPClientError.timeout
             }
             defer { group.cancelAll() }
