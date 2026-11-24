@@ -28,4 +28,6 @@
 
 修补版Preview测量`7b94f25f-a378-460b-91c7-0365919ea974`通过，22:38:50Z–22:39:17Z，正常替换并保留回退receipt。中文浅色引用清单与禁用移除、英文深色无引用确认页截图已检查；移除行AX名称包含目标。新建／编辑只保存合成动作与命令，未执行它们。原生未提交永久删除，真实删除和事务故障由上述临时目录回归验证；没有请求API、授予权限或触及个人剪贴板。最后语言／外观均恢复Follow System。
 
-完整core与同源CI另录。这些检查不关闭真实快捷键、AX、多屏、VoiceOver／IME、外部API和完整视觉矩阵。
+干净源`fed3a0add01786f064b7d38906c5fd41170c254c`完整cloud-core测量`ea4c3e6f-95da-4c70-975c-44f33f3aa799`通过，22:41:51Z–22:42:58Z：529 Swift／46 Python／631 key。摘要`.local/pipeline/20261124T224151591989Z/check-summary.json`列509个声明ID（core499／Terminal9／OCR1），inventory SHA256为`cbca64f4504c70a7ed075bcc1bb3e7ea453e644b3785949db615edc4297293ec`。系统OCR仍NOT_QUALIFIED。[同源CI 45503410004](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45503410004)PASS，job138832283497的源码／流水线检查、Release优化Preview、归档及上传均通过；云端系统OCR仍NOT_QUALIFIED，诊断job未运行。
+
+这些检查不关闭真实快捷键、AX、多屏、VoiceOver／IME、外部API和完整视觉矩阵。正式alpha.7保持，未晋升master或发行alpha.8。
