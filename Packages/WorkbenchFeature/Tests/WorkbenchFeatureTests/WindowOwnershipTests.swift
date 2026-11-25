@@ -403,10 +403,15 @@ private let legacyCases = [
         launcher.query = "KeyDockContractBetaOnly"
         let batch = try await completedBatch(launcher, text: launcher.query)
         #expect(batch.request.source == "keydock.launcher")
-        #expect(batch.providerID == "keydock.catalog")
+        let plan = try store.contributions.queryPlan(configuration:store.configuration,snapshot:store.contributionSnapshot,files:nil)
+        let providers = Set(["keydock.catalog"]+plan.providers.map(\.id))
+        #expect(batch.providerID.map(providers.contains) == true)
+        #expect(batch.pendingProviderIDs.isEmpty && batch.failures.isEmpty)
         #expect(batch.queryID == launcher.queryRequest?.queryID)
         #expect(batch.items == launcher.results)
         #expect(batch.items.map(\.payload) == [betaID.uuidString])
+        let current = try #require(store.catalog.first(where:{$0.id == "command."+betaID.uuidString}))
+        #expect(batch.items.first?.contribution == current.contribution && batch.items.first?.objectRevision == current.objectRevision)
     }
 
     @Test("新请求就绪前 Return 不执行旧对象", .timeLimit(.minutes(1)))

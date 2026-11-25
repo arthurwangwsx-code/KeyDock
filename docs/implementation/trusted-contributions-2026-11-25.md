@@ -22,6 +22,8 @@ Workflow／Agent仅在新运行接纳前检查CLI开关，保存编辑不受禁�
 
 本地日志在.local/desktop/contribution-*，iSpec attempt 9881b6d8-e08e-4176-b6a2-97706ee67811。保留所有失败测量，不把整体索引审计改为全部成功。
 
+首轮完整本机检查在c5a82ee发现旧WindowOwnership查询测试仍假定最后完成者必为单一catalog provider；迁入计算provider后，该字段正确表示最后完成的provider。保留失败measurement ac25c791-1297-4dcd-9b3e-db9ac18df0d1（170.524秒），只更新测试为精确查询计划provider集合、无pending／failure、准确CLI结果及其贡献绑定／revision；生产协调器不变。新提交需重新获得完整本机和CI资格，失败源不发行。
+
 ## 原生观察
 
 隔离Preview构建安装测量872ea749-7a84-44e6-b7cd-f4c250c45445（36.765秒）；第一轮发现Toggle辅助树缺少工具名称，补明确label／hint后第二轮9973fcaf-014f-46a5-ac9b-57011d006ef5（10.600秒）PASS。
