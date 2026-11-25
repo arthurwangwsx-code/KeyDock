@@ -523,6 +523,15 @@ def install_release():
         return install(app, quit_running=True)
 
 
+def mcp_interop(environment, run_name, scenario):
+    # 与日常检查串行执行；环境需先显式准备，绝不借用个人已有服务／凭据。
+    stage("mcp-interop-probe", ["xcrun", "swift", "build", "--jobs", "2", "--product", "KeyDockMCPInteropProbe"])
+    binaries = Path(run(["xcrun", "swift", "build", "--show-bin-path"], capture=True).strip())
+    stage("mcp-interop-" + scenario, [sys.executable, ROOT / "scripts/run-mcp-interop.py",
+          "--environment", environment, "--probe", binaries / "KeyDockMCPInteropProbe",
+          "--run-name", run_name, "--scenario", scenario], timeout=300)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -539,6 +548,8 @@ def main():
     p = sub.add_parser("rollback"); p.add_argument("receipt", type=Path); p.add_argument("--dry-run", action="store_true"); p.add_argument("--quit-running", action="store_true")
     p = sub.add_parser("debug"); p.add_argument("--no-launch", action="store_true")
     sub.add_parser("desktop-fixture")
+    p = sub.add_parser("prepare-mcp-interop"); p.add_argument("--python", type=Path, required=True); p.add_argument("--output", type=Path, required=True)
+    p = sub.add_parser("mcp-interop"); p.add_argument("--environment", type=Path, required=True); p.add_argument("--run-name", required=True); p.add_argument("--scenario", choices=["time", "sdk-lifecycle"], default="time")
     p = sub.add_parser("release"); p.add_argument("--publish", action="store_true"); p.add_argument("--install", action="store_true")
     args = parser.parse_args()
     if args.command == "doctor":
@@ -546,6 +557,9 @@ def main():
                           "repository": CONFIG["repository"], "tools": {tool: shutil.which(tool) is not None for tool in ["xcrun", "xcodegen", "gh", "codesign", "hdiutil"]},
                           "notaryProfileConfigured": bool(os.environ.get("KEYDOCK_NOTARY_PROFILE")), "buildStorage": build_storage_status()}, indent=2))
     elif args.command == "desktop-fixture": desktop_fixture()
+    elif args.command == "prepare-mcp-interop":
+        stage("mcp-interop-prepare", [sys.executable, ROOT / "scripts/prepare-mcp-interop.py", "--python", args.python, "--output", args.output], timeout=900)
+    elif args.command == "mcp-interop": mcp_interop(args.environment, args.run_name, args.scenario)
     elif args.command == "check": check(args.ci)
     elif args.command == "build": build(args.profile, args.configuration, args.allow_dirty)
     elif args.command == "package": package(args.app, args.notary_profile)

@@ -20,6 +20,8 @@
 | [AI 与自动化](technical/ai-and-automation.md) | Provider、快捷 AI、CLI、分析、Agent/MCP/ACP |
 | [后续能力与AiBox设计参考](technical/capability-expansion.md) | P2–P4产品目标、模块拆分、实现合同与完整验收义务 |
 | [Agent与外部协议边界](technical/agent-protocol-boundaries.md) | MCP版本、来源授权、回路与ACP评估结果 |
+| [独立MCP互通](technical/mcp-independent-interoperability.md) | 官方Time固定环境、schema语义、HTTP取消／会话清理和四格验证入口 |
+| [MCP互通增量复查](implementation/mcp-interoperability-2026-11-25.md) | 原始目录失败、真实调用、会话清理、进程组与环境证据修补 |
 | [数据与权限](technical/data-and-permissions.md) | TCC、上下文、存储、采集与执行策略 |
 | [P1会话保留](technical/session-retention.md) | 已实现的总预算、元数据维护、清除和恢复围栏及待验收边界 |
 | [导入文本上下文](technical/imported-text-context.md) | 单槽来源、AI冻结、联合预算与清除；alpha.10候选 |
@@ -62,7 +64,7 @@
 | [桌面工作区定义管理复查](implementation/desktop-workspace-definitions-2026-11-25.md) | 共用存储回归、版本与外部变化围栏、中英编辑原生子集 |
 | [桌面工作区执行内核复查](implementation/desktop-workspace-kernel-2026-11-25.md) | 冻结计划／Restore、专用焦点交接和取消收口；执行组合根仍待接通 |
 | [桌面工作区准备与回执复查](implementation/desktop-workspace-preparation-2026-11-25.md) | 单次后台应用准备、有序父子元数据、恢复保护；组合运行及入口仍待接通 |
-| [开源参考目录](../references/README.md) | 13 个参考工程及固定版本登记 |
+| [开源参考目录](../references/README.md) | 14 个参考工程及固定版本登记 |
 | [第一阶段进度](implementation/phase-one-progress.md) | 实现、测试、真实验收与下一步 |
 | [新版界面实机复查](implementation/native-ui-review-2026-11-22.md) | 三窗口、语言、外观、输入焦点和终端验收边界 |
 | [界面与任务边界复查](implementation/native-ui-hardening-2026-11-23.md) | 上轮120项测试、214条文案、全文预览与独立行控件 |

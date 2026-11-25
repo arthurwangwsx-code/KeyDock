@@ -1,5 +1,7 @@
 # 当前状态总账
 
+任务26候选已实现schema语义、HTTP取消／会话清理及可重复互通入口；开发态真实Time／SDK四格通过，环境metadata修补后新v4仅准备完成，尚待干净源重放和发行资格。当前正式安装仍为alpha.11。见[本轮复查](implementation/mcp-interoperability-2026-11-25.md)。
+
 更新：2026-11-25。用户已授权在保留P0/P1验收义务的同时推进P2–P4。**完整产品仍为PARTIAL**；当前源码、真实系统验收、已发布版本分别记录，不能用代码或CI绿测替代日用验收。
 
 当前[alpha.11](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.11)已公开并安装，精确源`9f8d6d5b39579c85f1edeec55cace27fb8fcf62a`：671 Swift／46 Python／708 key完整本机PASS（含原配置系统OCR双轮），同源feature core与优化构建、Developer ID、公证／装订／Gatekeeper、原子替换、公开回下载和[发行审计45551838751](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45551838751)均PASS。实际About为alpha.11 (11)，alpha.10直接回退包及更早证据保留。见[发行证据](implementation/alpha11-release-2026-11-25.md)。

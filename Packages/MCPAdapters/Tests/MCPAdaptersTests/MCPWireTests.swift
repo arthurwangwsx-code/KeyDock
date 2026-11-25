@@ -4,7 +4,7 @@ import Testing
 import AICore
 @testable import MCPAdapters
 
-private final class MCPLoopbackFixture {
+final class MCPLoopbackFixture {
     let baseURL: URL
     private let process: Process
     private let output: Pipe

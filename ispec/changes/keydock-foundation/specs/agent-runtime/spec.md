@@ -67,3 +67,23 @@ The host MUST keep MCP source transport, protocol version, catalog revision and 
 
 - **WHEN** the user selects a listed resource or prompt
 - **THEN** bounded text enters the selected preview as data and is not sent to AI automatically.
+
+### Requirement: 独立服务互通与schema语义
+
+系统 MUST 使用固定来源与完整依赖哈希的独立官方MCP服务验证生产adapter，原样保留服务端schema与协议；合法annotation和默认值不产生权限或偷偷填入参数，未知约束不得静默忽略。兼容修补不得改变原allowlist、逐次审批、来源revision、取消和输出预算。
+
+#### Scenario: 官方工具目录
+- **WHEN** 独立服务提供含title／default和省略additionalProperties的合法schema
+- **THEN** 宿主按明确支持的JSON Schema语义接受并验证参数，保留原schema；未知约束拒绝并给出目录拒绝事实，零工具或只有握手不算互通成功
+
+#### Scenario: 两版本两传输
+- **WHEN** 使用owned环境的未修改官方服务进行stdio及loopback HTTP、2025-11-25及2026-07-28验收
+- **THEN** 每格创建新连接，实际发现并调用工具，核对结构化结果和isError，断开后旧目录不可调用，并核对owned进程收口；无密钥且不访问个人数据
+
+#### Scenario: 验收覆盖边界
+- **WHEN** 时间服务的四格工具互通通过
+- **THEN** 回执绑定KeyDock源、解释器、全部依赖及服务版本哈希，保留先前失败；未覆盖的真实resources／prompts、长耗时取消、其他服务和全产品验收继续开放
+
+#### Scenario: 旧HTTP取消与会话生命周期
+- **WHEN** 2025-11-25的已派发带ID请求被取消／超时、显式断开或重新发现
+- **THEN** 宿主仅对仍在途的原请求发送一次取消通知，不取消initialize或notification；清理已知session时使用同endpoint／revision的原认证上下文发送DELETE并收口，迟到session仅能进入旧channel清理，失败保留未确认；2026-07-28仅关闭自身请求流

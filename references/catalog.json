@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-11-22",
-  "verification": "GitHub metadata and pinned root license/README reviewed; no builds or security audit",
+  "checkedAt": "2026-11-25",
+  "verification": "Per-entry fixed source/license reviewed on checkedAt; independent Time interoperability has a separately recorded scope; no general security audit",
   "projects": [
     {
       "repo": "ospfranco/sol",
@@ -262,6 +262,24 @@
       "attribution": "No code copied; review exact files and all notices before adoption",
       "securityReview": "Not performed",
       "observedLatestCommitDate": "2026-11-22"
+    },
+    {
+      "repo": "modelcontextprotocol/servers",
+      "url": "https://github.com/modelcontextprotocol/servers",
+      "revision": {
+        "branch": "main",
+        "sha": "c799c8552b0f27b7a33a7b9233773da144dddcf5"
+      },
+      "checkedAt": "2026-11-25",
+      "stack": "Python / MCP server",
+      "licenseSummary": "Package metadata MIT; root Apache-2.0/historical MIT transition; non-spec documentation CC-BY-4.0",
+      "licenseEvidence": "https://github.com/modelcontextprotocol/servers/blob/c799c8552b0f27b7a33a7b9233773da144dddcf5/LICENSE",
+      "researchScope": "Official mcp-server-time 2026.11.18 independent client interoperability",
+      "intendedUse": "Owned temporary test dependency only; exact wheels, full dependency lock and installation verification; not linked into App",
+      "copiedFiles": [],
+      "dependencyStatus": "test-environment-only",
+      "attribution": "No code copied; original package notices retained in ignored owned test environment",
+      "securityReview": "No general security audit; loopback process/transport/schema qualification only"
     }
   ]
 }

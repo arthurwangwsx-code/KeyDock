@@ -2,7 +2,7 @@
 
 本目录把参考工程纳入工程知识库，采用链接 + 固定 SHA + 研究用途，不克隆/vendor 第三方源码，不带入私有媒体。2026-11-22 核对了 GitHub 元数据、固定版本 README/根许可；未进行构建或安全审计。所有项目当时 archived=false，最近提交仅是维护信号。
 
-机器可读登记：[catalog.json](catalog.json)。当前全部为 reference-only，copiedFiles 为空；固定 SHA 用于研究复现，不是建议依赖的发布版本。
+机器可读登记：[catalog.json](catalog.json)。原有13项为 reference-only；2026-11-25新增Time为独立测试环境依赖，copiedFiles 均为空。固定 SHA 用于研究复现，不是建议依赖的发布版本。
 
 | 项目 | 技术与许可证快照 | 参考方向/使用判断 |
 |---|---|---|
@@ -19,6 +19,8 @@
 | [modelcontextprotocol/swift-sdk](https://github.com/modelcontextprotocol/swift-sdk/tree/c0ffca7b7d564aa750203988782d1f9966893a00) | Swift；Apache-2.0 / historical MIT; docs CC-BY-4.0 | MCP client/server/stdio/HTTP/取消/进度。MCP adapter 候选；当前 Swift6.1+/macOS13+，按实际版本复核 |
 | [aaif-goose/goose](https://github.com/aaif-goose/goose/tree/36b29113aff691e1a46a21a5c25900824caf9949) | Rust；Apache-2.0 | Agent 状态机/operations/providers/恢复/ACP。旧 block/goose 重定向；oi-kit alpha，参考或可选 ACP adapter |
 | [anomalyco/opencode](https://github.com/anomalyco/opencode/tree/ee5fe34e136488a1839ac73bcca8321c51a31b75) | TypeScript；MIT | 多 Provider/自定义 endpoint/plan-build/权限档。可选 CLI/Agent adapter，不强绑核心；权限规则不是 OS 沙箱 |
+
+| [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/tree/c799c8552b0f27b7a33a7b9233773da144dddcf5) | Python；包metadata MIT，根许可Apache-2.0／历史MIT过渡，文档CC-BY-4.0 | 官方Time 2026.11.18，仅在owned临时环境验证两协议／两传输；固定SDK 2.3.0及完整wheel哈希，不加入App。见[互通合同](../docs/technical/mcp-independent-interoperability.md) |
 
 ## 优先级
 

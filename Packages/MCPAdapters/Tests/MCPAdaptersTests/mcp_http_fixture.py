@@ -19,7 +19,11 @@ class Server(ThreadingHTTPServer):
         super().__init__(("127.0.0.1", 0), Handler)
         self.lock = threading.Lock()
         self.stats = {"posts": 0, "redirect_hits": 0, "slow_open": 0,
-                      "slow_closed": 0, "authorization_seen": 0, "valid_metadata": 0}
+                      "slow_closed": 0, "authorization_seen": 0, "valid_metadata": 0,
+                      "initializes": 0, "init_headers": 0, "cancels": 0,
+                      "cancel_request_id": 0, "deletes": 0, "delete_open": 0,
+                      "control_authorization_valid": 0, "control_invalid": 0}
+        self.delete_release = threading.Event()
     def count(self, key, delta=1):
         with self.lock:
             self.stats[key] += delta
@@ -38,11 +42,37 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
     def do_GET(self):
+        if self.path == "/release-delete":
+            self.server.delete_release.set()
+            return self.send_json(200, {})
         if self.path == "/stats":
             with self.server.lock: snapshot = dict(self.server.stats)
             return self.send_json(200, snapshot)
         self.server.count("redirect_hits")
         return self.send_json(200, {})
+    def do_DELETE(self):
+        self.server.count("deletes")
+        self.check_control()
+        if self.path == "/legacy/delete-gate":
+            self.server.count("delete_open")
+            self.server.delete_release.wait(5)
+            self.server.count("delete_open", -1)
+        if self.path == "/legacy/control-timeout": time.sleep(2)
+        status = {"/legacy/delete-405": 405, "/legacy/delete-404": 404,
+                  "/legacy/delete-fail": 500, "/legacy/delete-redirect": 302}.get(self.path, 204)
+        self.send_response(status)
+        if status == 302: self.send_header("Location", "/redirect-target")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+    def check_control(self):
+        if (self.headers.get("Mcp-Session-Id") != "synthetic-wire-session"
+                or self.headers.get("MCP-Protocol-Version") != "2025-11-25"):
+            self.server.count("control_invalid")
+        authorization = self.headers.get("Authorization")
+        if authorization == "Bearer synthetic-test-credential":
+            self.server.count("control_authorization_valid")
+        elif authorization:
+            self.server.count("control_invalid")
     def do_POST(self):
         size = int(self.headers.get("Content-Length", "0"))
         if not 0 < size <= 262144: return self.send_json(413, {})
@@ -53,7 +83,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.headers.get("Authorization"): self.server.count("authorization_seen")
         method = request.get("method")
         params = request.get("params", {})
-        legacy = self.path == "/legacy"
+        legacy = self.path == "/legacy" or self.path.startswith("/legacy/")
         if not legacy:
             meta = params.get("_meta", {})
             valid = (meta.get("io.modelcontextprotocol/protocolVersion") == "2026-07-28"
@@ -71,17 +101,34 @@ class Handler(BaseHTTPRequestHandler):
         elif method != "initialize":
             if self.headers.get("Mcp-Session-Id") != "synthetic-wire-session": return self.send_json(422, {})
             if self.headers.get("MCP-Protocol-Version") != "2025-11-25": return self.send_json(422, {})
+        if method == "notifications/cancelled":
+            self.server.count("cancels")
+            self.check_control()
+            self.server.count("cancel_request_id", params.get("requestId", 0))
+            if "id" in request: self.server.count("control_invalid")
+            if self.path == "/legacy/control-timeout": time.sleep(2)
+            status = 302 if self.path == "/legacy/cancel-redirect" else 202
+            self.send_response(status)
+            if status == 302: self.send_header("Location", "/redirect-target")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
         if self.path == "/redirect":
             self.send_response(302)
             self.send_header("Location", "/redirect-target")
             self.send_header("Content-Length", "0")
             self.end_headers()
             return
-        if self.path == "/slow":
+        if method == "initialize": self.server.count("initializes")
+        if self.path == "/legacy/init-noheaders" and method == "initialize": time.sleep(2)
+        if (self.path == "/slow" or (self.path.startswith("/legacy/") and method == "tools/call")
+                or (self.path == "/legacy/init-slow" and method == "initialize")):
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Connection", "close")
+            if method == "initialize": self.send_header("Mcp-Session-Id", "synthetic-wire-session")
             self.end_headers()
+            if method == "initialize": self.server.count("init_headers")
             self.server.count("slow_open")
             try:
                 while True:

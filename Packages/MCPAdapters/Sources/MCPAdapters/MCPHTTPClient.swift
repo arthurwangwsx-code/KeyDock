@@ -143,7 +143,7 @@ public actor MCPHTTPClient {
         }
         let structured = reply.result["structuredContent"]
         if let structured {
-            guard structured.objectValue != nil else { throw MCPClientError.invalidResponse }
+            guard configuration.protocolVersion == .modern20260728 || structured.objectValue != nil else { throw MCPClientError.invalidResponse }
             bytes += try Self.encoded(structured).count
             guard bytes <= 65_536 else { throw MCPClientError.limitExceeded }
         }

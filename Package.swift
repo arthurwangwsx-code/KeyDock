@@ -16,7 +16,8 @@ let package = Package(
         .library(name: "WorkbenchFeature", targets: ["WorkbenchFeature"]),
         .library(name: "KeyDockUI", targets: ["KeyDockUI"]),
         .executable(name: "KeyDockDiagnostics", targets: ["KeyDockDiagnostics"]),
-        .executable(name: "KeyDockAIRecoveryProbe", targets: ["KeyDockAIRecoveryProbe"])
+        .executable(name: "KeyDockAIRecoveryProbe", targets: ["KeyDockAIRecoveryProbe"]),
+        .executable(name: "KeyDockMCPInteropProbe", targets: ["KeyDockMCPInteropProbe"])
     ],
     targets: [
         .target(name: "CommandCore", path: "Packages/CommandCore/Sources/CommandCore"),
@@ -28,6 +29,7 @@ let package = Package(
         .testTarget(name: "AutomationCoreTests", dependencies: ["AutomationCore"], path: "Packages/AutomationCore/Tests/AutomationCoreTests"),
         .executableTarget(name: "KeyDockDiagnostics", dependencies: ["CommandCore"], path: "Tools/KeyDockDiagnostics"),
         .executableTarget(name: "KeyDockAIRecoveryProbe", dependencies: ["WorkbenchFeature"], path: "Tools/KeyDockAIRecoveryProbe"),
+        .executableTarget(name: "KeyDockMCPInteropProbe", dependencies: ["MCPAdapters", "AICore"], path: "Tools/KeyDockMCPInteropProbe"),
         .target(name: "AgentCore", dependencies: ["AICore", "ExecutionCore"], path: "Packages/AgentCore/Sources/AgentCore"),
         .systemLibrary(name: "CSQLite", path: "Packages/CSQLite"),
         .target(name: "MacAdapters", dependencies: ["CommandCore", "ExecutionCore", "CSQLite"], path: "Packages/MacAdapters/Sources/MacAdapters"),

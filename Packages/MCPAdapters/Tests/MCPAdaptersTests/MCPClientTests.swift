@@ -8,7 +8,7 @@ private let syntheticSchema: [String: JSONValue] = ["type": .string("object"), "
 ]), "required": .array([.string("text")]), "additionalProperties": .bool(false)]
 
 private actor ScriptedMCP: MCPHTTPTransporting {
-    enum Behavior: Sendable, Equatable { case normal, repeatedCursor, holdCall, nonText, largeText }
+    enum Behavior: Sendable, Equatable { case normal, repeatedCursor, holdCall, nonText, largeText, structured(JSONValue) }
     struct Record: Sendable { let method: String; let session: String? }
     let behavior: Behavior
     var records: [Record] = []
@@ -43,6 +43,7 @@ private actor ScriptedMCP: MCPHTTPTransporting {
             return result(["tools": .array([.object(["name": .string("unsupported"), "inputSchema": .object(["oneOf": .array([])])])])])
         case "tools/call":
             callStarted = true
+            if case .structured(let value) = behavior { return result(["content":.array([]),"structuredContent":value]) }
             if behavior == .holdCall { try await Task.sleep(for: .seconds(60)) }
             if behavior == .nonText { return result(["content": .array([.object(["type": .string("image"), "data": .string("synthetic")])])]) }
             let value = behavior == .largeText ? String(repeating: "a", count: 65_537) : params["arguments"]?.objectValue?["text"]?.stringValue ?? "missing"
@@ -53,6 +54,21 @@ private actor ScriptedMCP: MCPHTTPTransporting {
 }
 
 @Suite(.serialized) struct MCPClientTests {
+    @Test(arguments:[JSONValue.array([.string("合成"),.number(1)]),.string("Synthetic"),.number(0),.bool(false),.null,.object(["value":.number(1)])])
+    func structuredContentUsesTheSelectedProtocolContract(_ value:JSONValue) async throws {
+        for version in [MCPProtocolVersion.modern20260728,.legacy20251125] {
+            let client = try MCPHTTPClient(configuration:configuration(version),transport:ScriptedMCP(.structured(value)))
+            let catalog = try await client.discover()
+            let tool = try #require(catalog.tools.first)
+            if version == .legacy20251125 && value.objectValue == nil {
+                await #expect(throws:MCPClientError.invalidResponse) { try await client.call(modelToolName:tool.id,arguments:["text":.string("Synthetic")],catalogRevision:catalog.revision) }
+            } else {
+                let result = try await client.call(modelToolName:tool.id,arguments:["text":.string("Synthetic")],catalogRevision:catalog.revision)
+                #expect(result.structuredContent == value)
+            }
+            await client.invalidate()
+        }
+    }
     private func configuration(_ version: MCPProtocolVersion = .modern20260728, enabled: Bool = true) -> MCPServerConfiguration {
         MCPServerConfiguration(name: "Synthetic MCP", endpoint: URL(string: "http://127.0.0.1:12345/mcp")!, allowsLocalHTTP: true, enabled: enabled, protocolVersion: version)
     }

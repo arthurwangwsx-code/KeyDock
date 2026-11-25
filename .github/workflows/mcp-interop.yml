@@ -1,0 +1,43 @@
+name: Independent MCP interoperability
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mcp-interop-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  interoperability:
+    name: Time server and owned SDK lifecycle
+    runs-on: xcode-27
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Prepare fresh hashed dependency environment
+        run: |
+          interpreter="$(command -v python3.13 || command -v python3)"
+          python3 scripts/keydock.py prepare-mcp-interop --python "$interpreter" --output .local/interop/ci
+      - name: Test unmodified official Time server in four configurations
+        run: python3 scripts/keydock.py mcp-interop --environment .local/interop/ci/environment.json --run-name time
+      - name: Test owned official SDK cancellation in four configurations
+        run: python3 scripts/keydock.py mcp-interop --environment .local/interop/ci/environment.json --run-name sdk --scenario sdk-lifecycle
+      - name: Preserve synthetic interoperability evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: KeyDock-MCP-interop-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            .local/interop/ci/environment.json
+            .local/interop/ci/installation.json
+            .local/interop/ci/requirements.lock
+            .local/interop/ci/notices/
+            .local/interop/ci/runs/
+            .local/interop/ci/*.log
+            .local/pipeline/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn

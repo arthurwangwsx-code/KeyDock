@@ -1,4 +1,4 @@
-.PHONY: doctor check build debug desktop-fixture package release publish verify-release install rollback
+.PHONY: doctor check build debug desktop-fixture mcp-interop-prepare mcp-interop package release publish verify-release install rollback
 doctor:
 	python3 scripts/keydock.py doctor
 check:
@@ -9,6 +9,10 @@ debug:
 	python3 scripts/keydock.py debug
 desktop-fixture:
 	python3 scripts/keydock.py desktop-fixture
+mcp-interop-prepare:
+	python3 scripts/keydock.py prepare-mcp-interop --python "$(MCP_PYTHON)" --output "$(MCP_OUTPUT)"
+mcp-interop:
+	python3 scripts/keydock.py mcp-interop --environment "$(MCP_ENVIRONMENT)" --run-name "$(MCP_RUN)" --scenario "$(or $(MCP_SCENARIO),time)"
 package:
 	python3 scripts/keydock.py package
 release:
