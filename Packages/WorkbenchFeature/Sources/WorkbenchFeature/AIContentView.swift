@@ -7,6 +7,7 @@ struct AIContentView: View {
     var compact = false
     var onBack: (() -> Void)?
     @FocusState private var inputFocused: Bool
+    @State private var closeIntent: AIDraftCloseIntent?
     private var action: AIActionPreset? { store.configuration.aiActions.first { $0.id == draft.actionID } }
     private var task: RunningTaskItem? { store.tasks.first { $0.id == draft.latestRunID } }
     private var needsConfiguration: Bool { !store.hasValidAIConfiguration(modelOverride: action?.modelOverride ?? "") }
@@ -33,6 +34,7 @@ struct AIContentView: View {
                 Text(draft.inputSourceTitle)
                 Text("·"); Text(task?.modelName ?? (action?.modelOverride.isEmpty == false ? action!.modelOverride : (store.configuration.model.isEmpty ? L("No model configured") : store.configuration.model)))
             }.font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+            if draft.isClosing { HStack { ProgressView().controlSize(.small); Text(L("Closing draft after its tasks finish…")).font(.caption) } }
             if needsConfiguration && task == nil { KDInlineNotice(L("Add an API endpoint and model in Settings. Your draft will stay here.")) }
             if action == nil { KDInlineNotice(L("This AI action is unavailable. Existing tasks keep their settings. Choose an action for your next task.")) }
             if !compact {
@@ -76,7 +78,9 @@ struct AIContentView: View {
                 if compact { Button(L("Open in Workspace")) { store.onOpenWorkspace?(.ai(draft.id)) } }
                 else if !needsConfiguration || task != nil || action == nil { Button(L("Configure AI")) { store.onOpenSettings?(.aiService) } }
             }.controlSize(.small)
-        }.padding(compact ? 22 : 24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            HStack { Spacer(); Button(L("Close draft"),role:.destructive) { closeIntent = AIDraftCloseIntent(document:draft) } }.controlSize(.small)
+        }.disabled(draft.isClosing).padding(compact ? 22 : 24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .sheet(item:$closeIntent) { intent in AIDraftCloseReviewView(store:store,intent:intent) }
             .task(id: draft.id) {
                 guard draft.input.isEmpty else { return }
                 // 先让输入控件注册到窗口焦点树，再请求首响应者。

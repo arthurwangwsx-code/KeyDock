@@ -22,7 +22,7 @@ private struct UsageReceipt: Codable {
 extension WorkbenchModel {
     /// 原生菜单与按钮共用当前草稿门槛；不让快捷键重启在途任务或运行已移除草稿。
     public func canRunAIFromInput(_ draft: AIDraftDocument?) -> Bool {
-        guard !isShuttingDown, let draft, ownsDraft(draft), !draft.input.isEmpty,
+        guard !isShuttingDown, let draft, ownsDraft(draft), !draft.isClosing, !draft.input.isEmpty,
               let action = configuration.aiActions.first(where: { $0.id == draft.actionID }),
               hasValidAIConfiguration(modelOverride: action.modelOverride) else { return false }
         return !tasks.contains { $0.id == draft.latestRunID && $0.isRunning }
@@ -225,6 +225,7 @@ extension WorkbenchModel {
         onOpenWorkspace?(.tasks(id))
     }
     func validatedAIInput(_ draft: AIDraftDocument) -> String? {
+        guard !draft.isClosing else { return nil }
         guard ownsDraft(draft) else { if draft.notice.isEmpty { draft.noticeMessage = noticeKey("This draft is no longer available. Create a new draft to continue.") }; return nil }
         guard !isShuttingDown else { draft.noticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return nil }
         let input = draft.input

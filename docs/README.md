@@ -23,6 +23,7 @@
 | [导入文本上下文](technical/imported-text-context.md) | 单槽来源、AI冻结、联合预算与清除；alpha.10候选 |
 | [导入来源实现复查](implementation/imported-text-context-2026-11-25.md) | 合成提取／MCP／AI隐私、失败接纳与原生观察边界 |
 | [AI输入提交复查](implementation/ai-input-commit-2026-11-25.md) | Unicode字节编辑、输入法组字门禁与保留的原始失败 |
+| [AI草稿显式关闭](implementation/ai-draft-closing-2026-11-25.md) | 冻结确认身份、取消与实际worker收口、共享引用和保留历史 |
 | [复用评估](technical/reuse-assessment.md) | AiBox/Ashot 可借鉴模块与迁移条件 |
 | [验证方案](technical/validation.md) | 合成测试、真实 Mac/API 验收及性能预算 |
 | [工程流水线](technical/release-pipeline.md) | 共用检查／调试／签名公证／安装回退／上传与回下载 |

@@ -8,7 +8,7 @@
 
 后续alpha.10候选继续修补真实代码缺口：[准确输入与提交](implementation/ai-input-commit-2026-11-25.md)修复等价Unicode字节修改未更新revision、旧命令建议误采纳及输入法组字提交门禁，46项定向及Preview构建PASS。[导入来源](implementation/imported-text-context-2026-11-25.md)接通Tools／文档／OCR／MCP到AI草稿和三类运行的来源快照、联合接纳／预算、清除与迟到围栏；文本／PDF、合成HTTP和stdio MCP两版本回归，以及中英明暗原生子集PASS。仍未发布alpha.10或替换常规alpha.9，完整同源检查／CI／发行尚待当前源的单独记录。
 
-完整目标还存在代码义务：任务25的受信版本化能力目录及三个真实工具迁移，任务24.4的显式活动草稿关闭／cancel／drain；独立第三方MCP互通、真实API、AX／多屏、真实IME／VoiceOver、全应用视觉和驻留性能验收亦开放。不能把“只剩用户配置或授权”作为当前全产品结论。本轮常规alpha.9隐私页仍显示需要辅助功能授权，未更改TCC。
+完整目标还存在代码义务：任务25的受信版本化能力目录及三个真实工具迁移。后续[显式草稿关闭](implementation/ai-draft-closing-2026-11-25.md)已补工程闭环及中英明暗原生子集，取消／真实worker drain由owned gate与loopback验证；原生在途关闭仍依24.5。独立第三方MCP互通、真实API、AX／多屏、真实IME／VoiceOver、全应用视觉和驻留性能验收亦开放。不能把“只剩用户配置或授权”作为当前全产品结论。本轮常规alpha.9隐私页仍显示需要辅助功能授权，未更改TCC。
 
 ## 前序增量记录（历史时点）
 

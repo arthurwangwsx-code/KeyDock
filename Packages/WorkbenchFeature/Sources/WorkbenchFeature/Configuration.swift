@@ -151,6 +151,7 @@ public struct RunningTaskItem: Identifiable {
         set { noticeMessage = .verbatim(newValue) }
     }
     @Published public private(set) var isDiscarded = false
+    @Published public private(set) var isClosing = false
     @Published public private(set) var source: AIDraftSource
     public private(set) var inputProvenance: TextContextProvenance?
     var inputSourceTitle: String { inputProvenance?.title ?? sourceTarget?.applicationName ?? source.title }
@@ -164,15 +165,16 @@ public struct RunningTaskItem: Identifiable {
         if input.utf8.count > TaskTextLimits.inputBytes { discard(); noticeMessage = noticeKey("Input is too long. Split it into smaller parts; nothing was sent.") }
     }
     private func accepts(_ text: String) -> Bool {
-        guard !isDiscarded else { return false }
+        guard !isDiscarded, !isClosing else { return false }
         guard text.utf8.count <= TaskTextLimits.inputBytes else { noticeMessage = noticeKey("Input is too long. Split it into smaller parts; nothing was sent."); return false }
         return true
     }
     public func editInput(_ text: String) { guard accepts(text), !input.utf8.elementsEqual(text.utf8) else { return }; input = text; sourceTarget = nil; revision = UUID(); inputProvenance = inputProvenance?.edited(revision: revision, byteCount: text.utf8.count); source = inputProvenance == nil ? .manual : .importedContext; noticeMessage = .none }
     public func useClipboard(_ text: String) { guard accepts(text), !input.utf8.elementsEqual(text.utf8) || source != .clipboard else { return }; input = text; sourceTarget = nil; inputProvenance = nil; source = .clipboard; revision = UUID(); noticeMessage = .none }
-    public func clearInput() { guard !isDiscarded else { return }; input = ""; sourceTarget = nil; inputProvenance = nil; source = .manual; revision = UUID(); noticeMessage = .none }
-    public func selectAction(_ id: UUID?) { guard !isDiscarded, actionID != id else { return }; actionID = id; latestRunID = nil; revision = UUID(); noticeMessage = .none }
-    func discard() { isDiscarded = true; input = ""; sourceTarget = nil; inputProvenance = nil; latestRunID = nil; source = .manual; revision = UUID() }
+    public func clearInput() { guard !isDiscarded, !isClosing else { return }; input = ""; sourceTarget = nil; inputProvenance = nil; source = .manual; revision = UUID(); noticeMessage = .none }
+    public func selectAction(_ id: UUID?) { guard !isDiscarded, !isClosing, actionID != id else { return }; actionID = id; latestRunID = nil; revision = UUID(); noticeMessage = .none }
+    func beginClosing() { revision = UUID(); isClosing = true }
+    func discard() { isDiscarded = true; input = ""; sourceTarget = nil; inputProvenance = nil; latestRunID = nil; source = .manual; revision = UUID(); isClosing = false }
 }
 
 public enum SettingsPane: String, CaseIterable { case general, shortcuts, applications, desktopWorkspaces, aiService, aiActions, commands, mcp, clipboard, privacy, about

@@ -509,7 +509,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         return clipboardReader()
     }
     public func useClipboardInput(_ draft: AIDraftDocument) {
-        guard ownsDraft(draft), !isClearingHistory else { return }
+        guard ownsDraft(draft), !draft.isClosing, !isClearingHistory else { return }
         guard allowContextCapture else { draft.noticeMessage = noticeKey("Context capture is disabled in isolated smoke mode"); return }
         do {
             guard let text = try authorizedClipboardInput(caller: .user), !text.isEmpty else { draft.noticeMessage = noticeKey("No clipboard text is available. Enter text manually."); return }
