@@ -2,7 +2,7 @@
 
 面向 macOS 的原生快捷操作与 AI 工作台。用统一入口搜索应用和窗口、运行命令、处理剪贴板，并通过快捷键完成翻译、总结和可控的 Agent 任务。
 
-**当前阶段：P0–P4能力按增量实现，已公开签名公证的 alpha.8 测试版；完整日用验收尚未完成。** 本仓库独立于 AiBox，未迁入其源码、个人截图或历史数据。
+**当前阶段：P0–P4能力按增量实现，已公开签名公证的 alpha.9 测试版；完整日用验收尚未完成。** 本仓库独立于 AiBox，未迁入其源码、个人截图或历史数据。
 
 安装包见 [GitHub Releases](https://github.com/arthurwangwsx-code/KeyDock/releases)：macOS arm64，Developer ID签名、App／DMG公证与装订。下载包、完整源SHA和摘要随Release提供；这是早期预览，已知限制见发行说明。
 
@@ -12,7 +12,7 @@
 - 保存的命令行工具：参数、工作目录、运行状态、输出与取消；交互工具交给用户终端。
 - 本地纯文本剪贴板历史，支持暂停、排除、保留期限和清空。
 - 接入外部模型 API，以可配置快捷键完成选区翻译、总结和提示词动作；结果可展示、复制，或经确认后替换选区。
-- 当前源码新增窗口布局、本地OCR、使用分析、多步Agent、MCP HTTP／stdio、工作流与App内调度，以及Snippets／文件搜索／换算／URL动作／命令集合。入口见[扩展能力使用说明](docs/product/expanded-tools-guide.md)。
+- 已接通多应用桌面工作区、独立profile快捷键与逐项执行结果。当前源码另有窗口布局、本地OCR、使用分析、多步Agent、MCP HTTP／stdio、工作流与App内调度，以及Snippets／文件搜索／换算／URL动作／命令集合。入口见[扩展能力使用说明](docs/product/expanded-tools-guide.md)。
 
 AI 是核心能力域，模型账号和联网并非基础桌面操作的前提。
 

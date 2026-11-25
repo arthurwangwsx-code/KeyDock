@@ -1,10 +1,10 @@
 # 桌面工作区建设方案
 
-这是原窗口域“工作区”能力的实现合同。alpha.8已提供独立定义管理，支持命名、有序应用／布局／屏幕策略和修订。后续alpha.9候选已接通组合执行、逐项结果和profile快捷键；真实AX／多屏与完整系统资格仍待验收。alpha.7不含这项增量。任务Workspace、命令集合和桌面工作区分别承担任务、单项入口与窗口组合职责。
+这是原窗口域“工作区”能力的实现合同。alpha.8已提供独立定义管理，支持命名、有序应用／布局／屏幕策略和修订。alpha.9已接通组合执行、逐项结果和profile快捷键；真实AX／多屏与完整系统资格仍待验收。alpha.7不含这项增量。任务Workspace、命令集合和桌面工作区分别承担任务、单项入口与窗口组合职责。
 
 ## 产品与持久定义
 
-支持命名工作区，例如浏览器左侧、编辑器右侧。定义档案schema1、最多32个工作区／1MiB，每项1–8个有序应用目标、首版每应用一项；名称最多160 UTF8字节。选择器明确为“调用时该应用报告的焦点窗口”；不持久化PID、AX引用、窗口哈希或隐式采集的标题。独立UUID进入未来的执行目录／快捷键，定义管理阶段仅开放管理入口。多窗口选择器后续扩展，不通过应用路径、数组第一项或窗口标题假装稳定指向某窗口。
+支持命名工作区，例如浏览器左侧、编辑器右侧。定义档案schema1、最多32个工作区／1MiB，每项1–8个有序应用目标、首版每应用一项；名称最多160 UTF8字节。选择器明确为“调用时该应用报告的焦点窗口”；不持久化PID、AX引用、窗口哈希或隐式采集的标题。独立UUID进入执行目录／快捷键；alpha.8定义管理阶段仅开放管理入口，alpha.9已开放profile执行。多窗口选择器后续扩展，不通过应用路径、数组第一项或窗口标题假装稳定指向某窗口。
 
 定义采用独立版本化存储，包含修订、稳定应用引用、有序布局、显示器策略和缺失应用策略。默认要求应用已运行；允许后台启动为显式选项，其启动本身是副作用。旧版重写基础configuration不能丢失独立定义。编辑／删除和快捷键注册必须可回滚，运行不修改保存定义。
 
@@ -36,7 +36,7 @@ Restore缓存改用PID／启动时间和CFEqual驻留UUID，不依赖CFHash身�
 
 DesktopApplicationFocus仍仅允许KeyDock→目标或目标已前台。新增`WorkspaceWindowFocusController`与`DesktopWorkspaceFocusSession`专用于批次，未放宽原全局guard。fence仅按PID＋非空启动时间许可holding(A)→crossing(A,B)→holding(B)，观察到B后A也不能再放行；第三方／未知进程事件永久撤销，B的迟到通知不能恢复。只读验证等待期间仍holding源，确认后同一MainActor片段才arm／activate。raise与focused-window setter使用原冻结对象，setter正负返回都必须CFEqual读回；最终读回后不再等待另一轮membership验证。
 
-session持续覆盖准备／步骤间隙／布局／worker收口，显式close或释放均撤销fence；原生通知同步推进围栏，不能延迟到Task里再处理。`DesktopOperationGroup`原子封闭新child注册并撤销已有lease，保留pending计数，真实worker完成后才release；group本身不假装等待worker。预取消也进入取消处理器。上述内核已有合成回归，但尚未接入工作区执行组合根。
+session持续覆盖准备／步骤间隙／布局／worker收口，显式close或释放均撤销fence；原生通知同步推进围栏，不能延迟到Task里再处理。`DesktopOperationGroup`原子封闭新child注册并撤销已有lease，保留pending计数，真实worker完成后才release；group本身不假装等待worker。预取消也进入取消处理器。上述内核已有合成回归，并在alpha.9接入工作区执行组合根；真实系统验收仍开放。
 
 应用准备现由独立`DesktopApplicationPreparationService`承担。`inspectWorkspace`冻结全部目录修订、缺失策略、唯一运行实例及同一fence，并在全量检查后统一复核；原running变为absent或原absent已被外部启动均拒绝旧计划，不改变策略或重新绑定。`PreparedDesktopApplication`按service／调用围栏绑定且只能claim一次，`ReadyDesktopApplication`只表示身份就绪，不代表窗口已准备或布局成功。原`ApplicationControlService.perform`保持行为与启动gate，共享的唯一实例查询只做等价提取。
 
@@ -46,21 +46,21 @@ session持续覆盖准备／步骤间隙／布局／worker收口，显式close�
 
 `InvocationStore`已支持精确前缀keydock.desktop-workspace-run.<parentUUID>、父`DesktopWorkspaceRunContext`和子`DesktopWorkspaceReceiptContext`。父保存workspace UUID／revision及1–8个有序条目UUID，子保存parent UUID／entry UUID／0–7索引／launch、focus或layout；这些字段独立于恢复时会替换的message，不保存PID／路径／frame／AX。旧档案无需新字段；错误索引、未知阶段、关联不符或parent／child双重context会拒绝且保留原文件。
 
-新子回执必须关联仍在运行、含对应manifest的父回执，条目ID与索引一致；缺失父、普通CLI父和已结束父均不能产生新子intent。历史已裁剪的孤立子事实允许只读恢复，不能用它继续旧调用。初始化在prune之前保护恢复中的父／子／兄弟事实，避免先裁掉已确认项；消费恢复快照前不解除保护。运行中的child依既有liveParentIDs原子保护，所有worker与回执收口后宿主再释放parent。缺少回执不能从可变定义推断为未执行。组合根的durable intent→单次原生派发→结果落盘及逐项partial汇总仍需接通。
+新子回执必须关联仍在运行、含对应manifest的父回执，条目ID与索引一致；缺失父、普通CLI父和已结束父均不能产生新子intent。历史已裁剪的孤立子事实允许只读恢复，不能用它继续旧调用。初始化在prune之前保护恢复中的父／子／兄弟事实，避免先裁掉已确认项；消费恢复快照前不解除保护。运行中的child依既有liveParentIDs原子保护，所有worker与回执收口后宿主再释放parent。缺少回执不能从可变定义推断为未执行。alpha.9已串联组合根的durable intent→单次原生派发→结果落盘及逐项partial汇总。
 
 ## 验收与状态
 
 实施按可验证边界串行推进：
 
 1. 纯定义／Archive、独立`desktop-workspaces.json`与设置编辑器已经接入，原存储字节内核已抽取并保留wrapper与故障回归。中文浅色／英文深色的添加、重排、保存重开、校验失败保留及取消已观察；完整验证证据见[定义管理复查](../implementation/desktop-workspace-definitions-2026-11-25.md)。
-2. 当前仅贡献`utility.desktop-workspaces`管理入口，归入窗口管理快捷键分类。profile不进入执行catalog，setShortcut拒绝新执行绑定，ShortcutPlan过滤此阶段不受支持的profile配置项；管理快捷键直接打开设置，不读取选区。
-3. 冻结布局／全目标窗口复核、专用焦点交接和child撤销内核已实现；独立应用准备与父子回执存储后续接入，77项定向回归通过，见[准备与回执复查](../implementation/desktop-workspace-preparation-2026-11-25.md)。运行组合根、逐项汇总及profile快捷键仍待串联，完整接通后再开放执行目录。定义管理或内核合成通过不能代替20.3完整执行或20.4真实系统验收。
+2. alpha.8只贡献utility.desktop-workspaces管理入口。alpha.9已贡献每组profile的执行catalog／descriptor、设置应用与专用快捷键，后者按前缀直接路由，不捕获选区；历史未接通阶段的过滤现已移除。
+3. 冻结布局、全目标复核、专用焦点、child撤销、应用准备及父子回执已在alpha.9组合根接通。原77项准备回归保留，最终精确源完整本机627 Swift／46 Python／680 key及同源CI、发行已通过；这些工程结果不代替20.4实际AX／多屏与完整系统验收，见[发行证据](../implementation/alpha9-release-2026-11-25.md)。
 
 需覆盖应用替换／多实例、同App换窗口不重绑、全部冻结后再写、第二项失败保留第一项事实、第三方焦点变化、屏幕变化、取消与worker drain、启动／布局unknown重启不重放，以及存储／快捷键回滚。
 
-模型、编辑器和合成端口可先独立推进；真实AX／多屏／快捷键必须另做当前Mac验收。本轮正式App仍显示AX未授权，不代授予。此方案不改变OCR或发行门禁，任务20仍需实现与验证；自定义动作删除和Agent／工作流保存反馈另在任务21跟踪。
+模型、编辑器和合成端口可先独立推进；真实AX／多屏／快捷键必须另做当前Mac验收。本轮没有代授予AX，也未完成实际AX／多屏验收。此方案不改变OCR或发行门禁，任务20仍需实现与验证；自定义动作删除和Agent／工作流保存反馈另在任务21跟踪。
 
-## 组合执行接通（alpha.9候选）
+## 组合执行接通（alpha.9）
 
 DesktopWorkspaceRunner共用可注入端口和NativeDesktopWorkspaceRun适配。父intent及每个launch／focus／layout child intent均写入同一InvocationStore后才派发。父占一个活跃任务槽，child不另占UI槽；取消同步撤销group，真实worker与回执结束后才释放handle／父保护。FocusSession和拓扑快照先于旧worker drain建立，调用源屏幕在等待前只读冻结；原生运行复用同一session／snapshot，第三方短暂激活和拓扑代次变化也停止，不事后重选。
 
@@ -70,6 +70,6 @@ DesktopWorkspaceRunner共用可注入端口和NativeDesktopWorkspaceRun适配。
 
 profile贡献真实descriptor／catalog，支持Launcher、设置应用与直接快捷键。失效热键按前缀拒绝并打开设置，不读取选区。快捷键复用既有注册／文件补偿；删除仍要求先移除快捷键／别名／收藏／集合引用。成功修改才取消对应旧运行，保存失败保留它。运行中设置提供Stop并禁用View result；仅隔离Preview提供进程内结果样例，不写回执或触发系统操作。
 
-本节更新当前候选状态，前面尚待接通的文字保留为alpha.8阶段记录，不代表该发行版本具备新执行器。检查见[本轮复查](../implementation/desktop-workspace-execution-2026-11-25.md)。
+本节更新alpha.9状态，前面尚待接通的文字保留为alpha.8阶段记录，不代表该发行版本具备新执行器。检查见[本轮复查](../implementation/desktop-workspace-execution-2026-11-25.md)。
 
 别名清空通过候选配置事务真正移除key，纯空白同样处理；非空保留原文。写前／写后失败保留旧内存与原文件，删除仍受有效引用阻止；历史blank不算有效引用。该修补不引入跨档案原子删除承诺。

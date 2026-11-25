@@ -2,9 +2,11 @@
 
 更新：2026-11-25。用户已授权在保留P0/P1验收义务的同时推进P2–P4。**完整产品仍为PARTIAL**；当前源码、真实系统验收、已发布版本分别记录，不能用代码或CI绿测替代日用验收。
 
-当前开发分支feature/desktop-workspace-execution已接通alpha.9候选：多应用工作区运行、profile快捷键、设置应用和有序阶段结果，父子同库及完整结果恢复、旧快照／取消／排水围栏已补齐。111项／13 suites定向执行通过，含profile补偿、总任务预算与最终增量；尚未发布。原生中文浅色／英文深色、窄卡片／宽表格与设置入口已观察并修补实际挤压，完整工程与真实AX／多屏验收继续单独记录，见[本轮复查](implementation/desktop-workspace-execution-2026-11-25.md)。
+当前[alpha.9](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.9)已公开并安装，精确源`5f526588a1b280d98d24f7d7a2aa7018439da5d4`：627 Swift／46 Python／680 key完整本机PASS（含原配置系统OCR双轮），同源feature／master core与优化构建、Developer ID、公证／装订／Gatekeeper、原子替换、公开回下载和发行审计均PASS。实际About为alpha.9 (9)，alpha.8及回退回执保留。见[发行证据](implementation/alpha9-release-2026-11-25.md)。
 
-当前[alpha.8](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.8)已公开并安装，精确源`009532663eeac2f1e62461975060cce5adc29813`：601 Swift／46 Python／660 key完整本机PASS（含原生产OCR双轮），同源feature／master core及优化构建、App／DMG公证装订、原子替换、公开回下载和发行审计均PASS；实际About显示alpha.8 (8)，旧alpha.7与回退回执保留。见[发行证据](implementation/alpha8-release-2026-11-25.md)。此前OCR FAIL、冷首轮长耗时及未确认根因保留，长期可靠性仍PARTIAL；工作区组合运行／profile热键及真实系统／模型／完整视觉验收仍待完成。
+桌面工作区组合运行、profile快捷键、设置应用、父子同库与有序阶段结果、取消／drain及恢复不重放已经接通；别名清除和文件补偿已修补。中文浅色／英文深色、窄卡片／宽表格及设置入口已观察并修复实际挤压。任务20.2／20.3完成工程范围，20.4实际AX／多屏、真实模型、完整视觉／辅助功能与长期可靠性仍开放；此前FAIL保留。
+
+## 前序增量记录（历史时点）
 
 后续修补分支`fix/ui-semantics-and-text-sync`从master `703b9a1`创建，已实现任务13的文本字节同步、编辑器AX名称、计划时区与Launcher副标题，33项定向执行及Agent／计划中英深浅四组合等原生子集通过。前一候选`36812e0`的474 Swift／46 Python／587 key完整检查、Release构建及同源CI通过，但未发布。随后`57f308d`补URL运行／编辑隔离及工作区失败提示，27项定向执行和合成原生操作通过，共590个中英UI key；其core CI通过，完整本机检查却在OCR失败。增加轮次日志后真实提取首轮也失败，三个独立对照均未解决；未改变生产模式或门禁。alpha.8发行保持未放行，正式版本继续为alpha.7。详见[语义复查](implementation/ui-semantics-2026-11-25.md)、[URL编辑复查](implementation/url-action-editing-2026-11-25.md)及[OCR复发记录](implementation/ocr-recurrence-2026-11-25.md)。
 
@@ -38,7 +40,7 @@ Agent／工作流的保存反馈后续已实现：验证或写入失败在发起
 
 ## 当前源码
 
-canonical目录唯一；alpha.8精确源`009532663eeac2f1e62461975060cce5adc29813`已受控fast-forward到master并标记`v0.1.0-alpha.8`，发行证据在从该master创建的`chore/alpha8-release-evidence`补齐，不修改已发布字节。alpha.7源`59d1680`及其历史证据继续保留。主Agent独占写入／集成／提交／设备，子Agent只读研究评审或提供/tmp原创提案。未新建worktree或修改AiBox／Ashot。
+canonical目录唯一；alpha.9精确源5f52658已受控fast-forward至master，并固定tag v0.1.0-alpha.9；发行证据在从该master创建的chore/alpha9-release-evidence补齐，不改变已发布字节。alpha.8源0095326及更早历史证据保留。主Agent独占写入／分支／提交／集成／设备，子Agent仅只读研究评审；没有新建worktree或修改AiBox／Ashot。
 
 | 范围 | 状态 | 当前证据与限制 |
 |---|---|---|
@@ -46,7 +48,7 @@ canonical目录唯一；alpha.8精确源`009532663eeac2f1e62461975060cce5adc2981
 | 构建与模块 | PASS（本机） | Swift6／macOS14目标，当前27.2 arm64原生构建；最低系统未真实验证 |
 | 启动台／设置／工作区 | PARTIAL | 独立窗口、菜单栏入口、KeyDockUI、系统玻璃材料和中英；基本深浅色／焦点已观察，完整视觉／辅助功能矩阵未完成 |
 | 搜索与快捷键 | PARTIAL | 动作分类、剪贴板专用绑定／别名、目录／generation／过期结果和注册事务测试；Preview录制与重启持久化已观察，物理全局快捷键、IME／全屏／多屏未完整验收 |
-| 窗口切换与布局 | PARTIAL | 13项单窗口布局、循环／最小化与identity恢复；桌面工作区已有独立定义管理，批量执行与profile快捷键仍未实现；真实AX授权／撤销／多屏矩阵仍待验收 |
+| 窗口切换与布局 | PARTIAL | 13项单窗口布局、循环／最小化与identity恢复；桌面工作区已接通定义、全部预检／冻结、两阶段执行、逐项结果与profile快捷键；真实AX授权／撤销／多屏矩阵仍待验收 |
 | 应用控制与定制 | PARTIAL | 命名动作、显示／隐藏／前台切换／正常退出、独立存储与直接快捷键；合成原生宿主隐藏→显示及单次正常退出请求通过，真实保存界面／Spaces／物理热键仍待验收 |
 | CLI与任务 | PARTIAL | executable+argv、有限输出／超时、真实进程组取消与回收、durable intent／result／unknown不重放；Terminal GUI继续尊重既有工具拒绝，未计真实通过 |
 | 剪贴板 | PARTIAL | 独立两栏Panel、搜索／↑↓／预览、20项／1MiB有序合并、主动作与分隔符偏好、复制／受控插入及取消／竞争围栏；中文浅色／英文深色、Shift-Return、重排与实际合并复制已观察。记录默认关闭，真实自动插入、物理热键及完整矩阵仍待验收 |
@@ -75,13 +77,14 @@ canonical目录唯一；alpha.8精确源`009532663eeac2f1e62461975060cce5adc2981
 
 公开仓库为[arthurwangwsx-code/KeyDock](https://github.com/arthurwangwsx-code/KeyDock)，默认分支master。用户已授权公开此项目源码、Release本地打包上传、流水线及本地安装替换。
 
-- 当前为[alpha.8／build8](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.8)，源`0095326`，tag固定原始发行源；已安装至`/Applications/KeyDock.app`，实际About为alpha.8 (8)。601 Swift／46 Python／660 key、原生产OCR双轮、本机Developer ID构建、同源CI、公证／装订／Gatekeeper、ZIP／DMG一致性、公开回下载和[发行审计45523490646](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45523490646)通过，完整产品仍PARTIAL。alpha.7是当前保留的旧包，详细回执及剩余范围见[alpha.8证据](implementation/alpha8-release-2026-11-25.md)。
+- 当前为[alpha.9／build9](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.9)，精确源5f52658，tag不变；已安装至/Applications/KeyDock.app，实际About为alpha.9 (9)。627 Swift／46 Python／680 key、原生产OCR双轮、本机Developer ID构建、同源CI、公证／装订／Gatekeeper、ZIP／DMG一致性、公开回下载和[发行审计45534536518](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45534536518)通过，完整产品仍PARTIAL。alpha.8为当前直接回退旧包；见[alpha.9证据](implementation/alpha9-release-2026-11-25.md)。
+- [alpha.8／build8](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.8)源0095326，历史601 Swift／46 Python／660 key及公证／回下载通过；该包和alpha.7回退继续保留，见[alpha.8证据](implementation/alpha8-release-2026-11-25.md)。
 
-- [alpha.7／build7](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.7)是当前保留的直接回退旧包，源`59d1680`。其当时Developer ID／Hardened Runtime、App与DMG公证装订、Gatekeeper、只读DMG内部App一致性、公开后实际回下载均通过。原alpha.6及回退receipt继续保留；未force kill或改TCC。
+- [alpha.7／build7](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.7)是更早保留的历史旧包，源`59d1680`。其当时Developer ID／Hardened Runtime、App与DMG公证装订、Gatekeeper、只读DMG内部App一致性、公开后实际回下载均通过。原alpha.6及回退receipt继续保留；未force kill或改TCC。
 - [GitHub发行资产审计45461512603](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45461512603)已通过，核验精确alpha.7资产；不是云端OCR或真实自动插入验收。
 - alpha.7阶段曾实际启动并观察About7、Preview中文浅色／英文深色、主动作／分隔符、重启持久化及实际合并复制；语言／外观与默认主动作均恢复。该历史子集未代授予TCC，物理全局热键未计PASS；没有保存MCP来源、运行外部服务或配置真实API。
 - [alpha.6／build6](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.6)是历史发行，源`d61598a`；当时457 Swift／46 Python／556 key、发行及资产审计通过，见[桌面控制证据](implementation/desktop-controls-2026-11-25.md)。alpha.5及更旧历史发行与备份继续保留。
-- alpha.2／build2的历史源为`ace56efdf67faae0f8dd2df3f0871b8e61a7829f`，历史发行／安装验收见[alpha.2证据](implementation/native-actions-2026-11-24.md)。当前alpha.8的直接回退目标是alpha.7；alpha.3／build3仅保留本地候选，Preview的dirty源码构建不作为正式分发包。
+- alpha.2／build2的历史源为`ace56efdf67faae0f8dd2df3f0871b8e61a7829f`，历史发行／安装验收见[alpha.2证据](implementation/native-actions-2026-11-24.md)。当前alpha.9的直接回退目标是alpha.8；alpha.3／build3仅保留本地候选，Preview的dirty源码构建不作为正式分发包。
 - 所有旧版tag和资产字节保持不变。个人配置、bookmark、密钥、截图、剪贴板、正文和本机日志不进入公开资产。
 
 ## 历史证据与边界

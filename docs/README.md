@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-25。当前已有签名公证的公开alpha.8，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-25。当前已有签名公证的公开alpha.9，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -28,6 +28,8 @@
 | [alpha.5发行说明](releases/v0.1.0-alpha.5.md) | 独立剪贴板快捷面板与快捷键分类；实际发行状态见状态总账 |
 | [alpha.6发行说明](releases/v0.1.0-alpha.6.md) | 稳定窗口动作、命名应用控制与最小回执；实际发行状态见状态总账 |
 | [alpha.7发行说明](releases/v0.1.0-alpha.7.md) | 有序剪贴板合并、可配置主动作和AI复制兼容；实际发行状态见状态总账 |
+| [alpha.9发行说明](releases/v0.1.0-alpha.9.md) | 多应用工作区组合执行、profile快捷键与逐项结果 |
+| [alpha.9发行与安装证据](implementation/alpha9-release-2026-11-25.md) | 627 Swift／同源CI／公证／公开回下载／实际About9及alpha.8回退 |
 | [alpha.8发行说明](releases/v0.1.0-alpha.8.md) | 界面／编辑／工作流／保存反馈及工作区定义管理；组合执行尚未开放 |
 | [alpha.8发行与安装证据](implementation/alpha8-release-2026-11-25.md) | 同源本机／CI、公证、原子替换、公开回下载及真实About版本 |
 | [剪贴板原生交互复查](implementation/clipboard-panel-2026-11-24.md) | 查询／选择／插入围栏、快捷键定制和中英深浅色实查 |
@@ -46,8 +48,8 @@
 | [工作区定义保存复查](implementation/definition-saving-2026-11-25.md) | Agent／工作流失败提示、原文件补偿、编辑状态与真实保存版本 |
 | [保存动作生命周期](technical/saved-item-lifecycle.md) | 独立移除审阅、引用阻止、事务清理与旧编辑／在途快照边界 |
 | [保存动作生命周期复查](implementation/saved-item-lifecycle-2026-11-25.md) | 精确事务／引用／恢复、保留的测试失败与在途结果回归 |
-| [桌面工作区组合执行复查](implementation/desktop-workspace-execution-2026-11-25.md) | alpha.9候选的运行／回执／取消／profile入口与后续资格 |
-| [桌面工作区建设方案](technical/desktop-workspaces.md) | 独立定义管理、仍待实现的冻结／焦点／两阶段执行合同 |
+| [桌面工作区组合执行复查](implementation/desktop-workspace-execution-2026-11-25.md) | alpha.9运行／回执／取消／profile入口及已知失败复查 |
+| [桌面工作区建设方案](technical/desktop-workspaces.md) | 独立定义、冻结／焦点／两阶段执行与真实系统验收合同 |
 | [桌面工作区定义管理复查](implementation/desktop-workspace-definitions-2026-11-25.md) | 共用存储回归、版本与外部变化围栏、中英编辑原生子集 |
 | [桌面工作区执行内核复查](implementation/desktop-workspace-kernel-2026-11-25.md) | 冻结计划／Restore、专用焦点交接和取消收口；执行组合根仍待接通 |
 | [桌面工作区准备与回执复查](implementation/desktop-workspace-preparation-2026-11-25.md) | 单次后台应用准备、有序父子元数据、恢复保护；组合运行及入口仍待接通 |
