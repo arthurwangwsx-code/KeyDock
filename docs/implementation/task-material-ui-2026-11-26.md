@@ -9,10 +9,10 @@
 | 默认关闭／准确捕获 | PASS（定向） | typed AI、CLI、Agent、Workflow沿用同一生产入口；准确输入与后来编辑稿分离，CLI不把argv/env编码为输入。无关单项删除／TTL仅撤销内容票据，不撤销运行中的捕获许可 |
 | App维护与历史清理 | PASS（定向） | 独立启动恢复删除意图，owner批量读取不确定时保留正文；历史先清对应birth正文再删父记录，失败保留metadata；纯内存逐出不删除磁盘内容 |
 | 预算与收口 | PASS（定向） | read在await前预留解码上界，关闭时不提前释放未完成worker预算；save在创建Task前同步预留并单次接纳，实际完成才释放。shutdown等待读写／删除／维护收口后释放flock |
-| 审阅／查看／删除 | PASS（实现及原生子集） | 独立稳定sheet、逐项冻结／默认均未勾选、Agent工具返回明确说明、私有正文不进入导出；删除先显式勾选。原生最终删除点击未执行，模型真实文件删除与失败路径已检查 |
+| 审阅／查看／删除 | PASS（实现及原生子集） | 独立稳定sheet、逐项冻结／默认均未勾选、Agent工具返回明确说明、私有正文不进入导出；删除先显式勾选。后续已实际完成最终删除点击、空库导航和保存失败重审，完整矩阵仍开放 |
 | 输入复用 | PASS（定向及原生子集） | 绑定呈现／review／inputRevision／request／material version／文件身份／generation，超限编辑和Unicode ABA也失效。仅填原输入，已有文本需预览后明确替换，无结果兜底、无自动提交 |
-| 独立内容库 | PASS（实现／定向）／PARTIAL（原生） | `Saved content`侧栏及隐私设置入口，header-only列表与任务200条内存记录独立；内存逐出后仍能查看及准备新尝试。标题固定预算、最多200行。新列表原生布局尚待复查 |
-| 视觉／物理／发行 | PARTIAL | 已观察中文浅色和英文深色的短正文子集；长正文、失败态、完整明暗／辅助功能／IME／全屏多屏、物理热键仍开放；未将退出0或模型绿测当作完整产品验收 |
+| 独立内容库 | PASS（实现／定向／原生子集） | `Saved content`侧栏及隐私设置入口，header-only列表与任务200条内存记录独立；内存逐出后仍能查看及准备新尝试。标题固定预算、最多200行。后续卡片布局和独立AX按钮已实际复查，完整系统矩阵仍开放 |
+| 视觉／物理／发行 | PARTIAL | 已观察中文浅色和英文深色、128KiB三字段及1MiB CLI结果子集；AI／范围大文本、完整明暗／辅助功能／IME／全屏多屏、物理热键仍开放；未将退出0或模型绿测当作完整产品验收 |
 
 关闭保留先撤销运行时许可并释放临时审阅，配置失败仍保持本会话关闭，并提供再次保存关闭状态的入口；已存文件仍可读取。文件在7天后过期并拒绝读取，到期清理发生在下次App维护，App关闭时没有后台删除保证；不是应用级加密或SSD安全擦除。
 
@@ -33,7 +33,7 @@
 
 ## 待完成
 
-独立内容库原生布局、长正文与保存失败／取消／清除的完整原生矩阵，以及干净源完整本机／指定同源CI／Developer ID与新候选协议App+DMG公证／发布／安装回退继续推进。完整RunStore、P0–P4、真实API与真实系统验收义务不由本轮子集关闭。
+AI／范围大文本及保存失败／取消／清除的完整原生矩阵，以及最终干净源完整本机／指定同源CI／Developer ID与新候选协议App+DMG公证／发布／安装回退继续推进。完整RunStore、P0–P4、真实API与真实系统验收义务不由本轮子集关闭。
 
 ## 后续列表状态修补
 
@@ -62,3 +62,7 @@
 失败域为`KeyDock-Review-d017f527-e262-4283-99fb-79613f5f0d81`，采样在`.local/desktop/large-result-hang.sample.txt`；`task-material-large-result-native-v1` receipt SHA256 `6df9f9fecfe192248639cd6baf81368092cb36831b0438cc8ff41a4e87e2c06c`。结果区改为复用现有AppKit只读文本组件，保留完整正文、选择、独立滚动与原复制动作；这项修补必须重新做大结果原生验证，不能沿用前序绿测。正式App仍为alpha.19。
 
 同次只读评审确认AI输出（Launcher／Workspace共用）与当前执行范围预览也允许至1MiB，均接入同一组件，保留原compact／workspace高度、字号、DisclosureGroup及复制／替换动作。完整配置导出已使用此原生组件；设置摘要有独立64KiB编码上限和固定字段投影，不以此将修补扩大到全部小型标签。
+
+修补后优化干净源`50a1ccffbf014bf26cfa1bf6f4be157033a83dc8`、Preview摘要`8532591005663d4ad6fd8937ac0469b3b443b4821328cd7eda2cd9db24a13652`在新合成域`KeyDock-Review-2fab8cd5-ed89-4965-900c-024965b0e172`重跑。实际看到Completed／exit0、首尾滚动、默认未选的保存审阅、明确保存、独立卡片及按需查看、切换旧任务后无旧大正文、正常⌘Q退出。最初窗口切换／观察出现一次AX failure和一次工具kernel timeout；同时磁盘回执已成功、App CPU空闲，重绑定后UI操作恢复，不能把它定性为同样的App持续卡顿，工具异常原因仍未完全定位。
+
+`task-material-large-result-native-v2` lifecycle exit0，receipt SHA256 `4ddb60ddccbb319b5c1d8a4713e1ba4bd821c4e4e0fa4d579c31d742d90dd397`。独立文件证明`task-material-large-result-proof-v1`确认保存的visibleResult恰为1048576字节，B／C各524288个、无其他字符且非partial；只保存结果，不把CLI argv当作原输入；一份成功CLI回执、两份旧AI回执逐字段未变、无工具回执、control idle。报告为`.local/desktop/large-result-native-proof.json`，未输出正文。该原生子集仅覆盖CLI结果区及保存／查看，不声称已完成独立AI流式大输出、范围大预览、全部中英明暗或VoiceOver／IME／多屏。931条文案及最终同源检查另行记录，35.6／35.7仍开放。
