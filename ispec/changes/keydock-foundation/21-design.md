@@ -86,3 +86,7 @@ Agent／工作流的工作区提交复用既有配置写入与补偿事务，失
 新增独立SourceRemoval审阅，MCP不是可路由命令，不制造假commandID。工作流引用从ScheduleLedger窄定义快照与主配置集合计算，确认共用Schedule mutation owner／busy门禁；owner先于Published状态更新，避免同步回调重入。读取后核验主配置代次、目标完整指纹、ledger定义代次与呈现／审阅ID，再无await提交主配置／绑定补偿事务。MCP使用独立settings owner覆盖保存／删除／连接入口；被引用与旧确认不撤权，真正提交后按既有fail-closed语义暂停、取消及清理，失败保留原定义但明确重启风险。旧缓存于await前移除，不能让迟到清理按ID清掉后来目录。
 
 Workspace工作流编辑保存原指纹，MCPServerDraft保存原revision与独立稿身份；新建与编辑分离，异步成功仅更新仍属于该提交稿的状态／key。来源移除不擦除已有正文，只在当前渲染中标记来源失效；失效Agent来源及未呈现的保存工具可显式移除。Workflow孤儿偏好纳入既有显式修复。所有UI中英，原生合成验收与真实API／权限／全视觉范围分别记录。
+
+## 2026-11-25 可选AI费率及逐调用归因（计划）
+
+任务32沿用现有usage actor及累计accumulator，新增可选手工平价输入／输出费率与Decimal估算。运行先冻结精确服务／请求模型及费率配置集，各实际open前创建独立attempt并绑定冻结依据，provider记录端口不依赖UI消费；后续改价只影响新run。Workflow保存子调用parent／step归因，父只汇总叶子，所有入口使用同一事实计算。旧记录不追套当前价，缺报／失败／取消不抹去已知部分；不存完整endpoint／query或正文，不猜缓存折扣与汇率。单次、历史和按币种的有界分析共用口径，清除／TTL围栏不另造第二RunStore。详细合同见docs/technical/ai-rate-snapshots.md，尚未实现。

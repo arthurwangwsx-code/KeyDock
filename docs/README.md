@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-25。当前已有签名公证的公开alpha.16，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-25。当前已有签名公证的公开alpha.17，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -69,8 +69,10 @@
 | [目录观察生命周期复查](implementation/catalog-volume-lifecycle-2026-11-25.md) | 保留远端100ms失败、后台卷通知准备／清理、恢复与停止重入回归 |
 | [工作区定义保存复查](implementation/definition-saving-2026-11-25.md) | Agent／工作流失败提示、原文件补偿、编辑状态与真实保存版本 |
 | [保存动作生命周期](technical/saved-item-lifecycle.md) | 独立移除审阅、引用阻止、事务清理与旧编辑／在途快照边界 |
-| [工作流与MCP来源移除](technical/source-removal.md) | 权威引用、共同owner、旧稿／迟到围栏、正文保留与会话撤权；alpha.17候选 |
-| [来源移除实现复查](implementation/source-removal-2026-11-25.md) | 54项定向、760 Swift候选检查、中英原生及非合作MCP／在途Workflow与异步退出；干净分发资格待补 |
+| [工作流与MCP来源移除](technical/source-removal.md) | 权威引用、共同owner、旧稿／迟到围栏、正文保留与会话撤权；alpha.17已发行 |
+| [来源移除实现复查](implementation/source-removal-2026-11-25.md) | 54项定向、760 Swift、中英原生及非合作MCP／在途Workflow与异步退出 |
+| [alpha.17发行与安装证据](implementation/alpha17-release-2026-11-25.md) | 干净同源检查／CI、公证／公开回下载、实际About17与alpha.16回退 |
+| [可选AI费率与调用快照](technical/ai-rate-snapshots.md) | 下一增量计划：准确模型匹配、逐调用身份、估算／未知、工作流父子与有界账本；尚未实现 |
 | [保存动作生命周期复查](implementation/saved-item-lifecycle-2026-11-25.md) | 精确事务／引用／恢复、保留的测试失败与在途结果回归 |
 | [常用工具生命周期复查](implementation/saved-tool-lifecycle-2026-11-25.md) | 片段／网页／集合编辑与删除、历史遗留偏好修复及原生双语重启子集 |
 | [桌面工作区组合执行复查](implementation/desktop-workspace-execution-2026-11-25.md) | alpha.9运行／回执／取消／profile入口及已知失败复查 |
