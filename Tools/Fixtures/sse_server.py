@@ -108,7 +108,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.wfile.flush()
             elif path == "/slow":
                 self.slow_stream()
-            elif path in ("/large-text", "/large-proposal", "/large-agent", "/held-text"):
+            elif path in ("/large-text", "/large-proposal", "/large-agent", "/large-agent-reported", "/held-text"):
                 request = json.loads(body)
                 if path == "/held-text":
                     self.server.increment("held_text_started")
@@ -189,7 +189,7 @@ class Handler(BaseHTTPRequestHandler):
             time.sleep(0.001)
 
     def large_response(self, path, request):
-        if path == "/large-agent":
+        if path in ("/large-agent", "/large-agent-reported"):
             self.server.increment("limit_agent_requests")
             messages = request.get("messages", [])
             has_result = any(m.get("role") == "tool" for m in messages)
@@ -209,6 +209,14 @@ class Handler(BaseHTTPRequestHandler):
         else:
             response_id, size = "synthetic-large-output", 1_052_672
         self.start_sse()
+        if path == "/large-agent-reported":
+            # usage与触发产品总预算的文本同一payload，decoder须在消费者停止前保存已验证事实。
+            value = chunk(text="x" * size, finish="stop")
+            value["id"] = response_id
+            value["usage"] = {"prompt_tokens": 20, "completion_tokens": 6}
+            self.wfile.write(event(value) + b"data: [DONE]\r\n\r\n")
+            self.wfile.flush()
+            return
         if path == "/large-proposal":
             # 直到最后才闭合 JSON；达到 Store 上限后不能解析或触发审阅。
             initial = chunk(text='{"name":"Synthetic oversize","executable":"/usr/bin/touch",'
@@ -216,6 +224,9 @@ class Handler(BaseHTTPRequestHandler):
             initial["id"] = response_id
             self.wfile.write(event(initial))
         self.write_large_text(response_id, size)
+        if path == "/large-agent":
+            # 明确在wire上缺少第二轮usage与完成标记，避免把消费者未读到的完整响应假设为未报告。
+            return
         if path == "/large-proposal":
             ending = chunk(text='"}')
             ending["id"] = response_id

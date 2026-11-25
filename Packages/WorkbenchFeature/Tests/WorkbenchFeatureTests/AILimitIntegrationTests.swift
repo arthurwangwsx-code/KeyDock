@@ -126,6 +126,23 @@ enum AIEntry: CaseIterable { case text, proposal, agent }
         }
     }
 
+    @Test func reportedUsageSurvivesAgentProductOutputLimit() async throws {
+        try await withStoreHTTPFixture(path: "large-agent-reported") { fixture in
+            let store = fixture.store, draft = fixture.store.createDraft(input: "Synthetic reported usage at product limit")
+            store.runReadOnlyAgent(draft: draft)
+            let id = try #require(store.tasks.first?.id)
+            try await fixture.drain(id)
+            let task = try #require(store.tasks.first { $0.id == id })
+            #expect(task.status == .failed && task.outputIsIncomplete && task.output.utf8.count <= 1_048_576)
+            let receipt = try fixture.usage(id)
+            #expect(receipt.outcome == "failed" && receipt.observations.count == 2)
+            #expect(receipt.observations.compactMap(\.inputTokens).reduce(0, +) == 30)
+            #expect(receipt.observations.compactMap(\.outputTokens).reduce(0, +) == 10)
+            #expect(task.aiUsageSummary?.reportedInputTokens == 30 && task.aiUsageSummary?.reportedOutputTokens == 10)
+            let stats = try await fixture.server.stats(); #expect(stats["limit_agent_requests"] == 2)
+            try fixture.assertNoCommandEffects()
+        }
+    }
     @Test func oversizedCommandProposalCannotBecomeReviewableDraft() async throws {
         try await withStoreHTTPFixture(path: "large-proposal") { fixture in
             let store = fixture.store
