@@ -35,7 +35,9 @@ struct TaskMaterialLibraryView: View {
                 case .ready: KDEmptyState(symbol: "tray", title: L("Nothing available to view"), detail: L("Review and save chosen text from Tasks. Existing saved content stays available when new capture is off."))
                 }
             } else {
-                List(Array(store.taskMaterialRecords.enumerated()), id: \.element.id) { entry in
+                ScrollView {
+                LazyVStack(alignment: .leading, spacing: 12) {
+                ForEach(Array(store.taskMaterialRecords.enumerated()), id: \.element.id) { entry in
                     let record = entry.element
                     let context = record.displayTitle + " · " + record.savedAtText + " · " + L("Saved item") + " " + String(entry.offset + 1)
                     VStack(alignment: .leading, spacing: 8) {
@@ -52,9 +54,11 @@ struct TaskMaterialLibraryView: View {
                                 .accessibilityLabel(L("View retained content…") + " · " + context)
                             Button(L("Prepare new attempt")) { session.prepareAttempt(.init(store: record.id.receiptStore == .cli ? .cli : .ai, invocationID: record.id.invocationID), in: store) }.disabled(!record.isTerminal)
                                 .accessibilityLabel(L("Prepare new attempt") + " · " + context)
-                        }.buttonStyle(.borderless)
-                    }.padding(.vertical, 8).accessibilityElement(children: .contain)
-                }.listStyle(.inset)
+                        }.buttonStyle(.bordered)
+                    }.padding(12).frame(maxWidth: .infinity, alignment: .leading).modifier(KDReadingSurface()).accessibilityElement(children: .contain)
+                }
+                }.padding(.vertical, 4)
+                }.frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             HStack {
                 Button(L("Refresh")) { Task { await store.refreshTaskMaterialIndex() } }.disabled(store.taskMaterialIndexPhase == .loading)
