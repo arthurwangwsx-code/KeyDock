@@ -14,10 +14,28 @@ struct AIContentView: View {
     private var auxiliaryActionsConfigured: Bool { store.hasValidAIConfiguration() }
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 12 : 18) {
-            HStack(spacing: 12) {
+            heading
+            if compact {
+                ScrollView { content }.frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else { content }
+            if compact && !draft.notice.isEmpty { KDInlineNotice(draft.notice).lineLimit(2) }
+            footer
+            if !compact { HStack { Spacer(); closeDraftButton }.controlSize(.small) }
+        }.disabled(draft.isClosing).padding(compact ? 22 : 24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .sheet(item:$closeIntent) { intent in AIDraftCloseReviewView(store:store,intent:intent) }
+            .task(id: draft.id) {
+                guard draft.input.isEmpty else { return }
+                // 先让输入控件注册到窗口焦点树，再请求首响应者。
+                await Task.yield()
+                inputFocused = true
+            }
+    }
+    private var heading: some View {
+        HStack(spacing: 12) {
                 if let onBack { KDIconButton("chevron.left", label: L("Back"), action: onBack) }
                 Image(systemName: "sparkles").foregroundStyle(.tint)
                 Text(task?.displayTitle ?? action?.displayName ?? L("AI workspace")).font(.system(size: compact ? 15 : 22, weight: .semibold))
+                    .lineLimit(compact ? 1 : 3)
                 Spacer()
                 if task?.isRunning == true, let id = task?.id { ProgressView().controlSize(.small); Button(L("Stop")) { store.cancelTask(id) } }
                 else if action != nil {
@@ -29,7 +47,10 @@ struct AIContentView: View {
                         }.buttonStyle(.borderedProminent).disabled(!store.canRunAIFromInput(draft))
                     }
                 }
-            }
+        }
+    }
+    private var content: some View {
+        VStack(alignment: .leading, spacing: compact ? 12 : 18) {
             HStack(spacing: 6) {
                 Text(draft.inputSourceTitle)
                 Text("·"); Text(task?.modelName ?? (action?.modelOverride.isEmpty == false ? action!.modelOverride : (store.configuration.model.isEmpty ? L("No model configured") : store.configuration.model)))
@@ -63,28 +84,27 @@ struct AIContentView: View {
                 if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary, compact: compact) }
                 ReadOnlyTextPreview(text: task.output.isEmpty && task.isRunning ? L("Waiting for response…") : task.output,
                     accessibilityLabel: L("Task output"), pointSize: compact ? 13 : 14)
-                    .frame(maxWidth: .infinity, minHeight: compact ? 0 : 180, idealHeight: compact ? nil : 260, maxHeight: compact ? .infinity : 420).modifier(KDReadingSurface())
+                    .frame(maxWidth: .infinity, minHeight: compact ? 140 : 180, idealHeight: compact ? 140 : 260, maxHeight: compact ? 140 : 420).modifier(KDReadingSurface())
             } else if !compact { KDEmptyState(symbol: "sparkles", title: L("Ready when you are"), detail: L("Choose an action and add text. Only this input is sent to your model.")) }
-            if !draft.notice.isEmpty { KDInlineNotice(draft.notice).lineLimit(compact ? 2 : 4) }
-            if compact && task == nil { Spacer(minLength: 0) }
-            HStack(spacing: 12) {
+            if !compact && !draft.notice.isEmpty { KDInlineNotice(draft.notice).lineLimit(4) }
+        }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+    private var footer: some View {
+        HStack(spacing: 12) {
                 if let id = task?.id {
                     Button(L("Copy")) { store.copyResult(id) }.disabled(task?.output.isEmpty != false)
                     if store.canReplaceResult(id) { Button(L("Replace original selection")) { store.replaceResult(id) } }
                 }
                 if compact && needsConfiguration && (action == nil || task?.isRunning == true) { Button(L("Configure AI")) { store.onOpenSettings?(.aiService) } }
                 Spacer()
-                if compact { Button(L("Open in Workspace")) { store.onOpenWorkspace?(.ai(draft.id)) } }
+                if compact {
+                    Button(L("Open in Workspace")) { store.onOpenWorkspace?(.ai(draft.id)) }
+                    closeDraftButton
+                }
                 else if !needsConfiguration || task != nil || action == nil { Button(L("Configure AI")) { store.onOpenSettings?(.aiService) } }
             }.controlSize(.small)
-            HStack { Spacer(); Button(L("Close draft"),role:.destructive) { closeIntent = AIDraftCloseIntent(document:draft) } }.controlSize(.small)
-        }.disabled(draft.isClosing).padding(compact ? 22 : 24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .sheet(item:$closeIntent) { intent in AIDraftCloseReviewView(store:store,intent:intent) }
-            .task(id: draft.id) {
-                guard draft.input.isEmpty else { return }
-                // 先让输入控件注册到窗口焦点树，再请求首响应者。
-                await Task.yield()
-                inputFocused = true
-            }
+    }
+    private var closeDraftButton: some View {
+        Button(L("Close draft"),role:.destructive) { closeIntent = AIDraftCloseIntent(document:draft) }
     }
 }
