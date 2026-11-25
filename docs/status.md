@@ -1,8 +1,10 @@
 # 当前状态总账
 
+alpha.16候选正在建设完整配置定义导出：六类白名单、引用／预算、跨owner快照、独立中英审阅与系统保存已实现；16项定向及735 Swift／74 Python／768 key完整WIP检查、原生中文浅色／英文深色保存与SHA-256字节核验子集PASS。当前尚未发行／替换正式App，同源CI及发行资格待完成，正式安装仍为下述alpha.15。见[本轮复查](implementation/configuration-export-2026-11-25.md)。未来import和原完整产品验收义务保持开放。
+
 [alpha.15](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.15)已公开并安装，精确源`72a7595d2b1ee05a0e1d2df761153d341e1d2d7c`：719 Swift／74 Python／744 key、生产OCR双轮、本机Release与指定同源core CI通过；独立性能CI、Developer ID、公证／装订／Gatekeeper、公开回下载及发行审计PASS。正式App实际About为alpha.15 (15)，alpha.14回退包保留。查询缓存和菜单语义修补已交付；完整产品仍PARTIAL。见[发行证据](implementation/alpha15-release-2026-11-25.md)。
 
-任务29.1–29.3完成工程范围：原51.67ms超标保留，最终源本机查询p95 9.94ms、云端15.79ms，原50ms预算不变。此前干净2b3d5b6的ReleasePreview完成1800.014秒／361点三阶段基线；不跨源升级为后续UI修补候选的驻留资格。四窗口16个基础组合已观察，实际菜单辅助名称缺陷已修并复验；屏幕首帧、8小时驻留、真实采集能耗、完整视觉／IME／VoiceOver／多屏仍开放。一次工程构建中断未生成完成回执，明确保留为unfinished，不声称全局测量审计完整。见[本轮复查](implementation/performance-sampling-2026-11-25.md)。完整定义导出28.4仍未实现，下一步按[独立导出方案](technical/configuration-export.md)推进，未来import事务不作为只读导出的前置。
+任务29.1–29.3完成工程范围：原51.67ms超标保留，最终源本机查询p95 9.94ms、云端15.79ms，原50ms预算不变。此前干净2b3d5b6的ReleasePreview完成1800.014秒／361点三阶段基线；不跨源升级为后续UI修补候选的驻留资格。四窗口16个基础组合已观察，实际菜单辅助名称缺陷已修并复验；屏幕首帧、8小时驻留、真实采集能耗、完整视觉／IME／VoiceOver／多屏仍开放。一次工程构建中断未生成完成回执，明确保留为unfinished，不声称全局测量审计完整。见[本轮复查](implementation/performance-sampling-2026-11-25.md)。alpha.15当时尚未实现28.4；当前alpha.16候选进度见顶部，合同见[独立导出方案](technical/configuration-export.md)，未来import事务不作为只读导出的前置。
 
 以下版本段落保留各轮当时的状态，当前安装版本以上述alpha.15为准。
 

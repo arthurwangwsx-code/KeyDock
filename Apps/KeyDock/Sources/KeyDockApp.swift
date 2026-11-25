@@ -664,11 +664,11 @@ import KeyDockUI
         if sender === settings { settingsSession.apiKey = ""; settingsSession.setVisible(false) }
         return true
     }
-    func beginShutdown() { settingsSession.invalidateSettingsSummaryExport(); dismissClipboard(restore: false); hotkeys.suspend(); store.shutdown() }
+    func beginShutdown() { settingsSession.invalidateSettingsSummaryExport(); settingsSession.invalidateConfigurationExport(); dismissClipboard(restore: false); hotkeys.suspend(); store.shutdown() }
     func prepareForQuit() async { await store.shutdownAndWait() }
     func shutdown() {
         if let observer = clipboardActivationObserver { NSWorkspace.shared.notificationCenter.removeObserver(observer) }; clipboardActivationObserver = nil
-        hotkeys.shutdown(); store.shutdown(); settingsSession.apiKey = ""; settingsSession.invalidateSettingsSummaryExport()
+        hotkeys.shutdown(); store.shutdown(); settingsSession.apiKey = ""; settingsSession.invalidateSettingsSummaryExport(); settingsSession.invalidateConfigurationExport()
     }
 }
 

@@ -19,6 +19,24 @@ public struct ScheduleDefinition: Identifiable, Codable, Sendable, Equatable {
     }
 }
 public enum ScheduleAttemptOutcome: String, Codable, Sendable { case succeeded, failed, cancelled, unknown }
+
+/// 导出专用的定义投影；不把授权指纹或运行账本带出actor。
+public struct ScheduleDefinitionExport: Encodable, Sendable, Equatable, Identifiable {
+    public let id: UUID
+    public let name: String
+    public let workflowID: UUID
+    public let enabled: Bool
+    public let trigger: ScheduleTrigger
+    public let revision: Int
+    public init(id: UUID, name: String, workflowID: UUID, enabled: Bool, trigger: ScheduleTrigger, revision: Int) {
+        self.id = id; self.name = name; self.workflowID = workflowID; self.enabled = enabled; self.trigger = trigger; self.revision = revision
+    }
+}
+public struct ScheduleDefinitionExportSnapshot: Sendable {
+    public let generation: UUID
+    public let definitions: [ScheduleDefinitionExport]
+    public init(generation: UUID, definitions: [ScheduleDefinitionExport]) { self.generation = generation; self.definitions = definitions }
+}
 /// 只包含计划点和运行身份，不保存Workflow输入、正文、argv或凭据。
 public struct ScheduleAttempt: Identifiable, Codable, Sendable, Equatable {
     public let id: UUID

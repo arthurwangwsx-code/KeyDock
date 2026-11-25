@@ -16,8 +16,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public private(set) var isShuttingDown = false
     @Published public var shortcutsUnavailable = false
     @Published public var configuration: AppConfiguration {
-        didSet { if configuration.disabledContributions != oldValue.disabledContributions { contributionEpoch = UUID() } }
+        didSet { configurationExportGeneration = UUID(); if configuration.disabledContributions != oldValue.disabledContributions { contributionEpoch = UUID() } }
     }
+    var configurationExportGeneration = UUID()
     @Published public private(set) var contributionEpoch = UUID()
     @Published public private(set) var catalog: [CommandItem] = []
     @Published public private(set) var clipboardRevision: UInt64 = 0
@@ -99,11 +100,11 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     lazy var desktopWorkspaceRunner = DesktopWorkspaceRunner(desktop: desktop, applications: workspaceApplications, layouts: windowLayouts)
     var desktopWorkspaceGroups: [UUID: (definitionID: UUID, group: DesktopOperationGroup)] = [:]
     let applicationActionStore: ApplicationActionStore?
-    @Published public internal(set) var applicationActions: [SavedApplicationAction] = []
-    @Published public internal(set) var applicationActionsWritable = false
+    @Published public internal(set) var applicationActions: [SavedApplicationAction] = [] { didSet { configurationExportGeneration = UUID() } }
+    @Published public internal(set) var applicationActionsWritable = false { didSet { configurationExportGeneration = UUID() } }
     let desktopWorkspaceStore: DesktopWorkspaceStore?
-    @Published public internal(set) var desktopWorkspaces: [SavedDesktopWorkspace] = []
-    @Published public internal(set) var desktopWorkspacesWritable = false
+    @Published public internal(set) var desktopWorkspaces: [SavedDesktopWorkspace] = [] { didSet { configurationExportGeneration = UUID() } }
+    @Published public internal(set) var desktopWorkspacesWritable = false { didSet { configurationExportGeneration = UUID() } }
     var desktopLeases: [UUID: DesktopOperationLease] = [:]
     public var target: TargetSnapshot?
     public let clipboardStore: ClipboardStore

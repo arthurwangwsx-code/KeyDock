@@ -8,6 +8,7 @@ public actor ScheduleLedger {
     private let maxRecords: Int
     private let maxBytes: Int
     private var records: [UUID: ScheduleSnapshot]
+    private var definitionGeneration = UUID()
     private var suspendedForSession: Set<UUID> = []
     private var invalidatedForSession: Set<UUID> = []
 
@@ -51,6 +52,12 @@ public actor ScheduleLedger {
     public func snapshots() -> [ScheduleSnapshot] {
         records.values.sorted { $0.id.uuidString < $1.id.uuidString }
     }
+    public func definitionSnapshot() -> ScheduleDefinitionExportSnapshot {
+        .init(generation: definitionGeneration, definitions: records.values.map { record in
+            let value = record.definition
+            return .init(id: value.id, name: value.name, workflowID: value.workflowID, enabled: value.enabled, trigger: value.trigger, revision: value.revision)
+        }.sorted { $0.id.uuidString < $1.id.uuidString })
+    }
     public func isSuspendedForSession(id: UUID) -> Bool { suspendedForSession.contains(id) }
     /// 新定义revision必须为1；编辑必须为当前revision+1，旧编辑器不能覆盖新版本。
     @discardableResult public func upsert(_ definition: ScheduleDefinition, now: Date) throws -> ScheduleMutation {
@@ -75,6 +82,7 @@ public actor ScheduleLedger {
         }
         candidate[definition.id] = next
         try commit(candidate)
+        definitionGeneration = UUID()
         if definition.enabled { suspendedForSession.remove(definition.id) }
         if let invalidated { invalidatedForSession.remove(invalidated) }
         return ScheduleMutation(snapshot: next, invalidatedAttemptID: invalidated)
@@ -106,6 +114,7 @@ public actor ScheduleLedger {
         if let active = record.activeAttempt { invalidatedForSession.insert(active.id) }
         var candidate = records; candidate.removeValue(forKey: id)
         try commit(candidate)
+        definitionGeneration = UUID()
         suspendedForSession.remove(id)
         if let active = record.activeAttempt { invalidatedForSession.remove(active.id) }
         return record.activeAttempt?.id

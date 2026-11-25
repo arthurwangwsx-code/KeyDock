@@ -17,6 +17,38 @@
         }
       }
     },
+    "A configuration source is unavailable. It cannot be exported as an empty list.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A configuration source is unavailable. It cannot be exported as an empty list."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配置来源不可用，无法将其作为空列表导出。"
+          }
+        }
+      }
+    },
+    "A definition or reference is invalid. Review saved definitions and shortcuts before exporting.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A definition or reference is invalid. Review saved definitions and shortcuts before exporting."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "某个定义或引用无效。请先检查已保存的定义和快捷键。"
+          }
+        }
+      }
+    },
     "A desktop request may already have taken effect. Check the target application before retrying.": {
       "localizations": {
         "en": {
@@ -285,6 +317,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法保存任务回执，AI 请求未发送。"
+          }
+        }
+      }
+    },
+    "AI services, MCP and folder requirements": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI services, MCP and folder requirements"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 服务、MCP 与目录需求"
           }
         }
       }
@@ -1037,6 +1085,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "应用动作"
+          }
+        }
+      }
+    },
+    "Application actions and desktop workspaces": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application actions and desktop workspaces"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用动作与桌面工作区"
           }
         }
       }
@@ -1809,6 +1873,22 @@
         }
       }
     },
+    "Choose at least one configuration section.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose at least one configuration section."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请至少选择一个配置类别。"
+          }
+        }
+      }
+    },
     "Choose at least one summary section.": {
       "localizations": {
         "en": {
@@ -2513,6 +2593,22 @@
         }
       }
     },
+    "Configuration changed while preparing the preview. Update the preview again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration changed while preparing the preview. Update the preview again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "准备预览期间配置发生变化，请重新更新预览。"
+          }
+        }
+      }
+    },
     "Configuration could not be saved": {
       "localizations": {
         "en": {
@@ -2525,6 +2621,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法保存配置"
+          }
+        }
+      }
+    },
+    "Configuration definitions JSON preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration definitions JSON preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配置定义 JSON 预览"
+          }
+        }
+      }
+    },
+    "Configuration definitions saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration definitions saved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配置定义已保存。"
           }
         }
       }
@@ -3037,6 +3165,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "默认模型"
+          }
+        }
+      }
+    },
+    "Definitions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Definitions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "定义"
           }
         }
       }
@@ -3809,6 +3953,22 @@
         }
       }
     },
+    "Export configuration definitions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export configuration definitions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出配置定义"
+          }
+        }
+      }
+    },
     "Export redacted settings summary": {
       "localizations": {
         "en": {
@@ -3837,6 +3997,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Export was cancelled or could not be saved"
+          }
+        }
+      }
+    },
+    "External resources": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "External resources"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外部资源"
           }
         }
       }
@@ -4637,6 +4813,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "钥匙串操作失败"
+          }
+        }
+      }
+    },
+    "Keychain values, environment values, MCP secret references, authorization, folder bookmarks and all history are excluded. Required local fields and omitted dependencies are listed in the file. Import is not available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keychain values, environment values, MCP secret references, authorization, folder bookmarks and all history are excluded. Required local fields and omitted dependencies are listed in the file. Import is not available yet."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "钥匙串值、环境变量值、MCP 秘密引用、授权、目录书签及所有历史均不包含。文件会列出需在本机补齐的字段与未选依赖，目前尚不支持导入。"
           }
         }
       }
@@ -5825,6 +6017,22 @@
         }
       }
     },
+    "Omitted dependencies": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitted dependencies"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未选依赖"
+          }
+        }
+      }
+    },
     "One text input is kept in this session. A new import replaces it. Clear input removes its text and source; existing AI drafts and task results are kept in history.": {
       "localizations": {
         "en": {
@@ -6237,6 +6445,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "纯文本"
+          }
+        }
+      }
+    },
+    "Preferences and clipboard panel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferences and clipboard panel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "基础偏好与剪贴板面板"
+          }
+        }
+      }
+    },
+    "Preparing configuration preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing configuration preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在准备配置预览"
           }
         }
       }
@@ -7041,6 +7281,22 @@
         }
       }
     },
+    "Required local fields": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required local fields"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本机待补字段"
+          }
+        }
+      }
+    },
     "Response ended early; the result is incomplete": {
       "localizations": {
         "en": {
@@ -7213,6 +7469,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "检查已删除工具的偏好"
+          }
+        }
+      }
+    },
+    "Review saved definitions and preferences before saving JSON. Prompts, snippets, command arguments, aliases, URLs and local resource descriptions may contain private information. This is not an anonymous export.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review saved definitions and preferences before saving JSON. Prompts, snippets, command arguments, aliases, URLs and local resource descriptions may contain private information. This is not an anonymous export."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存 JSON 前请审阅配置定义与偏好。提示词、片段、命令参数、别名、URL 及本机资源描述可能含私人信息，此导出并非匿名文件。"
           }
         }
       }
@@ -7633,6 +7905,22 @@
         }
       }
     },
+    "Saved commands, AI actions and tools": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved commands, AI actions and tools"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存的命令、AI 动作与工具"
+          }
+        }
+      }
+    },
     "Saved version": {
       "localizations": {
         "en": {
@@ -7725,6 +8013,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schedule could not be saved. Check its name, time zone and interval."
+          }
+        }
+      }
+    },
+    "Schedule definitions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule definitions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "调度定义"
           }
         }
       }
@@ -8365,6 +8669,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "快捷键当前未启用。请更换快捷键或重试注册。"
+          }
+        }
+      }
+    },
+    "Shortcuts, aliases and favorites": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcuts, aliases and favorites"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷键、别名与收藏"
           }
         }
       }
@@ -9117,6 +9437,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "此剪贴板记录已不可用"
+          }
+        }
+      }
+    },
+    "The configuration could not be saved. Your preview is kept; try another location.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The configuration could not be saved. Your preview is kept; try another location."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存配置，已保留预览，请尝试其他位置。"
+          }
+        }
+      }
+    },
+    "The configuration exceeds the export limits. Choose fewer sections or shorten the definitions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The configuration exceeds the export limits. Choose fewer sections or shorten the definitions."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配置超出导出限额，请减少所选类别或缩短定义内容。"
+          }
+        }
+      }
+    },
+    "The configuration preview could not be prepared. Your settings were not changed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The configuration preview could not be prepared. Your settings were not changed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法准备配置预览，设置未发生更改。"
           }
         }
       }
@@ -10365,6 +10733,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "更新预览"
+          }
+        }
+      }
+    },
+    "Update the preview to review the exact file before saving.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update the preview to review the exact file before saving."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请更新预览，审阅将要保存的准确文件内容。"
           }
         }
       }

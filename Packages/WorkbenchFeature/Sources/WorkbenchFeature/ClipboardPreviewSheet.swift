@@ -26,9 +26,13 @@ struct ClipboardPreviewSheet: View {
     }
 }
 
-struct ClipboardReadOnlyText: NSViewRepresentable {
+typealias ClipboardReadOnlyText = ReadOnlyTextPreview
+
+struct ReadOnlyTextPreview: NSViewRepresentable {
     let text: String
     var transparent = false
+    var accessibilityLabel: String? = nil
+    var monospaced = false
     func makeNSView(context: Context) -> NSScrollView {
         let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 600, height: 400))
         scroll.hasVerticalScroller = true; scroll.hasHorizontalScroller = false
@@ -41,16 +45,16 @@ struct ClipboardReadOnlyText: NSViewRepresentable {
         view.textContainerInset = NSSize(width: 12, height: 12)
         view.textContainer?.widthTracksTextView = true
         view.layoutManager?.allowsNonContiguousLayout = true
-        view.font = .systemFont(ofSize: 13)
+        view.font = monospaced ? .monospacedSystemFont(ofSize: 11, weight: .regular) : .systemFont(ofSize: 13)
         view.backgroundColor = .textBackgroundColor
         view.drawsBackground = !transparent
-        view.setAccessibilityLabel(L("Preview"))
+        view.setAccessibilityLabel(accessibilityLabel ?? L("Preview"))
         scroll.documentView = view
         return scroll
     }
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let view = scroll.documentView as? NSTextView else { return }
-        view.setAccessibilityLabel(L("Preview"))
+        view.setAccessibilityLabel(accessibilityLabel ?? L("Preview"))
         Self.synchronizeText(text, in: view)
     }
     static func synchronizeText(_ text: String, in view: NSTextView) {

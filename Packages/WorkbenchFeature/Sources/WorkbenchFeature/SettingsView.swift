@@ -39,6 +39,9 @@ public struct SettingsRootView: View {
                 if let presentation = session.settingsSummaryExport {
                     SettingsSummarySheetHost(store: store, session: session, presentation: presentation).id(presentation.id)
                 }
+                if let presentation = session.configurationExport {
+                    ConfigurationExportSheetHost(store: store, session: session, presentation: presentation).id(presentation.id)
+                }
             }
             .onAppear { exclusions = store.configuration.clipboardExclusions.joined(separator: "\n"); session.keyStored = store.credentialExists() }
             .confirmationDialog(L("Clear finished tasks and idle drafts?"), isPresented: $confirmTaskClear) {
@@ -192,6 +195,7 @@ public struct SettingsRootView: View {
             Section(L("Your data")) {
                 Text(L("Local data, no product telemetry. AI actions send only their chosen input to your configured service.")).font(.callout).foregroundStyle(.secondary)
                 Button(L("Export redacted settings summary")) { session.prepareSettingsSummary(in: store) }.disabled(!session.canBeginSavedItemEditor)
+                Button(L("Export configuration definitions")) { session.prepareConfigurationExport(in: store) }.disabled(!session.canBeginSavedItemEditor)
             }
             Section(L("Task and usage history")) {
                 Text(L("KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Output stays in memory; after restarting, only task metadata is restored. Finished task and usage records expire after 90 days.")).font(.caption).foregroundStyle(.secondary)
