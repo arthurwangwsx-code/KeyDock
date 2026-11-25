@@ -1425,6 +1425,22 @@
         }
       }
     },
+    "Basic preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basic preferences"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "基础偏好"
+          }
+        }
+      }
+    },
     "Bearer key · leave blank to keep": {
       "localizations": {
         "zh-Hans": {
@@ -1789,6 +1805,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "请为每个新增目标选择可用应用。"
+          }
+        }
+      }
+    },
+    "Choose at least one summary section.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose at least one summary section."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请至少选择一类摘要内容。"
           }
         }
       }
@@ -2913,6 +2945,22 @@
         }
       }
     },
+    "Custom names, alias contents, prompts, snippets, command arguments, paths, service connections, credentials and history are excluded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom names, alias contents, prompts, snippets, command arguments, paths, service connections, credentials and history are excluded."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不包含自定义名称、别名内容、提示词、片段、命令参数、路径、服务连接信息、凭据或历史。"
+          }
+        }
+      }
+    },
     "Daily at a local time": {
       "localizations": {
         "zh-Hans": {
@@ -3761,6 +3809,22 @@
         }
       }
     },
+    "Export redacted settings summary": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export redacted settings summary"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出设置摘要（脱敏）"
+          }
+        }
+      }
+    },
     "Export was cancelled or could not be saved": {
       "localizations": {
         "zh-Hans": {
@@ -4465,6 +4529,22 @@
         }
       }
     },
+    "JSON preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JSON preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JSON 预览"
+          }
+        }
+      }
+    },
     "Key stored · leave blank to keep": {
       "localizations": {
         "en": {
@@ -4637,6 +4717,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "启动台"
+          }
+        }
+      }
+    },
+    "Launcher shortcut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launcher shortcut"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启动器快捷键"
           }
         }
       }
@@ -4909,6 +5005,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "MCP settings were not saved and the previous credential could not be restored. Check the stored key."
+          }
+        }
+      }
+    },
+    "Main configuration counts (includes built-in definitions)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main configuration counts (includes built-in definitions)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主配置数量摘要（含内置定义）"
           }
         }
       }
@@ -7265,6 +7377,22 @@
         }
       }
     },
+    "Save JSON…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save JSON…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存 JSON…"
+          }
+        }
+      }
+    },
     "Save URL action": {
       "localizations": {
         "zh-Hans": {
@@ -7405,6 +7533,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save profile"
+          }
+        }
+      }
+    },
+    "Save selected preferences, the launcher shortcut and configuration counts as JSON for viewing or sharing. This file cannot restore the app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save selected preferences, the launcher shortcut and configuration counts as JSON for viewing or sharing. This file cannot restore the app."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将所选基础偏好、启动器快捷键和配置数量保存为 JSON，用于查看与分享。此文件不能恢复应用。"
           }
         }
       }
@@ -8061,6 +8205,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法保存设置，也未能恢复原配置文件。请在重新启动前检查设置。"
+          }
+        }
+      }
+    },
+    "Settings summary JSON preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings summary JSON preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置摘要 JSON 预览"
+          }
+        }
+      }
+    },
+    "Settings summary saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings summary saved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置摘要已保存。"
           }
         }
       }
@@ -9085,6 +9261,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "保存的工作流已更改。请重新载入并检查步骤后再运行。"
+          }
+        }
+      }
+    },
+    "The settings summary could not be prepared. Your settings were not changed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The settings summary could not be prepared. Your settings were not changed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法生成设置摘要，原设置保持不变。"
+          }
+        }
+      }
+    },
+    "The settings summary could not be saved. Your preview is kept; try another location.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The settings summary could not be saved. Your preview is kept; try another location."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置摘要保存失败。预览已保留，请尝试其他位置。"
           }
         }
       }
@@ -10145,6 +10353,22 @@
         }
       }
     },
+    "Update preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新预览"
+          }
+        }
+      }
+    },
     "Uppercase": {
       "localizations": {
         "zh-Hans": {
@@ -10925,6 +11149,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "工作区已停止，已确认步骤保留，后续步骤未派发。再次运行前请检查未知结果。"
+          }
+        }
+      }
+    },
+    "Your choices changed. Update the preview before saving.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your choices changed. Update the preview before saving."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选项已更改，请更新预览后再保存。"
           }
         }
       }

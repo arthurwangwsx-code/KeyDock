@@ -79,8 +79,7 @@ extension WorkbenchModel {
 
 extension SettingsSession {
     func prepareDeletedToolPreferences(in store: WorkbenchModel) {
-        guard !store.isShuttingDown, editedCommand == nil, editedAction == nil, savedItemRemoval == nil,
-              desktopWorkspaceEditor == nil, deletedToolPreferencesReview == nil else { return }
+        guard canBeginSavedItemEditor else { return }
         let review = store.reviewDeletedToolPreferences()
         guard !review.entries.isEmpty else { store.settingsNoticeMessage = noticeKey("There are no deleted tool preferences to clear."); return }
         store.settingsNoticeMessage = .none

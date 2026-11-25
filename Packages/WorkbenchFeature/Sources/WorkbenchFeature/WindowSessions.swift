@@ -109,9 +109,11 @@ private struct LauncherCatalogProvider: CommandProviding {
     var editedActionExistingID: UUID?
     @Published var savedItemRemoval: SavedItemRemovalPresentation?
     @Published var deletedToolPreferencesReview: DeletedToolPreferencePresentation?
+    @Published var settingsSummaryExport: SettingsSummaryPresentation?
+    @Published var settingsSummaryDismissing = false
     @Published var desktopWorkspaceEditor: DesktopWorkspaceEditorDraft?
     var canBeginSavedItemEditor: Bool {
-        store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil
+        store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil && settingsSummaryExport == nil && !settingsSummaryDismissing
     }
     @Published public var apiKey = ""
     @Published public var keyStored = false
@@ -158,7 +160,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         editedCommandExistingID = nil; editedCommandSourceRunID = review.id; editedCommand = review.command
         return true
     }
-    public func setVisible(_ value: Bool) { visible = value; updateVisibleReferences() }
+    public func setVisible(_ value: Bool) { visible = value; if !value { invalidateSettingsSummaryExport() }; updateVisibleReferences() }
     private func updateVisibleReferences() {
         guard let store else { return }
         if visible { store.setVisibleReferences(owner: visibilityOwner, draftID: nil, taskID: editedCommandSourceRunID) }

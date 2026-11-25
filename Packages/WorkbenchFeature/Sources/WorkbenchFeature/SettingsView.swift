@@ -35,6 +35,11 @@ public struct SettingsRootView: View {
             .sheet(item: $session.savedItemRemoval) { presentation in SavedItemRemovalView(store: store, session: session, presentation: presentation) }
             .sheet(item: $session.deletedToolPreferencesReview) { presentation in DeletedToolPreferencesView(store: store, session: session, presentation: presentation) }
             .sheet(item: $session.desktopWorkspaceEditor) { draft in DesktopWorkspaceEditorView(store: store, session: session, draft: draft) }
+            .background {
+                if let presentation = session.settingsSummaryExport {
+                    SettingsSummarySheetHost(store: store, session: session, presentation: presentation).id(presentation.id)
+                }
+            }
             .onAppear { exclusions = store.configuration.clipboardExclusions.joined(separator: "\n"); session.keyStored = store.credentialExists() }
             .confirmationDialog(L("Clear finished tasks and idle drafts?"), isPresented: $confirmTaskClear) {
                 Button(L("Clear finished history"), role: .destructive) { Task { await store.clearFinishedHistory() } }
@@ -184,7 +189,10 @@ public struct SettingsRootView: View {
                 Button(L("Enable Accessibility")) { store.requestAccessibility() }.disabled(!store.allowContextCapture)
                 Text(L("Application search works without Accessibility. Screen recording is not required for window-title search.")).font(.caption).foregroundStyle(.secondary)
             }
-            Section(L("Your data")) { Text(L("Local data, no product telemetry. AI actions send only their chosen input to your configured service.")).font(.callout).foregroundStyle(.secondary) }
+            Section(L("Your data")) {
+                Text(L("Local data, no product telemetry. AI actions send only their chosen input to your configured service.")).font(.callout).foregroundStyle(.secondary)
+                Button(L("Export redacted settings summary")) { session.prepareSettingsSummary(in: store) }.disabled(!session.canBeginSavedItemEditor)
+            }
             Section(L("Task and usage history")) {
                 Text(L("KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Output stays in memory; after restarting, only task metadata is restored. Finished task and usage records expire after 90 days.")).font(.caption).foregroundStyle(.secondary)
                 HStack {

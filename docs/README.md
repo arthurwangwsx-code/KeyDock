@@ -23,6 +23,8 @@
 | [独立MCP互通](technical/mcp-independent-interoperability.md) | 官方Time固定环境、schema语义、HTTP取消／会话清理和四格验证入口 |
 | [MCP互通增量复查](implementation/mcp-interoperability-2026-11-25.md) | 原始目录失败、真实调用、会话清理、进程组与环境证据修补 |
 | [数据与权限](technical/data-and-permissions.md) | TCC、上下文、存储、采集与执行策略 |
+| [设置摘要导出](technical/settings-summary-export.md) | 字段白名单、冻结预览与系统保存；完整定义迁移另行建设 |
+| [设置摘要实现与原生复查](implementation/settings-summary-export-2026-11-25.md) | 敏感哨兵、关闭／保存身份、英文截断修复及实际文件字节 |
 | [P1会话保留](technical/session-retention.md) | 已实现的总预算、元数据维护、清除和恢复围栏及待验收边界 |
 | [导入文本上下文](technical/imported-text-context.md) | 单槽来源、AI冻结、联合预算与清除；alpha.10候选 |
 | [导入来源实现复查](implementation/imported-text-context-2026-11-25.md) | 合成提取／MCP／AI隐私、失败接纳与原生观察边界 |

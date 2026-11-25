@@ -103,8 +103,7 @@ extension WorkbenchModel {
 
 extension SettingsSession {
     func beginDesktopWorkspace(_ value: SavedDesktopWorkspace? = nil, in store: WorkbenchModel) {
-        guard !store.isShuttingDown, store.desktopWorkspacesWritable, desktopWorkspaceEditor == nil,
-              editedCommand == nil, editedAction == nil, savedItemRemoval == nil, deletedToolPreferencesReview == nil else { return }
+        guard canBeginSavedItemEditor, store.desktopWorkspacesWritable else { return }
         desktopWorkspaceEditor = DesktopWorkspaceEditorDraft(value)
     }
     func cancelDesktopWorkspaceEdit(_ presentationID: UUID) {

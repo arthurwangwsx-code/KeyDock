@@ -40,7 +40,7 @@ import KeyDockUI
             alert.runModal(); NSApp.terminate(nil)
         }
     }
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { coordinator?.presentLauncher(); return true }
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { coordinator?.reopen(); return false }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !terminating else { return .terminateLater }; terminating = true
         coordinator?.beginShutdown()
@@ -197,6 +197,18 @@ import KeyDockUI
             else { self?.store.cancelDesktopWorkspaceRuns(); self?.dismissLauncher(restore: true) }
         }
         return panel
+    }
+    func reopen() {
+        guard !store.isShuttingDown else { return }
+        // Dock/reopen不能把正在审阅或保存的sheet盖在启动台后面；按当前窗口前后顺序选择。
+        for window in NSApp.orderedWindows where (window === settings || window === workspace) && window.isVisible {
+            guard window.attachedSheet != nil else { continue }
+            var target = window
+            while let child = target.attachedSheet, child.isVisible { target = child }
+            NSApp.activate(ignoringOtherApps: true); target.makeKeyAndOrderFront(nil)
+            return
+        }
+        presentLauncher()
     }
     func presentLauncher(commandID: String? = nil) {
         guard !store.isShuttingDown else { return }
@@ -652,11 +664,11 @@ import KeyDockUI
         if sender === settings { settingsSession.apiKey = ""; settingsSession.setVisible(false) }
         return true
     }
-    func beginShutdown() { dismissClipboard(restore: false); hotkeys.suspend(); store.shutdown() }
+    func beginShutdown() { settingsSession.invalidateSettingsSummaryExport(); dismissClipboard(restore: false); hotkeys.suspend(); store.shutdown() }
     func prepareForQuit() async { await store.shutdownAndWait() }
     func shutdown() {
         if let observer = clipboardActivationObserver { NSWorkspace.shared.notificationCenter.removeObserver(observer) }; clipboardActivationObserver = nil
-        hotkeys.shutdown(); store.shutdown(); settingsSession.apiKey = ""
+        hotkeys.shutdown(); store.shutdown(); settingsSession.apiKey = ""; settingsSession.invalidateSettingsSummaryExport()
     }
 }
 
