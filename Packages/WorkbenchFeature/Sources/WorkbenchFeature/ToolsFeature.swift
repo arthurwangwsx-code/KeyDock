@@ -22,38 +22,40 @@ extension WorkbenchModel {
         var next = configuration; next.snippets.removeAll{$0.id == id}; _ = commitSettingsConfiguration(next)
     }
     public func importDocument(_ url: URL, session: WorkspaceSession) {
-        let token = UUID(); session.contextGeneration = token
-        runContextOperation(resource:url.path,operation:.importContext,work:{
+        runContextOperation(resource:url.path,operation:.importContext,session:session,work:{
             let access = url.startAccessingSecurityScopedResource()
             defer { if access { url.stopAccessingSecurityScopedResource() } }
             return try await DocumentContextService.read(url)
-        },deliver:{ [weak session] result in
-            guard let session, session.contextGeneration == token else { return }
-            session.toolsText = result.text; session.toolsSourceName = result.displayName
+        },origin:{ result in
+            let kind: TextContextProvenance.Kind = switch result.extraction { case .text: .textFile; case .pdfText: .pdfText; case .imageOCR: .imageOCR }
+            return (kind,result.displayName)
         })
     }
     public func captureRegion(session: WorkspaceSession) {
         guard allowContextCapture else { workspaceNoticeMessage = noticeKey("Context capture is disabled in isolated smoke mode"); return }
-        let token = UUID(); session.contextGeneration = token; onDismiss?(true)
-        runContextOperation(resource:"user-selected-screen-region",operation:.captureScreen,work:{ try await DocumentContextService.captureRegion() },deliver:{ [weak session] result in
-            guard let session,session.contextGeneration == token else { return }; session.toolsText = result.text; session.toolsSourceName = L("Selected screen region")
+        runContextOperation(resource:"user-selected-screen-region",operation:.captureScreen,session:session,work:{ try await DocumentContextService.captureRegion() },origin:{ _ in
+            (.regionOCR,L("Selected screen region"))
         })
     }
-    private func runContextOperation(resource:String,operation:HostOperation,work:@escaping @Sendable () async throws -> DocumentText,deliver:@escaping @MainActor (DocumentText)->Void) {
+    private func runContextOperation(resource:String,operation:HostOperation,session:WorkspaceSession,work:@escaping @Sendable () async throws -> DocumentText,origin:@escaping @MainActor (DocumentText)->(TextContextProvenance.Kind,String)) {
         let id = UUID()
         do {
             let authorization = try authorizeHostAction(id:"context.import",operation:operation,resource:resource,availableContext:[.explicitInput],invocation:id)
-            guard reserveExecution(id) else { return }
+            guard let bytes = textContextAdmissionBytes(session), reserveExecution(id,additionalBytes:bytes) else { return }
+            let token = claimTextContext(session)
+            if operation == .captureScreen { onDismiss?(true) }
             tasks.insert(RunningTaskItem(id:id,title:L("Text import"),state:.running,titleKey:"Text import"),at:0); tasks[0].receiptIsAI = true
             aiTaskIDs.insert(id); registerActivity(id,commandID:"context.import",category:.utility)
-            taskHandles[id] = Task { [weak self] in
+            taskHandles[id] = Task { [weak self, weak session] in
                 guard let self else { return }
                 var started = false
                 do {
                     try await beginAIReceipt(id:id,kind:.context,authorization:authorization); started = true; try Task.checkCancellation()
                     let result = try await work(); try Task.checkCancellation()
                     guard !isShuttingDown else { throw CancellationError() }
-                    _ = appendOutput(id,text:result.text); deliver(result); updateTask(id,state:.completed,finished:true)
+                    _ = appendOutput(id,text:result.text)
+                    if let session { let (kind,name) = origin(result); commitTextContext(result.text,kind:kind,name:name,session:session,token:token) }
+                    updateTask(id,state:.completed,finished:true)
                 } catch {
                     let cancelled = Task.isCancelled || error is CancellationError || (error as? DocumentContextError) == .cancelled
                     updateTask(id,state:cancelled ? .cancelled:.failed,finished:true)

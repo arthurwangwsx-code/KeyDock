@@ -26,22 +26,22 @@ struct ToolsWorkspaceView: View {
             }
             Section(L("Text and OCR")) {
                 HStack {
-                    Button(L("Choose text, PDF or image")) { chooseFile = true }
-                    Button(L("Capture a region")) { store.captureRegion(session:session) }.disabled(!store.allowContextCapture)
+                    Button(L("Choose text, PDF or image")) { chooseFile = true }.disabled(store.isClearingHistory)
+                    Button(L("Capture a region")) { store.captureRegion(session:session) }.disabled(!store.allowContextCapture || store.isClearingHistory)
                     Button(L("Screen Recording settings")) { DocumentContextService.openScreenRecordingSettings() }.disabled(!store.allowContextCapture)
                 }
                 Text(L("OCR runs locally. Files are limited to 16 MiB, images to 20 million pixels and PDFs to 30 pages. Text is limited to 128 KiB. Nothing is sent to AI until you choose an action.")).font(.caption).foregroundStyle(.secondary)
+                Text(L("One text input is kept in this session. A new import replaces it. Clear input removes its text and source; existing AI drafts and task results are kept in history.")).font(.caption).foregroundStyle(.secondary)
                 if !session.toolsSourceName.isEmpty { Text(session.toolsSourceName).font(.caption).foregroundStyle(.secondary) }
-                TextEditor(text:$session.toolsText).font(.body).frame(minHeight:140).modifier(KDReadingSurface()).accessibilityLabel(L("Imported text"))
+                TextEditor(text:Binding(get:{session.toolsText},set:{store.editToolsInput($0,session:session)})).font(.body).frame(minHeight:140).modifier(KDReadingSurface()).accessibilityLabel(L("Imported text")).disabled(store.isClearingHistory)
                 HStack {
                     ForEach(store.configuration.aiActions.prefix(3)) { action in
                         Button(action.displayName) {
-                            let draft = store.createDraft(actionID:action.id,input:session.toolsText)
-                            guard store.ownsDraft(draft) else { return }; session.navigate(.ai(draft.id),store:store)
+                            guard let draft = store.createToolsDraft(actionID:action.id,session:session) else { return }; session.navigate(.ai(draft.id),store:store)
                         }.disabled(session.toolsText.isEmpty)
                     }
                     Spacer()
-                    Button(L("Clear input")) { session.contextGeneration = UUID(); session.toolsText = ""; session.toolsSourceName = "" }
+                    Button(L("Clear input")) { store.clearToolsInput(session) }
                 }
             }
             Section(L("Snippets")) {

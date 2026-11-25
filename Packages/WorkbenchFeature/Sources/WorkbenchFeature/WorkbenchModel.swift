@@ -164,6 +164,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     private let languageApplier: @MainActor (String) -> Void
     // 剪贴板是全局资源；不同草稿的迟到结果也不能覆盖较新的复制请求。
     var latestAutoCopyRunID: UUID?
+    var contextSessions: [UUID: WeakTextContextSession] = [:]
 
     public init(dataDirectory: URL? = nil, allowContextCapture: Bool = true,
                 clipboardWriter: (@MainActor (String) throws -> Void)? = nil,
@@ -269,6 +270,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     }
     public func shutdown() {
         isShuttingDown = true; monitor.stop(); desktop.applicationCatalog.stop()
+        clearTextContextInputs()
         cancelDesktopWorkspaceRuns(); workspaceApplications.close()
         windowLayouts.close()
         windowCommands.close()
@@ -478,7 +480,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         if let i = next.aiActions.firstIndex(where: { $0.id == action.id }) { next.aiActions[i] = action } else { next.aiActions.append(action) }
         return commitShortcutConfiguration(next)
     }
-    public func createDraft(actionID: UUID? = nil, input: String? = nil, target: TargetSnapshot? = nil, source: AIDraftSource? = nil, caller: ExecutionCaller = .user) -> AIDraftDocument {
+    public func createDraft(actionID: UUID? = nil, input: String? = nil, target: TargetSnapshot? = nil, source: AIDraftSource? = nil, provenance: TextContextProvenance? = nil, caller: ExecutionCaller = .user) -> AIDraftDocument {
         let action = configuration.aiActions.first { $0.id == actionID } ?? configuration.aiActions.first
         var value = input ?? "", original: TargetSnapshot?
         var origin = source ?? .manual
@@ -496,7 +498,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             }
         }
         if original?.selectedTextExceedsLimit == true { noticeMessage = noticeKey("Input is too long. Split it into smaller parts; nothing was sent.") }
-        let draft = AIDraftDocument(input: value, actionID: action?.id, target: original, source: origin)
+        let draft = AIDraftDocument(input: value, actionID: action?.id, target: original, source: origin, provenance: provenance)
         if draft.isDiscarded { launcherNoticeMessage = draft.noticeMessage; workspaceNoticeMessage = draft.noticeMessage; return draft }
         draft.noticeMessage = noticeMessage
         _ = registerDraft(draft)

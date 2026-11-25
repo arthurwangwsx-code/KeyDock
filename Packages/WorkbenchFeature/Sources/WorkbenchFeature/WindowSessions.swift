@@ -177,8 +177,12 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var workflowInput = ""
     @Published var workflowLaunch: WorkflowLaunchDraft?
     var workflowLoaded = false
-    @Published public var toolsText = ""
-    @Published public var toolsSourceName = ""
+    @Published public private(set) var toolsInput: TextContextInput = .empty
+    public var toolsText: String { toolsInput.text }
+    public var toolsSourceName: String { toolsInput.provenance?.title ?? "" }
+    let contextOwnerID = UUID()
+    weak var toolsOwner: WorkbenchModel?
+    func setToolsInput(_ value: TextContextInput) { toolsInput = value }
     @Published public var selectedWebActionID: UUID?
     @Published var webActionDraft = WebActionEditorDraft()
     @Published public var selectedCollectionID: UUID?

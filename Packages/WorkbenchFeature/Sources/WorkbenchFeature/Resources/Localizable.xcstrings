@@ -3121,6 +3121,22 @@
         }
       }
     },
+    "Edited input from": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edited input from"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已编辑，来源"
+          }
+        }
+      }
+    },
     "Editing URL action": {
       "localizations": {
         "en": {
@@ -3841,6 +3857,22 @@
         }
       }
     },
+    "Image OCR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image OCR"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图片 OCR"
+          }
+        }
+      }
+    },
     "Imported text": {
       "localizations": {
         "zh-Hans": {
@@ -3853,6 +3885,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Imported text"
+          }
+        }
+      }
+    },
+    "Imported text or its source name is too large. The previous input was kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported text or its source name is too large. The previous input was kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导入文本或来源名称超出限制，已保留原输入。"
           }
         }
       }
@@ -4429,6 +4477,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "MCP endpoint URL"
+          }
+        }
+      }
+    },
+    "MCP prompt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP prompt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP 提示词"
+          }
+        }
+      }
+    },
+    "MCP resource": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP resource"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP 资源"
           }
         }
       }
@@ -5249,6 +5329,22 @@
         }
       }
     },
+    "One text input is kept in this session. A new import replaces it. Clear input removes its text and source; existing AI drafts and task results are kept in history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One text input is kept in this session. A new import replaces it. Clear input removes its text and source; existing AI drafts and task results are kept in history."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前会话保留一份文本，新导入会替换它。清除输入将移除正文和来源；已有 AI 草稿和任务结果仍保留在历史中。"
+          }
+        }
+      }
+    },
     "Only enable sources you trust. Local servers run as your user and can access files or run commands outside KeyDock. This is not an OS sandbox. Connections start only when you connect or start an allowed Agent run.": {
       "localizations": {
         "zh-Hans": {
@@ -5533,6 +5629,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "输出用量（token）"
+          }
+        }
+      }
+    },
+    "PDF text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF 正文"
           }
         }
       }
@@ -5981,6 +6093,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "刷新应用列表"
+          }
+        }
+      }
+    },
+    "Region OCR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Region OCR"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "区域 OCR"
           }
         }
       }
@@ -6573,6 +6701,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Run agent"
+          }
+        }
+      }
+    },
+    "Run input": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run input"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本次运行输入"
           }
         }
       }
@@ -7793,6 +7937,22 @@
         }
       }
     },
+    "Source not retained": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source not retained"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来源未保留"
+          }
+        }
+      }
+    },
     "Space": {
       "localizations": {
         "en": {
@@ -8193,6 +8353,22 @@
         }
       }
     },
+    "Text file": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text file"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文本文件"
+          }
+        }
+      }
+    },
     "Text import": {
       "localizations": {
         "zh-Hans": {
@@ -8561,18 +8737,18 @@
         }
       }
     },
-    "This discards finished task output, idle unsaved AI drafts and command suggestions. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept.": {
+    "This discards finished task output, idle unsaved AI drafts, command suggestions and the Tools text input with its source. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This discards finished task output, idle unsaved AI drafts and command suggestions. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept."
+            "value": "This discards finished task output, idle unsaved AI drafts, command suggestions and the Tools text input with its source. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "这会丢弃已结束任务的输出、闲置且未保存的 AI 草稿和命令建议。正在运行的任务会保留。终端中的命令可能仍在运行，清除记录不会停止它们。已保存的命令、设置、凭据和剪贴板历史会保留。"
+            "value": "此操作会丢弃已完成任务的输出、空闲且未保存的 AI 草稿、命令建议，以及工具页文本与来源。运行中的任务会保留。终端命令可能仍在运行，清除历史不会停止它们。已保存的命令、设置、凭据和剪贴板历史会保留。"
           }
         }
       }

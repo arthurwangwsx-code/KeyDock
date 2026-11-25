@@ -42,11 +42,11 @@ extension WorkbenchModel {
     }
 
     /// 整份输出在任何Published更新/窗口回调之前预留，避免同步重入绕过并发上限。
-    func reserveExecution(_ id: UUID, draft: AIDraftDocument? = nil) -> Bool {
+    func reserveExecution(_ id: UUID, draft: AIDraftDocument? = nil, additionalBytes: Int = 0) -> Bool {
         guard !isShuttingDown, !isClearingHistory, !mutatingSession,
               executionReservations.count < sessionLimits.activeTasks else { admissionNotice(draft); return false }
         executionReservations.insert(id)
-        guard makeSessionRoom(taskSlots: 1, protectingDraft: draft?.id) else {
+        guard makeSessionRoom(taskSlots: 1, additionalBytes: additionalBytes, protectingDraft: draft?.id) else {
             executionReservations.remove(id); admissionNotice(draft); return false
         }
         return true
@@ -97,10 +97,10 @@ extension WorkbenchModel {
 
     func retainedSessionBytes(excludingTasks taskIDs: Set<UUID> = [], excludingDrafts draftIDs: Set<UUID> = []) -> Int {
         // 为下一次面板上下文预留一个固定槽位，捕获完成不会绕过全局预算。
-        var bytes = TaskTextLimits.inputBytes + 1_024, snapshots: [ObjectIdentifier: TargetSnapshot] = [:]
+        var bytes = TaskTextLimits.inputBytes + 1_024 + retainedContextSlotBytes, snapshots: [ObjectIdentifier: TargetSnapshot] = [:]
         func include(_ snapshot: TargetSnapshot?) { if let snapshot { snapshots[ObjectIdentifier(snapshot)] = snapshot } }
         for task in tasks where !taskIDs.contains(task.id) {
-            let metadata = task.title.utf8.count + task.noticeMessage.retainedByteCount + (task.modelName?.utf8.count ?? 0) + (task.sourceApplication?.utf8.count ?? 0) + task.desktopWorkspaceLabels.values.reduce(0) { $0 + $1.utf8.count } + (task.desktopWorkspaceResult == nil ? 0 : 4_096)
+            let metadata = (task.inputProvenance?.retainedBytes ?? 0) + task.title.utf8.count + task.noticeMessage.retainedByteCount + (task.modelName?.utf8.count ?? 0) + (task.sourceApplication?.utf8.count ?? 0) + task.desktopWorkspaceLabels.values.reduce(0) { $0 + $1.utf8.count } + (task.desktopWorkspaceResult == nil ? 0 : 4_096)
             bytes += task.output.utf8.count + metadata
             if executionReservations.contains(task.id) {
                 bytes += max(0, TaskTextLimits.outputBytes - task.output.utf8.count) + max(0, 16_384 - metadata) + TaskTextLimits.inputBytes
@@ -110,7 +110,7 @@ extension WorkbenchModel {
         let existingIDs = Set(tasks.map(\.id))
         bytes += executionReservations.subtracting(existingIDs).count * (TaskTextLimits.outputBytes + 16_384 + TaskTextLimits.inputBytes)
         for (id, draft) in drafts where !draftIDs.contains(id) {
-            bytes += TaskTextLimits.inputBytes + 8_192
+            bytes += TaskTextLimits.inputBytes + 8_192 + (draft.inputProvenance?.retainedBytes ?? 0)
             include(draft.sourceTarget)
         }
         for review in pendingCommandReviews where !taskIDs.contains(review.id) { bytes += review.textBytes }
@@ -121,7 +121,7 @@ extension WorkbenchModel {
 
     func registerDraft(_ draft: AIDraftDocument) -> Bool {
         guard !isShuttingDown, !isClearingHistory, !draft.isDiscarded,
-              makeSessionRoom(draftSlots: 1, additionalBytes: TaskTextLimits.inputBytes + 8_192 + (draft.sourceTarget?.selectedText?.utf8.count ?? 0) + (draft.sourceTarget?.applicationName.utf8.count ?? 0)) else {
+              makeSessionRoom(draftSlots: 1, additionalBytes: TaskTextLimits.inputBytes + 8_192 + (draft.inputProvenance?.retainedBytes ?? 0) + (draft.sourceTarget?.selectedText?.utf8.count ?? 0) + (draft.sourceTarget?.applicationName.utf8.count ?? 0)) else {
             draft.discard(); admissionNotice(draft); return false
         }
         draftOrder.append(draft.id); drafts[draft.id] = draft

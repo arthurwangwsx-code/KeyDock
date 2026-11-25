@@ -52,6 +52,11 @@ public struct MCPPromptDescriptor: Equatable, Sendable, Identifiable {
     public var id: String { name }
     public let description: String
     public let arguments: [MCPPromptArgument]
+    public func validateArguments(_ values: [String:String]) throws {
+        guard Set(values.keys).isSubset(of:Set(arguments.map(\.name))),
+              arguments.filter(\.required).allSatisfy({ values[$0.name] != nil }),
+              values.reduce(0,{ $0 + $1.key.utf8.count + $1.value.utf8.count }) <= 65_536 else { throw MCPClientError.invalidArguments }
+    }
 }
 public struct MCPPromptSelection: Equatable, Sendable {
     public let source: MCPExplicitSourceSelection

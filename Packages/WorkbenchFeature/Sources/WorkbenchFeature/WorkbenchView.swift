@@ -73,6 +73,9 @@ public struct WorkspaceView: View {
                         if task.desktopWorkspaceResult == nil { KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }.disabled(task.output.isEmpty) }
                     }
                     if !task.notice.isEmpty { KDInlineNotice(task.notice) }
+                    if task.source != nil || task.receiptIsAI {
+                        Text(L("Run input") + " · " + task.inputSourceTitle).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                    }
                     AgentApprovalView(store:store,runID:task.id)
                     if let checkpoint = store.workflowCheckpoints[task.id] { Text(L("Step")+" \(checkpoint.stepIndex+1) · "+workflowPhaseTitle(checkpoint.phase)).font(.caption).foregroundStyle(.secondary) }
                     ForEach(store.pendingWorkflowInputs.filter{$0.runID == task.id}) { request in WorkflowInputView(store:store,request:request) }

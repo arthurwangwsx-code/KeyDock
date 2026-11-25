@@ -9,9 +9,11 @@ import Darwin
 
 public enum DocumentContextError: Error, Equatable { case unsupported, tooLarge, invalidFile, noText, screenPermissionRequired, cancelled, captureFailed }
 public struct DocumentText: Sendable {
+    public enum Extraction: Sendable, Equatable { case text, pdfText, imageOCR }
     public let displayName: String
     public let text: String
-    public let usedOCR: Bool
+    public let extraction: Extraction
+    public var usedOCR: Bool { extraction == .imageOCR }
 }
 
 /// 仅处理用户明确选中的单个文件或截图；没有目录扫描、自动上传或截图历史。
@@ -54,7 +56,7 @@ public enum DocumentContextService {
             guard data.count+count <= 16*1_048_576 else { throw DocumentContextError.tooLarge }
             data.append(contentsOf:buffer.prefix(count))
         }
-        let text: String, ocr: Bool
+        let text: String, extraction: DocumentText.Extraction
         if let image = CGImageSourceCreateWithData(data as CFData,nil), let type = CGImageSourceGetType(image), UTType(type as String)?.conforms(to:.image) == true {
             guard CGImageSourceGetCount(image) == 1,
                   let properties = CGImageSourceCopyPropertiesAtIndex(image,0,nil) as? [CFString:Any],
@@ -66,7 +68,7 @@ public enum DocumentContextService {
             // 未声明CPU支持的阶段保持Vision默认选择；不构造或强塞不支持的设备。
             cancellation.install(request); try Task.checkCancellation()
             try VNImageRequestHandler(cgImage:pixels).perform([request]); try Task.checkCancellation()
-            text = (request.results ?? []).compactMap{$0.topCandidates(1).first?.string}.joined(separator:"\n"); ocr = true
+            text = (request.results ?? []).compactMap{$0.topCandidates(1).first?.string}.joined(separator:"\n"); extraction = .imageOCR
         } else if data.starts(with:Data("%PDF-".utf8)) {
             guard let pdf = PDFDocument(data:data), !pdf.isLocked, pdf.pageCount <= 30 else { throw DocumentContextError.unsupported }
             var pages: [String] = [], bytes = 0
@@ -74,14 +76,15 @@ public enum DocumentContextService {
                 try Task.checkCancellation(); let page = pdf.page(at:index)?.string ?? ""
                 bytes += page.utf8.count; guard bytes <= 131_072 else { throw DocumentContextError.tooLarge }; pages.append(page)
             }
-            text = pages.joined(separator:"\n\n"); ocr = false
+            text = pages.joined(separator:"\n\n"); extraction = .pdfText
         } else {
             guard data.count <= 131_072, !data.contains(0), let value = String(data:data,encoding:.utf8) else { throw DocumentContextError.unsupported }
-            text = value; ocr = false
+            text = value; extraction = .text
         }
         guard !text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty else { throw DocumentContextError.noText }
         guard text.utf8.count <= 131_072 else { throw DocumentContextError.tooLarge }
-        return DocumentText(displayName:String(url.lastPathComponent.prefix(256)),text:text,usedOCR:ocr)
+        guard url.lastPathComponent.utf8.count <= 512 else { throw DocumentContextError.tooLarge }
+        return DocumentText(displayName:url.lastPathComponent,text:text,extraction:extraction)
     }
     @MainActor public static func captureRegion() async throws -> DocumentText {
         guard CGPreflightScreenCaptureAccess() else { throw DocumentContextError.screenPermissionRequired }

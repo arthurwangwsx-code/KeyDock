@@ -6,6 +6,10 @@
 
 桌面工作区组合运行、profile快捷键、设置应用、父子同库与有序阶段结果、取消／drain及恢复不重放已经接通；别名清除和文件补偿已修补。中文浅色／英文深色、窄卡片／宽表格及设置入口已观察并修复实际挤压。任务20.2／20.3完成工程范围，20.4实际AX／多屏、真实模型、完整视觉／辅助功能与长期可靠性仍开放；此前FAIL保留。
 
+后续alpha.10候选继续修补真实代码缺口：[准确输入与提交](implementation/ai-input-commit-2026-11-25.md)修复等价Unicode字节修改未更新revision、旧命令建议误采纳及输入法组字提交门禁，46项定向及Preview构建PASS。[导入来源](implementation/imported-text-context-2026-11-25.md)接通Tools／文档／OCR／MCP到AI草稿和三类运行的来源快照、联合接纳／预算、清除与迟到围栏；文本／PDF、合成HTTP和stdio MCP两版本回归，以及中英明暗原生子集PASS。仍未发布alpha.10或替换常规alpha.9，完整同源检查／CI／发行尚待当前源的单独记录。
+
+完整目标还存在代码义务：任务25的受信版本化能力目录及三个真实工具迁移，任务24.4的显式活动草稿关闭／cancel／drain；独立第三方MCP互通、真实API、AX／多屏、真实IME／VoiceOver、全应用视觉和驻留性能验收亦开放。不能把“只剩用户配置或授权”作为当前全产品结论。本轮常规alpha.9隐私页仍显示需要辅助功能授权，未更改TCC。
+
 ## 前序增量记录（历史时点）
 
 后续修补分支`fix/ui-semantics-and-text-sync`从master `703b9a1`创建，已实现任务13的文本字节同步、编辑器AX名称、计划时区与Launcher副标题，33项定向执行及Agent／计划中英深浅四组合等原生子集通过。前一候选`36812e0`的474 Swift／46 Python／587 key完整检查、Release构建及同源CI通过，但未发布。随后`57f308d`补URL运行／编辑隔离及工作区失败提示，27项定向执行和合成原生操作通过，共590个中英UI key；其core CI通过，完整本机检查却在OCR失败。增加轮次日志后真实提取首轮也失败，三个独立对照均未解决；未改变生产模式或门禁。alpha.8发行保持未放行，正式版本继续为alpha.7。详见[语义复查](implementation/ui-semantics-2026-11-25.md)、[URL编辑复查](implementation/url-action-editing-2026-11-25.md)及[OCR复发记录](implementation/ocr-recurrence-2026-11-25.md)。

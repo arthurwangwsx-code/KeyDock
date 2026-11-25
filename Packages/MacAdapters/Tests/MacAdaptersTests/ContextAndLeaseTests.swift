@@ -33,7 +33,7 @@ import CryptoKit
         let url = dir.appendingPathComponent("Synthetic.md")
         try Data("Synthetic 中文 input".utf8).write(to:url)
         let result = try await DocumentContextService.read(url)
-        #expect(result.text == "Synthetic 中文 input" && result.displayName == "Synthetic.md" && !result.usedOCR)
+        #expect(result.text == "Synthetic 中文 input" && result.displayName == "Synthetic.md" && !result.usedOCR && result.extraction == .text)
         try Data([0,1,2]).write(to:url)
         await #expect(throws:DocumentContextError.unsupported) { _ = try await DocumentContextService.read(url) }
         try Data(repeating:65,count:131_073).write(to:url)
@@ -47,7 +47,7 @@ import CryptoKit
         let view = NSTextView(frame:NSRect(x:0,y:0,width:320,height:100)); view.textStorage?.setAttributedString(text)
         try view.dataWithPDF(inside:view.bounds).write(to:url)
         let result = try await DocumentContextService.read(url)
-        #expect(result.text.contains("Synthetic PDF context") && !result.usedOCR)
+        #expect(result.text.contains("Synthetic PDF context") && !result.usedOCR && result.extraction == .pdfText)
         let task = Task { try Task.checkCancellation(); return try await DocumentContextService.read(url) }; task.cancel()
         if case .success = await task.result { Issue.record("Cancelled extraction unexpectedly succeeded") }
     }

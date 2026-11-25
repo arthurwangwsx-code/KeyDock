@@ -38,7 +38,7 @@ public struct SettingsRootView: View {
             .confirmationDialog(L("Clear finished tasks and idle drafts?"), isPresented: $confirmTaskClear) {
                 Button(L("Clear finished history"), role: .destructive) { Task { await store.clearFinishedHistory() } }
             } message: {
-                Text(L("This discards finished task output, idle unsaved AI drafts and command suggestions. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept."))
+                Text(L("This discards finished task output, idle unsaved AI drafts, command suggestions and the Tools text input with its source. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept."))
             }
             .confirmationDialog(L("Clear AI usage history?"), isPresented: $confirmUsageClear) {
                 Button(L("Clear AI usage history"), role: .destructive) { Task { await store.clearAIUsageHistory() } }

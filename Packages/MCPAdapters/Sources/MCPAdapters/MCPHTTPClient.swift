@@ -235,9 +235,7 @@ public actor MCPHTTPClient {
         try validateSelection(selection.source, capability: "prompts")
         guard promptCatalog?.revision == selection.catalogRevision,
               let prompt = promptCatalog?.prompts.first(where: { $0.name == selection.name }) else { throw MCPClientError.catalogChanged }
-        guard Set(arguments.keys).isSubset(of: Set(prompt.arguments.map(\.name))),
-              prompt.arguments.filter(\.required).allSatisfy({ arguments[$0.name] != nil }),
-              arguments.reduce(0, { $0 + $1.key.utf8.count + $1.value.utf8.count }) <= 65_536 else { throw MCPClientError.invalidArguments }
+        try prompt.validateArguments(arguments)
         let token = generation; activeCalls += 1
         defer { activeCalls -= 1 }
         let reply = try await rpc("prompts/get", params: ["name": .string(selection.name),

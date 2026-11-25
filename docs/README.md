@@ -20,6 +20,9 @@
 | [Agent与外部协议边界](technical/agent-protocol-boundaries.md) | MCP版本、来源授权、回路与ACP评估结果 |
 | [数据与权限](technical/data-and-permissions.md) | TCC、上下文、存储、采集与执行策略 |
 | [P1会话保留](technical/session-retention.md) | 已实现的总预算、元数据维护、清除和恢复围栏及待验收边界 |
+| [导入文本上下文](technical/imported-text-context.md) | 单槽来源、AI冻结、联合预算与清除；alpha.10候选 |
+| [导入来源实现复查](implementation/imported-text-context-2026-11-25.md) | 合成提取／MCP／AI隐私、失败接纳与原生观察边界 |
+| [AI输入提交复查](implementation/ai-input-commit-2026-11-25.md) | Unicode字节编辑、输入法组字门禁与保留的原始失败 |
 | [复用评估](technical/reuse-assessment.md) | AiBox/Ashot 可借鉴模块与迁移条件 |
 | [验证方案](technical/validation.md) | 合成测试、真实 Mac/API 验收及性能预算 |
 | [工程流水线](technical/release-pipeline.md) | 共用检查／调试／签名公证／安装回退／上传与回下载 |

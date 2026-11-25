@@ -180,30 +180,37 @@ extension WorkbenchModel {
         }
     }
     public func readMCPResource(_ id: UUID, uri:String,session:WorkspaceSession) {
-        guard let catalog = mcpResources[id], let selection = try? catalog.select(uri:uri) else { return }
-        let token = mcpGeneration, context = UUID(); session.contextGeneration = context
-        performMCPContext(id) { client,_ in
+        guard let catalog = mcpResources[id], let selection = try? catalog.select(uri:uri), let selectedName = catalog.resources.first(where:{$0.uri == uri})?.name else { return }
+        var context: UUID?
+        let token = mcpGeneration, sourceName = (configuration.mcpServers.first(where:{$0.id == id})?.name ?? L("MCP resource")) + " · " + selectedName
+        performMCPContext(id,prepare:{ context = self.beginTextContextImport(session); return context != nil }) { client,_ in
+            guard let context else { return }
             let result = try await client.readResource(selection:selection)
             guard !Task.isCancelled,!self.isShuttingDown,self.mcpGeneration == token,session.contextGeneration == context else { return }
-            session.toolsText = result.contents.map(\.text).joined(separator:"\n"); session.toolsSourceName = uri
-            self.onOpenWorkspace?(.tools)
+            if self.commitTextContext(result.contents.map(\.text).joined(separator:"\n"),kind:.mcpResource,name:sourceName,session:session,token:context,mcpSourceID:id) { self.onOpenWorkspace?(.tools) }
         }
     }
     public func readMCPPrompt(_ id: UUID,name:String,arguments:String,session:WorkspaceSession) {
-        guard let catalog = mcpPrompts[id], let selection = try? catalog.select(name:name) else { return }
-        let token = mcpGeneration, context = UUID(); session.contextGeneration = context
-        performMCPContext(id) { client,_ in
+        guard let catalog = mcpPrompts[id], let selection = try? catalog.select(name:name), let prompt = catalog.prompts.first(where:{$0.name == name}) else { return }
+        let values: [String:String]
+        do {
             guard arguments.utf8.count <= 65_536 else { throw MCPClientError.limitExceeded }
-            let values = try JSONDecoder().decode([String:String].self,from:Data(arguments.utf8))
+            values = try JSONDecoder().decode([String:String].self,from:Data(arguments.utf8))
+            try prompt.validateArguments(values)
+        } catch { settingsNoticeMessage = noticeKey("MCP content could not be loaded. Refresh the source and try again."); return }
+        var context: UUID?
+        let token = mcpGeneration, sourceName = (configuration.mcpServers.first(where:{$0.id == id})?.name ?? L("MCP prompt")) + " · " + name
+        performMCPContext(id,prepare:{ context = self.beginTextContextImport(session); return context != nil }) { client,_ in
+            guard let context else { return }
             let result = try await client.getPrompt(selection:selection,arguments:values)
             guard !Task.isCancelled,!self.isShuttingDown,self.mcpGeneration == token,session.contextGeneration == context else { return }
-            session.toolsText = result.messages.map{"["+$0.role.rawValue+"]\n"+$0.text}.joined(separator:"\n\n"); session.toolsSourceName = name
-            self.onOpenWorkspace?(.tools)
+            if self.commitTextContext(result.messages.map{"["+$0.role.rawValue+"]\n"+$0.text}.joined(separator:"\n\n"),kind:.mcpPrompt,name:sourceName,session:session,token:context,mcpSourceID:id) { self.onOpenWorkspace?(.tools) }
         }
     }
-    private func performMCPContext(_ id: UUID, operation:@escaping @MainActor (MCPHTTPClient,MCPExplicitSourceSelection) async throws->Void) {
+    private func performMCPContext(_ id: UUID, prepare:@MainActor ()->Bool = { true }, operation:@escaping @MainActor (MCPHTTPClient,MCPExplicitSourceSelection) async throws->Void) {
         guard !isShuttingDown,!mcpBusy,!mcpSessionDisabled.contains(id),let client = mcpClients[id],let source = configuration.mcpServers.first(where:{$0.id == id && $0.enabled}),source == client.configuration else { return }
         mcpBusy = true
+        guard prepare() else { mcpBusy = false; return }
         mcpConnectionTask = Task { [weak self] in
             guard let self else { return }; defer { mcpBusy = false; mcpConnectionTask = nil }
             do { try await operation(client,.init(serverID:id,configurationRevision:source.revision)); try Task.checkCancellation() }

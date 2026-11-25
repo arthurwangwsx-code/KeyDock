@@ -30,7 +30,7 @@ struct AIContentView: View {
                 }
             }
             HStack(spacing: 6) {
-                Text(task?.sourceApplication ?? task?.source?.title ?? draft.sourceTarget?.applicationName ?? draft.source.title)
+                Text(draft.inputSourceTitle)
                 Text("·"); Text(task?.modelName ?? (action?.modelOverride.isEmpty == false ? action!.modelOverride : (store.configuration.model.isEmpty ? L("No model configured") : store.configuration.model)))
             }.font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
             if needsConfiguration && task == nil { KDInlineNotice(L("Add an API endpoint and model in Settings. Your draft will stay here.")) }
@@ -46,6 +46,7 @@ struct AIContentView: View {
                 if !compact {
                     HStack {
                         Button(L("Use clipboard")) { store.useClipboardInput(draft) }
+                        Button(L("Clear input")) { draft.clearInput() }.disabled(draft.input.isEmpty && draft.inputProvenance == nil)
                         Button(L("Suggest CLI")) { store.performUserInputAction { store.generateCommandProposal(draft: draft) } }.disabled(!auxiliaryActionsConfigured)
                         Button(L("Read-only agent")) { store.performUserInputAction { store.runReadOnlyAgent(draft: draft) } }.disabled(!auxiliaryActionsConfigured)
                         Spacer()
@@ -54,6 +55,7 @@ struct AIContentView: View {
             }
             if compact && draft.input.isEmpty && task == nil { Text(L("No selected text. Enter text to begin.")).font(.caption).foregroundStyle(.secondary) }
             if let task {
+                Text(L("Run input") + " · " + task.inputSourceTitle).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                 HStack { Text(task.state).font(.caption).foregroundStyle(.secondary); Spacer() }
                 if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary, compact: compact) }
                 ScrollView {

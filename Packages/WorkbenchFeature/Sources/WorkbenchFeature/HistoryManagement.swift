@@ -60,6 +60,7 @@ extension WorkbenchModel {
     public func clearFinishedHistory() async {
         guard !isShuttingDown, !isClearingHistory else { return }
         isClearingHistory = true; historyGeneration &+= 1
+        clearTextContextInputs()
         let generation = historyGeneration
         let protected = executionReservations.union(taskHandles.keys)
         let candidates = tasks.filter { $0.finishedAt != nil && !protected.contains($0.id) }

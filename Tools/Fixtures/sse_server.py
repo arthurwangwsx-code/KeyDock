@@ -39,7 +39,8 @@ class FixtureServer(ThreadingHTTPServer):
                       "proposal_started": 0, "agent_requests": 0,
                       "agent_tool_messages": 0, "ordinary_tools_advertised": 0,
                       "authorization_seen": 0, "post_requests": 0,
-                      "limit_agent_requests": 0, "held_text_started": 0}
+                      "limit_agent_requests": 0, "held_text_started": 0,
+                      "context_label_leaks": 0, "context_body_requests": 0}
         self.proposal_release = threading.Event()
         self.text_release = threading.Event()
 
@@ -85,6 +86,10 @@ class Handler(BaseHTTPRequestHandler):
             self.connection.settimeout(5)
             body = self.rfile.read(length)
             self.server.increment("post_requests")
+            if b"synthetic-provenance-secret-name" in body:
+                self.server.increment("context_label_leaks")
+            if b"synthetic-explicit-context-body" in body:
+                self.server.increment("context_body_requests")
             if self.headers.get("Authorization"):
                 self.server.increment("authorization_seen")
             path = urlsplit(self.path).path
