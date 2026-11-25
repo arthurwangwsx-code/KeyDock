@@ -5,6 +5,7 @@ import CommandCore
 enum HostOperation: String, Hashable, Sendable, CaseIterable {
     case openApplication, activateWindow, runCommand, prepareAI, generateText
     case proposeCommand, runReadOnlyAgent, runAgent, copyText, replaceSelection, pasteClipboard, readClipboard, navigate, layoutWindow, importContext, captureScreen, revealFile, openURL
+    case applyDesktopWorkspace
     case cycleWindow, minimizeWindow, hideApplication, showApplication, showAllApplicationWindows, quitApplication
 }
 
@@ -50,6 +51,8 @@ enum HostActionCatalog {
             input = .application; output = .none; context = []; effects = [.activateApplication, .changeApplicationVisibility]
         case .activateWindow:
             input = .window; output = .none; context = [.window]; effects = [.activateWindow]
+        case .applyDesktopWorkspace:
+            input = .structuredData; output = .none; context = []; effects = [.modifyWindow, .activateApplication, .activateWindow, .changeApplicationVisibility]
         case .layoutWindow, .minimizeWindow:
             input = .window; output = .none; context = [.window]; effects = [.modifyWindow, .activateApplication]
         case .cycleWindow:

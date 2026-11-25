@@ -1,6 +1,6 @@
 # 桌面工作区建设方案
 
-这是原窗口域“工作区”能力的实现合同。alpha.8已提供独立定义管理，支持命名、有序应用／布局／屏幕策略和修订；完整批量布局执行与profile快捷键尚待接通。alpha.7不含这项增量。任务Workspace、命令集合和桌面工作区分别承担任务、单项入口与窗口组合职责。
+这是原窗口域“工作区”能力的实现合同。alpha.8已提供独立定义管理，支持命名、有序应用／布局／屏幕策略和修订。后续alpha.9候选已接通组合执行、逐项结果和profile快捷键；真实AX／多屏与完整系统资格仍待验收。alpha.7不含这项增量。任务Workspace、命令集合和桌面工作区分别承担任务、单项入口与窗口组合职责。
 
 ## 产品与持久定义
 
@@ -59,3 +59,15 @@ session持续覆盖准备／步骤间隙／布局／worker收口，显式close�
 需覆盖应用替换／多实例、同App换窗口不重绑、全部冻结后再写、第二项失败保留第一项事实、第三方焦点变化、屏幕变化、取消与worker drain、启动／布局unknown重启不重放，以及存储／快捷键回滚。
 
 模型、编辑器和合成端口可先独立推进；真实AX／多屏／快捷键必须另做当前Mac验收。本轮正式App仍显示AX未授权，不代授予。此方案不改变OCR或发行门禁，任务20仍需实现与验证；自定义动作删除和Agent／工作流保存反馈另在任务21跟踪。
+
+## 组合执行接通（alpha.9候选）
+
+DesktopWorkspaceRunner共用可注入端口和NativeDesktopWorkspaceRun适配。父intent及每个launch／focus／layout child intent均写入同一InvocationStore后才派发。父占一个活跃任务槽，child不另占UI槽；取消同步撤销group，真实worker与回执结束后才释放handle／父保护。FocusSession和拓扑快照先于旧worker drain建立，调用源屏幕在等待前只读冻结；原生运行复用同一session／snapshot，第三方短暂激活和拓扑代次变化也停止，不事后重选。
+
+先完成AX／显示器检查、全部应用inspect与全部已运行窗口prepare，再允许显式后台启动。缺失应用的初始窗口只在有界准备期观测，不发送Cmd+N、选第一窗口或冻结后改绑。全部准备好后统一复核。工作区布局逐次检查原冻结焦点窗口，单项入口默认合同不变。
+
+父回执新增可选DesktopWorkspaceRunResult，保存有序阶段枚举，不记录应用名称／PID／路径／窗口元数据。已确认结果与receiptUncertain分离，finish失败不会降为unknown；后续步骤停止。恢复先聚合父子再套历史预算，缺失child为unrecorded，不能推断notExecuted；旧快照不能覆盖本进程已确认结果。当前任务的应用显示名仅由调用目录冻结在内存，最多每项256字节，不写回执；恢复按有序编号显示。
+
+profile贡献真实descriptor／catalog，支持Launcher、设置应用与直接快捷键。失效热键按前缀拒绝并打开设置，不读取选区。快捷键复用既有注册／文件补偿；删除仍要求先移除快捷键／别名／收藏／集合引用。成功修改才取消对应旧运行，保存失败保留它。运行中设置提供Stop并禁用View result；仅隔离Preview提供进程内结果样例，不写回执或触发系统操作。
+
+本节更新当前候选状态，前面尚待接通的文字保留为alpha.8阶段记录，不代表该发行版本具备新执行器。检查见[本轮复查](../implementation/desktop-workspace-execution-2026-11-25.md)。

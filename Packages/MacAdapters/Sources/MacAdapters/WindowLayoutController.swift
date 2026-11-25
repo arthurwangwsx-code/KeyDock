@@ -21,7 +21,9 @@ public enum WindowLayoutError: Error { case unavailable, expired, busy, unsuppor
             guard let app = NSRunningApplication(processIdentifier: ref.pid), !app.isTerminated,
                   ref.launchDate != nil, app.launchDate == ref.launchDate else { throw WindowLayoutError.expired }
         }, displays: { (generation.current, Self.liveDisplays()) }, generationIsCurrent: { generation.current == $0 }, read: { try Self.readFrame($0.reference) },
-        checkWritable: { try Self.checkWritable($0.reference) }, write: { try Self.writeFrame($0, expected: $1, reference: $2.reference, lease: $3, submission: $4) }))
+        checkWritable: { try Self.checkWritable($0.reference) }, write: { try Self.writeFrame($0, expected: $1, reference: $2.reference, lease: $3, submission: $4) }, checkFocused: { target in
+            guard NSRunningApplication(processIdentifier: target.identity.pid)?.isActive == true, AX.equal(target.reference.element, AX.element(AX.application(target.identity.pid), kAXFocusedWindowAttribute)) else { throw WindowLayoutError.changed }
+        }))
     }
     init(environment: WindowLayoutEnvironment) { self.environment = environment }
     public func close() { closed = true; for cancel in cancellations.values { cancel() } }
@@ -31,6 +33,16 @@ public enum WindowLayoutError: Error { case unavailable, expired, busy, unsuppor
         let (generation, screens) = environment.displays()
         guard !screens.isEmpty, screens.allSatisfy({ $0.visibleFrame.valid }), Set(screens.map(\.id)).count == screens.count else { throw WindowLayoutError.unavailable }
         return WindowDisplaySnapshot(displays: screens, owner: owner, generation: generation)
+    }
+
+    /// 调用屏幕只读定位；源应用窗口不需要支持position/size写入。
+    public func displayID(containing target: DesktopWindowTarget, displays: WindowDisplaySnapshot) async throws -> String {
+        try validate(target, displays: displays)
+        let readFrame = environment.read
+        let worker = Task.detached { try readFrame(target) }
+        let frame = try await withTaskCancellationHandler { try await worker.value } onCancel: { worker.cancel() }
+        try Task.checkCancellation(); try validate(target, displays: displays)
+        return displays.displays[try WindowGeometry.displayIndex(for: frame, displays: displays.displays)].id
     }
 
     /// prepare只读，不能占用Restore基线、激活应用或提交lease。
@@ -61,9 +73,9 @@ public enum WindowLayoutError: Error { case unavailable, expired, busy, unsuppor
         guard frame.approximatelyEquals(plan.originalFrame) else { throw WindowLayoutError.changed }
     }
 
-    public func applyPrepared(_ plan: PreparedWindowLayout, lease: DesktopOperationLease) async throws {
+    public func applyPrepared(_ plan: PreparedWindowLayout, lease: DesktopOperationLease, requiresFocusedWindow: Bool = false) async throws {
         try lease.begin()
-        try await execute(plan, lease: lease)
+        try await execute(plan, lease: lease, requiresFocusedWindow: requiresFocusedWindow)
     }
     public func apply(_ layout: WindowLayout, target: DesktopWindowTarget, lease: DesktopOperationLease, restoreFocus: Bool = false) async throws {
         try lease.begin()
@@ -74,14 +86,15 @@ public enum WindowLayoutError: Error { case unavailable, expired, busy, unsuppor
         try await execute(plan, lease: lease)
     }
 
-    private func execute(_ plan: PreparedWindowLayout, lease: DesktopOperationLease) async throws {
+    private func execute(_ plan: PreparedWindowLayout, lease: DesktopOperationLease, requiresFocusedWindow: Bool = false) async throws {
         guard plan.displays.owner == owner else { throw WindowLayoutError.changed }
         try plan.claim(); try lease.check()
         let target = plan.target, ref = target.reference, key = key(for: ref)
         guard !active.contains(key) else { throw WindowLayoutError.busy }
         active.insert(key)
         let generationIsCurrent = environment.generationIsCurrent
-        let operation = UUID(), submission = WindowFrameSubmission(isCurrent: { generationIsCurrent(plan.displays.generation) })
+        let focused = environment.checkFocused
+        let operation = UUID(), submission = WindowFrameSubmission(checkFocus: { if requiresFocusedWindow { try focused(plan.target) } }, isCurrent: { generationIsCurrent(plan.displays.generation) })
         defer {
             // 只撤回本次尚未提交的候选基线；之前的布局／部分写入不被抹掉。
             if !submission.didSubmit, originals[key]?.operation == operation { originals[key] = nil; order.removeAll { $0 == key } }
@@ -171,6 +184,7 @@ public enum WindowLayoutError: Error { case unavailable, expired, busy, unsuppor
         try submission.check(); try lease.check(); try validateLiveReference(ref)
         guard AXUIElementSetAttributeValue(ref.element, kAXPositionAttribute as CFString, position) == .success,
               try readFrame(ref).approximatelyEquals(frame) else { throw WindowLayoutError.verificationFailed }
+        try submission.check()
     }
     nonisolated private static func validateLiveReference(_ ref: WindowReference) throws {
         guard AXIsProcessTrusted() else { throw DesktopError.accessibilityRequired }

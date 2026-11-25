@@ -2,6 +2,8 @@
 
 更新：2026-11-25。用户已授权在保留P0/P1验收义务的同时推进P2–P4。**完整产品仍为PARTIAL**；当前源码、真实系统验收、已发布版本分别记录，不能用代码或CI绿测替代日用验收。
 
+当前开发分支feature/desktop-workspace-execution已接通alpha.9候选：多应用工作区运行、profile快捷键、设置应用和有序阶段结果，父子同库及完整结果恢复、旧快照／取消／排水围栏已补齐。111项／13 suites定向执行通过，含profile补偿、总任务预算与最终增量；尚未发布。原生中文浅色／英文深色、窄卡片／宽表格与设置入口已观察并修补实际挤压，完整工程与真实AX／多屏验收继续单独记录，见[本轮复查](implementation/desktop-workspace-execution-2026-11-25.md)。
+
 当前[alpha.8](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.8)已公开并安装，精确源`009532663eeac2f1e62461975060cce5adc29813`：601 Swift／46 Python／660 key完整本机PASS（含原生产OCR双轮），同源feature／master core及优化构建、App／DMG公证装订、原子替换、公开回下载和发行审计均PASS；实际About显示alpha.8 (8)，旧alpha.7与回退回执保留。见[发行证据](implementation/alpha8-release-2026-11-25.md)。此前OCR FAIL、冷首轮长耗时及未确认根因保留，长期可靠性仍PARTIAL；工作区组合运行／profile热键及真实系统／模型／完整视觉验收仍待完成。
 
 后续修补分支`fix/ui-semantics-and-text-sync`从master `703b9a1`创建，已实现任务13的文本字节同步、编辑器AX名称、计划时区与Launcher副标题，33项定向执行及Agent／计划中英深浅四组合等原生子集通过。前一候选`36812e0`的474 Swift／46 Python／587 key完整检查、Release构建及同源CI通过，但未发布。随后`57f308d`补URL运行／编辑隔离及工作区失败提示，27项定向执行和合成原生操作通过，共590个中英UI key；其core CI通过，完整本机检查却在OCR失败。增加轮次日志后真实提取首轮也失败，三个独立对照均未解决；未改变生产模式或门禁。alpha.8发行保持未放行，正式版本继续为alpha.7。详见[语义复查](implementation/ui-semantics-2026-11-25.md)、[URL编辑复查](implementation/url-action-editing-2026-11-25.md)及[OCR复发记录](implementation/ocr-recurrence-2026-11-25.md)。

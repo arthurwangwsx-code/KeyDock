@@ -12,8 +12,8 @@ public enum ShortcutPlan {
     public static func entries(_ configuration: AppConfiguration) -> [ShortcutPlanEntry] {
         var result: [ShortcutPlanEntry] = []
         if let binding = configuration.launcherShortcut { result.append(.init(id: 1, binding: binding, commandID: nil)) }
-        // 定义管理阶段不注册尚未接通执行器的profile热键；管理入口仍可正常绑定。
-        var commands = configuration.commandShortcuts.filter { !$0.key.hasPrefix("ai.") && !$0.key.hasPrefix("desktop-workspace.") }
+        // 保存的profile热键走专用桌面入口，不经过通用Launcher选区捕获。
+        var commands = configuration.commandShortcuts.filter { !$0.key.hasPrefix("ai.") }
         for action in configuration.aiActions {
             if let binding = action.shortcut { commands["ai." + action.id.uuidString] = binding }
         }

@@ -11,14 +11,26 @@ extension WorkbenchModel {
     func restoreHistorySnapshot(cli: [InvocationReceipt], ai: [InvocationReceipt], generation: UInt64) {
         guard !isShuttingDown, !isClearingHistory, historyGeneration == generation else { return }
         let aiIDs = Set(ai.map(\.id))
-        let merged = (cli + ai).sorted {
+        let workspaceParents = Set(cli.filter { $0.desktopWorkspaceRun != nil }.map(\.id))
+        let topLevelCLI = cli.filter { $0.desktopWorkspace.map { !workspaceParents.contains($0.parentID) } ?? true }
+        let merged = (topLevelCLI + ai).sorted {
             // 崩溃后的未知结果优先可见，避免长任务被大量后来完成的短任务挤出首屏历史。
             if ($0.state == .interrupted) != ($1.state == .interrupted) { return $0.state == .interrupted }
             if $0.startedAt != $1.startedAt { return $0.startedAt > $1.startedAt }
             return $0.id.uuidString < $1.id.uuidString
         }
         for receipt in merged.prefix(sessionLimits.tasks) {
-            if aiIDs.contains(receipt.id) { restoreAIReceipt(receipt) } else { restoreReceipt(receipt) }
+            // 恢复读取与清理会await；旧快照不能覆盖本进程随后确认的结果。
+            guard !tasks.contains(where: { $0.id == receipt.id }) else { continue }
+            if aiIDs.contains(receipt.id) { restoreAIReceipt(receipt) } else {
+                restoreReceipt(receipt)
+                if let report = DesktopWorkspaceRunResult.recover(parent: receipt, children: cli), let index = tasks.firstIndex(where: { $0.id == receipt.id }) {
+                    tasks[index].titleKey = "Desktop workspace"
+                    tasks[index].desktopWorkspaceID = receipt.desktopWorkspaceRun?.workspaceID
+                    tasks[index].desktopWorkspaceResult = report
+                    tasks[index].noticeMessage = desktopWorkspaceNotice(report)
+                }
+            }
         }
     }
 

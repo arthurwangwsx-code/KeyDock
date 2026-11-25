@@ -100,7 +100,7 @@ extension WorkbenchModel {
         var bytes = TaskTextLimits.inputBytes + 1_024, snapshots: [ObjectIdentifier: TargetSnapshot] = [:]
         func include(_ snapshot: TargetSnapshot?) { if let snapshot { snapshots[ObjectIdentifier(snapshot)] = snapshot } }
         for task in tasks where !taskIDs.contains(task.id) {
-            let metadata = task.title.utf8.count + task.noticeMessage.retainedByteCount + (task.modelName?.utf8.count ?? 0) + (task.sourceApplication?.utf8.count ?? 0)
+            let metadata = task.title.utf8.count + task.noticeMessage.retainedByteCount + (task.modelName?.utf8.count ?? 0) + (task.sourceApplication?.utf8.count ?? 0) + task.desktopWorkspaceLabels.values.reduce(0) { $0 + $1.utf8.count } + (task.desktopWorkspaceResult == nil ? 0 : 4_096)
             bytes += task.output.utf8.count + metadata
             if executionReservations.contains(task.id) {
                 bytes += max(0, TaskTextLimits.outputBytes - task.output.utf8.count) + max(0, 16_384 - metadata) + TaskTextLimits.inputBytes

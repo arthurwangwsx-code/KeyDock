@@ -97,7 +97,8 @@ extension WorkbenchModel {
         cancelledTaskIDs.insert(id)
         cancelApprovals(runID: id)
         cancelWorkflowInputs(runID: id)
-        if let lease = desktopLeases[id] { lease.revoke(); taskHandles[id]?.cancel() }
+        if let run = desktopWorkspaceGroups[id] { run.group.revoke(); taskHandles[id]?.cancel() }
+        else if let lease = desktopLeases[id] { lease.revoke(); taskHandles[id]?.cancel() }
         else if aiTaskIDs.contains(id) { taskHandles[id]?.cancel() }
         else { Task { await processRunner.cancel(id) } }
     }

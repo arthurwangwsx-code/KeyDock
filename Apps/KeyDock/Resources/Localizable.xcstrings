@@ -49,6 +49,22 @@
         }
       }
     },
+    "Browser sample": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browser sample"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浏览器样例"
+          }
+        }
+      }
+    },
     "Clipboard history": {
       "localizations": {
         "en": {
@@ -141,6 +157,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "编辑"
+          }
+        }
+      }
+    },
+    "Editor sample": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editor sample"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑器样例"
           }
         }
       }
@@ -269,6 +301,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "新建命令"
+          }
+        }
+      }
+    },
+    "Notes sample": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes sample"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "笔记样例"
           }
         }
       }
@@ -445,6 +493,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "示例剪贴板历史"
+          }
+        }
+      }
+    },
+    "Sample workspace results": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample workspace results"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区结果样例"
           }
         }
       }

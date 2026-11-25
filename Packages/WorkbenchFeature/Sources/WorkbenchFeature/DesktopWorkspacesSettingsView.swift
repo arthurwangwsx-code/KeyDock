@@ -8,19 +8,36 @@ struct DesktopWorkspacesSettingsView: View {
     @State private var removing: SavedDesktopWorkspace?
     var body: some View {
         Section(L("Desktop workspaces")) {
-            Text(L("Save an ordered group of applications and window layouts. Applying workspaces is not available yet; saving does not launch or move applications.")).font(.callout).foregroundStyle(.secondary)
+            Text(L("Apply an ordered group of applications and window layouts, or assign a direct shortcut. Saving a definition does not launch or move applications.")).font(.callout).foregroundStyle(.secondary)
             if !store.desktopWorkspacesWritable { KDInlineNotice(L("Desktop workspaces are read-only. Existing data has been preserved.")) }
             ForEach(store.desktopWorkspaces) { value in
-                HStack(spacing: 12) {
-                    Image(systemName: "rectangle.3.group").foregroundStyle(.tint).accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(value.name).fontWeight(.medium)
-                        Text(L("Applications") + ": \(value.entries.count) · " + L("Saved version") + ": \(value.revision)").font(.caption).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "rectangle.3.group").foregroundStyle(.tint).accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(value.name).fontWeight(.medium).lineLimit(2)
+                            Text(L("Applications") + ": \(value.entries.count) · " + L("Saved version") + ": \(value.revision)").font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer(minLength: 0)
                     }
-                    Spacer()
-                    Button(L("Edit")) { session.beginDesktopWorkspace(value, in: store) }.disabled(!store.desktopWorkspacesWritable)
-                    Button(L("Remove"), role: .destructive) { removing = value }.accessibilityLabel(L("Remove") + " " + value.name).disabled(!store.desktopWorkspacesWritable)
+                    HStack {
+                        if let item = store.catalog.first(where: { $0.id == value.commandID }) {
+                            Button(L("Apply workspace")) { store.execute(item) }.disabled(store.isShuttingDown || store.tasks.contains(where: { $0.desktopWorkspaceID == value.id && $0.isRunning }))
+                            Button(L("Shortcut")) { store.onOpenShortcutSettings?(item) }
+                        }
+                        Spacer()
+                        Button(L("Edit")) { session.beginDesktopWorkspace(value, in: store) }.disabled(!store.desktopWorkspacesWritable)
+                        Button(L("Remove"), role: .destructive) { removing = value }.accessibilityLabel(L("Remove") + " " + value.name).disabled(!store.desktopWorkspacesWritable)
+                    }
                 }.padding(.vertical, 7)
+                if let task = store.tasks.first(where: { $0.desktopWorkspaceID == value.id }) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) { Text(task.state).font(.caption.weight(.medium)); if !task.notice.isEmpty { Text(task.notice).font(.caption).foregroundStyle(.secondary) } }
+                        Spacer()
+                        if task.canCancel { Button(L("Stop")) { store.cancelTask(task.id) } }
+                        Button(L("View result")) { store.onOpenWorkspace?(.tasks(task.id)) }.disabled(task.isRunning)
+                    }.padding(.bottom, 6)
+                }
             }
             if store.desktopWorkspaces.isEmpty { Text(L("No desktop workspaces yet")).foregroundStyle(.secondary) }
             Button { session.beginDesktopWorkspace(in: store) } label: { Label(L("Add desktop workspace"), systemImage: "plus") }

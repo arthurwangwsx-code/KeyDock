@@ -194,7 +194,7 @@ import KeyDockUI
         panel.contentView = KDLauncherSurface.make(root: LauncherView(store: store, session: launcherSession), review: visualReview)
         panel.onEscape = { [weak self] in
             if self?.launcherSession.actionsVisible == true { self?.launcherSession.actionsVisible = false }
-            else { self?.dismissLauncher(restore: true) }
+            else { self?.store.cancelDesktopWorkspaceRuns(); self?.dismissLauncher(restore: true) }
         }
         return panel
     }
@@ -240,6 +240,20 @@ import KeyDockUI
     }
     private func runDesktopAction(_ item: CommandItem, caller: ExecutionCaller) {
         guard !store.isShuttingDown else { return }
+        if store.isDesktopWorkspace(item) {
+            revokeDesktopInvocations()
+            guard !safeSmoke, let app = NSWorkspace.shared.frontmostApplication else { store.showError(DesktopError.accessibilityRequired); store.settingsNotice = store.launcherNotice; return }
+            let source = TargetIdentity(pid: app.processIdentifier, launchDate: app.launchDate, name: "")
+            let invokingWindow = [launcher, settings, workspace].compactMap { $0 }.first { $0.isKeyWindow }
+            let display = app.processIdentifier == ProcessInfo.processInfo.processIdentifier
+                ? (invokingWindow?.screen?.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.stringValue : nil
+            let launcherWasVisible = launcher?.isVisible == true
+            var hidden = false
+            _ = store.runDesktopWorkspace(item, source: source, invocationDisplayID: display, caller: caller) { [weak self] in
+                if launcherWasVisible && !hidden { hidden = true; self?.dismissLauncher(restore: false) }
+            }
+            return
+        }
         let inherited = launcher?.isKeyWindow == true && NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier
         let identity = inherited ? originalIdentity : store.desktop.frontmostTarget()
         let isCycle = item.payload == "window-command.focusNext" || item.payload == "window-command.focusPrevious"
@@ -261,6 +275,7 @@ import KeyDockUI
         dismissLauncher(restore: false)
     }
     private func revokeDesktopInvocations(keepingCyclesFor identity: TargetIdentity? = nil) {
+        store.cancelDesktopWorkspaceRuns()
         for invocation in desktopInvocations.values {
             if let identity, invocation.isWindowCycle, invocation.source?.pid == identity.pid, invocation.source?.launchDate == identity.launchDate { continue }
             invocation.lease.revoke()
@@ -507,6 +522,8 @@ import KeyDockUI
             let demo = NSMenuItem(title: AppL("Sample clipboard history"), action: #selector(openClipboardDemoAction), keyEquivalent: "")
             demo.target = self; previewMenu.addItem(demo)
             if visualReview.allowsChanges {
+                let workspaceSample = NSMenuItem(title: AppL("Sample workspace results"), action: #selector(openWorkspaceResultsDemoAction), keyEquivalent: "")
+                workspaceSample.target = self; previewMenu.addItem(workspaceSample)
                 let samples = NSMenuItem(title: AppL("Visual samples (KeyDock controls)"), action: nil, keyEquivalent: "")
                 let presets = NSMenu(title: samples.title)
                 for (preset, title) in [(KDVisualReviewPreset.system, AppL("Follow system visuals")), (.contrast, AppL("Higher contrast sample")), (.opaque, AppL("Opaque surface sample")), (.motion, AppL("Reduced motion sample")), (.all, AppL("All visual samples"))] {
@@ -518,6 +535,20 @@ import KeyDockUI
             let previewItem = NSMenuItem(); previewItem.submenu = previewMenu; main.addItem(previewItem)
         }
         NSApp.mainMenu = main
+    }
+    @objc private func openWorkspaceResultsDemoAction() {
+        #if KEYDOCK_PREVIEW
+        guard safeSmoke, visualReview.allowsChanges, !store.isShuttingDown,
+              let id = UUID(uuidString: "ED000000-0000-4000-8000-000000000001") else { return }
+        var result = DesktopWorkspaceRunResult(entryIDs: (0..<3).map { _ in UUID() })
+        result.entries[0].launch = .notRequired; result.entries[0].focus = .confirmed; result.entries[0].layout = .confirmed
+        result.entries[1].launch = .confirmed; result.entries[1].focus = .confirmed; result.entries[1].layout = .unknown
+        var task = RunningTaskItem(id: id, title: AppL("Sample workspace results"), state: .interrupted, finishedAt: Date())
+        task.desktopWorkspaceResult = result
+        task.desktopWorkspaceLabels = Dictionary(uniqueKeysWithValues: zip(result.entries.map(\.entryID), [AppL("Browser sample"), AppL("Editor sample"), AppL("Notes sample")]))
+        store.tasks.removeAll { $0.id == id }; store.tasks.insert(task, at: 0)
+        openWorkspace(.tasks(id))
+        #endif
     }
     @objc private func openClipboardDemoAction() { loadClipboardDemo() }
     @objc private func visualPresetAction(_ sender: NSMenuItem) {
@@ -574,6 +605,7 @@ import KeyDockUI
             HotkeyDefinition(id: entry.id, binding: entry.binding) { [weak self] in
                 guard let self else { return }
                 if entry.commandID == "utility.clipboard" { self.presentClipboard() }
+                else if let command = entry.commandID, command.hasPrefix("desktop-workspace.") { self.store.performDesktopWorkspaceShortcut(id: command) }
                 else if let command = entry.commandID, self.store.isDesktopCommand(command) { self.store.desktopShortcut(command) }
                 else if entry.commandID == "utility.desktop-workspaces" { self.store.performCommand(id: "utility.desktop-workspaces") }
                 else if let command = entry.commandID, command.hasPrefix("workflow.") {

@@ -69,7 +69,8 @@ extension WorkbenchModel {
             if let index = next.firstIndex(where: { $0.id == value.id }) { next[index] = value }
             else { next.append(value) }
             try storage.save(next)
-            desktopWorkspaces = storage.workspaces; desktopWorkspacesWritable = storage.writable
+            cancelDesktopWorkspaceRuns(definitionID: candidate.id)
+            desktopWorkspaces = storage.workspaces; desktopWorkspacesWritable = storage.writable; rebuildCatalog()
             settingsNoticeMessage = storage.writable ? .none : noticeKey("Workspace definitions were saved, but a recovery file remains. Further changes are disabled until checked.")
             return true
         } catch {
@@ -89,7 +90,8 @@ extension WorkbenchModel {
         }
         do {
             try storage.save(desktopWorkspaces.filter { $0.id != reviewed.id })
-            desktopWorkspaces = storage.workspaces; desktopWorkspacesWritable = storage.writable
+            cancelDesktopWorkspaceRuns(definitionID: reviewed.id)
+            desktopWorkspaces = storage.workspaces; desktopWorkspacesWritable = storage.writable; rebuildCatalog()
             settingsNoticeMessage = storage.writable ? .none : noticeKey("Workspace definitions were saved, but a recovery file remains. Further changes are disabled until checked.")
             return true
         } catch {

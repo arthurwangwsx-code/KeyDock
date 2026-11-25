@@ -120,27 +120,59 @@ import MacAdapters
             #expect(session.desktopWorkspaceEditor === second && store.desktopWorkspaces.isEmpty)
         }
     }
-    @Test func onlyTheManagementEntryCanBeBoundUntilExecutionIsConnected() async throws {
+    @Test func profilesHaveDirectCatalogShortcutsAndReferencesBlockDeletion() async throws {
         try await withStore { store, _, _ in
             let session = SettingsSession(store: store), draft = try prepare(in: session, store: store)
             #expect(session.saveDesktopWorkspaceEdit(draft.id, in: store))
             let value = try #require(store.desktopWorkspaces.first), manager = try #require(store.catalog.first { $0.id == "utility.desktop-workspaces" })
-            #expect(!store.catalog.contains { $0.id == value.commandID })
+            #expect(store.catalog.contains { $0.id == value.commandID })
+            let profile = try #require(store.catalog.first { $0.id == value.commandID })
+            #expect(store.isDesktopCommand(profile.id) && ShortcutCategory.windows.contains(profile) && !ShortcutCategory.tools.contains(profile))
+            var desktopInvocation: String?; store.onDesktopAction = { item, _ in desktopInvocation = item.id }
+            store.desktopShortcut(profile.id); #expect(desktopInvocation == profile.id && store.tasks.isEmpty)
             #expect(ShortcutCategory.windows.contains(manager) && !ShortcutCategory.tools.contains(manager))
             var opened: SettingsPane?; store.onOpenSettings = { opened = $0 }
             store.performCommand(id: manager.id)
             #expect(opened == .desktopWorkspaces && store.tasks.isEmpty)
+            store.onShortcutConfigurationChanged = { _ in }
             let registered = store.setShortcut(HotkeyBinding(keyCode: 2), for: value.commandID)
-            #expect(!registered)
+            #expect(registered)
             var config = store.configuration; config.commandShortcuts[value.commandID] = .init(keyCode: 2)
-            #expect(!ShortcutPlan.entries(config).contains { $0.commandID == value.commandID })
+            #expect(ShortcutPlan.entries(config).contains { $0.commandID == value.commandID })
             store.onShortcutConfigurationChanged = { _ in }
             #expect(store.setShortcut(.init(keyCode: 3), for: manager.id))
             #expect(store.directShortcuts.contains { $0.0 == manager.id })
+            #expect(!store.removeDesktopWorkspace(value))
+            #expect(store.setShortcut(nil, for: value.commandID))
             store.configuration.preferences.favorites.insert(value.commandID)
             #expect(!store.removeDesktopWorkspace(value))
             store.configuration.preferences.favorites.remove(value.commandID)
             #expect(store.removeDesktopWorkspace(value))
+        }
+    }
+
+    @Test func staleProfileShortcutUsesVisibleSettingsFailureWithoutGenericLauncherCapture() async throws {
+        try await withStore { store, _, _ in
+            var pane: SettingsPane?, routed = false
+            store.onOpenSettings = { pane = $0 }; store.onDesktopAction = { _,_ in routed = true }
+            store.performDesktopWorkspaceShortcut(id: "desktop-workspace." + UUID().uuidString)
+            #expect(pane == .desktopWorkspaces && !routed && !store.settingsNotice.isEmpty && store.tasks.isEmpty)
+        }
+    }
+    @Test func saveFailureDoesNotCancelLiveSnapshotButSuccessfulRevisionDoes() async throws {
+        try await withStore { store, fault, _ in
+            let session = SettingsSession(store: store), draft = try prepare(in: session, store: store)
+            #expect(session.saveDesktopWorkspaceEdit(draft.id, in: store))
+            let original = try #require(store.desktopWorkspaces.first), item = try #require(store.catalog.first { $0.id == original.commandID })
+            let run = UUID(), group = DesktopOperationGroup()
+            store.desktopWorkspaceGroups[run] = (original.id,group)
+            let edited = try SavedDesktopWorkspace(id: original.id, revision: original.revision, name: "Synthetic new revision", entries: original.entries)
+            fault.stage = .afterCommit
+            #expect(!store.saveDesktopWorkspace(edited, expectedRevision: original.revision) && group.isCurrent)
+            #expect(store.catalog.contains(item))
+            #expect(store.saveDesktopWorkspace(edited, expectedRevision: original.revision) && !group.isCurrent)
+            #expect(store.catalog.first { $0.id == original.commandID }?.objectRevision != item.objectRevision)
+            store.desktopWorkspaceGroups[run] = nil
         }
     }
 

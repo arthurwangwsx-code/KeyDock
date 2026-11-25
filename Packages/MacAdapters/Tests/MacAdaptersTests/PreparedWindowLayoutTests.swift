@@ -30,6 +30,7 @@ private final class LayoutFixture: @unchecked Sendable {
         var expired: Set<pid_t> = []
         var unwritable: Set<pid_t> = []
         var writes: [pid_t] = []
+        var focusChanged = false
         var failBeforeWrite = false
         var failAfterSubmission = false
         var simulatePriorSubmission = false
@@ -64,6 +65,8 @@ private final class LayoutFixture: @unchecked Sendable {
             }
             try afterSubmission?.wait(); try lease.check(); try submission.check()
             self.withState { $0.frames[target.identity.pid] = destination }
+        }, checkFocused: { _ in
+            guard !self.withState({ $0.focusChanged }) else { throw WindowLayoutError.changed }
         }))
     }
     func target(_ pid: pid_t = 41001) -> DesktopWindowTarget {
@@ -73,6 +76,20 @@ private final class LayoutFixture: @unchecked Sendable {
 
 /// 仅合成窗口、屏幕与worker；不读个人窗口，不请求系统权限。
 @Suite @MainActor struct PreparedWindowLayoutTests {
+    @Test func workspaceFocusChangeBeforeFrameSubmissionDoesNotMoveFrozenWindow() async throws {
+        let fixture = LayoutFixture(), controller = fixture.controller()
+        let plan = try await controller.prepare(.leftHalf, target: fixture.target(), displays: controller.captureDisplaySnapshot())
+        fixture.withState { $0.focusChanged = true }
+        let lease = DesktopOperationLease()
+        await #expect(throws: WindowLayoutError.changed) { try await controller.applyPrepared(plan, lease: lease, requiresFocusedWindow: true) }
+        #expect(!lease.didSubmit && fixture.withState { $0.writes.isEmpty })
+    }
+    @Test func directInvocationDisplayLookupDoesNotRequireSourceResizable() async throws {
+        let fixture = LayoutFixture(), controller = fixture.controller()
+        fixture.withState { $0.unwritable.insert(41001) }
+        #expect(try await controller.displayID(containing: fixture.target(), displays: controller.captureDisplaySnapshot()) == "primary")
+    }
+
     @Test func preparationIsReadOnlyAndCannotCreateRestoreHistory() async throws {
         let fixture = LayoutFixture(), target = fixture.target(), controller = fixture.controller()
         let plan = try await controller.prepare(.rightHalf, target: target, displays: controller.captureDisplaySnapshot())

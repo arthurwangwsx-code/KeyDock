@@ -7,7 +7,7 @@ extension WorkbenchModel {
     public func isDesktopCommand(_ id: String) -> Bool { catalog.first(where: { $0.id == id }).map { $0.kind == .application || isDesktopItem($0) } ?? false }
     public func desktopShortcut(_ id: String) { if let item = catalog.first(where: { $0.id == id }), isDesktopCommand(id) { onDesktopAction?(item, .shortcut) } }
     func isDesktopItem(_ item: CommandItem) -> Bool {
-        item.payload.hasPrefix("window-layout.") || item.payload.hasPrefix("window-command.") || item.payload.hasPrefix("application-action.")
+        isDesktopWorkspace(item) || item.payload.hasPrefix("window-layout.") || item.payload.hasPrefix("window-command.") || item.payload.hasPrefix("application-action.")
     }
     public var configurableApplications: [CommandItem] { catalog.filter { $0.kind == .application } }
     @discardableResult public func saveApplicationAction(_ action: SavedApplicationAction) -> Bool {
@@ -57,12 +57,15 @@ extension WorkbenchModel {
                 availableContext: needsWindow ? [.window] : [], caller: caller, invocation: id)
         } catch { showError(error); return nil }
         guard reserveExecution(id) else { return nil }
+        let previousWorkspaceRuns = desktopWorkspaceGroups.keys.compactMap { taskHandles[$0] }
+        cancelDesktopWorkspaceRuns()
         desktopLeases[id] = lease
         tasks.insert(RunningTaskItem(id: id, title: item.title, state: .queued), at: 0)
         registerActivity(id, commandID: item.id, category: needsWindow ? .window : .application)
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
             defer { desktopLeases[id] = nil; onDesktopActionFinished?(id); finishExecutionReservation(id) }
+            for handle in previousWorkspaceRuns { await handle.value }
             var result: DesktopControlOutcome
             var failureReason = "unavailable"
             do {

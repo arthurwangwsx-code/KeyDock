@@ -92,6 +92,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     let windowLayouts = WindowLayoutController()
     let windowCommands = WindowCommandController()
     let applicationControl: ApplicationControlService
+    let workspaceApplications: DesktopApplicationPreparationService
+    lazy var desktopWorkspaceRunner = DesktopWorkspaceRunner(desktop: desktop, applications: workspaceApplications, layouts: windowLayouts)
+    var desktopWorkspaceGroups: [UUID: (definitionID: UUID, group: DesktopOperationGroup)] = [:]
     let applicationActionStore: ApplicationActionStore?
     @Published public internal(set) var applicationActions: [SavedApplicationAction] = []
     @Published public internal(set) var applicationActionsWritable = false
@@ -180,6 +183,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         let desktop = DesktopService(applicationCatalog: applicationCatalog ?? ApplicationCatalog())
         self.desktop = desktop
         applicationControl = ApplicationControlService(catalog: desktop.applicationCatalog)
+        workspaceApplications = DesktopApplicationPreparationService(catalog: desktop.applicationCatalog)
         self.applicationLauncher = applicationLauncher ?? { try await desktop.launchApplication($0) }
         self.allowContextCapture = allowContextCapture
         self.clipboardWriter = clipboardWriter ?? { try ClipboardMonitor.copy($0) }
@@ -264,6 +268,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     }
     public func shutdown() {
         isShuttingDown = true; monitor.stop(); desktop.applicationCatalog.stop()
+        cancelDesktopWorkspaceRuns(); workspaceApplications.close()
         windowLayouts.close()
         windowCommands.close()
         for lease in desktopLeases.values { lease.revoke() }
@@ -312,12 +317,14 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         let snippets = configuration.snippets.map { CommandItem(id:"snippet."+$0.id.uuidString,title:$0.name,subtitle:L("Snippet"),kind:.utility,payload:"snippet."+$0.id.uuidString) }
         let web = configuration.webActions.map { CommandItem(id:"web."+$0.id.uuidString,title:$0.name,subtitle:L("URL action"),kind:.utility,payload:"web."+$0.id.uuidString) }
         let collections = configuration.collections.map { CommandItem(id:"collection."+$0.id.uuidString,title:$0.name,subtitle:L("Command collection"),kind:.utility,payload:"collection."+$0.id.uuidString) }
-        return saved + ai + builtins + layouts + windowActions + appActions + additional + workflows + snippets + web + collections
+        return saved + ai + builtins + layouts + windowActions + appActions + additional + workflows + snippets + web + collections + desktopWorkspaces.map(desktopWorkspaceItem)
     }
     func rebuildCatalog() { catalog = catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
     public func execute(_ item: CommandItem, caller: ExecutionCaller = .user) {
         guard !isShuttingDown else { launcherNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return }
         if isDesktopItem(item) { onDesktopAction?(item, caller); return }
+        let previousWorkspaceRuns = desktopWorkspaceGroups.keys.compactMap { taskHandles[$0] }
+        cancelDesktopWorkspaceRuns()
         invalidateLauncherReplies()
         configuration.preferences.recent[item.id] = Date(); save()
         switch item.kind {
@@ -326,6 +333,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             let replyGeneration = launcherReplyGeneration, actionStarted = Date()
             Task {
                 do {
+                    for handle in previousWorkspaceRuns { await handle.value }
+                    guard !isShuttingDown, launcherReplyGeneration == replyGeneration else { return }
                     let launch = try await applicationLauncher(item)
                     guard !isShuttingDown, launcherReplyGeneration == replyGeneration else { return }
                     guard launch.activate() else {
@@ -555,8 +564,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         if id.hasPrefix("ai."), let action = configuration.aiActions.first(where: { "ai." + $0.id.uuidString == id }) { return action.shortcut }; return configuration.commandShortcuts[id]
     }
     @discardableResult public func setShortcut(_ binding: HotkeyBinding?, for id: String) -> Bool {
-        if binding != nil && id.hasPrefix("desktop-workspace.") {
-            settingsNoticeMessage = noticeKey("Workspace execution shortcuts are not available yet."); return false
+        if binding != nil && id.hasPrefix("desktop-workspace.") && !desktopWorkspaces.contains(where: { $0.commandID == id }) {
+            settingsNoticeMessage = noticeKey("The shortcut target is no longer available"); return false
         }
         var next = configuration
         if id.hasPrefix("ai."), let i = next.aiActions.firstIndex(where: { "ai." + $0.id.uuidString == id }) { next.aiActions[i].shortcut = binding; next.commandShortcuts[id] = nil }

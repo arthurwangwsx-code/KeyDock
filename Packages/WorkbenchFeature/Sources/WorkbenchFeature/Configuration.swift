@@ -122,6 +122,9 @@ public struct RunningTaskItem: Identifiable {
         get { noticeMessage.rendered(maximumBytes: 8_192) }
         set { noticeMessage = .verbatim(newValue) }
     }
+    public var desktopWorkspaceLabels: [UUID: String] = [:]
+    public var desktopWorkspaceID: UUID?
+    public var desktopWorkspaceResult: DesktopWorkspaceRunResult?
     public var restoredFromReceipt = false
     public var isRunning: Bool { finishedAt == nil }
     public var canCancel: Bool { isRunning && status != .handoffPending }

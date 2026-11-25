@@ -70,7 +70,7 @@ public struct WorkspaceView: View {
                         if task.canCancel, store.agentRunDefinitions[task.id] != nil { Button(L("Pause")) { store.pauseAgent(task.id) } }
                         if task.canCancel { Button(L("Stop")) { store.cancelTask(task.id) } }
                         if !task.isRunning, store.agentRunDefinitions[task.id] != nil, let draftID = task.draftID, store.drafts[draftID] != nil { Button(L("Start new attempt")) { restartID = task.id } }
-                        KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }.disabled(task.output.isEmpty)
+                        if task.desktopWorkspaceResult == nil { KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }.disabled(task.output.isEmpty) }
                     }
                     if !task.notice.isEmpty { KDInlineNotice(task.notice) }
                     AgentApprovalView(store:store,runID:task.id)
@@ -78,15 +78,19 @@ public struct WorkspaceView: View {
                     ForEach(store.pendingWorkflowInputs.filter{$0.runID == task.id}) { request in WorkflowInputView(store:store,request:request) }
                     if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary) }
                     if let code = task.exitCode { Text(L("Exit code") + ": \(code)").font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary) }
+                    if let result = task.desktopWorkspaceResult {
+                        DesktopWorkspaceResultView(result: result, labels: task.desktopWorkspaceLabels)
+                    } else {
                     ScrollView { Text(task.output.isEmpty ? (task.restoredFromReceipt ? L("Output is not retained after restarting KeyDock.") : L("No output")) : task.output).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(16) }
                         .modifier(KDReadingSurface())
+                    }
                     HStack {
-                        Button(L("Explain with AI")) {
+                        if task.desktopWorkspaceResult == nil { Button(L("Explain with AI")) {
                             let action = store.configuration.aiActions.first { $0.builtinKey == "Explain command output" } ?? store.configuration.aiActions.last
                             let draft = store.createDraft(actionID: action?.id, input: task.output, source: .commandOutput)
                             guard store.ownsDraft(draft) else { return }
                             session.draft = draft; session.page = .ai
-                        }.disabled(task.output.isEmpty)
+                        }.disabled(task.output.isEmpty) }
                         Spacer()
                         Text(task.startedAt, style: .time).font(.caption).foregroundStyle(.tertiary)
                     }

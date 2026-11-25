@@ -41,11 +41,12 @@ public final class PreparedWindowLayout: @unchecked Sendable {
 final class WindowFrameSubmission: @unchecked Sendable {
     private let lock = NSLock()
     private var submitted = false
+    private let checkFocus: @Sendable () throws -> Void
     private let isCurrent: @Sendable () -> Bool
-    init(isCurrent: @escaping @Sendable () -> Bool = { true }) { self.isCurrent = isCurrent }
+    init(checkFocus: @escaping @Sendable () throws -> Void = {}, isCurrent: @escaping @Sendable () -> Bool = { true }) { self.isCurrent = isCurrent; self.checkFocus = checkFocus }
     var didSubmit: Bool { lock.lock(); defer { lock.unlock() }; return submitted }
     func mark() { lock.lock(); submitted = true; lock.unlock() }
-    func check() throws { try Task.checkCancellation(); guard isCurrent() else { throw WindowLayoutError.changed } }
+    func check() throws { try Task.checkCancellation(); guard isCurrent() else { throw WindowLayoutError.changed }; try checkFocus() }
 }
 
 /// 生产适配与合成测试共用状态机；合成端口不发送AX或进程请求。
@@ -57,6 +58,7 @@ final class WindowFrameSubmission: @unchecked Sendable {
     var read: @Sendable (DesktopWindowTarget) throws -> WindowFrame
     var checkWritable: @Sendable (DesktopWindowTarget) throws -> Void
     var write: @Sendable (WindowFrame, WindowFrame, DesktopWindowTarget, DesktopOperationLease, WindowFrameSubmission) throws -> Void
+    var checkFocused: @Sendable (DesktopWindowTarget) throws -> Void = { _ in }
 }
 
 /// 几何恢复为相同字节也不能让断开后重连的旧计划再次生效。

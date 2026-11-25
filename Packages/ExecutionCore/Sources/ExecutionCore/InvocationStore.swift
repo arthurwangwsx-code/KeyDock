@@ -15,8 +15,9 @@ public struct InvocationReceipt: Identifiable, Codable, Sendable, Equatable {
     public var caller: String?
     public var desktopWorkspace: DesktopWorkspaceReceiptContext?
     public var desktopWorkspaceRun: DesktopWorkspaceRunContext?
+    public var desktopWorkspaceResult: DesktopWorkspaceRunResult?
 
-    public init(id: UUID, name: String, state: ExecutionState, startedAt: Date = Date(), finishedAt: Date? = nil, exitCode: Int32? = nil, message: String = "", commandID: String? = nil, commandVersion: Int? = nil, configurationFingerprint: String? = nil, caller: String? = nil, desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil) {
+    public init(id: UUID, name: String, state: ExecutionState, startedAt: Date = Date(), finishedAt: Date? = nil, exitCode: Int32? = nil, message: String = "", commandID: String? = nil, commandVersion: Int? = nil, configurationFingerprint: String? = nil, caller: String? = nil, desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil) {
         self.id = id
         self.name = name
         self.state = state
@@ -28,6 +29,7 @@ public struct InvocationReceipt: Identifiable, Codable, Sendable, Equatable {
         self.configurationFingerprint = configurationFingerprint; self.caller = caller
         self.desktopWorkspace = desktopWorkspace
         self.desktopWorkspaceRun = desktopWorkspaceRun
+        self.desktopWorkspaceResult = desktopWorkspaceResult
     }
 }
 
@@ -87,6 +89,8 @@ public actor InvocationStore {
                       receipt.finishedAt?.timeIntervalSinceReferenceDate.isFinite != false else { throw InvocationStoreError.invalidMetadata }
                 try Self.validateWorkspaceContext(receipt.desktopWorkspace, commandID: receipt.commandID, id: receipt.id)
                 guard receipt.desktopWorkspace == nil || receipt.desktopWorkspaceRun == nil else { throw InvocationStoreError.invalidMetadata }
+                try receipt.desktopWorkspaceResult?.validate(manifest: receipt.desktopWorkspaceRun)
+                if let result = receipt.desktopWorkspaceResult { guard receipt.state.isTerminal, result.state == receipt.state else { throw InvocationStoreError.invalidMetadata } }
                 if !receipt.state.isTerminal {
                     recovered.insert(receipt.id)
                     receipt.state = .interrupted; receipt.finishedAt = now; receipt.exitCode = nil
@@ -142,12 +146,15 @@ public actor InvocationStore {
         }
     }
 
-    public func finish(id: UUID, result: ProcessResult) throws {
+    public func finish(id: UUID, result: ProcessResult, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil) throws {
         guard var receipt = receipts[id] else { throw InvocationStoreError.missingInvocation }
         guard result.state.isTerminal else { throw InvocationStoreError.nonterminalResult }
         // 不覆盖取消/恢复后的终态；不确定的持久状态由显式维护重试确认。
         guard !receipt.state.isTerminal else { return }
         guard result.message.utf8.count <= 512 else { throw InvocationStoreError.invalidMetadata }
+        try desktopWorkspaceResult?.validate(manifest: receipt.desktopWorkspaceRun)
+        if let workspace = desktopWorkspaceResult { guard workspace.state == result.state else { throw InvocationStoreError.invalidMetadata } }
+        receipt.desktopWorkspaceResult = desktopWorkspaceResult
         receipt.state = result.state; receipt.finishedAt = try currentTime()
         receipt.exitCode = result.exitCode; receipt.message = result.message
         var next = receipts; next[id] = receipt

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import CommandCore
 import MacAdapters
 import KeyDockUI
 @testable import WorkbenchFeature
@@ -156,6 +157,25 @@ struct ShortcutConfigurationTests {
             let persisted = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: url))
             #expect(persisted.launcherShortcut == next)
             #expect(fixture.store.settingsNotice == L("Shortcut changes could not be saved and rollback was incomplete. Check the saved shortcuts before retrying."))
+        }
+    }
+
+    @Test func workspaceBindingPostWriteFailureRestoresBytesRegistrationAndDefinition() async throws {
+        try await withFixture { fixture in
+            let store = fixture.store, appID = "app./Applications/SyntheticWorkspace.app"
+            store.desktop.applicationCatalog.onChange?([CommandItem(id: appID, title: "Synthetic", kind: .application, payload: "/Applications/SyntheticWorkspace.app")])
+            let workspace = try SavedDesktopWorkspace(name: "Synthetic workspace", entries: [.init(applicationID: appID)])
+            #expect(store.saveDesktopWorkspace(workspace, expectedRevision: nil))
+            #expect(store.setShortcut(next, for: workspace.commandID))
+            let file = fixture.directory.appendingPathComponent("configuration.json"), bytes = try Data(contentsOf: file), plan = Set(fixture.registry.bindings.values), baselineWrites = fixture.writes
+            fixture.afterWrite = { if fixture.writes == baselineWrites+1 { throw CocoaError(.fileWriteUnknown) } }
+            let accepted = store.setShortcut(HotkeyBinding(keyCode: 3), for: workspace.commandID)
+            #expect(!accepted)
+            #expect(store.shortcut(for: workspace.commandID) == next && Set(fixture.registry.bindings.values) == plan)
+            #expect(try Data(contentsOf: file) == bytes)
+            #expect(store.desktopWorkspaces == [workspace] && !store.removeDesktopWorkspace(workspace))
+            fixture.afterWrite = nil
+            #expect(store.setShortcut(nil, for: workspace.commandID) && store.removeDesktopWorkspace(workspace))
         }
     }
 

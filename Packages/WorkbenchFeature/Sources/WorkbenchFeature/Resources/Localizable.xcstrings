@@ -865,6 +865,22 @@
         }
       }
     },
+    "All workspace layouts were confirmed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All workspace layouts were confirmed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有工作区布局均已确认。"
+          }
+        }
+      }
+    },
     "Allow HTTP for localhost only": {
       "localizations": {
         "en": {
@@ -893,6 +909,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "未运行时允许后台启动"
+          }
+        }
+      }
+    },
+    "Already running": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already running"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在运行"
           }
         }
       }
@@ -1105,6 +1137,54 @@
         }
       }
     },
+    "Apply an ordered group of applications and window layouts, or assign a direct shortcut. Saving a definition does not launch or move applications.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply an ordered group of applications and window layouts, or assign a direct shortcut. Saving a definition does not launch or move applications."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按顺序应用一组应用与窗口布局，也可为其设置独立快捷键。保存定义不会启动应用或移动窗口。"
+          }
+        }
+      }
+    },
+    "Apply workspace": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用工作区"
+          }
+        }
+      }
+    },
+    "Applying desktop workspace…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applying desktop workspace…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在应用桌面工作区…"
+          }
+        }
+      }
+    },
     "Approve once": {
       "localizations": {
         "zh-Hans": {
@@ -1309,6 +1389,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "返回"
+          }
+        }
+      }
+    },
+    "Background launch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background launch"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后台启动"
           }
         }
       }
@@ -2305,6 +2401,22 @@
         }
       }
     },
+    "Confirmed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已确认"
+          }
+        }
+      }
+    },
     "Connect / refresh": {
       "localizations": {
         "zh-Hans": {
@@ -2673,6 +2785,22 @@
         }
       }
     },
+    "Declined before submission": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declined before submission"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提交前已拒绝"
+          }
+        }
+      }
+    },
     "Default model": {
       "localizations": {
         "en": {
@@ -2765,6 +2893,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "桌面动作已确认"
+          }
+        }
+      }
+    },
+    "Desktop workspace": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop workspace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面工作区"
           }
         }
       }
@@ -4977,6 +5121,22 @@
         }
       }
     },
+    "No record · unable to confirm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No record · unable to confirm"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无记录 · 无法确认"
+          }
+        }
+      }
+    },
     "No selected text. Enter text to begin.": {
       "localizations": {
         "en": {
@@ -5037,6 +5197,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "正常退出不会强制结束应用，也不会关闭保存提示。“显示所有窗口”会请求将窗口置前，最小化窗口和桌面空间仍由 macOS 管理。"
+          }
+        }
+      }
+    },
+    "Not dispatched": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not dispatched"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未派发"
           }
         }
       }
@@ -6545,22 +6721,6 @@
         }
       }
     },
-    "Save an ordered group of applications and window layouts. Applying workspaces is not available yet; saving does not launch or move applications.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save an ordered group of applications and window layouts. Applying workspaces is not available yet; saving does not launch or move applications."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "按顺序保存一组应用及窗口布局。目前尚未支持应用布局，保存不会启动应用或移动窗口。"
-          }
-        }
-      }
-    },
     "Save collection": {
       "localizations": {
         "en": {
@@ -7761,6 +7921,22 @@
         }
       }
     },
+    "Submitted · unconfirmed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Submitted · unconfirmed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已提交 · 未确认"
+          }
+        }
+      }
+    },
     "Success rate (known outcomes)": {
       "localizations": {
         "zh-Hans": {
@@ -8125,6 +8301,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "桌面操作目标不可用或已变化。请刷新后重试。"
+          }
+        }
+      }
+    },
+    "The desktop workspace is unavailable or changed. Reopen it before applying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The desktop workspace is unavailable or changed. Reopen it before applying."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面工作区不可用或已更改，请重新打开后再应用。"
           }
         }
       }
@@ -9409,6 +9601,22 @@
         }
       }
     },
+    "View result": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View result"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看结果"
+          }
+        }
+      }
+    },
     "Waiting for approval": {
       "localizations": {
         "zh-Hans": {
@@ -9469,6 +9677,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "窗口动作需要原窗口目标。请从启动台或直接快捷键运行。"
+          }
+        }
+      }
+    },
+    "Window focus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window focus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口聚焦"
           }
         }
       }
@@ -9841,6 +10065,22 @@
         }
       }
     },
+    "Workspace cancelled before any confirmed change. Check any unknown steps before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace cancelled before any confirmed change. Check any unknown steps before retrying."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区已取消，没有已确认的更改。重试前请检查所有未知步骤。"
+          }
+        }
+      }
+    },
     "Workspace definitions could not be saved. Your draft and existing data were preserved.": {
       "localizations": {
         "en": {
@@ -9873,18 +10113,34 @@
         }
       }
     },
-    "Workspace execution shortcuts are not available yet.": {
+    "Workspace receipt could not be confirmed. Known steps are retained; check applications before starting a new run.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Workspace execution shortcuts are not available yet."
+            "value": "Workspace receipt could not be confirmed. Known steps are retained; check applications before starting a new run."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "目前尚未支持工作区执行快捷键。"
+            "value": "工作区回执未能确认。已知步骤结果已保留，请检查相关应用后再发起新运行。"
+          }
+        }
+      }
+    },
+    "Workspace stopped. Confirmed steps remain; remaining steps were not dispatched. Check unknown results before a new run.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace stopped. Confirmed steps remain; remaining steps were not dispatched. Check unknown results before a new run."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作区已停止，已确认步骤保留，后续步骤未派发。再次运行前请检查未知结果。"
           }
         }
       }
