@@ -21,6 +21,7 @@ struct TaskMaterialLibraryView: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: WorkspaceSession
     var body: some View {
+        GeometryReader { viewport in
         VStack(alignment: .leading, spacing: 16) {
             Text(L("Retained task content")).font(.title2.weight(.semibold))
             Text(L("Browse saved text independently of current task history. Text is loaded only when you open a record.")).font(.callout).foregroundStyle(.secondary)
@@ -51,8 +52,8 @@ struct TaskMaterialLibraryView: View {
                                 .accessibilityLabel(L("View retained content…") + " · " + context)
                             Button(L("Prepare new attempt")) { session.prepareAttempt(.init(store: record.id.receiptStore == .cli ? .cli : .ai, invocationID: record.id.invocationID), in: store) }.disabled(!record.isTerminal)
                                 .accessibilityLabel(L("Prepare new attempt") + " · " + context)
-                        }
-                    }.padding(.vertical, 8)
+                        }.buttonStyle(.borderless)
+                    }.padding(.vertical, 8).accessibilityElement(children: .contain)
                 }.listStyle(.inset)
             }
             HStack {
@@ -60,6 +61,7 @@ struct TaskMaterialLibraryView: View {
                 Spacer()
                 Button(L("Open Privacy settings")) { store.onOpenSettings?(.privacy) }
             }
-        }.padding(24).task { await store.refreshTaskMaterialIndex() }
+        }.padding(24).frame(width: viewport.size.width, height: viewport.size.height, alignment: .topLeading)
+        }.task { await store.refreshTaskMaterialIndex() }
     }
 }
