@@ -22,6 +22,7 @@
 
 - `task-material-library-v1`：140项定向通过（Workbench123＋RunStore17），receipt SHA256 `1978306342a49855548a5fe633849d2e9ccb433df67d64f36f5f4d0cf7f56965`。含真实begin等待撤权、2000个metadata key的少量正文清除、保存后最后owner查询期间清除不复活、读取／保存真实worker预算、partial delete父记录保留、无关捕获保留、内存逐出后独立读取，以及新尝试的空值／NFD／非空替换／版本变化／超限ABA／迟到读取与结果不兜底。
 - 首轮输入复用检查`task-material-input-flow-v1`保留FAIL：偏好更改推进原有配置范围审阅代次，旧review不能直接复用；测试先重新审阅后通过，未放宽执行门禁。最终更完整检查另行记录，不将上述次数套到新增标题本地化后的精确源。
+- 干净源`93b8304`的首轮完整检查`task-material-ui-full-check-v1`保留FAIL：两项既有上下文输入边界测试仍按旧空会话预算设置，新增的200KiB标题固定预留使单槽接纳前提不再成立，共6个断言问题。后续测试基线计入固定预留，单槽拒收／清除和释放／恰好满额的原断言保持；没有取消标题预算或放宽产品上限。137项Python和925条文案在该轮已通过，Swift整体验证必须由随后修正源重新运行。
 - 优化隔离Preview `task-material-ui-preview-v1` exit0，86.999秒，receipt SHA256 `623b5a4de6790cabd0073439c4770961de6ca4d989cab9544e3739356ac0560e`；实际观察App摘要`a5821085839769fec1b1cfd9f5d63e6f98c9fb31db1d740a093e5e48016aa9a3`，基线a5deaca／dirty。它早于后续残留提示、到期说明、导出偏好与独立内容库修补，不能作为新精确源的发行资格。
 - `task-material-native-review-v1/v2`均正常退出0；生命周期本身不证明UI通过。Cua实际观察中文浅色手动保存两字段、保留原始空白及NFD、只回填不执行、非空输入预览后显式替换、点击开始后才产生第二次纯变换任务；英文深色只读页及英语到期日期、重启仅恢复两份metadata，再点击后查看正文。默认均未勾选；删除按钮仅在勾选后可用，未点击最终删除。
 - native结构复核`task-material-native-proof-v1` exit0，receipt SHA256 `48534763e1f7cf9fd9c8431d58734224750a9447bb348ac90e279bdbb45f9b61`。owned样例只有一份正文、两个typed成功attempt、原birth关联保持，重启后没有新attempt／CLI或工具回执，control idle。脚本只核对合成数据后置条件，不声称可替代截图／交互评审；不输出正文。

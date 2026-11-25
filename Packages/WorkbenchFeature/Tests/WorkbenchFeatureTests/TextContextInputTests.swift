@@ -6,6 +6,8 @@ import MCPAdapters
 @testable import WorkbenchFeature
 
 @Suite(.serialized) @MainActor struct TextContextInputTests {
+    // 空会话还预留最多200个内容标题；边界测试保留同样的单槽／恰好满额约束。
+    private let fixedSessionReservation = TaskTextLimits.inputBytes + 1_024 + 200 * 1_024
     @Test(arguments: [TextContextProvenance.Kind.textFile, .pdfText, .imageOCR, .regionOCR, .mcpResource, .mcpPrompt])
     func importedKindsSurviveDraftCreationAndByteEdits(kind: TextContextProvenance.Kind) async throws {
         let fixture = try RetentionFixture(); defer { Task { await fixture.cleanup() } }
@@ -58,7 +60,7 @@ import MCPAdapters
     }
 
     @Test func globalBudgetRejectsAnotherOwnerAndClearOrDeallocationReleasesItsSlot() async throws {
-        let baseline = TaskTextLimits.inputBytes + 1_024
+        let baseline = fixedSessionReservation
         let fixture = try RetentionFixture(limits:.init(textBytes:baseline + WorkbenchModel.contextSlotBytes)); defer { Task { await fixture.cleanup() } }
         let store = fixture.store, first = WorkspaceSession(), second = WorkspaceSession()
         #expect(store.beginTextContextImport(first) != nil)
@@ -75,7 +77,7 @@ import MCPAdapters
     }
 
     @Test func sourceMetadataCannotFitOutsideAnExactlyFullDraftBudget() async throws {
-        let baseline = TaskTextLimits.inputBytes + 1_024
+        let baseline = fixedSessionReservation
         let fixture = try RetentionFixture(limits:.init(textBytes:baseline + WorkbenchModel.contextSlotBytes + TaskTextLimits.inputBytes + 8_192)); defer { Task { await fixture.cleanup() } }
         let store = fixture.store, session = WorkspaceSession()
         let token = try #require(store.beginTextContextImport(session))
@@ -106,7 +108,7 @@ import MCPAdapters
     }
 
     @Test func combinedImportBudgetRejectsWithoutEvictingAnIdleDraft() async throws {
-        let baseline = TaskTextLimits.inputBytes + 1_024
+        let baseline = fixedSessionReservation
         let execution = TaskTextLimits.outputBytes + TaskTextLimits.inputBytes + 16_384
         let fixture = try RetentionFixture(limits:.init(textBytes:baseline + execution + 4_096)); defer { Task { await fixture.cleanup() } }
         let store = fixture.store, session = WorkspaceSession(), draft = store.createDraft(input:"Synthetic retained draft")
