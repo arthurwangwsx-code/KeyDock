@@ -1,6 +1,6 @@
 # 常用工具生命周期与遗留配置复查
 
-2026-11-25。`fix/saved-tool-lifecycle`从master `0f89927`建立；主Agent独占写入／构建／设备，三位子Agent只读研究与评审。候选alpha.13尚未发行，常规安装仍为alpha.12。合同见[保存动作生命周期](../technical/saved-item-lifecycle.md)。
+2026-11-25。`fix/saved-tool-lifecycle`从master `0f89927`建立；主Agent独占写入／构建／设备，三位子Agent只读研究与评审。以下为候选阶段记录，最终alpha.13已完整检查、公开并安装，见[发行证据](alpha13-release-2026-11-25.md)。合同见[保存动作生命周期](../technical/saved-item-lifecycle.md)。
 
 片段、网页动作、集合接通独立编辑身份、准确字节指纹、稳定删除呈现与引用重查。删除同时清除准确ID的四类偏好，注册／持久化沿用同一补偿事务；旧编辑稿、搜索结果、热键回调不能复活已删除对象。专用入口不读取不必要的原选区。
 
