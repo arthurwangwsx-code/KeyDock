@@ -190,6 +190,8 @@ private struct LauncherCatalogProvider: CommandProviding {
     var workflowEditorOrigin: (id: UUID, fingerprint: String)?
     @Published public var workflowInput = ""
     @Published var workflowLaunch: WorkflowLaunchDraft?
+    @Published var attemptPreparation: AttemptPreparationPresentation?
+    @Published var attemptPreparationDismissing = false
     var workflowLoaded = false
     @Published public private(set) var toolsInput: TextContextInput = .empty
     public var toolsText: String { toolsInput.text }
@@ -226,9 +228,18 @@ private struct LauncherCatalogProvider: CommandProviding {
     public init() {
         clipboardChanges = clipboard.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
     }
-    public func setVisible(_ value: Bool, in store: WorkbenchModel) { self.store = store; visible = value; if !value { files.cancel(); invalidateSourceRemoval() }; updateVisibleReferences() }
+    public func setVisible(_ value: Bool, in store: WorkbenchModel) {
+        self.store = store; visible = value
+        if !value {
+            files.cancel(); invalidateSourceRemoval(); invalidateAttemptPreparation()
+            if let launch = workflowLaunch { cancelWorkflowLaunch(launch.id) }
+            if let removal = savedToolRemoval { cancelToolRemoval(removal.id) }
+        }
+        updateVisibleReferences()
+    }
     public func present(_ route: WorkspaceRoute? = nil, in store: WorkbenchModel) {
         setVisible(true, in: store)
+        guard !hasPendingOrDismissingModal else { return }
         if let route { navigate(route, store: store) }
         else if page == .tasks && selectedTaskID == nil { navigate(.tasks(nil), store: store) }
     }

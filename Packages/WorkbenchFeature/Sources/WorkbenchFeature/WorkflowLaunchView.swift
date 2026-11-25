@@ -2,6 +2,23 @@ import SwiftUI
 import AutomationCore
 import KeyDockUI
 
+struct WorkflowLaunchSheetHost: View {
+    @ObservedObject var store: WorkbenchModel
+    @ObservedObject var session: WorkspaceSession
+    @ObservedObject var launch: WorkflowLaunchDraft
+    @State private var presented = false
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0).accessibilityHidden(true)
+            .sheet(isPresented: Binding(get: { presented && !launch.closed }, set: { value in
+                if !value { session.cancelWorkflowLaunch(launch.id) }; presented = value
+            }), onDismiss: { session.workflowLaunchDidDismiss(launch.id) }) {
+                WorkflowLaunchView(store: store, session: session, launch: launch).onAppear { launch.appeared = true }
+            }
+            .onAppear { if !launch.closed { presented = true } else { session.workflowLaunchDidDismiss(launch.id) } }
+            .onChange(of: launch.closed) { _, value in if value { presented = false } }
+    }
+}
+
 struct WorkflowLaunchView: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: WorkspaceSession

@@ -267,7 +267,7 @@
 ## 33. 类型化任务记录与显式新尝试（承接5.5，实施中）
 
 - [x] 33.1 Core同actor／文件实现有界版本化run／attempt／定义引用、CAS与新intent原子提交、出生身份条件收口；旧格式只读，不持久正文／授权。80条定向测试定义及固定指纹向量通过；App接线／数据回退／完整资格仍依33.2–33.5，详见Core复查。
-- [ ] 33.2 独立稳定“准备新尝试”审阅／有界输入，区分unknown／paused／preparing；只读准备不占执行槽、不调用资源／密钥／网络，取消与配置失败保留正确所有权。
-- [ ] 33.3 重新验证定义／contribution／MCP来源与schema／权限／预算，new UUID及recoveryOf接入生产admission／intent；保存失败零执行，旧授权／目标／终态／价格不复用。
-- [ ] 33.4 工作区任务详情、AI／Agent／Workflow及保存CLI接入，旧缺材料记录保持只读；恢复默认展示，不自动复制／替换／继续步骤或重投unknown。
+- [x] 33.2 独立稳定“准备新尝试”审阅／有界输入，区分unknown／paused／preparing；只读准备不占执行槽、不调用资源／密钥／网络，取消与配置失败保留正确所有权。定向回归及合成原生中英明暗子集、20步滚动／取消／重启通过，完整视觉仍依33.5。
+- [x] 33.3 重新验证定义／contribution／MCP来源与schema／权限／预算，new UUID及recoveryOf接入生产admission／intent；保存失败零执行，旧授权／目标／终态／价格不复用。真实owned进程／loopback／stdio及原子写故障、配置ABA、MCP合同变化验证通过；真实API／系统资格独立。
+- [x] 33.4 工作区任务详情、AI／Agent／Workflow及保存CLI接入，旧缺材料记录保持只读；恢复默认展示，不自动复制／替换／继续步骤或重投unknown。typed worker准确owner与出生stamp贯穿finish／drain／release；安装数据兼容门禁及签名合成v2／旧reader拒绝通过。
 - [ ] 33.5 合成故障／中断／撤权／ABA／clear／迟到／容量／drain及新旧费用归因；原生中英明暗与重启闭环、完整检查／CI／发行分别留证，原5.5及完整P0–P4仍独立。

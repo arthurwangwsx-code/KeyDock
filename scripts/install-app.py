@@ -14,7 +14,8 @@ import stat
 import sys
 import uuid
 
-from keydock_common import CONFIG, PipelineError, inspect_app, run, atomic_json
+from keydock_common import CONFIG, PipelineError, inspect_app, run, atomic_json, validate_data_compatibility
+from invocation_compatibility import runtime_data_root, probe_versions, runtime_data_lease
 
 ALLOWED_IDS = {"com.arthurwangwsx.KeyDock", "com.arthurwangwsx.KeyDock.preview"}
 IDENTITY_KEYS = ("bundle_id", "version", "release_version", "build_number", "profile", "commit",
@@ -62,6 +63,23 @@ def verify_copy(path, expected):
     run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(path)])
     if identity(path) != expected:
         raise PipelineError("App identity or resource-tree digest changed: " + str(path))
+
+
+def require_data_compatible(app, expected, resolver, guard=None):
+    facts = inspect_app(app)
+    if {key: facts.get(key) for key in IDENTITY_KEYS} != expected:
+        raise PipelineError("Candidate App identity changed during its data check")
+    capability = validate_data_compatibility(facts.get("data_compatibility"))
+    root = plain_path(resolver(facts))
+    if guard is not None and root != guard.root:
+        raise PipelineError("Candidate runtime data domain changed")
+    versions = probe_versions(root, guard)
+    readers = capability["invocationEnvelope"]["readVersions"]
+    if any(version is not None and version not in readers for version in versions.values()):
+        raise PipelineError("This App cannot read the current invocation data. Apps and records were preserved; use a compatible version")
+    return {"schemaVersion": 1, "profile": facts["profile"], "runtimeDataRoot": str(root),
+            "readerVersions": readers, "envelopes": versions, "provisional": guard is None,
+            "scope": "default runtime domain; custom Preview TMPDIR domains are not discovered"}
 
 
 def distribution_policy(info, allow_preview):
@@ -179,7 +197,7 @@ def save_receipt(path, record, state):
         os.close(descriptor)
 
 
-def compensate_install(destination, exchange, previous, installed, helper):
+def compensate_install(destination, exchange, previous, installed, helper, resolver, data_guard):
     # 只对身份仍完全匹配的本次交换补偿，绝不覆盖之后出现的其他App。
     expected_current(destination, installed)
     if running_at_destination(helper, installed["bundle_id"], destination):
@@ -190,11 +208,13 @@ def compensate_install(destination, exchange, previous, installed, helper):
         atomic_rename(destination, exchange, RENAME_EXCL)
     else:
         verify_copy(exchange, previous)
+        require_data_compatible(exchange, previous, resolver, data_guard)
         atomic_rename(destination, exchange, RENAME_SWAP)
         verify_copy(destination, previous)
 
 
-def install(args):
+def install(args, *, data_root_resolver=None):
+    resolver = data_root_resolver or runtime_data_root
     create_parents = getattr(args, "create_parents", False)
     source, destination, receipt = plain_path(args.app), app_path(args.destination, create_parents), plain_path(args.receipt)
     helper = helper_path(args.helper)
@@ -206,6 +226,7 @@ def install(args):
         raise PipelineError("Receipt already exists; choose a new receipt path")
     installed = identity(source)
     distribution_policy(installed, args.allow_unnotarized_preview)
+    data_check = require_data_compatible(source, installed, resolver)
     previous = identity(destination) if destination.exists() else None
     if previous is not None and previous["bundle_id"] != installed["bundle_id"]:
         raise PipelineError("Destination has a different bundle ID")
@@ -221,18 +242,20 @@ def install(args):
     record = {"schema_version": 1, "transaction_id": transaction, "created_at": now(),
               "source": str(source), "destination": str(destination), "helper": str(helper),
               "exchange_path": str(exchange), "backup_path": str(exchange) if previous else None,
-              "installed": installed, "previous": previous, "rollback_available": previous is not None}
+              "installed": installed, "previous": previous, "rollback_available": previous is not None,
+              "rollback_note": "App backup exists; current data compatibility is checked again before rollback", "data_check": data_check}
     if args.dry_run:
         return dict(record, state="dry-run", would_quit=running)
     if create_parents:
         destination.parent.mkdir(parents=True, exist_ok=True)
         receipt.parent.mkdir(parents=True, exist_ok=True)
         plain_path(destination); plain_path(receipt)
-    with installation_lock(destination):
+    with installation_lock(destination), contextlib.ExitStack() as stack:
         expected_current(destination, previous)
         descriptor = os.open(str(receipt), os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
         os.close(descriptor)
         attempted = False
+        data_guard = None
         try:
             if exchange.exists() or exchange.is_symlink():
                 raise PipelineError("The staging path already exists")
@@ -246,6 +269,8 @@ def install(args):
             save_receipt(receipt, record, "prepared")
             quiesce(helper, installed["bundle_id"], destination, args.quit_running)
             expected_current(destination, previous)
+            data_guard = stack.enter_context(runtime_data_lease(plain_path(resolver(inspect_app(exchange)))))
+            record["data_check"] = require_data_compatible(exchange, installed, resolver, data_guard)
             # 先标记attempted；即使rename后发生信号/异常，也不能把旧备份当候选删除。
             attempted = True
             atomic_rename(exchange, destination, RENAME_SWAP if previous else RENAME_EXCL)
@@ -264,7 +289,7 @@ def install(args):
                     state = "failed-before-exchange"
                 except Exception:
                     try:
-                        compensate_install(destination, exchange, previous, installed, helper)
+                        compensate_install(destination, exchange, previous, installed, helper, resolver, data_guard)
                         state = "compensated"
                     except Exception:
                         state = "needs-recovery"
@@ -275,7 +300,8 @@ def install(args):
             raise PipelineError("Installation failed (" + state + "); App paths were preserved: " + str(error)) from error
 
 
-def rollback(args):
+def rollback(args, *, data_root_resolver=None):
+    resolver = data_root_resolver or runtime_data_root
     receipt = plain_path(args.rollback)
     if not receipt.is_file() or receipt.stat().st_size > 131_072:
         raise PipelineError("A bounded installation receipt file is required")
@@ -298,24 +324,28 @@ def rollback(args):
     helper = helper_path(args.helper or default_helper)
     if record["state"] in ("rollback-prepared", "rolled-back"):
         if identity(destination) == previous and identity(exchange) == installed:
-            return dict(record, state="rolled-back", already_rolled_back=True)
+            check = require_data_compatible(destination, previous, resolver)
+            return dict(record, state="rolled-back", already_rolled_back=True, data_check=check)
         if record["state"] == "rolled-back":
             raise PipelineError("Apps changed after rollback; nothing was overwritten")
     verify_copy(destination, installed)
     verify_copy(exchange, previous)
     distribution_policy(identity(destination), True)
     distribution_policy(identity(exchange), True)
+    check = require_data_compatible(exchange, previous, resolver)
     running = running_at_destination(helper, installed["bundle_id"], destination)
     if running and not args.quit_running:
         raise PipelineError("The destination App is running; quit it or pass --quit-running")
     if args.dry_run:
-        return dict(record, state="rollback-dry-run", would_quit=running)
-    with installation_lock(destination):
+        return dict(record, state="rollback-dry-run", would_quit=running, data_check=check)
+    with installation_lock(destination), contextlib.ExitStack() as stack:
         verify_copy(destination, installed)
         verify_copy(exchange, previous)
         quiesce(helper, installed["bundle_id"], destination, args.quit_running)
         verify_copy(destination, installed)
         verify_copy(exchange, previous)
+        data_guard = stack.enter_context(runtime_data_lease(plain_path(resolver(inspect_app(exchange)))))
+        record["data_check"] = require_data_compatible(exchange, previous, resolver, data_guard)
         save_receipt(receipt, record, "rollback-prepared")
         attempted = False
         try:
@@ -339,6 +369,7 @@ def rollback(args):
                         verify_copy(exchange, installed)
                         if running_at_destination(helper, installed["bundle_id"], destination):
                             raise PipelineError("Compensation cannot replace a running App")
+                        require_data_compatible(exchange, installed, resolver, data_guard)
                         atomic_rename(destination, exchange, RENAME_SWAP)
                         verify_copy(destination, installed)
                         state = "installed"

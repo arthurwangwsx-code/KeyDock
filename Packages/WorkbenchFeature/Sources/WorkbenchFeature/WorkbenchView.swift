@@ -7,7 +7,6 @@ public struct WorkspaceView: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: WorkspaceSession
     @State private var confirmClear = false
-    @State private var restartID: UUID?
     public init(store: WorkbenchModel, session: WorkspaceSession) { self.store = store; self.session = session }
     public var body: some View {
         NavigationSplitView {
@@ -44,41 +43,47 @@ public struct WorkspaceView: View {
                 }
             }
         }.frame(minWidth: 820, minHeight: 560).environment(\.locale, KDLocalizer.locale)
-            .sheet(item: $session.workflowLaunch) { launch in WorkflowLaunchView(store: store, session: session, launch: launch) }
-            .sheet(item: $session.savedToolRemoval) { review in SavedToolRemovalView(store: store, session: session, presentation: review) }
             .background {
+                if let launch = session.workflowLaunch { WorkflowLaunchSheetHost(store: store, session: session, launch: launch).id(launch.id) }
+                if let review = session.savedToolRemoval { SavedToolRemovalSheetHost(store: store, session: session, presentation: review).id(review.id) }
+                if let presentation = session.attemptPreparation { AttemptPreparationSheetHost(store: store, session: session, presentation: presentation).id(presentation.id) }
                 if let presentation = session.sourceRemoval {
                     SourceRemovalSheetHost(store: store, presentation: presentation, cancel: session.cancelSourceRemoval, didAppear: session.sourceRemovalDidAppear, didDismiss: session.sourceRemovalDidDismiss).id(presentation.id)
                 }
             }
-            .confirmationDialog(L("Start a new attempt?"),isPresented:Binding(get:{restartID != nil},set:{if !$0 {restartID = nil}})) {
-                Button(L("Start new attempt")) { if let id = restartID { store.restartAgent(id) }; restartID = nil }
-            } message: { Text(L("A new attempt rechecks current scope and may repeat completed work. Unknown effects must be checked first.")) }
     }
     private func newAI() { session.createDraft(in: store) }
     private var taskContent: some View {
-        HSplitView {
+        let language = store.configuration.language
+        return HSplitView {
             List(selection: $session.selectedTaskID) {
                 ForEach(store.tasks) { task in
-                    HStack(spacing: 9) {
-                        Image(systemName: task.isRunning ? "circle.dotted" : (task.status == .completed || task.status == .handedOff ? "checkmark.circle" : "exclamationmark.circle")).foregroundStyle(task.isRunning ? Color.accentColor : .secondary)
-                        VStack(alignment: .leading, spacing: 4) { Text(task.displayTitle).font(.system(size: 12, weight: .medium)).lineLimit(1); Text(task.state).font(.system(size: 10)).foregroundStyle(.secondary) }
-                        Spacer(minLength: 0)
-                        if task.isRunning { ProgressView().controlSize(.mini) }
-                    }.padding(.vertical, 6).tag(task.id)
+                    TaskHistoryRow(task: task, language: language).tag(task.id)
                 }
-            }.listStyle(.inset).frame(minWidth: 220, idealWidth: 245, maxWidth: 300)
+            }.listStyle(.inset).environment(\.defaultMinListRowHeight, 56)
+                .transaction { $0.animation = nil }
+                .frame(minWidth: 220, idealWidth: 245, maxWidth: 300)
             VStack(alignment: .leading, spacing: 18) {
                 if let task = store.tasks.first(where: { $0.id == session.selectedTaskID }) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 7) { Text(task.displayTitle).font(.system(size: 20, weight: .semibold)); Text(task.state).font(.system(size: 12)).foregroundStyle(.secondary) }
-                        Spacer()
+                    VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text(task.displayTitle).font(.system(size: 20, weight: .semibold)).lineLimit(3).frame(maxWidth: .infinity, alignment: .leading)
+                            Text(task.state).font(.system(size: 12)).foregroundStyle(.secondary)
+                        }
+                        HStack {
                         if task.canCancel, store.agentRunDefinitions[task.id] != nil { Button(L("Pause")) { store.pauseAgent(task.id) } }
                         if task.canCancel { Button(L("Stop")) { store.cancelTask(task.id) } }
-                        if !task.isRunning, store.agentRunDefinitions[task.id] != nil, let draftID = task.draftID, store.drafts[draftID] != nil { Button(L("Start new attempt")) { restartID = task.id } }
+                        if !task.isRunning, task.runAttempt != nil { Button(L("Prepare new attempt")) { session.prepareAttempt(task.id, in: store) } }
+                        Spacer(minLength: 0)
                         if task.desktopWorkspaceResult == nil { KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }.disabled(task.output.isEmpty) }
+                        }
                     }
                     if !task.notice.isEmpty { KDInlineNotice(task.notice) }
+                    if task.runAttempt?.recoveryOf != nil {
+                        Text(L("This is a new attempt. The previous result and recorded cost were kept.")).font(.caption).foregroundStyle(.secondary)
+                    } else if !task.isRunning && task.runAttempt == nil && task.restoredFromReceipt {
+                        Text(L("This history record has no saved definition reference and cannot be restarted here.")).font(.caption).foregroundStyle(.secondary)
+                    }
                     if task.source != nil || task.receiptIsAI {
                         Text(L("Run input") + " · " + task.inputSourceTitle).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                         if store.isRemovedMCPSource(task.inputProvenance) { Text(L("This MCP source was removed. The imported text is kept as a snapshot.")).font(.caption).foregroundStyle(.secondary) }
@@ -86,7 +91,7 @@ public struct WorkspaceView: View {
                     AgentApprovalView(store:store,runID:task.id)
                     if let checkpoint = store.workflowCheckpoints[task.id] { Text(L("Step")+" \(checkpoint.stepIndex+1) · "+workflowPhaseTitle(checkpoint.phase)).font(.caption).foregroundStyle(.secondary) }
                     ForEach(store.pendingWorkflowInputs.filter{$0.runID == task.id}) { request in WorkflowInputView(store:store,request:request) }
-                    if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary) }
+                    if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary).id(store.configuration.language) }
                     if let code = task.exitCode { Text(L("Exit code") + ": \(code)").font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary) }
                     if let result = task.desktopWorkspaceResult {
                         DesktopWorkspaceResultView(result: result, labels: task.desktopWorkspaceLabels)
@@ -154,6 +159,24 @@ public struct WorkspaceView: View {
         }.padding(.horizontal, 20).padding(.vertical, 10).accessibilityElement(children: .contain)
     }
 
+}
+
+/// 语言是明确的值依赖；ForEach始终仅用任务UUID识别行，不用语言覆盖原生List的行身份。
+private struct TaskHistoryRow: View {
+    let task: RunningTaskItem
+    let language: String
+    var body: some View {
+        HStack(spacing: 9) {
+            Image(systemName: task.isRunning ? "circle.dotted" : (task.status == .completed || task.status == .handedOff ? "checkmark.circle" : "exclamationmark.circle"))
+                .foregroundStyle(task.isRunning ? Color.accentColor : .secondary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(task.displayTitle).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                Text(task.state).font(.system(size: 10)).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+            if task.isRunning { ProgressView().controlSize(.mini) }
+        }.frame(height: 36).padding(.vertical, 6)
+    }
 }
 
 struct AIDraftMenuLabel: View {

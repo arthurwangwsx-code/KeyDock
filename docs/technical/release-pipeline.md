@@ -69,6 +69,10 @@ Release构建前后还比较资格与当前OS build／Swift／完整Xcode及SDK�
 
 Debug使用单一可执行文件（`ENABLE_DEBUG_DYLIB=NO`），保留Hardened Runtime；避免Xcode未统一签名的debug dylib在安装后触发库验证失败。此路径覆盖构建、安装和UI／日志调试；Xcode／LLDB断点与附加权限尚待专项验收。
 
+合成原生复查使用`python3 scripts/keydock.py native-review`（先构建Preview）；它创建`.local/desktop/KeyDock-Review-UUID`及private marker，等待GUI正常退出并保存进程回执。`--fixture <上次目录>`复用同一owned域供重启验证。只有Preview编译／SafeSmoke／BuildInfo preview接受显式根，runner在写日志前检查owner／marker，日志拒绝symlink和多hardlink。系统Foundation临时目录在本机不随gate TMPDIR变化，不能再以继承环境推断隔离成功；正式／普通Preview默认域与安装器定位不受此入口影响。
+
+alpha.19候选增加签名BuildInfo／manifest数据能力声明与安装／回退门禁。正常退出后持有runtime-owner lease，检查三个固定Invocation Envelope及目录映射，交换和失败补偿均重新验证。已知旧alpha.1–18缺省为read/write v1，未知缺声明拒绝；生成v2后旧alpha.18回退被拒绝并保留App和数据。二进制备份不等于可读数据恢复，跨版本archive／restore尚未实现；手动覆盖和历史脚本不在新门禁范围内。
+
 安装器完成路径／重叠／身份／进程预检后才按显式参数创建父目录，再在目标同卷复制并验证资源与权限摘要，使用macOS renamex_np原子交换；首次安装使用EXCL拒绝后来出现的目标。旧App保存在回执指定的隐藏备份路径，不自动删除。回退再次检查真实签名team与双方摘要，退出等待后重新核对目标；无法确认时保留双方和needs-recovery回执。不改用户配置、Keychain、TCC或quarantine，不自动授予AX权限，不使用sudo。
 
 ## 发行与CI

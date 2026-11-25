@@ -75,10 +75,11 @@ extension WorkbenchModel {
     @discardableResult public func runWorkflow(_ definition:WorkflowDefinition,input:String,interaction:Bool = true) -> UUID? {
         runWorkflow(definition,input:input,interaction:interaction,runID:UUID())
     }
-    @discardableResult func runWorkflow(_ definition: WorkflowDefinition, input: String, interaction: Bool, runID id: UUID, scheduleAuthorization: WorkflowScheduleAuthorization? = nil, onFinished: (@MainActor (TaskStatus) async -> Void)? = nil) -> UUID? {
+    @discardableResult func runWorkflow(_ definition: WorkflowDefinition, input: String, interaction: Bool, runID id: UUID, scheduleAuthorization: WorkflowScheduleAuthorization? = nil, attempt: AttemptExecutionContext? = nil, onFinished: (@MainActor (TaskStatus) async -> Void)? = nil) -> UUID? {
         do {
             guard !isShuttingDown, !executionReservations.contains(id), !tasks.contains(where:{$0.id == id}), input.utf8.count <= TaskTextLimits.inputBytes else { return nil }
             let plan = try compileWorkflow(definition,interaction:interaction)
+            let runDefinition = savedRunReference(.workflow(definition))
             let referencedCommands = Set(definition.steps.compactMap { if case .savedCommand(let id) = $0.operation { id } else { nil as UUID? } })
             var commands: [UUID:PreparedWorkflowCommand] = [:]
             if !referencedCommands.isEmpty {
@@ -109,9 +110,11 @@ extension WorkbenchModel {
             taskHandles[id] = Task { [weak self] in
                 guard let self else { return }
                 var started = false
+                var owner: InvocationWorkerOwnership?
                 do {
-                    try await beginAIReceipt(id:id,kind:.workflow,authorization:authorization); started = true
+                    owner = try await beginAIReceipt(id:id,kind:.workflow,authorization:authorization,runDefinition:runDefinition,attempt:attempt); started = true
                     try Task.checkCancellation()
+                    try attempt?.willDispatch(in: self)
                     let result = await WorkflowRunner.run(plan,input:input,runID:id,host:{ request in try await host.invoke(request) },onCheckpoint:{ [weak self] checkpoint in
                         Task { @MainActor [weak self] in self?.publishWorkflowCheckpoint(checkpoint) }
                     })
@@ -121,10 +124,10 @@ extension WorkbenchModel {
                     switch result.outcome { case .succeeded: state = .completed; case .cancelled: state = .cancelled; case .timedOut: state = .timedOut; case .unknown: state = .interrupted; case .failed: state = .failed }
                     _ = appendOutput(id,text:result.output); updateTask(id,state:result.hasUncertainHostOutcome ? .interrupted:state,finished:true)
                     if result.hasUncertainHostOutcome, let index = tasks.firstIndex(where:{$0.id == id}) { tasks[index].noticeMessage = noticeKey("A workflow step may have effects. Check the result before starting a new run; nothing was replayed.") }
-                } catch { await host.close(cancel:true); updateTask(id,state:Task.isCancelled ? .cancelled:.failed,finished:true) }
+                } catch { attempt?.fail(error); await host.close(cancel:true); updateTask(id,state:Task.isCancelled ? .cancelled:.failed,finished:true) }
                 cancelWorkflowInputs(runID:id)
                 await finishWorkflowUsage(id)
-                if started { await finishAIReceipt(id) }; await agentToolStore.releaseParentProtection(for:id); finishExecutionReservation(id)
+                if started { await finishAIReceipt(id, owner: owner) }; await agentToolStore.releaseParentProtection(for:id); finishExecutionReservation(id, owner: owner)
                 if let onFinished { await onFinished(tasks.first(where:{$0.id == id})?.status ?? .interrupted) }
             }
             if interaction { onOpenWorkspace?(.tasks(id)) }; return id

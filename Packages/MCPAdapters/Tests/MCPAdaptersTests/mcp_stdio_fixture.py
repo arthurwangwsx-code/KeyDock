@@ -9,6 +9,10 @@ import time
 
 signal.signal(signal.SIGTERM, signal.SIG_DFL)
 mode = sys.argv[1] if len(sys.argv) > 1 else "normal"
+if mode == "attempt-contract":
+    # 参数只由owned测试目录提供；启动哨兵与可变描述用于真正的生产stdio接线回归。
+    with open(sys.argv[3], "x", encoding="utf-8") as marker:
+        marker.write("synthetic started")
 if mode == "delayed-start-slow":
     time.sleep(1.25)
 lock = threading.Lock()
@@ -55,7 +59,11 @@ for raw in sys.stdin:
         if method == "initialize": send(identifier, {"protocolVersion": "2025-11-25", "capabilities": caps})
         else: send(identifier, {"supportedVersions": ["2026-07-28"], "capabilities": caps})
     elif method == "tools/list":
-        send(identifier, {"tools": [{"name": "echo", "description": "Synthetic echo", "inputSchema": schema}]})
+        description = "Synthetic echo"
+        if mode == "attempt-contract":
+            with open(sys.argv[2], encoding="utf-8") as source:
+                description = source.read(1024)
+        send(identifier, {"tools": [{"name": "echo", "description": description, "inputSchema": schema}]})
     elif method == "tools/call":
         text = params.get("arguments", {}).get("text", "")
         if mode in ("slow", "delayed-start-slow"): threading.Thread(target=respond_later, args=(identifier, text), daemon=True).start()

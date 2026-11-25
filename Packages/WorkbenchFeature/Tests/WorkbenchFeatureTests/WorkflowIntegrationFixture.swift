@@ -11,22 +11,25 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
     let directory: URL
     let store: WorkbenchModel
 
-    init(configurationWriter: (@MainActor (Data, URL) throws -> Void)? = nil) throws {
+    init(configurationWriter: (@MainActor (Data, URL) throws -> Void)? = nil,
+         allowContextCapture: Bool = false,
+         clipboardChangeCount: @escaping @MainActor () -> Int = { 0 },
+         invocationPersistenceFault: @escaping @Sendable (String, InvocationPersistencePoint) -> Int32? = { _, _ in nil }) throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Workflow-Integration-" + UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         do {
             var configuration = AppConfiguration()
             configuration.aiActions = []; configuration.clipboardEnabled = false
             try JSONEncoder().encode(configuration).write(to: directory.appendingPathComponent("configuration.json"), options: .withoutOverwriting)
-            store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: false,
+            store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: allowContextCapture,
                 clipboardWriter: { _ in Issue.record("Unexpected synthetic clipboard write") },
-                clipboardChangeCount: { 0 }, clipboardReader: { Issue.record("Unexpected clipboard input"); return nil },
+                clipboardChangeCount: clipboardChangeCount, clipboardReader: { Issue.record("Unexpected clipboard input"); return nil },
                 credentialReader: { _ in Issue.record("Unexpected credential read"); throw WorkflowIntegrationFixtureError.unexpectedCapability },
                 credentialWriter: { _,_ in Issue.record("Unexpected credential write"); throw WorkflowIntegrationFixtureError.unexpectedCapability },
                 configurationWriter: configurationWriter ?? { try PrivateFiles.write($0, to: $1) },
                 applicationCatalog: ApplicationCatalog(roots: []),
                 applicationLauncher: { _ in throw WorkflowIntegrationFixtureError.unexpectedCapability },
-                clipboardCaptureSource: WorkflowIntegrationClipboardSource(), languageApplier: { _ in })
+                clipboardCaptureSource: WorkflowIntegrationClipboardSource(), invocationPersistenceFault: invocationPersistenceFault, languageApplier: { _ in })
         } catch { try? FileManager.default.removeItem(at: directory); throw error }
     }
 

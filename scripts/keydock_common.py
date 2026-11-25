@@ -19,6 +19,36 @@ class PipelineError(RuntimeError):
     pass
 
 
+def current_data_compatibility():
+    return {"schemaVersion": 1, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]}}
+
+
+def validate_data_compatibility(value):
+    if not isinstance(value, dict) or set(value) != {"schemaVersion", "invocationEnvelope"} or type(value.get("schemaVersion")) is not int or value["schemaVersion"] != 1:
+        raise PipelineError("Unsupported App data compatibility declaration")
+    envelope = value["invocationEnvelope"]
+    if not isinstance(envelope, dict) or set(envelope) != {"readVersions", "writeVersions"}:
+        raise PipelineError("Invalid invocation reader declaration")
+    normalized = {}
+    for key in ("readVersions", "writeVersions"):
+        versions = envelope[key]
+        if (not isinstance(versions, list) or not 1 <= len(versions) <= 16 or
+                any(type(v) is not int or not 1 <= v <= 64 for v in versions) or len(set(versions)) != len(versions)):
+            raise PipelineError("Invalid invocation reader versions")
+        normalized[key] = sorted(versions)
+    if not set(normalized["writeVersions"]).issubset(normalized["readVersions"]):
+        raise PipelineError("App cannot write a format it cannot read")
+    return {"schemaVersion": 1, "invocationEnvelope": normalized}
+
+
+def app_data_compatibility(metadata, release_version):
+    if "dataCompatibility" in metadata:
+        return validate_data_compatibility(metadata["dataCompatibility"])
+    if re.fullmatch(r"0\.1\.0-alpha\.([1-9]|1[0-8])", str(release_version)):
+        return {"schemaVersion": 1, "invocationEnvelope": {"readVersions": [1], "writeVersions": [1]}}
+    raise PipelineError("This App has no known data reader declaration")
+
+
 def run(args, capture=False, cwd=ROOT, env=None):
     """始终使用参数数组；凭据只由系统工具从钥匙串读取，不拼接shell命令。"""
     result = subprocess.run([str(a) for a in args], cwd=cwd, env=env,
@@ -140,6 +170,7 @@ def inspect_app(path):
         notarized = subprocess.run(["xcrun", "stapler", "validate", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
     return {
         "bundle_id": bundle_id, "profile": profile, "safe_smoke": safe_smoke,
+        "data_compatibility": app_data_compatibility(metadata, release_version),
         "version": version, "release_version": release_version,
         "build_number": str(info.get("CFBundleVersion", "")), "commit": commit,
         "source_dirty": bool(metadata.get("source", {}).get("dirty")),

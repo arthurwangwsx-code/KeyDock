@@ -20,7 +20,7 @@ import tempfile
 import time
 import zipfile
 
-from keydock_common import CONFIG, ROOT, PipelineError, atomic_json, inspect_app, run, sha256, source_identity, validate_version
+from keydock_common import CONFIG, ROOT, PipelineError, atomic_json, inspect_app, run, sha256, source_identity, validate_version, current_data_compatibility, app_data_compatibility
 import release_quality as quality
 
 BUILD = ROOT / "build/pipeline"
@@ -192,6 +192,7 @@ def build(profile="preview", configuration=None, allow_dirty=False, identity=Non
     metadata = {"schemaVersion": 1, "version": CONFIG["version"], "buildNumber": CONFIG["buildNumber"], "profile": profile, "configuration": build_configuration,
                 "source": source, "architecture": "arm64", "xcode": xcode.splitlines()[0],
                 "swift": run(["xcrun", "swift", "--version"], capture=True).splitlines()[0]}
+    metadata["dataCompatibility"] = current_data_compatibility()
     if qualification is not None: metadata["qualificationSHA256"] = quality.digest(qualification)
     atomic_json(app / "Contents/Resources/BuildInfo.json", metadata)
     (app / "Contents/Resources/BuildInfo.json").chmod(0o644)
@@ -274,6 +275,7 @@ def package(app=None, profile=None):
                 "qualification": qualification, "qualificationSHA256": quality.digest(qualification), "coreCI": core_ci, "cloudOCR": "NOT_QUALIFIED",
                 "bundleIdentifier": facts["bundle_id"], "bundleVersion": facts["version"], "buildNumber": facts["build_number"],
                 "signature": facts["code_signature"], "notarized": facts["notarized"], "safeSmoke": False,
+                "dataCompatibility": facts["data_compatibility"],
                 "notarizationSubmissions": {"app": app_submission, "dmg": dmg_submission},
                 "productAcceptance": "PARTIAL; see release notes for physical-device and external-model limits",
                 "assets": [{"name": p.name, "bytes": p.stat().st_size, "sha256": sha256(p)} for p in (zip_path, dmg)]}
@@ -302,6 +304,7 @@ def verify_assets(directory):
     if manifest.get("architecture") != "arm64" or manifest.get("bundleIdentifier") != CONFIG["bundleIdentifier"] or manifest.get("signature", {}).get("kind") != "developer-id" or manifest.get("signature", {}).get("team_id") != CONFIG["teamID"] or manifest.get("signature", {}).get("hardened_runtime") is not True:
         raise PipelineError("Release identity, architecture or signing team is not the configured application")
     validate_version(manifest["version"])
+    app_data_compatibility(manifest, manifest["version"])
     if not re.fullmatch(r"[0-9a-f]{40}", manifest.get("source", {}).get("commit", "")):
         raise PipelineError("Release has no full source commit")
     if not legacy:
@@ -369,6 +372,8 @@ def unpack_release(directory, destination):
     run(["/usr/bin/ditto", "-x", "-k", archive, destination])
     app = Path(destination) / "KeyDock.app"
     facts = inspect_app(app)
+    if facts["data_compatibility"] != app_data_compatibility(manifest, manifest["version"]):
+        raise PipelineError("Packaged App data reader differs from its release manifest")
     if manifest.get("qualificationSHA256") and facts.get("qualification_sha256") != manifest["qualificationSHA256"]:
         raise PipelineError("Packaged App qualification differs from its manifest")
     if facts["commit"] != manifest["source"]["commit"] or facts["release_version"] != manifest["version"] or facts["source_dirty"] or facts["safe_smoke"] or facts["code_signature"]["team_id"] != CONFIG["teamID"] or not facts["notarized"] or not facts["code_signature"]["hardened_runtime"]:
@@ -410,7 +415,7 @@ def verify_dmg(directory, manifest, expected_app=None):
 
 
 def compare_app_payloads(actual, expected):
-    fields = ("bundle_id", "profile", "safe_smoke", "source_dirty", "commit", "release_version", "build_number", "architecture", "qualification_sha256", "bundle_sha256", "binary_sha256", "code_signature", "notarized")
+    fields = ("bundle_id", "profile", "safe_smoke", "source_dirty", "commit", "release_version", "build_number", "architecture", "qualification_sha256", "bundle_sha256", "binary_sha256", "code_signature", "notarized", "data_compatibility")
     if any(field not in actual or field not in expected or actual[field] != expected[field] for field in fields):
         raise PipelineError("DMG App differs from the qualified ZIP App")
 
@@ -574,6 +579,7 @@ def main():
     p = sub.add_parser("verify-release"); p.add_argument("--repo", default=CONFIG["repository"]); p.add_argument("--tag", default="v" + CONFIG["version"])
     p = sub.add_parser("verify-assets"); p.add_argument("directory", type=Path)
     p = sub.add_parser("qualify-install"); p.add_argument("--app", type=Path, default=BUILD / "preview/KeyDock Preview.app")
+    p = sub.add_parser("native-review"); p.add_argument("--app", type=Path, default=BUILD / "preview/KeyDock Preview.app"); p.add_argument("--fixture", type=Path)
     p = sub.add_parser("install"); p.add_argument("--app", type=Path, required=True); p.add_argument("--destination", type=Path); p.add_argument("--quit-running", action="store_true"); p.add_argument("--dry-run", action="store_true"); p.add_argument("--receipt", type=Path)
     p = sub.add_parser("rollback"); p.add_argument("receipt", type=Path); p.add_argument("--dry-run", action="store_true"); p.add_argument("--quit-running", action="store_true")
     p = sub.add_parser("debug"); p.add_argument("--no-launch", action="store_true")
@@ -599,6 +605,10 @@ def main():
     elif args.command == "verify-release": print(json.dumps(verify_remote(args.repo, args.tag), indent=2))
     elif args.command == "verify-assets": print(json.dumps(verify_assets(args.directory), indent=2))
     elif args.command == "qualify-install": run([sys.executable, ROOT / "scripts/qualify-install.py", "--app", args.app.expanduser().resolve(), "--helper", helper()])
+    elif args.command == "native-review":
+        command = [sys.executable, ROOT / "scripts/native-review.py", "--app", args.app.expanduser().resolve()]
+        if args.fixture is not None: command += ["--fixture", args.fixture.expanduser().absolute()]
+        run(command)
     elif args.command == "install": install(args.app, args.destination, args.quit_running, args.dry_run, args.receipt)
     elif args.command == "rollback":
         command = [sys.executable, ROOT / "scripts/install-app.py", "--rollback", args.receipt.expanduser().absolute(), "--helper", helper()]

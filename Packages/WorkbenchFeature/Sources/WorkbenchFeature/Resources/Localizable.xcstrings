@@ -65,6 +65,22 @@
         }
       }
     },
+    "A new attempt may repeat completed work. Unknown effects cannot be undone or assumed safe to repeat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A new attempt may repeat completed work. Unknown effects cannot be undone or assumed safe to repeat."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新尝试可能重复已完成的操作。未知效果无法撤销，也不能据此认定重复执行安全。"
+          }
+        }
+      }
+    },
     "A new attempt rechecks current scope and may repeat completed work. Unknown effects must be checked first.": {
       "localizations": {
         "zh-Hans": {
@@ -333,6 +349,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法保存任务回执，AI 请求未发送。"
+          }
+        }
+      }
+    },
+    "AI service and model": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI service and model"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 服务与模型"
           }
         }
       }
@@ -893,6 +925,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "加入合并清单"
+          }
+        }
+      }
+    },
+    "Admitting new attempt…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admitting new attempt…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在接纳新尝试…"
           }
         }
       }
@@ -1869,6 +1917,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "请检查名称、绝对路径、参数、环境变量和超时时间"
+          }
+        }
+      }
+    },
+    "Checking current scope…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking current scope…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在检查当前范围…"
           }
         }
       }
@@ -2961,6 +3025,22 @@
         }
       }
     },
+    "Connect or refresh the selected MCP sources first, then review this attempt again. Nothing was sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect or refresh the selected MCP sources first, then review this attempt again. Nothing was sent."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先连接或刷新选定的 MCP 来源，再重新审阅本次尝试。尚未发送任何请求。"
+          }
+        }
+      }
+    },
     "Connection": {
       "localizations": {
         "en": {
@@ -3293,6 +3373,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "当前剪贴板"
+          }
+        }
+      }
+    },
+    "Current execution scope": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current execution scope"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前执行范围"
+          }
+        }
+      }
+    },
+    "Current time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前时间"
           }
         }
       }
@@ -4081,6 +4193,22 @@
         }
       }
     },
+    "Environment overrides": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Environment overrides"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "环境覆盖项"
+          }
+        }
+      }
+    },
     "Estimate from known usage": {
       "localizations": {
         "en": {
@@ -4781,6 +4909,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hour: %d"
+          }
+        }
+      }
+    },
+    "I checked the previous effects and want a new attempt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the previous effects and want a new attempt."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我已检查此前的操作效果，并决定开始新尝试。"
           }
         }
       }
@@ -5505,6 +5649,22 @@
         }
       }
     },
+    "Literal text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Literal text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定文本"
+          }
+        }
+      }
+    },
     "Loading preview…": {
       "localizations": {
         "en": {
@@ -5729,6 +5889,22 @@
         }
       }
     },
+    "MCP tool": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP tool"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP 工具"
+          }
+        }
+      }
+    },
     "Main configuration counts (includes built-in definitions)": {
       "localizations": {
         "en": {
@@ -5821,6 +5997,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "手动输入"
+          }
+        }
+      }
+    },
+    "Maximum tool calls": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum tool calls"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具调用上限"
+          }
+        }
+      }
+    },
+    "Maximum turns": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum turns"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轮次上限"
           }
         }
       }
@@ -6129,6 +6337,22 @@
         }
       }
     },
+    "New attempt input": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New attempt input"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新尝试输入"
+          }
+        }
+      }
+    },
     "New collection": {
       "localizations": {
         "zh-Hans": {
@@ -6141,6 +6365,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "New collection"
+          }
+        }
+      }
+    },
+    "New input": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New input"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新输入"
           }
         }
       }
@@ -6673,6 +6913,22 @@
         }
       }
     },
+    "Only this new input is used. Results are shown without automatic copying or replacement.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only this new input is used. Results are shown without automatic copying or replacement."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只使用本次新输入。结果仅展示，不会自动复制或替换。"
+          }
+        }
+      }
+    },
     "Open": {
       "localizations": {
         "en": {
@@ -7105,6 +7361,22 @@
         }
       }
     },
+    "Prepare new attempt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare new attempt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "准备新尝试"
+          }
+        }
+      }
+    },
     "Preparing configuration preview": {
       "localizations": {
         "en": {
@@ -7181,6 +7453,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preview text"
+          }
+        }
+      }
+    },
+    "Previous attempt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous attempt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次尝试"
           }
         }
       }
@@ -8333,6 +8621,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "检查命令"
+          }
+        }
+      }
+    },
+    "Review current scope. The previous attempt will stay unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review current scope. The previous attempt will stay unchanged."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请审阅当前范围。上次尝试的记录将保持不变。"
           }
         }
       }
@@ -9521,6 +9825,22 @@
         }
       }
     },
+    "Set a compatible AI endpoint and model in Settings, then review again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a compatible AI endpoint and model in Settings, then review again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在设置中配置兼容的 AI 接口与模型，再重新审阅。"
+          }
+        }
+      }
+    },
     "Settings": {
       "localizations": {
         "en": {
@@ -10077,6 +10397,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Step"
+          }
+        }
+      }
+    },
+    "Steps": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步骤"
           }
         }
       }
@@ -10673,6 +11009,38 @@
         }
       }
     },
+    "The new attempt could not be admitted. Your input was kept; review settings and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The new attempt could not be admitted. Your input was kept; review settings and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法接纳新尝试。已保留输入，请检查设置后重试。"
+          }
+        }
+      }
+    },
+    "The previous worker is still finishing. Wait, then review again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The previous worker is still finishing. Wait, then review again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次任务仍在收尾。请稍候再重新审阅。"
+          }
+        }
+      }
+    },
     "The rate limit is 64 saved service and model pairs.": {
       "localizations": {
         "en": {
@@ -10701,6 +11069,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "结果已生成，但无法确认复制成功，剪贴板可能已改变。完整结果已保留。"
+          }
+        }
+      }
+    },
+    "The saved definition differs from the previous attempt. Review the current scope before starting.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved definition differs from the previous attempt. Review the current scope before starting."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存的定义与上次尝试不同。开始前请审阅当前范围。"
           }
         }
       }
@@ -10929,6 +11313,38 @@
         }
       }
     },
+    "This attempt or its saved definition is no longer available. History remains read-only.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This attempt or its saved definition is no longer available. History remains read-only."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本次记录或其保存的定义已不可用。历史记录仅供查看。"
+          }
+        }
+      }
+    },
+    "This attempt or its settings changed. Review again before starting. Your input was kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This attempt or its settings changed. Review again before starting. Your input was kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本次记录或设置已变化。开始前请重新审阅。已保留输入。"
+          }
+        }
+      }
+    },
     "This collection no longer exists. Start a new collection to save this draft.": {
       "localizations": {
         "en": {
@@ -11025,6 +11441,38 @@
         }
       }
     },
+    "This history record has no saved definition reference and cannot be restarted here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This history record has no saved definition reference and cannot be restarted here."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这条历史记录没有保存的定义引用，无法在此开始新尝试。"
+          }
+        }
+      }
+    },
+    "This is a new attempt. The previous result and recorded cost were kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a new attempt. The previous result and recorded cost were kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这是一次新尝试。已保留上次结果和记录的费用。"
+          }
+        }
+      }
+    },
     "This item is still in use. Remove its references, then review again.": {
       "localizations": {
         "en": {
@@ -11085,6 +11533,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "这会删除已保存的用量元数据。正在运行的请求保留本次用量，结束后可能产生新记录。AI 动作和 API 凭据会保留。"
+          }
+        }
+      }
+    },
+    "This saved definition is too large for an attempt review. Edit it before trying again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved definition is too large for an attempt review. Edit it before trying again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存的定义超出审阅容量。请编辑后重试。"
           }
         }
       }
@@ -11421,6 +11885,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "已超时"
+          }
+        }
+      }
+    },
+    "Timeout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timeout"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超时"
           }
         }
       }

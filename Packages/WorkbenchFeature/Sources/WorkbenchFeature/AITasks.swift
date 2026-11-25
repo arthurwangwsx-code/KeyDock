@@ -52,21 +52,27 @@ extension WorkbenchModel {
             usageRecorder: AIUsageRecorder(rate: AIRateDefinition.snapshot(in: configuration.aiRates, configuration: config)))
     }
     @discardableResult public func runAI(action: AIActionPreset, draft: AIDraftDocument, caller: ExecutionCaller = .user) -> UUID? {
+        runAI(action: action, draft: draft, caller: caller, attempt: nil)
+    }
+    @discardableResult func runAI(action: AIActionPreset, draft: AIDraftDocument, caller: ExecutionCaller, attempt: AttemptExecutionContext?) -> UUID? {
         guard let input = validatedAIInput(draft) else { return nil }
         let frozenOrigin = AIInputOrigin(draft)
         let service: ChatCompletionsProvider
         let authorization: ExecutionRequest
-        let id = UUID()
+        let id = attempt?.id ?? UUID()
+        let runDefinition = savedRunReference(.action(action))
+        let copiesAutomatically = attempt == nil && action.output == .copy
         do { service = try provider(override: action.modelOverride); authorization = try authorizeHostAction(id: "ai." + action.id.uuidString, operation: .generateText, resource: service.configuration.endpoint.absoluteString + "|" + service.configuration.model + "|" + action.prompt + "|" + input, availableContext: [.explicitInput], modelOverride: action.modelOverride, caller: caller, invocation: id) } catch { draft.noticeMessage = aiErrorNotice(error); return nil }
         guard reserveExecution(id, draft: draft) else { return nil }
         draft.noticeMessage = .none
         draft.latestRunID = id; let revision = draft.revision
-        if action.output == .copy { latestAutoCopyRunID = id }
-        let copyChangeCount = action.output == .copy ? clipboardChangeCount() : nil
-        if let original = draft.sourceTarget { resultTargets[id] = original }
+        if copiesAutomatically { latestAutoCopyRunID = id }
+        let copyChangeCount = copiesAutomatically ? clipboardChangeCount() : nil
+        if attempt == nil, let original = draft.sourceTarget { resultTargets[id] = original }
         tasks.insert(RunningTaskItem(id: id, title: action.displayName, state: .running, draftID: draft.id, titleKey: action.builtinKey, modelName: service.configuration.model), at: 0)
         frozenOrigin.apply(to: &tasks[0])
         tasks[0].aiUsageSummary = .pending
+        tasks[0].receiptIsAI = true
         aiTaskIDs.insert(id)
         registerActivity(id,commandID:"ai.run",category:.ai)
         let request = AIRequest(messages: [.init(role: "system", content: action.prompt), .init(role: "user", content: input)], tools: [])
@@ -74,11 +80,13 @@ extension WorkbenchModel {
             guard let self else { return }
             var observations = AIUsageAccumulator()
             var outcome = "failed", receiptStarted = false
+            var owner: InvocationWorkerOwnership?
             do {
-                try await beginAIReceipt(id: id, kind: .text, authorization: authorization)
+                owner = try await beginAIReceipt(id: id, kind: .text, authorization: authorization, runDefinition: runDefinition, attempt: attempt)
                 receiptStarted = true
                 try Task.checkCancellation()
                 guard !isShuttingDown else { throw CancellationError() }
+                try attempt?.willDispatch(in: self)
                 for try await event in service.stream(request) {
                     try Task.checkCancellation()
                     switch event {
@@ -94,7 +102,7 @@ extension WorkbenchModel {
                       !output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw AITextResultError.empty }
                 outcome = "succeeded"
                 updateTask(id, state: .completed, finished: true)
-                if action.output == .copy, latestAutoCopyRunID == id, draft.latestRunID == id && draft.revision == revision,
+                if copiesAutomatically, latestAutoCopyRunID == id, draft.latestRunID == id && draft.revision == revision,
                    let task = tasks.first(where: { $0.id == id }), !task.outputIsIncomplete {
                     if let copyChangeCount, clipboardChangeCount() == copyChangeCount {
                         do { try copyAuthorizedText(task.output, caller: caller) }
@@ -111,6 +119,7 @@ extension WorkbenchModel {
                     }
                 }
             } catch {
+                attempt?.fail(error)
                 markIncompleteAIError(error, id: id)
                 let cancelled = Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled
                 outcome = cancelled ? "cancelled" : "failed"
@@ -118,8 +127,8 @@ extension WorkbenchModel {
                 if !cancelled { taskError(error, id: id, draft: draft, revision: revision) }
             }
             await recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: action.id.uuidString, observations: observations, outcome: outcome, recorder: service.usageRecorder)
-            if receiptStarted { await finishAIReceipt(id) }
-            finishExecutionReservation(id)
+            if receiptStarted { await finishAIReceipt(id, owner: owner) }
+            finishExecutionReservation(id, owner: owner)
         }
         return id
     }

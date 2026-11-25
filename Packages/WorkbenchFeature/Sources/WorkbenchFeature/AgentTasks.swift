@@ -30,7 +30,11 @@ extension WorkbenchModel {
     }
 
     @discardableResult public func runAgent(_ definition: AgentDefinition, input: String) -> UUID? {
-        let id = UUID()
+        runAgent(definition, input: input, attempt: nil)
+    }
+    @discardableResult func runAgent(_ definition: AgentDefinition, input: String, attempt: AttemptExecutionContext?) -> UUID? {
+        let id = attempt?.id ?? UUID()
+        let runDefinition = savedRunReference(.agent(definition))
         do {
             guard !isShuttingDown, !input.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty,
                   input.utf8.count <= TaskTextLimits.inputBytes else { throw AIProviderError.invalidRequest }
@@ -54,7 +58,7 @@ extension WorkbenchModel {
             guard ownsDraft(draft), reserveExecution(id,draft:draft) else { return nil }
             draft.latestRunID = id; agentRunDefinitions[id] = definition
             tasks.insert(RunningTaskItem(id:id,title:definition.name,state:.running,draftID:draft.id,modelName:service.configuration.model),at:0)
-            tasks[0].aiUsageSummary = .pending; aiTaskIDs.insert(id)
+            tasks[0].aiUsageSummary = .pending; tasks[0].receiptIsAI = true; aiTaskIDs.insert(id)
             registerActivity(id,commandID:"agent."+definition.id.uuidString,category:.agent)
             taskHandles[id] = Task { [weak self] in
                 guard let self else { return }
@@ -65,11 +69,13 @@ extension WorkbenchModel {
                 }
                 defer { deadline.cancel() }
                 var usage = AIUsageAccumulator(), outcome = "failed", started = false
+                var owner: InvocationWorkerOwnership?
                 var broker: ScopedToolBroker?
                 do {
-                    try await beginAIReceipt(id:id,kind:.agent,authorization:authorization); started = true
-                    let mcpTools = try await prepareMCPTools(definition,sources:sources,runID:id)
+                    owner = try await beginAIReceipt(id:id,kind:.agent,authorization:authorization,runDefinition:runDefinition,attempt:attempt); started = true
+                    let mcpTools = try await prepareMCPTools(definition,sources:sources,runID:id,attempt:attempt)
                     try Task.checkCancellation()
+                    try attempt?.willDispatch(in: self)
                     let tools = frozenTools+mcpTools
                     let routing = try ScopedToolBroker(runID:id,tools:tools,journal:agentToolStore) { [weak self] proposal in guard let self else { return false }; return try await self.requestApproval(proposal) }
                     broker = routing
@@ -90,6 +96,7 @@ extension WorkbenchModel {
                     guard !isShuttingDown,!cancelledTaskIDs.contains(id),!timedOutTaskIDs.contains(id) else { throw CancellationError() }
                     outcome = "succeeded"; updateTask(id,state:.completed,finished:true)
                 } catch {
+                    attempt?.fail(error)
                     await broker?.close(cancel:true); await closeMCPRun(id)
                     markIncompleteAIError(error,id:id)
                     let uncertain = (await broker?.unknownInvocationCount() ?? 0) > 0 || error is MCPSetupError || (error as? AgentToolError) == .receiptUnavailable
@@ -106,7 +113,7 @@ extension WorkbenchModel {
                 }
                 cancelApprovals(runID:id)
                 await recordUsage(id:id,endpoint:service.configuration.endpoint,model:service.configuration.model,purpose:"agent."+definition.id.uuidString,observations:usage,outcome:outcome,recorder:service.usageRecorder)
-                if started { await finishAIReceipt(id) }; await agentToolStore.releaseParentProtection(for:id); finishExecutionReservation(id)
+                if started { await finishAIReceipt(id, owner: owner) }; await agentToolStore.releaseParentProtection(for:id); finishExecutionReservation(id, owner: owner)
             }
             onOpenWorkspace?(.tasks(id)); return id
         } catch { workspaceNoticeMessage = aiErrorNotice(error); return nil }
@@ -116,8 +123,8 @@ extension WorkbenchModel {
         pausedAgentIDs.insert(id); cancelTask(id)
     }
     public func restartAgent(_ id: UUID) {
-        guard let definition = agentRunDefinitions[id],let task = tasks.first(where:{$0.id == id}),!task.isRunning,let draftID = task.draftID,let draft = drafts[draftID] else { return }
-        _ = runAgent(definition,input:draft.input)
+        guard let task = tasks.first(where: { $0.id == id }), !task.isRunning, task.runAttempt?.definition.kind == .agent else { return }
+        onPrepareAttempt?(id)
     }
 
     func requestApproval(_ proposal: AgentToolApproval) async throws -> Bool {

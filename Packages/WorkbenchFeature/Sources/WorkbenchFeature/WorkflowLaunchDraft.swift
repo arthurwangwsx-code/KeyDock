@@ -9,6 +9,9 @@ import AutomationCore
     @Published private(set) var input = ""
     @Published private(set) var inputRejected = false
     @Published var needsReview = false
+    @Published var closed = false
+    var appeared = false
+    var startedTaskID: UUID?
     @Published var noticeMessage: LocalizedNotice = .none
     var notice: String { noticeMessage.rendered(maximumBytes: 8_192) }
     init(_ definition: WorkflowDefinition) { self.definition = definition }
@@ -28,11 +31,12 @@ import AutomationCore
 extension WorkspaceSession {
     @discardableResult func prepareWorkflowLaunch(_ id: UUID, in store: WorkbenchModel) -> Bool {
         guard !store.isShuttingDown else { return false }
-        guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else {
+        guard attemptPreparation == nil, !attemptPreparationDismissing, savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else {
             store.workspaceNoticeMessage = noticeKey("Finish or cancel the saved item review before opening another action.")
             return false
         }
         if let current = workflowLaunch {
+            guard !current.closed else { return false }
             guard current.definition.id != id else { return true }
             current.noticeMessage = noticeKey("Finish or cancel the current workflow input before opening another.")
             return false
@@ -45,13 +49,16 @@ extension WorkspaceSession {
         workflowLaunch = WorkflowLaunchDraft(definition)
         return true
     }
-    func cancelWorkflowLaunch(_ id: UUID) { if workflowLaunch?.id == id { workflowLaunch = nil } }
+    func cancelWorkflowLaunch(_ id: UUID) {
+        guard let current = workflowLaunch, current.id == id else { return }
+        if current.appeared { current.closed = true } else { workflowLaunch = nil }
+    }
     func canRunWorkflowLaunch(_ id: UUID, in store: WorkbenchModel) -> Bool {
-        guard !store.isShuttingDown, let launch = workflowLaunch, launch.id == id else { return false }
+        guard !store.isShuttingDown, let launch = workflowLaunch, launch.id == id, !launch.closed else { return false }
         return !launch.needsReview && !launch.inputRejected && !launch.input.isEmpty && launch.input.utf8.count <= TaskTextLimits.inputBytes
     }
     @discardableResult func reloadWorkflowLaunch(_ id: UUID, in store: WorkbenchModel) -> Bool {
-        guard !store.isShuttingDown, let launch = workflowLaunch, launch.id == id else { return false }
+        guard !store.isShuttingDown, let launch = workflowLaunch, launch.id == id, !launch.closed else { return false }
         guard let current = store.configuration.workflows.first(where: { $0.id == launch.definition.id }) else {
             launch.needsReview = true; launch.noticeMessage = noticeKey("This saved workflow is no longer available."); return false
         }
@@ -67,10 +74,10 @@ extension WorkspaceSession {
         guard current == launch.definition else {
             launch.needsReview = true; launch.noticeMessage = noticeKey("The saved workflow changed. Reload it and review the steps before running."); return false
         }
-        guard store.runWorkflow(launch.definition, input: launch.input) != nil else {
+        guard let taskID = store.runWorkflow(launch.definition, input: launch.input) else {
             launch.noticeMessage = noticeKey("Workflow could not start. Check its steps and AI configuration."); return false
         }
-        if workflowLaunch?.id == id { workflowLaunch = nil }
+        launch.startedTaskID = taskID; cancelWorkflowLaunch(id)
         return true
     }
 }

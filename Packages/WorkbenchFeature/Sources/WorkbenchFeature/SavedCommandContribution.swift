@@ -25,7 +25,11 @@ struct FrozenCommandContribution: Codable, Sendable {
     }
 }
 
-struct PreparedSavedCommand: Sendable { let command:SavedCommand; let showWorkspace:Bool }
+struct PreparedSavedCommand: Sendable {
+    let command: SavedCommand
+    let showWorkspace: Bool
+    var attempt: AttemptExecutionContext? = nil
+}
 
 enum SavedCommandContribution {
     static func manifest() throws -> ContributionManifest {
@@ -50,7 +54,7 @@ enum SavedCommandContribution {
             },read:nil)
         let handler = ContributionHandlerRegistration(contract:.init(action:action),body:.immediate {store,resolved,payload,caller in
             guard let prepared = payload as? PreparedSavedCommand else { throw ContributionCatalogError.invalidInput }
-            guard let id = store.runPreparedCommand(prepared.command,resolved:resolved,caller:caller,showWorkspace:prepared.showWorkspace) else { return .rejected }
+            guard let id = store.runPreparedCommand(prepared.command,resolved:resolved,caller:caller,showWorkspace:prepared.showWorkspace,attempt:prepared.attempt) else { return .rejected }
             return .started(id)
         })
         return .init(provider:provider,handlers:[handler])

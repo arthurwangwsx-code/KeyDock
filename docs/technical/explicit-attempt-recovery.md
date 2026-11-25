@@ -1,6 +1,6 @@
 # 任务持久化与显式新尝试
 
-2026-11-26，任务33实施中：类型化记录／CAS、四类定义指纹与MCP选中工具合同已完成Core切片，App生产入口和独立准备页尚未接线。承接原5.5的完整RunStore义务，产品切片是“持久类型化记录 → 重启只读检查 → 准备新尝试 → 重新授权与持久化 → 新UUID执行”。原输入／输出的可选保留、完整checkpoint材料及真正续接另行建设；本切片不能代替完整RunStore验收。见[Core复查](../implementation/task-recovery-core-2026-11-26.md)。
+2026-11-26，任务33实施中：Core及独立准备页、四类生产新授权入口、默认仅展示和安装数据版本门禁已接通。承接原5.5的完整RunStore义务，产品切片是“持久类型化记录 → 重启只读检查 → 准备新尝试 → 重新授权与持久化 → 新UUID执行”。原输入／输出的可选保留、完整checkpoint材料及真正续接另行建设；本切片不能代替完整RunStore验收。见[Core复查](../implementation/task-recovery-core-2026-11-26.md)和[App接线与原生复查](../implementation/explicit-attempt-ui-2026-11-26.md)。
 
 ## 产品闭环
 
@@ -26,9 +26,11 @@ RunStore是既有InvocationStore同一actor上的类型化查询与CAS；逻辑�
 
 MCP合同仅比较完整选中工具、来源ID／配置revision、原名／模型名／描述／schema及不可信只读hint，不包含连接generation／catalog.revision；后两者继续由当前会话用于迟到围栏。流式长度分帧hash沿用生产64KiB单schema、256KiB目录、8192节点／32层预算，不因投影膨胀拒绝合法目录。它不连接服务、不读取密钥，也不产生工具权限。
 
-含类型化元数据的文件使用Envelope v2，新App读v1／v2；纯legacy仍写v1。alpha.18仅支持v1，会明确拒读v2，不能忽略字段后重写。当前App入口尚未生成v2。正式接线／发行前必须补齐安装／回退的数据版本检查与可验证恢复策略；仅保留旧App不能宣称已具备完整数据回退。
+含类型化元数据的文件使用Envelope v2，新App读v1／v2；纯legacy仍写v1。alpha.18仅支持v1，会明确拒读v2，不能忽略字段后重写。alpha.19候选的四类保存定义执行会生成v2。统一安装器实施只读版本门禁；旧二进制备份不能宣称完整数据回退，跨版本archive／restore仍未建设。
 
-下一切片的安装门禁计划从已验签候选App的BuildInfo读取能力声明，不用当前checkout配置推断；正式交换前正常退出并持有既有runtime-owner data lease，再有界只读复查三个固定回执文件的Envelope版本。install／rollback／失败补偿及“已经回退”快路都须覆盖，dry-run不创建目录或锁、不退出App。已知alpha.18只读v1，遇到v2拒绝交换并保留双方App；不剥离字段或删除数据来放行。旧安装回执的结构兼容与本次fresh capability检查分离；archive／restore属于独立的多库一致性与显式恢复点方案。本计划尚未实现，不为当前安装器新增资格，手工拖拽与历史脚本亦不在统一工具门禁范围内。
+安装门禁从已验签候选App的BuildInfo读取schema1能力声明，不用当前checkout配置推断；只对已知alpha.1–18缺省声明映射为v1，未知版本缺失或无效声明拒绝。正式交换前正常退出并持有既有runtime-owner data lease，再有界只读复查三个固定回执文件的Envelope版本、目录和文件身份（含原缺失项）。install／rollback／失败补偿及“已经回退”快路均重新检查，dry-run不创建目录或锁、不退出App。alpha.18遇到v2拒绝交换并保留双方App；不剥离字段或删除数据来放行。旧安装回执的结构兼容与本次fresh capability检查分离。签名Preview的合成v2放行／read-v1-only拒绝已验证；拒绝声明是重签合成合同，不是真实alpha.18运行验证。手工拖拽、历史脚本及任意自定义数据域不在统一工具门禁范围内。
+
+正式域按当前UID的用户Application Support定位，默认Preview域按OS getconf定位，不继承构建gate的TMPDIR。实测Foundation temporaryDirectory在本机也未采用该TMPDIR；原生验收使用单独的`native-review`入口及仅Preview编译接受的private owned UUID／marker目录。它不修改安装器resolver，不改变普通Preview的默认域，不构成OS沙箱。
 
 ## 恢复事务
 

@@ -31,7 +31,8 @@
 | [alpha.16发行与安装证据](implementation/alpha16-release-2026-11-25.md) | 干净本机／同源CI、公证／公开回下载、实际About16和alpha.15回退 |
 | [设置摘要实现与原生复查](implementation/settings-summary-export-2026-11-25.md) | 敏感哨兵、关闭／保存身份、英文截断修复及实际文件字节 |
 | [P1会话保留](technical/session-retention.md) | 已实现的总预算、元数据维护、清除和恢复围栏及待验收边界 |
-| [任务持久化与显式新尝试](technical/explicit-attempt-recovery.md) | 任务33：类型化Core／CAS及定义指纹已实现，独立准备与生产新授权仍待接线 |
+| [任务持久化与显式新尝试](technical/explicit-attempt-recovery.md) | 任务33：类型化Core、独立准备／四类新授权和安装数据版本门禁已接通，完整验收仍开放 |
+| [准备页与生产入口复查](implementation/explicit-attempt-ui-2026-11-26.md) | 真实进程／loopback／stdio故障围栏、原生修补、合成隔离及签名版本门禁 |
 | [任务恢复Core复查](implementation/task-recovery-core-2026-11-26.md) | 原子新intent、旧回调围栏、保留预算、固定指纹与MCP流式合同；非App日用验收 |
 | [导入文本上下文](technical/imported-text-context.md) | 单槽来源、AI冻结、联合预算与清除；alpha.10候选 |
 | [导入来源实现复查](implementation/imported-text-context-2026-11-25.md) | 合成提取／MCP／AI隐私、失败接纳与原生观察边界 |

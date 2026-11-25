@@ -60,12 +60,16 @@ public struct MCPServerConfiguration: Codable, Equatable, Sendable, Identifiable
         timeoutSeconds = try fields.decode(TimeInterval.self, forKey: .timeoutSeconds)
     }
     public func validate() throws {
+        try validateStructure()
+        if transportKind == .stdio { try stdioLaunch?.validate() }
+    }
+    public func validateStructure() throws {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 256,
               timeoutSeconds.isFinite, (1...120).contains(timeoutSeconds) else { throw MCPClientError.invalidConfiguration }
         if transportKind == .stdio {
             guard let stdioLaunch, endpoint.isFileURL, endpoint.path == stdioLaunch.executable,
                   secretReference == nil, !allowsLocalHTTP else { throw MCPClientError.invalidConfiguration }
-            try stdioLaunch.validate()
+            try stdioLaunch.validateStructure()
             return
         }
         guard stdioLaunch == nil else { throw MCPClientError.invalidConfiguration }

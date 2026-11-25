@@ -101,7 +101,7 @@ extension SettingsSession {
 }
 
 extension WorkspaceSession {
-    var canPresentSourceRemoval: Bool { sourceRemoval == nil && !sourceRemovalDismissing && savedToolRemoval == nil && workflowLaunch == nil }
+    var canPresentSourceRemoval: Bool { !hasPendingOrDismissingModal }
     func prepareSourceRemoval(_ target: SavedSourceTarget, in store: WorkbenchModel) {
         guard !store.isShuttingDown, canPresentSourceRemoval else { return }
         let presentation = SourceRemovalPresentation(target); sourceRemoval = presentation; presentation.refresh(in: store)

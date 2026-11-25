@@ -96,9 +96,10 @@ class ReleaseQualityTests(unittest.TestCase):
     def test_same_team_old_dmg_app_cannot_replace_the_qualified_zip_payload(self):
         fields = ("bundle_id","profile","safe_smoke","source_dirty","commit","release_version","build_number","architecture","qualification_sha256","bundle_sha256","binary_sha256","code_signature","notarized")
         expected = {name:"synthetic" for name in fields}
-        keydock.compare_app_payloads(expected.copy(),expected)
-        for field in ("commit","release_version","build_number","qualification_sha256","bundle_sha256"):
-            actual = expected.copy(); actual[field] = "old payload"
+        expected["data_compatibility"] = keydock.current_data_compatibility()
+        keydock.compare_app_payloads(copy.deepcopy(expected),expected)
+        for field in ("commit","release_version","build_number","qualification_sha256","bundle_sha256","data_compatibility"):
+            actual = copy.deepcopy(expected); actual[field] = "old payload"
             with self.subTest(field=field), self.assertRaises(PipelineError): keydock.compare_app_payloads(actual,expected)
 
     def test_only_successful_same_source_push_ci_can_authorize_packaging(self):

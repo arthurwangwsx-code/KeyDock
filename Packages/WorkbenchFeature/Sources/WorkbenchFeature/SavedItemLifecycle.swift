@@ -43,6 +43,8 @@ struct SavedItemRemovalReview: Identifiable {
 @MainActor final class SavedItemRemovalPresentation: ObservableObject, Identifiable {
     let id = UUID()
     @Published private(set) var review: SavedItemRemovalReview
+    @Published var closed = false
+    var appeared = false
     init(_ review: SavedItemRemovalReview) { self.review = review }
     func update(_ review: SavedItemRemovalReview) { self.review = review }
 }
@@ -144,19 +146,20 @@ extension WorkbenchModel {
 
 extension WorkspaceSession {
     func prepareToolRemoval(_ target: SavedItemTarget, in store: WorkbenchModel) {
-        guard target.isWorkspaceTool, savedToolRemoval == nil, workflowLaunch == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return }
+        guard target.isWorkspaceTool, attemptPreparation == nil, !attemptPreparationDismissing, savedToolRemoval == nil, workflowLaunch == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return }
         savedToolRemoval = store.reviewSavedItemRemoval(target).map(SavedItemRemovalPresentation.init)
     }
     func refreshToolRemoval(_ presentationID: UUID, in store: WorkbenchModel) {
-        guard let current = savedToolRemoval, current.id == presentationID else { return }
+        guard let current = savedToolRemoval, current.id == presentationID, !current.closed else { return }
         if let review = store.reviewSavedItemRemoval(current.review.target) { current.update(review) }
     }
     func cancelToolRemoval(_ presentationID: UUID) {
-        guard savedToolRemoval?.id == presentationID else { return }; savedToolRemoval = nil
+        guard let current = savedToolRemoval, current.id == presentationID else { return }
+        if current.appeared { current.closed = true } else { savedToolRemoval = nil }
     }
     @discardableResult func confirmToolRemoval(_ reviewID: UUID, in store: WorkbenchModel) -> Bool {
-        guard let current = savedToolRemoval, current.review.id == reviewID, store.removeSavedItem(current.review) else { return false }
-        savedToolRemoval = nil
+        guard let current = savedToolRemoval, !current.closed, current.review.id == reviewID, store.removeSavedItem(current.review) else { return false }
+        cancelToolRemoval(current.id)
         return true
     }
 }

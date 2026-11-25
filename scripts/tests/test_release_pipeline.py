@@ -97,7 +97,7 @@ class ReleasePipelineTests(unittest.TestCase):
                     "source": {"commit": "a" * 40, "dirty": False}, "safeSmoke": False,
                     "architecture": "arm64", "bundleIdentifier": CONFIG["bundleIdentifier"],
                     "signature": {"kind": "developer-id", "team_id": CONFIG["teamID"], "hardened_runtime": True},
-                    "notarized": True,
+                    "notarized": True, "dataCompatibility": keydock.current_data_compatibility(),
                     "assets": [{"name": p.name, "bytes": p.stat().st_size, "sha256": sha256(p)} for p in (zip_path, dmg)]}
         self.save_manifest(directory, manifest)
         return manifest

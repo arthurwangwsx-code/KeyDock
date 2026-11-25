@@ -497,6 +497,22 @@
         }
       }
     },
+    "Sample task attempts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample task attempts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务尝试示例"
+          }
+        }
+      }
+    },
     "Sample workspace results": {
       "localizations": {
         "en": {

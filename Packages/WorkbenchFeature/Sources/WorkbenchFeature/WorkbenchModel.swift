@@ -60,6 +60,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public internal(set) var isClearingHistory = false
     @Published public internal(set) var isClearingUsage = false
     public var onHistoryRemoved: ((Set<UUID>, Set<UUID>) -> Void)?
+    public var onAttemptHistoryChanged: ((Set<UUID>) -> Void)?
     let sessionLimits: SessionRetentionPolicy
     var executionReservations: Set<UUID> = []
     var visibleDraftReferences: [UUID: UUID] = [:]
@@ -85,6 +86,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public var onOpenShortcutSettings: ((CommandItem) -> Void)?
     public var onOpenWorkspace: ((WorkspaceRoute) -> Void)?
     public var onOpenClipboard: (() -> Void)?
+    public var onPrepareAttempt: ((UUID) -> Void)?
     public var onDesktopAction: ((CommandItem, ExecutionCaller) -> Void)?
     public var onDesktopActionFinished: ((UUID) -> Void)?
     public var onAIAction: ((AIDraftDocument, ExecutionCaller) -> Void)?
@@ -138,7 +140,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public internal(set) var workflowCheckpoints: [UUID: WorkflowCheckpoint] = [:]
     @Published public internal(set) var pendingWorkflowInputs: [PendingWorkflowInput] = []
     var workflowInputContinuations: [UUID: CheckedContinuation<String?, Never>] = [:]
-    @Published public internal(set) var mcpCatalogs: [UUID: MCPToolCatalog] = [:]
+    @Published public internal(set) var mcpCatalogs: [UUID: MCPToolCatalog] = [:] { didSet { mcpCatalogEpoch = UUID() } }
+    var mcpCatalogEpoch = UUID()
     @Published public internal(set) var mcpResources: [UUID: MCPResourceCatalog] = [:]
     @Published public internal(set) var mcpPrompts: [UUID: MCPPromptCatalog] = [:]
     @Published public internal(set) var mcpBusy = false
@@ -198,6 +201,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
                 applicationLauncher: (@MainActor (CommandItem) async throws -> PreparedApplicationLaunch)? = nil,
                 sessionLimits: SessionRetentionPolicy = SessionRetentionPolicy(),
                 clipboardCaptureSource: (any ClipboardCaptureSource)? = nil,
+                invocationPersistenceFault: @escaping @Sendable (String, InvocationPersistencePoint) -> Int32? = { _, _ in nil },
                 languageApplier: @escaping @MainActor (String) -> Void = { KDLocalizer.setLanguage($0) }) throws {
         contributions = try WorkbenchContributionRuntime()
         self.sessionLimits = sessionLimits
@@ -241,9 +245,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         }
         clipboardStore = try ClipboardStore(url: directory.appendingPathComponent("clipboard.sqlite"))
         monitor = ClipboardMonitor(store: clipboardStore, source: clipboardCaptureSource)
-        invocationStore = try InvocationStore(directory: directory.appendingPathComponent("invocations"))
-        aiInvocationStore = try InvocationStore(directory: directory.appendingPathComponent("ai-invocations"))
-        agentToolStore = try InvocationStore(directory: directory.appendingPathComponent("agent-tool-invocations"))
+        invocationStore = try InvocationStore(directory: directory.appendingPathComponent("invocations"), persistenceFault: { invocationPersistenceFault("cli", $0) })
+        aiInvocationStore = try InvocationStore(directory: directory.appendingPathComponent("ai-invocations"), persistenceFault: { invocationPersistenceFault("ai", $0) })
+        agentToolStore = try InvocationStore(directory: directory.appendingPathComponent("agent-tool-invocations"), persistenceFault: { invocationPersistenceFault("tools", $0) })
         let scheduler = try ScheduleLedger(directory:directory.appendingPathComponent("schedules"),now:Date())
         scheduleLedger = scheduler; _schedules = Published(initialValue:scheduler.initialSnapshots)
         do { activityLedger = try ActivityLedger(directory:directory.appendingPathComponent("activity"),enabled:statisticsEnabled) }

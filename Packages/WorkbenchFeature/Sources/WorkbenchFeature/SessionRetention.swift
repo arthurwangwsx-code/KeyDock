@@ -51,13 +51,14 @@ extension WorkbenchModel {
         }
         return true
     }
-    func finishExecutionReservation(_ id: UUID) {
+    func finishExecutionReservation(_ id: UUID, owner: InvocationWorkerOwnership? = nil) {
         taskHandles[id] = nil; executionReservations.remove(id)
         aiTaskIDs.remove(id); cancelledTaskIDs.remove(id)
         timedOutTaskIDs.remove(id); pausedAgentIDs.remove(id)
         let cli = invocationStore, ai = aiInvocationStore
         Task { [weak self] in
-            await cli.releaseProtection(for: id); await ai.releaseProtection(for: id)
+            if let owner { await owner.release() }
+            else { await cli.releaseProtection(for: id); await ai.releaseProtection(for: id) }
             guard let self, !self.isShuttingDown else { return }
             await self.maintainTaskHistory()
         }

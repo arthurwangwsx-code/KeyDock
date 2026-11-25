@@ -19,16 +19,20 @@ public struct MCPStdioLaunchConfiguration: Codable, Equatable, Sendable {
         startupTimeoutSeconds = try fields.decodeIfPresent(TimeInterval.self,forKey:.startupTimeoutSeconds) ?? 30
     }
     public func validate() throws {
-        guard executable.hasPrefix("/"), executable.utf8.count <= 4096, !executable.contains("\0"),
-              workingDirectory.hasPrefix("/"), workingDirectory.utf8.count <= 4096, !workingDirectory.contains("\0"),
-              arguments.count <= 128, arguments.allSatisfy({ !$0.contains("\0") }),
-              startupTimeoutSeconds.isFinite, (1...120).contains(startupTimeoutSeconds),
-              arguments.reduce(0, { $0 + $1.utf8.count }) <= 16_384,
-              FileManager.default.isExecutableFile(atPath: executable) else { throw MCPClientError.invalidConfiguration }
+        try validateStructure()
+        guard FileManager.default.isExecutableFile(atPath: executable) else { throw MCPClientError.invalidConfiguration }
         var directory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: workingDirectory, isDirectory: &directory), directory.boolValue else {
             throw MCPClientError.invalidConfiguration
         }
+    }
+    /// 准备审阅只校验值，不触及可执行文件、目录或OS权限。
+    public func validateStructure() throws {
+        guard executable.hasPrefix("/"), executable.utf8.count <= 4096, !executable.contains("\0"),
+              workingDirectory.hasPrefix("/"), workingDirectory.utf8.count <= 4096, !workingDirectory.contains("\0"),
+              arguments.count <= 128, arguments.allSatisfy({ !$0.contains("\0") }),
+              startupTimeoutSeconds.isFinite, (1...120).contains(startupTimeoutSeconds),
+              arguments.reduce(0, { $0 + $1.utf8.count }) <= 16_384 else { throw MCPClientError.invalidConfiguration }
     }
 }
 

@@ -115,6 +115,7 @@ public struct RunningTaskItem: Identifiable {
     public var outputIsIncomplete = false
     public var aiUsageSummary: AIUsageSummary?
     var receiptIsAI = false
+    var runAttempt: RunAttemptMetadata?
     public var exitCode: Int32?
     public var startedAt = Date()
     public var finishedAt: Date?

@@ -122,11 +122,17 @@ extension WorkbenchModel {
         }
         return try MCPHTTPClient(configuration:source,transport:MCPTransportRouter(http:MCPHTTPTransport(secrets:secret)))
     }
-    func discoverMCP(_ client: MCPHTTPClient, parentRun: UUID? = nil) async throws -> MCPToolCatalog {
+    func discoverMCP(_ client: MCPHTTPClient, parentRun: UUID? = nil, validateBeforeDispatch: (@MainActor () throws -> Void)? = nil) async throws -> MCPToolCatalog {
         try Task.checkCancellation()
         let id = UUID(), source = client.configuration
         do { try await agentToolStore.begin(id:id,name:"MCP connection",commandID:(parentRun.map{"keydock.agent."+$0.uuidString} ?? "keydock.mcp-source."+source.id.uuidString),commandVersion:1,configurationFingerprint:source.revision.uuidString,caller:parentRun == nil ? "user":"agent",initialMessage:"mcp.connectionIntent") }
         catch { await agentToolStore.abandonUndispatched(id); throw error }
+        do { try Task.checkCancellation(); try validateBeforeDispatch?() }
+        catch {
+            try? await agentToolStore.finish(id: id, result: .init(state: .cancelled, message: "mcp.connectionNotDispatched"))
+            await agentToolStore.releaseProtection(for: id)
+            throw error
+        }
         let catalog: MCPToolCatalog
         do { catalog = try await client.discover() }
         catch {
@@ -177,14 +183,23 @@ extension WorkbenchModel {
     public func removeMCPServer(_ id: UUID) async {
         settingsNoticeMessage = noticeKey("Review this MCP source in Settings before removing it.")
     }
-    func prepareMCPTools(_ definition: AgentDefinition, sources:[MCPServerConfiguration], runID: UUID) async throws -> [ScopedAITool] {
+    func prepareMCPTools(_ definition: AgentDefinition, sources:[MCPServerConfiguration], runID: UUID, attempt: AttemptExecutionContext? = nil) async throws -> [ScopedAITool] {
         var tools: [ScopedAITool] = [], resolved: Set<String> = []
         mcpRunScopes[runID] = Set(sources.map(\.id))
         for source in sources where definition.allowedMCPToolNames.contains(where:{$0.hasPrefix("mcp_"+String(source.id.uuidString.replacingOccurrences(of:"-",with:"").lowercased().prefix(12))+"_")}) {
             try Task.checkCancellation()
-            guard configuration.mcpServers.contains(where:{$0 == source && $0.enabled}) else { throw MCPClientError.invalidated }
+            try attempt?.validate(in: self)
+            guard !isShuttingDown, !mcpSessionDisabled.contains(source.id), configuration.mcpServers.contains(where:{$0 == source && $0.enabled}) else { throw MCPClientError.invalidated }
             let client = try makeMCPClient(source); mcpRunClients[runID,default:[]].append(client)
-            let catalog = try await discoverMCP(client,parentRun:runID)
+            let catalog = try await discoverMCP(client,parentRun:runID,validateBeforeDispatch: { try attempt?.willDispatch(in: self) })
+            try Task.checkCancellation()
+            guard !isShuttingDown, !mcpSessionDisabled.contains(source.id), configuration.mcpServers.contains(where:{$0 == source && $0.enabled}) else { throw MCPClientError.invalidated }
+            if let attempt {
+                let selected = Set(definition.allowedMCPToolNames.filter { MCPToolReference.references($0, sourceID: source.id) })
+                guard let expected = attempt.review.mcpScopes.first(where: { $0.serverID == source.id && $0.configurationRevision == source.revision }),
+                      Set(expected.selectedNames) == selected,
+                      try catalog.selectedContractDigest(names: selected).utf8.elementsEqual(expected.contractDigest.utf8) else { throw MCPClientError.catalogChanged }
+            }
             for tool in catalog.tools where definition.allowedMCPToolNames.contains(tool.definition.name) {
                 resolved.insert(tool.definition.name)
                 let scope = fingerprint(source.id.uuidString+"|"+source.revision.uuidString+"|"+catalog.revision+"|"+tool.originalName)

@@ -52,6 +52,8 @@ extension WorkbenchModel {
         let currentParents = executionReservations.union(taskHandles.keys)
         let tools = await agentToolStore.maintain(protectingParents:currentParents)
         guard !isShuttingDown, !isClearingHistory else { return }
+        let removed = cli.removedIDs.union(ai.removedIDs)
+        if !removed.isEmpty { onAttemptHistoryChanged?(removed) }
         if cli.failure != nil || ai.failure != nil || tools.failure != nil || !tools.limitsSatisfied || !cli.limitsSatisfied || !ai.limitsSatisfied {
             workspaceNoticeMessage = noticeKey("Some task records could not be maintained. Running and unconfirmed tasks were kept.")
         }
@@ -60,6 +62,7 @@ extension WorkbenchModel {
     public func clearFinishedHistory() async {
         guard !isShuttingDown, !isClearingHistory else { return }
         isClearingHistory = true; historyGeneration &+= 1
+        onAttemptHistoryChanged?([])
         clearTextContextInputs()
         let generation = historyGeneration
         let protected = executionReservations.union(taskHandles.keys)

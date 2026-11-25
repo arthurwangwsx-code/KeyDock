@@ -5,6 +5,7 @@ import CommandCore
 import ExecutionCore
 import MacAdapters
 import KeyDockUI
+import Darwin
 
 @main @MainActor enum KeyDockApp {
     static func main() {
@@ -24,7 +25,7 @@ import KeyDockUI
             let smoke = (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true) || ProcessInfo.processInfo.arguments.contains("--safe-smoke")
             if let id = Bundle.main.bundleIdentifier, NSRunningApplication.runningApplications(withBundleIdentifier:id).contains(where:{$0.processIdentifier != ProcessInfo.processInfo.processIdentifier && !$0.isTerminated}) { throw RuntimeDirectoryLeaseError.alreadyOwned }
             let directory: URL
-            if smoke { directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Smoke") }
+            if smoke { directory = try previewDataDirectory() }
             else { directory = try PrivateFiles.applicationDirectory() }
             dataLease = try RuntimeDirectoryLease(directory:directory)
             let store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: !smoke)
@@ -39,6 +40,28 @@ import KeyDockUI
             alert.informativeText = error as? RuntimeDirectoryLeaseError == .alreadyOwned ? AppL("Another KeyDock instance owns this data directory. Close it before opening this copy.") : AppL("Local data could not be opened. Existing files were preserved.")
             alert.runModal(); NSApp.terminate(nil)
         }
+    }
+    private func previewDataDirectory() throws -> URL {
+        #if KEYDOCK_PREVIEW
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "--review-fixture-root") {
+            guard arguments.filter({ $0 == "--review-fixture-root" }).count == 1, index + 1 < arguments.count,
+                  Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true,
+                  let metadata = Bundle.main.url(forResource: "BuildInfo", withExtension: "json"),
+                  let info = try JSONSerialization.jsonObject(with: Data(contentsOf: metadata)) as? [String: Any], info["profile"] as? String == "preview" else { throw RuntimeDirectoryLeaseError.invalidDirectory }
+            let path = arguments[index + 1], root = URL(fileURLWithPath: path, isDirectory: true)
+            guard path.hasPrefix("/"), root.standardizedFileURL.path == path, root.resolvingSymlinksInPath().path == path,
+                  root.lastPathComponent.hasPrefix("KeyDock-Review-"), UUID(uuidString: String(root.lastPathComponent.dropFirst("KeyDock-Review-".count))) != nil else { throw RuntimeDirectoryLeaseError.invalidDirectory }
+            var attributes = stat(), markerAttributes = stat()
+            let marker = root.appendingPathComponent("synthetic-review.json")
+            guard lstat(root.path, &attributes) == 0, attributes.st_mode & mode_t(S_IFMT) == mode_t(S_IFDIR), attributes.st_uid == getuid(), attributes.st_mode & 0o077 == 0,
+                  lstat(marker.path, &markerAttributes) == 0, markerAttributes.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG), markerAttributes.st_uid == getuid(), markerAttributes.st_mode & 0o077 == 0,
+                  markerAttributes.st_nlink == 1, markerAttributes.st_size <= 4096,
+                  let value = try JSONSerialization.jsonObject(with: Data(contentsOf: marker)) as? [String: String], value == ["fixture": "keydock-native-review-v1"] else { throw RuntimeDirectoryLeaseError.invalidDirectory }
+            return root.appendingPathComponent("KeyDock-Smoke", isDirectory: true)
+        }
+        #endif
+        return FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Smoke")
     }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { coordinator?.reopen(); return false }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -156,6 +179,13 @@ import KeyDockUI
             self.launcherSession.removeHistory(draftIDs: draftIDs)
             self.workspaceSession.removeHistory(taskIDs: taskIDs, draftIDs: draftIDs, in: store)
             self.settingsSession.removeHistory(taskIDs: taskIDs)
+        }
+        store.onAttemptHistoryChanged = { [weak self] removed in
+            guard let self else { return }; self.workspaceSession.attemptHistoryChanged(removed, in: self.store)
+        }
+        store.onPrepareAttempt = { [weak self] id in
+            guard let self else { return }
+            self.openWorkspace(.tasks(id)); self.workspaceSession.prepareAttempt(id, in: self.store)
         }
         store.onLanguageChanged = { [weak self] in self?.installMenus(); self?.refreshTitles() }
         store.onAppearanceChanged = { [weak self] in self?.applyAppearance() }
@@ -451,8 +481,9 @@ import KeyDockUI
         workspace?.title = AppL("Workspace") + " — KeyDock"
     }
     private var workspaceSheetOwnsKeyboard: Bool {
-        guard let workspace, let sheet = workspace.attachedSheet, let key = NSApp.keyWindow else { return false }
-        return key === workspace || key === sheet || key.sheetParent === sheet
+        guard let workspace, let key = NSApp.keyWindow else { return false }
+        let belongs = key === workspace || key.sheetParent === workspace || workspace.attachedSheet.map { key === $0 || key.sheetParent === $0 } == true
+        return belongs && (workspaceSession.hasPendingOrDismissingModal || workspace.attachedSheet != nil)
     }
     private var keyboardDraft: AIDraftDocument? {
         guard !workspaceSheetOwnsKeyboard, let keyWindow = NSApp.keyWindow else { return nil }
@@ -536,6 +567,8 @@ import KeyDockUI
             let demo = NSMenuItem(title: AppL("Sample clipboard history"), action: #selector(openClipboardDemoAction), keyEquivalent: "")
             demo.target = self; previewMenu.addItem(demo)
             if visualReview.allowsChanges {
+                let attempts = NSMenuItem(title: AppL("Sample task attempts"), action: #selector(openAttemptDemoAction), keyEquivalent: "")
+                attempts.target = self; previewMenu.addItem(attempts)
                 let workspaceSample = NSMenuItem(title: AppL("Sample workspace results"), action: #selector(openWorkspaceResultsDemoAction), keyEquivalent: "")
                 workspaceSample.target = self; previewMenu.addItem(workspaceSample)
                 let samples = NSMenuItem(title: AppL("Visual samples (KeyDock controls)"), action: nil, keyEquivalent: "")
@@ -561,6 +594,19 @@ import KeyDockUI
         task.desktopWorkspaceResult = result
         task.desktopWorkspaceLabels = Dictionary(uniqueKeysWithValues: zip(result.entries.map(\.entryID), [AppL("Browser sample"), AppL("Editor sample"), AppL("Notes sample")]))
         store.tasks.removeAll { $0.id == id }; store.tasks.insert(task, at: 0)
+        openWorkspace(.tasks(id))
+        #endif
+    }
+    @objc private func openAttemptDemoAction() {
+        #if KEYDOCK_PREVIEW
+        guard safeSmoke, visualReview.allowsChanges, !store.isShuttingDown, !workspaceSession.hasPendingOrDismissingModal else { return }
+        // 隔离Preview里也走真正的保存／执行入口；仅固定printf和纯文本变换，无外部服务或桌面上下文。
+        let command = SavedCommand(name: "Synthetic printf attempt", executable: "/usr/bin/printf", arguments: ["Synthetic previous CLI result"], workingDirectory: FileManager.default.temporaryDirectory.path)
+        if store.saveCommand(command) { store.runCommand(command) }
+        let workflow = store.configuration.workflows.first { $0.name == "Synthetic uppercase attempt" }
+            ?? .init(name: "Synthetic uppercase attempt", steps: [.init(operation: .transform(.uppercase))])
+        guard store.saveWorkflow(workflow), let current = store.configuration.workflows.first(where: { $0.id == workflow.id }),
+              let id = store.runWorkflow(current, input: "Synthetic previous workflow input") else { return }
         openWorkspace(.tasks(id))
         #endif
     }
@@ -664,7 +710,7 @@ import KeyDockUI
         if sender === settings { settingsSession.apiKey = ""; settingsSession.setVisible(false) }
         return true
     }
-    func beginShutdown() { settingsSession.invalidateSettingsSummaryExport(); settingsSession.invalidateConfigurationExport(); settingsSession.invalidateSourceRemoval(); workspaceSession.invalidateSourceRemoval(); dismissClipboard(restore: false); hotkeys.suspend(); store.shutdown() }
+    func beginShutdown() { settingsSession.invalidateSettingsSummaryExport(); settingsSession.invalidateConfigurationExport(); settingsSession.invalidateSourceRemoval(); workspaceSession.invalidateSourceRemoval(); workspaceSession.invalidateAttemptPreparation(); dismissClipboard(restore: false); hotkeys.suspend(); store.shutdown() }
     func prepareForQuit() async { await store.shutdownAndWait() }
     func shutdown() {
         if let observer = clipboardActivationObserver { NSWorkspace.shared.notificationCenter.removeObserver(observer) }; clipboardActivationObserver = nil

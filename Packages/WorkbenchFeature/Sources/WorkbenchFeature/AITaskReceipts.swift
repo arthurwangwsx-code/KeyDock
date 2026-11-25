@@ -14,15 +14,13 @@ enum AITaskReceiptKind: String {
 enum AITaskReceiptError: Error { case intentUnavailable }
 
 extension WorkbenchModel {
-    func beginAIReceipt(id: UUID, kind: AITaskReceiptKind, authorization: ExecutionRequest) async throws {
-        do {
-            try await aiInvocationStore.begin(id: id, name: kind.rawValue,
-                commandID: authorization.commandID, commandVersion: authorization.commandVersion,
-                caller: authorization.caller.rawValue)
-        } catch { await aiInvocationStore.abandonUndispatched(id); throw AITaskReceiptError.intentUnavailable }
+    @discardableResult func beginAIReceipt(id: UUID, kind: AITaskReceiptKind, authorization: ExecutionRequest,
+                        runDefinition: RunDefinitionReference? = nil, attempt: AttemptExecutionContext? = nil) async throws -> InvocationWorkerOwnership {
+        try await beginOwnedReceipt(store: aiInvocationStore, id: id, name: kind.rawValue, authorization: authorization,
+                                    runDefinition: runDefinition, attempt: attempt)
     }
 
-    func finishAIReceipt(_ id: UUID) async {
+    func finishAIReceipt(_ id: UUID, owner: InvocationWorkerOwnership? = nil) async {
         guard let task = tasks.first(where: { $0.id == id }) else { return }
         let state: ExecutionState
         switch task.status {
@@ -33,7 +31,12 @@ extension WorkbenchModel {
         default: state = .failed
         }
         let message = task.status == .draftReady ? "ai.proposal.draftReady" : "ai." + task.status.rawValue
-        do { try await aiInvocationStore.finish(id: id, result: .init(state: state, message: message)) }
+        do {
+            if let owner {
+                guard owner.id == id else { throw InvocationStoreError.staleRecovery }
+                try await owner.finish(.init(state: state, message: message))
+            } else { try await aiInvocationStore.finish(id: id, result: .init(state: state, message: message)) }
+        }
         catch {
             // 实际模型结果不因落盘失败被改写；旧 intent 仍是重启时的保守 unknown 围栏。
             let notice = noticeKey("AI finished, but its task receipt could not be saved. Do not retry automatically.")
@@ -55,6 +58,7 @@ extension WorkbenchModel {
             startedAt: receipt.startedAt, finishedAt: receipt.finishedAt, titleKey: kind.rawValue)
         task.restoredFromReceipt = true
         task.receiptIsAI = true
+        task.runAttempt = receipt.runAttempt
         if kind != .context { task.aiUsageSummary = .unknown }
         task.outputIsIncomplete = status == .interrupted
         if status == .interrupted { task.noticeMessage = noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }

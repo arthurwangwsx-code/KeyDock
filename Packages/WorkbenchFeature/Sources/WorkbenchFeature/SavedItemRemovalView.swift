@@ -1,6 +1,23 @@
 import SwiftUI
 import KeyDockUI
 
+struct SavedToolRemovalSheetHost: View {
+    @ObservedObject var store: WorkbenchModel
+    @ObservedObject var session: WorkspaceSession
+    @ObservedObject var presentation: SavedItemRemovalPresentation
+    @State private var presented = false
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0).accessibilityHidden(true)
+            .sheet(isPresented: Binding(get: { presented && !presentation.closed }, set: { value in
+                if !value { session.cancelToolRemoval(presentation.id) }; presented = value
+            }), onDismiss: { session.toolRemovalDidDismiss(presentation.id) }) {
+                SavedToolRemovalView(store: store, session: session, presentation: presentation).onAppear { presentation.appeared = true }
+            }
+            .onAppear { if !presentation.closed { presented = true } else { session.toolRemovalDidDismiss(presentation.id) } }
+            .onChange(of: presentation.closed) { _, value in if value { presented = false } }
+    }
+}
+
 struct SavedItemRemovalView: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: SettingsSession

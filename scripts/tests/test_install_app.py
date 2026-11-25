@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
-from keydock_common import CONFIG, PipelineError, tree_digest
+from keydock_common import CONFIG, PipelineError, tree_digest, current_data_compatibility, app_data_compatibility
 
 spec = importlib.util.spec_from_file_location("keydock_installer", SCRIPTS / "install-app.py")
 installer = importlib.util.module_from_spec(spec)
@@ -31,7 +31,9 @@ class InstallAppTests(unittest.TestCase):
         self.processes = []
         self.fail_copy = False
         self.fail_quit = False
-        self.patches = [patch.object(installer, "inspect_app", side_effect=self.inspect), patch.object(installer, "run", side_effect=self.fake_run)]
+        self.data_root = self.directory / "SyntheticData"
+        self.patches = [patch.object(installer, "inspect_app", side_effect=self.inspect), patch.object(installer, "run", side_effect=self.fake_run),
+                        patch.object(installer, "runtime_data_root", return_value=self.data_root)]
         for item in self.patches: item.start()
 
     def tearDown(self):
@@ -41,11 +43,15 @@ class InstallAppTests(unittest.TestCase):
     def app(self, name, payload):
         app = self.directory / (name + ".app"); app.mkdir()
         (app / "payload").write_text(payload)
+        (app / "synthetic-capability.json").write_text(json.dumps(current_data_compatibility()))
         return app
 
     def inspect(self, app):
+        capability_file = Path(app) / "synthetic-capability.json"
+        capability = json.loads(capability_file.read_text()) if capability_file.exists() else app_data_compatibility({}, "0.1.0-alpha.1")
         return {"bundle_id": "com.arthurwangwsx.KeyDock.preview", "version": "0.1.0", "release_version": "0.1.0-alpha.1", "build_number": "1",
                 "profile": "preview", "commit": "a" * 40, "safe_smoke": True, "source_dirty": True,
+                "data_compatibility": capability,
                 "bundle_sha256": tree_digest(app), "code_signature": {"kind": "adhoc", "team_id": None, "hardened_runtime": True}, "notarized": False}
 
     def fake_run(self, args, capture=False):
@@ -73,6 +79,78 @@ class InstallAppTests(unittest.TestCase):
         args = self.arguments(new, "second")
         record = installer.install(args)
         return old, new, args, record
+
+    def envelope(self, name="invocations", version=2):
+        folder = self.data_root / name; folder.mkdir(parents=True, mode=0o700, exist_ok=True)
+        path = folder / "invocations.json"; path.write_text(json.dumps({"version": version, "receipts": []}))
+        return path
+
+    def legacy_app(self, name="legacy"):
+        app = self.app(name, "synthetic legacy reader")
+        (app / "synthetic-capability.json").write_text(json.dumps({"schemaVersion": 1, "invocationEnvelope": {"readVersions": [1], "writeVersions": [1]}}))
+        return app
+
+    def test_each_v2_domain_blocks_old_install_and_rollback_without_changing_data(self):
+        old = self.legacy_app(); installer.install(self.arguments(old, "legacy-first"))
+        modern = self.app("modern", "synthetic modern reader")
+        args = self.arguments(modern, "modern-install"); record = installer.install(args)
+        for name in ("invocations", "ai-invocations", "agent-tool-invocations"):
+            with self.subTest(name=name):
+                path = self.envelope(name); data = path.read_bytes()
+                declined = self.arguments(old, "declined-" + name)
+                with self.assertRaises(PipelineError): installer.install(declined)
+                with self.assertRaises(PipelineError): installer.rollback(SimpleNamespace(rollback=args.receipt, helper=self.helper, quit_running=False, dry_run=False))
+                self.assertEqual(path.read_bytes(), data)
+                self.assertEqual(tree_digest(self.destination), tree_digest(modern))
+                self.assertEqual(tree_digest(Path(record["backup_path"])), tree_digest(old))
+                self.assertFalse(Path(declined.receipt).exists())
+                path.unlink()
+
+    def test_quiesce_version_change_is_rechecked_before_swap(self):
+        modern = self.app("modern", "modern"); installer.install(self.arguments(modern, "first"))
+        legacy = self.legacy_app(); self.envelope(version=1)
+        original = installer.quiesce
+        def quiesce(*args):
+            original(*args); self.envelope(version=2)
+        candidate = self.arguments(legacy, "declined-drift")
+        with patch.object(installer, "quiesce", side_effect=quiesce), self.assertRaises(PipelineError): installer.install(candidate)
+        self.assertEqual(tree_digest(self.destination), tree_digest(modern))
+        self.assertEqual(json.loads(Path(candidate.receipt).read_text())["state"], "failed-before-exchange")
+
+    def test_incompatible_compensation_preserves_new_app_backup_and_records(self):
+        old = self.legacy_app(); installer.install(self.arguments(old, "first"))
+        modern = self.app("modern", "modern"); candidate = self.arguments(modern, "needs-recovery")
+        original = installer.verify_copy; failed = False
+        def verify(path, expected):
+            nonlocal failed
+            if Path(path) == self.destination and not failed:
+                failed = True; self.envelope(version=2)
+                raise PipelineError("synthetic post-swap failure")
+            return original(path, expected)
+        with patch.object(installer, "verify_copy", side_effect=verify), self.assertRaises(PipelineError): installer.install(candidate)
+        record = json.loads(Path(candidate.receipt).read_text())
+        self.assertEqual(record["state"], "needs-recovery")
+        self.assertEqual(tree_digest(self.destination), tree_digest(modern))
+        self.assertEqual(tree_digest(Path(record["backup_path"])), tree_digest(old))
+        self.assertEqual(json.loads((self.data_root / "invocations/invocations.json").read_text())["version"], 2)
+
+    def test_already_rolled_back_still_checks_fresh_data(self):
+        old = self.legacy_app(); installer.install(self.arguments(old, "first"))
+        modern = self.app("modern", "modern"); candidate = self.arguments(modern, "second")
+        installer.install(candidate)
+        options = SimpleNamespace(rollback=candidate.receipt, helper=self.helper, quit_running=False, dry_run=False)
+        installer.rollback(options); self.envelope(version=2)
+        with self.assertRaises(PipelineError): installer.rollback(options)
+        self.assertEqual(tree_digest(self.destination), tree_digest(old))
+
+    def test_runtime_owner_blocks_swap_but_dry_run_is_only_read_only_preflight(self):
+        first = self.app("first", "first"); installer.install(self.arguments(first, "first-install"))
+        second = self.app("second", "second")
+        with installer.runtime_data_lease(self.data_root):
+            dry = installer.install(self.arguments(second, "dry", dry_run=True))
+            self.assertTrue(dry["data_check"]["provisional"])
+            with self.assertRaises(PipelineError): installer.install(self.arguments(second, "blocked"))
+        self.assertEqual(tree_digest(self.destination), tree_digest(first))
 
     def test_dry_run_does_not_create_target_backup_lock_or_receipt(self):
         app = self.app("source", "synthetic")
