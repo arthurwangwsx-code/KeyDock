@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-25。当前已有签名公证的公开alpha.17，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-25。当前已有签名公证的公开alpha.18，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -31,6 +31,7 @@
 | [alpha.16发行与安装证据](implementation/alpha16-release-2026-11-25.md) | 干净本机／同源CI、公证／公开回下载、实际About16和alpha.15回退 |
 | [设置摘要实现与原生复查](implementation/settings-summary-export-2026-11-25.md) | 敏感哨兵、关闭／保存身份、英文截断修复及实际文件字节 |
 | [P1会话保留](technical/session-retention.md) | 已实现的总预算、元数据维护、清除和恢复围栏及待验收边界 |
+| [任务持久化与显式新尝试](technical/explicit-attempt-recovery.md) | 任务33计划：类型化记录、重启只读、独立准备及新授权；完整RunStore仍待实现 |
 | [导入文本上下文](technical/imported-text-context.md) | 单槽来源、AI冻结、联合预算与清除；alpha.10候选 |
 | [导入来源实现复查](implementation/imported-text-context-2026-11-25.md) | 合成提取／MCP／AI隐私、失败接纳与原生观察边界 |
 | [AI输入提交复查](implementation/ai-input-commit-2026-11-25.md) | Unicode字节编辑、输入法组字门禁与保留的原始失败 |
@@ -74,7 +75,7 @@
 | [工作流与MCP来源移除](technical/source-removal.md) | 权威引用、共同owner、旧稿／迟到围栏、正文保留与会话撤权；alpha.17已发行 |
 | [来源移除实现复查](implementation/source-removal-2026-11-25.md) | 54项定向、760 Swift、中英原生及非合作MCP／在途Workflow与异步退出 |
 | [alpha.17发行与安装证据](implementation/alpha17-release-2026-11-25.md) | 干净同源检查／CI、公证／公开回下载、实际About17与alpha.16回退 |
-| [可选AI费率与调用快照](technical/ai-rate-snapshots.md) | 下一增量计划：准确模型匹配、逐调用身份、估算／未知、工作流父子与有界账本；尚未实现 |
+| [alpha.18发行与安装证据](implementation/alpha18-release-2026-11-25.md) | 804 Swift／78 Python／847 key、费用快照／本地分析、同源CI／公证／About18与alpha.17回退 |
 | [保存动作生命周期复查](implementation/saved-item-lifecycle-2026-11-25.md) | 精确事务／引用／恢复、保留的测试失败与在途结果回归 |
 | [常用工具生命周期复查](implementation/saved-tool-lifecycle-2026-11-25.md) | 片段／网页／集合编辑与删除、历史遗留偏好修复及原生双语重启子集 |
 | [桌面工作区组合执行复查](implementation/desktop-workspace-execution-2026-11-25.md) | alpha.9运行／回执／取消／profile入口及已知失败复查 |

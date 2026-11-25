@@ -1,12 +1,14 @@
 # 当前状态总账
 
+当前[alpha.18](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.18)已公开并安装，精确源`6baaee827131a31e342ced8dbc0955c5f2a768ae`。可选AI费率／逐请求快照、Workflow父子索引、历史恢复及7／30／90天独立分析已交付；804 Swift／78 Python／847中英key、本机OCR双轮、指定同源CI／优化构建、公证／公开回下载及发布审计PASS。实际About18确认，alpha.17回退保留。中英明暗仅已观察子集通过，完整产品仍PARTIAL。见[发行证据](implementation/alpha18-release-2026-11-25.md)和[实现复查](implementation/ai-rate-snapshots-2026-11-25.md)。
+
 [alpha.17](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.17)已公开并替换正式App，精确源`3e681f00efa54ed3763effd64047fba3a5797bd5`。工作流／MCP独立移除审阅、全部引用检查、旧稿／迟到围栏及配置worker退出等待已交付；54项定向／8套件、760 Swift／74 Python／789 key干净本机、指定同源CI／优化构建、公证／Gatekeeper、公开回下载和发行资产审计PASS。实际About为alpha.17 (17)，alpha.16回退保留。中文浅色／英文深色原生观察子集通过，完整产品仍PARTIAL。见[发行证据](implementation/alpha17-release-2026-11-25.md)及[实现复查](implementation/source-removal-2026-11-25.md)。
 
-任务32的[可选AI费率与调用快照](technical/ai-rate-snapshots.md)已在feature/ai-rate-snapshots实现：可选手工费率、provider逐次请求记录、工作流父子索引、历史恢复及独立7／30／90天用量分析。56项定向及847中英key通过，完整本机／原生／同源CI及发行尚待验证；正式App仍是alpha.17。见[本轮实现复查](implementation/ai-rate-snapshots-2026-11-25.md)。不读取AiBox凭据，不自动配置真实API或把估算称为账单。
+任务32已随alpha.18交付；历史价格不套用当前配置，原币分组，缺失／旧格式保持未知。下一优先项为完整RunStore与显式恢复的拆解，继续只读参考AiBox并独立实现，不自动重放副作用或恢复旧授权。真实API仍按用户决定稍后配置。
 
 现有主要工具已有代码，未勾选任务仍包含大量真实验收义务，不能统一理解为“未开发”。完整RunStore显式恢复、原图多模态附件、ACP adapter及实际首帧链路仍有独立工程／评估缺口；真实模型、目标插入／AX、多屏、IME／VoiceOver、最低系统、完整视觉及长期驻留保持开放。
 
-下述alpha.16及更早段落保留各轮历史状态，当前正式安装以上述alpha.17为准。
+下述alpha.17及更早段落保留各轮历史状态，当前正式安装以上述alpha.18为准。
 
 [alpha.16](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.16)当时公开并替换正式App，精确源`20854e3edf924ec0f4e64b153ec5caddca9c17e9`；735 Swift／74 Python／768 key干净本机、指定同源core CI／优化构建、Developer ID、公证／Gatekeeper、公开回下载和发布资产审计PASS，当时About为alpha.16 (16)，alpha.15回退保留。28.4／30的完整定义导出完成：16项定向及中文浅色／英文深色系统保存与预览字节核验子集PASS。见[发行证据](implementation/alpha16-release-2026-11-25.md)和[实现复查](implementation/configuration-export-2026-11-25.md)。完整产品仍PARTIAL，未来import及原真实系统／AI／视觉／长期资格保持开放。
 
@@ -68,7 +70,7 @@ Agent／工作流的保存反馈后续已实现：验证或写入失败在发起
 
 ## 当前源码
 
-canonical目录唯一；alpha.16精确源20854e3已受控fast-forward至master，并固定tag v0.1.0-alpha.16；发行证据在从该master创建的chore/alpha16-evidence补齐，不改变已发布字节。alpha.15及更早源与资产继续保留。主Agent独占写入／分支／提交／集成／设备，子Agent仅只读研究评审；没有新建worktree或修改AiBox／Ashot。
+canonical目录唯一；alpha.18精确源6baaee8已受控fast-forward至master，并固定tag v0.1.0-alpha.18；发行证据在从该master创建的chore/alpha18-evidence补齐，不改变已发布字节。alpha.17及更早源与资产继续保留。主Agent独占写入／分支／提交／集成／设备，子Agent仅只读研究评审；没有新建worktree或修改AiBox／Ashot。
 
 | 范围 | 状态 | 当前证据与限制 |
 |---|---|---|
@@ -81,6 +83,7 @@ canonical目录唯一；alpha.16精确源20854e3已受控fast-forward至master�
 | CLI与任务 | PARTIAL | executable+argv、有限输出／超时、真实进程组取消与回收、durable intent／result／unknown不重放；Terminal GUI继续尊重既有工具拒绝，未计真实通过 |
 | 剪贴板 | PARTIAL | 独立两栏Panel、搜索／↑↓／预览、20项／1MiB有序合并、主动作与分隔符偏好、复制／受控插入及取消／竞争围栏；中文浅色／英文深色、Shift-Return、重排与实际合并复制已观察。记录默认关闭，真实自动插入、物理热键及完整矩阵仍待验收 |
 | AI服务与快捷动作 | PARTIAL | 自定义兼容API、Keychain事务、重定向保护、翻译／总结／命令建议／选区输出、loopback全链路；真实外部API按用户决定稍后配置 |
+| AI用量与估算 | PASS（本增量工程）／PARTIAL（完整验收） | alpha.18按实际请求冻结服务／模型费率，Workflow索引不重复计价，历史与独立7／30／90天原币分析；真实API／账单、完整视觉与稳定delta适配仍独立 |
 | AI质量 | NOT_RUN | 20条合成质量样本已准备；真实模型质量与人工评阅未执行 |
 | 多步Agent | PARTIAL | 保存命令／MCP工具allowlist、冻结范围、schema／预算、逐次审批、暂停／新attempt与unknown回归；真实外部模型／工具组合未全面验收 |
 | 工作流与App内计划 | PARTIAL | 编辑／输入输出绑定、完整动态argv审批、快照冻结、child drain、durable claim／指纹／revision／DST／睡眠合并／unknown检查；真实长期驻留仍待验收 |

@@ -92,6 +92,8 @@ Skills 为有版本、来源和显式启用范围的资料/提示工作流；导
 
 两组数据独立：ActivityEvent 是 KeyDock 命令 ID、结果类别、耗时和时间；UsageObservation 是 provider、wireModelID、purpose、runID、requestID、token buckets、usage source、cost basis 与费率快照。每次真实网络请求有 attemptID，重试产生新 attempt；usage 明确 cumulative snapshot 或 delta，按 provider request/response identity 去重合并。stream 同时发 failed 并抛错也仅记一个终态，cancel/fail 保留已知部分并将未报告部分标 unknown。provider 不返回 usage 就显示 unknown；估算、影子订阅价与实际 API 费用分开，账本不等于服务商账单。
 
+当前alpha.18实现累计快照、逐实际请求身份、可选手工输入／输出费率与原币历史分析；没有稳定eventID的delta明确拒绝并保留unknown，不能视为已经支持delta或订阅账单计价。Workflow父记录为子调用引用索引，实际只计价叶子；价格在运行准备时冻结，旧记录不追套现价，见[费用合同](ai-rate-snapshots.md)。
+
 本地先做按日次数、耗时、失败率、热门动作和使用趋势。AIInsight 使用用户选择区间的聚合报告，附数据覆盖率/来源和依据；“建议创建某快捷动作”可审阅后一键生成草稿，不能直接修改配置或运行自动化。P4 可另行启用前台活动观察；window title、浏览 URL、键盘内容与屏幕截图绝不成为默认行为日志。
 
 ## 配置前置体验

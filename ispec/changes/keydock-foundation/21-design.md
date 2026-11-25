@@ -87,6 +87,10 @@ Agent／工作流的工作区提交复用既有配置写入与补偿事务，失
 
 Workspace工作流编辑保存原指纹，MCPServerDraft保存原revision与独立稿身份；新建与编辑分离，异步成功仅更新仍属于该提交稿的状态／key。来源移除不擦除已有正文，只在当前渲染中标记来源失效；失效Agent来源及未呈现的保存工具可显式移除。Workflow孤儿偏好纳入既有显式修复。所有UI中英，原生合成验收与真实API／权限／全视觉范围分别记录。
 
-## 2026-11-25 可选AI费率及逐调用归因（计划）
+## 2026-11-25 可选AI费率及逐调用归因
 
-任务32沿用现有usage actor及累计accumulator，新增可选手工平价输入／输出费率与Decimal估算。运行先冻结精确服务／请求模型及费率配置集，各实际open前创建独立attempt并绑定冻结依据，provider记录端口不依赖UI消费；后续改价只影响新run。Workflow保存子调用parent／step归因，父只汇总叶子，所有入口使用同一事实计算。旧记录不追套当前价，缺报／失败／取消不抹去已知部分；不存完整endpoint／query或正文，不猜缓存折扣与汇率。单次、历史和按币种的有界分析共用口径，清除／TTL围栏不另造第二RunStore。详细合同见docs/technical/ai-rate-snapshots.md，尚未实现。
+任务32沿用现有usage actor及累计accumulator，新增可选手工平价输入／输出费率与Decimal估算。运行先冻结精确服务／请求模型及费率配置集，各实际open前创建独立attempt并绑定冻结依据，provider记录端口不依赖UI消费；后续改价只影响新run。Workflow保存子调用parent／step归因，父只汇总叶子，所有入口使用同一事实计算。旧记录不追套当前价，缺报／失败／取消不抹去已知部分；不存完整endpoint／query或正文，不猜缓存折扣与汇率。单次、历史和按币种的有界分析共用口径，清除／TTL围栏不另造第二RunStore。详细合同见docs/technical/ai-rate-snapshots.md；alpha.18已实现并发行，804 Swift／78 Python／847 key与原生观察子集及流水线资格见发行证据，稳定delta及完整产品义务保持开放。
+
+## 2026-11-25 任务持久化与显式新尝试（计划）
+
+任务33采用类型化逻辑run／执行attempt／恢复引用及revision CAS，持久成功后发布；既有InvocationStore继续拥有实际副作用真值。冷启动与检查只读，缺正文须重新提供，不恢复grant、provider session、AX／选区或旧审批。用户经独立稳定准备页明确提交后，重新核对当前定义、贡献／MCP来源与schema、权限、预算和history generation，以新UUID走生产入口和持久intent。旧终态与费率快照保留，恢复输出默认展示。首切片不关闭原5.5完整RunStore及可选正文／checkpoint义务，详见docs/technical/explicit-attempt-recovery.md。
