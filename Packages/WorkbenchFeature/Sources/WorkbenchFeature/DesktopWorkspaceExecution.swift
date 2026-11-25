@@ -49,6 +49,8 @@ extension WorkbenchModel {
         cancelDesktopWorkspaceRuns()
         desktopWorkspaceGroups[id] = (definition.id, group)
         tasks.insert(RunningTaskItem(id: id, title: definition.name, state: .queued), at: 0)
+        tasks[0].noticeMessage = noticeKey("Applying desktop workspace…")
+        launcherNoticeMessage = tasks[0].noticeMessage; settingsNoticeMessage = .none
         tasks[0].desktopWorkspaceID = definition.id
         tasks[0].desktopWorkspaceResult = .init(entryIDs: definition.entries.map(\.id))
         tasks[0].desktopWorkspaceLabels = Dictionary(uniqueKeysWithValues: definition.entries.compactMap { entry in

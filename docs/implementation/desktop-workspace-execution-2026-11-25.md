@@ -32,3 +32,5 @@
 原生复查：首版四列表格在820宽窗口挤断应用名和状态，实际截图FAIL后改为窄窗口逐项卡片、宽窗口表格。65a418d3响应式Preview构建PASS并经流水线安装；中文浅色和英文深色均观察到三阶段有序结果，英文长状态正常换行，宽窗口表格也已观察。设置实际提供Apply／Shortcut／Edit／Remove，快捷键入口准确定位profile；隔离Preview点击Apply显示辅助功能所需提示，没有启动或移动应用。语言与外观均恢复原Follow System。样例仅内存合成，没有写回执、访问剪贴板／密钥或改变TCC。
 
 本轮原生观察仅覆盖上述子集；没有将缩放窗口当成多显示器验收，没有运行实际AX布局、后台应用启动或真实外部AI请求，也未关闭完整视觉／VoiceOver／IME矩阵。
+
+干净源码ee324e21f4c00ebe88e5b36b9ae628e4e295ff78的完整本机e835bf4b-0474-46fe-9e77-64691a4b6674 PASS：624 Swift／46 Python／680 key，inventory603（core593／Terminal9／OCR1），原accurate／revision3／自动语言／语言修正及支持CPU保持，合成图06db6e05双轮命中。check-summary绑定同源及当前host，耗时120.795秒。后续补即时“正在应用”反馈，精确最终源仍按原流水线重新资格；旧OCR故障及长期可靠性义务不因此删除。
