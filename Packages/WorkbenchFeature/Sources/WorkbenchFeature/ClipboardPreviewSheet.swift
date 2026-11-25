@@ -33,6 +33,10 @@ struct ReadOnlyTextPreview: NSViewRepresentable {
     var transparent = false
     var accessibilityLabel: String? = nil
     var monospaced = false
+    var pointSize: CGFloat? = nil
+    private var textFont: NSFont {
+        monospaced ? .monospacedSystemFont(ofSize: pointSize ?? 11, weight: .regular) : .systemFont(ofSize: pointSize ?? 13)
+    }
     func makeNSView(context: Context) -> NSScrollView {
         let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 600, height: 400))
         scroll.hasVerticalScroller = true; scroll.hasHorizontalScroller = false
@@ -45,7 +49,7 @@ struct ReadOnlyTextPreview: NSViewRepresentable {
         view.textContainerInset = NSSize(width: 12, height: 12)
         view.textContainer?.widthTracksTextView = true
         view.layoutManager?.allowsNonContiguousLayout = true
-        view.font = monospaced ? .monospacedSystemFont(ofSize: 11, weight: .regular) : .systemFont(ofSize: 13)
+        view.font = textFont
         view.backgroundColor = .textBackgroundColor
         view.drawsBackground = !transparent
         view.setAccessibilityLabel(accessibilityLabel ?? L("Preview"))
@@ -55,6 +59,7 @@ struct ReadOnlyTextPreview: NSViewRepresentable {
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let view = scroll.documentView as? NSTextView else { return }
         view.setAccessibilityLabel(accessibilityLabel ?? L("Preview"))
+        if view.font != textFont { view.font = textFont }
         Self.synchronizeText(text, in: view)
     }
     static func synchronizeText(_ text: String, in view: NSTextView) {

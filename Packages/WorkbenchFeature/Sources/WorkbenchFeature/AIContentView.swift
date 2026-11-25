@@ -61,11 +61,9 @@ struct AIContentView: View {
                 Text(L("Run input") + " · " + task.inputSourceTitle).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                 HStack { Text(task.state).font(.caption).foregroundStyle(.secondary); Spacer() }
                 if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary, compact: compact) }
-                ScrollView {
-                    Text(task.output.isEmpty && task.isRunning ? L("Waiting for response…") : task.output)
-                        .font(.system(size: compact ? 13 : 14)).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
-                        .padding(12)
-                }.frame(maxWidth: .infinity, minHeight: compact ? 0 : 180, idealHeight: compact ? nil : 260, maxHeight: compact ? .infinity : 420).modifier(KDReadingSurface())
+                ReadOnlyTextPreview(text: task.output.isEmpty && task.isRunning ? L("Waiting for response…") : task.output,
+                    accessibilityLabel: L("Task output"), pointSize: compact ? 13 : 14)
+                    .frame(maxWidth: .infinity, minHeight: compact ? 0 : 180, idealHeight: compact ? nil : 260, maxHeight: compact ? .infinity : 420).modifier(KDReadingSurface())
             } else if !compact { KDEmptyState(symbol: "sparkles", title: L("Ready when you are"), detail: L("Choose an action and add text. Only this input is sent to your model.")) }
             if !draft.notice.isEmpty { KDInlineNotice(draft.notice).lineLimit(compact ? 2 : 4) }
             if compact && task == nil { Spacer(minLength: 0) }

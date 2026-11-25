@@ -60,3 +60,5 @@
 结果区两次CUA观察超时；进程持续约99% CPU，RSS从约736MiB增长到约1096MiB，采样主线程集中在SwiftUI的AppKitTextInteractionView／TextSelection／TextLayoutManager。普通⌘Q未响应，随后仅对已核对PID／路径／owned fixture的本次Preview发送SIGTERM，保留exit-15和E2E非零回执，不称正常退出或App自行崩溃。CLI父metadata仍为running，不把进程输出计划当作已完整接收1MiB的证明。
 
 失败域为`KeyDock-Review-d017f527-e262-4283-99fb-79613f5f0d81`，采样在`.local/desktop/large-result-hang.sample.txt`；`task-material-large-result-native-v1` receipt SHA256 `6df9f9fecfe192248639cd6baf81368092cb36831b0438cc8ff41a4e87e2c06c`。结果区改为复用现有AppKit只读文本组件，保留完整正文、选择、独立滚动与原复制动作；这项修补必须重新做大结果原生验证，不能沿用前序绿测。正式App仍为alpha.19。
+
+同次只读评审确认AI输出（Launcher／Workspace共用）与当前执行范围预览也允许至1MiB，均接入同一组件，保留原compact／workspace高度、字号、DisclosureGroup及复制／替换动作。完整配置导出已使用此原生组件；设置摘要有独立64KiB编码上限和固定字段投影，不以此将修补扩大到全部小型标签。

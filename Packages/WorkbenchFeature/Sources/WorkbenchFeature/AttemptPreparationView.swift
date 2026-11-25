@@ -52,7 +52,7 @@ private struct AttemptPreparationView: View {
                 if review.definitionChanged { KDInlineNotice(L("The saved definition differs from the previous attempt. Review the current scope before starting.")) }
                 if !review.scopePreview.isEmpty {
                     DisclosureGroup(L("Current execution scope"), isExpanded: $definitionExpanded) {
-                        ScrollView { Text(review.scopePreview).font(.system(.callout, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(12) }
+                        ReadOnlyTextPreview(text: review.scopePreview, accessibilityLabel: L("Current execution scope"), monospaced: true, pointSize: 13)
                             .frame(height: 140).modifier(KDReadingSurface())
                     }
                 }
