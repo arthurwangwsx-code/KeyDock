@@ -285,6 +285,6 @@
 - [ ] 35.2 body-free删除意图、跨重启pending遮蔽／已授权清理、TTL／孤立／managed tmp维护与部分失败；旧票据／读取不复活，正文不进入导出／日志。
 - [ ] 35.3 默认关闭的许可与未来typed输入捕获、停用先撤销、32MiB联合预算和最近成功Workflow材料独立端口；不保存定义argv/env或恢复授权。
 - [ ] 35.4 独立双语保存／只读查看／删除审阅、全部modal互斥、稳定actual-dismiss、按需读取和新尝试输入回填票据；Agent工具结果默认未选，绝不自动提交／复制。
-- [ ] 35.5 扩展签名数据能力与安装／rollback header-only门禁，旧reader对材料／tmp／未知格式／pending clear拒绝，完全清空后允许；不修改invocation v2。
+- [x] 35.5 扩展签名数据能力与安装／rollback header-only门禁，旧reader对材料／tmp／未知格式／pending clear拒绝，完全清空后允许；不修改invocation v2。137项Python及隔离签名Preview真实交换通过；旧能力声明为合成签名样本，非真实alpha.19运行资格。
 - [ ] 35.6 准确输入／成功边界／预算／故障／清除／ABA／重启／费用与签名兼容回归，原生中英明暗／长正文／保存失败和按需复用闭环分别留证。
 - [ ] 35.7 干净本机检查／指定同源CI、原生观察、经任务34新协议真实签名公证／发行／安装回退资格；完整RunStore其余义务及P0–P4不以局部绿测关闭。

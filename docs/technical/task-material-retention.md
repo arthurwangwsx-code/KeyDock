@@ -54,4 +54,4 @@ AiBox仅借鉴serialized mutation／expectedRevision、persist后发布、projec
 
 ## 当前实现范围
 
-独立文件层、actor、删除控制、固定跨语言样本、未来typed输入捕获、会话配额和成功边界端口已实现；65项Swift定向与137项Python回归已通过，见[本轮实现记录](../implementation/task-material-core-2026-11-26.md)。原生保存／查看／删除审阅、回填票据、App启动维护与history正文清理接线仍未完成；当前没有开放设置开关或正文保存按钮。签名reader协议及安装只读门禁已接通，签名Preview资格、整仓检查及真正发行尚待执行。alpha.20是开发候选，正式安装及公开Release仍为alpha.19。
+独立文件层、actor、删除控制、固定跨语言样本、未来typed输入捕获、会话配额和成功边界端口已实现；65项Swift定向、137项Python全套、干净源898项Swift整仓及签名Preview安装／回退资格已通过，见[本轮实现记录](../implementation/task-material-core-2026-11-26.md)。原生保存／查看／删除审阅、回填票据、App启动维护与history正文清理接线仍未完成；当前没有开放设置开关或正文保存按钮。alpha.20是开发候选，正式安装及公开Release仍为alpha.19；未把签名能力声明样本视为真实旧版运行验收，完整视觉与真正发行仍开放。

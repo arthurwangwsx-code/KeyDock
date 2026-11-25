@@ -1,5 +1,7 @@
 # 当前状态总账
 
+2026-11-26后续开发：`feature/task-material-retention`精确源`d8ae7ca`已公开，alpha.20／build20仍为开发候选。任务35.1／35.5的独立内容层、准确输入捕获与签名数据门禁已实现；干净本机898 Swift／137 Python／876中英key及生产合成OCR双轮、优化Preview和隔离签名安装／回退资格PASS。任务35.2–35.4／35.6–35.7的App维护、原生审阅、输入回填、完整视觉及发行继续开放，当前没有开放内容保留开关或保存按钮；正式App和公开发行仍为下述alpha.19。见[基础层复查](implementation/task-material-core-2026-11-26.md)。
+
 2026-11-26：任务33.1–33.4已随[alpha.19](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.19)公开并替换正式App，固定源`e4884968c196a0f6c19ee104eb448e65ba9df8d5`。849 Swift执行工具计数／95 Python／876中英key、本机生产OCR双轮、指定同源CI／优化Preview、公证／装订／Gatekeeper、公开回下载和发行资产审计均通过。正式二进制为alpha.19(19)，About19未观察；合成原生中英明暗已观察子集、20步执行、取消／重启与签名v2准入／旧reader拒绝另行留证。完整视觉、33.5、完整RunStore与P0–P4仍PARTIAL。见[发行证据](implementation/alpha19-release-2026-11-26.md)和[App接线复查](implementation/explicit-attempt-ui-2026-11-26.md)；历史资格仅属于各自精确源。
 
 后续工程修补：永久候选／公证回执、新inode消费副本、同ID续查、unknown不自动重投、Accepted后失败资产重建及信号收口已实现，28项定向／122 Python和历史Accepted输入的真实只读探针通过。文档检查及分支CI另记，尚未通过新版本完整提交发行；不改写alpha.19历史过程。见[冻结候选与公证恢复](technical/release-candidate-recovery.md)。
