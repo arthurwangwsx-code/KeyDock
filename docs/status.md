@@ -22,7 +22,7 @@
 
 前序[alpha.12](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.12)已公开，精确源`d99fee8078f807ce3803f2829181c69509468cc2`：685 Swift／58 Python／708 key完整本机PASS（含原配置系统OCR双轮）；同源core与优化构建、独立互通CI、Developer ID、公证／装订／Gatekeeper、原子替换、公开回下载和[发行审计45562087011](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45562087011)均PASS。当时实际About为alpha.12 (12)，现已替换为alpha.13，原包及更早证据保留。见[发行证据](implementation/alpha12-release-2026-11-25.md)。alpha.11及其历史资格保持原记录。
 
-任务27补齐Snippet／网页／集合的旧编辑稿与删除关联配置闭环，提供历史遗留偏好显式修复。74项定向回归、729个文案key、中文浅色／英文深色保存／删除／Esc／重启与修复子集PASS，最终完整资格和alpha.13发行见上。见[本轮复查](implementation/saved-tool-lifecycle-2026-11-25.md)。脱敏配置导出和UI首帧采样仍是实际工程缺口，与真实系统／API验收分别推进。
+任务27补齐Snippet／网页／集合的旧编辑稿与删除关联配置闭环，提供历史遗留偏好显式修复。74项定向回归、729个文案key、中文浅色／英文深色保存／删除／Esc／重启与修复子集PASS，最终完整资格和alpha.13发行见上。见[本轮复查](implementation/saved-tool-lifecycle-2026-11-25.md)。alpha.13当时的配置导出缺口已由alpha.14摘要及alpha.16完整定义导出推进；UI首帧采样仍是工程缺口，未来import与真实系统／API验收分别保留。
 
 桌面工作区组合运行、profile快捷键、设置应用、父子同库与有序阶段结果、取消／drain及恢复不重放已经接通；别名清除和文件补偿已修补。中文浅色／英文深色、窄卡片／宽表格及设置入口已观察并修复实际挤压。任务20.2／20.3完成工程范围，20.4实际AX／多屏、真实模型、完整视觉／辅助功能与长期可靠性仍开放；此前FAIL保留。
 
@@ -64,11 +64,11 @@ Agent／工作流的保存反馈后续已实现：验证或写入失败在发起
 
 ## 当前源码
 
-canonical目录唯一；alpha.9精确源5f52658已受控fast-forward至master，并固定tag v0.1.0-alpha.9；发行证据在从该master创建的chore/alpha9-release-evidence补齐，不改变已发布字节。alpha.8源0095326及更早历史证据保留。主Agent独占写入／分支／提交／集成／设备，子Agent仅只读研究评审；没有新建worktree或修改AiBox／Ashot。
+canonical目录唯一；alpha.16精确源20854e3已受控fast-forward至master，并固定tag v0.1.0-alpha.16；发行证据在从该master创建的chore/alpha16-evidence补齐，不改变已发布字节。alpha.15及更早源与资产继续保留。主Agent独占写入／分支／提交／集成／设备，子Agent仅只读研究评审；没有新建worktree或修改AiBox／Ashot。
 
 | 范围 | 状态 | 当前证据与限制 |
 |---|---|---|
-| 产品／架构／开源参考 | PASS（工程） | 原生模块化单体、13项固定revision参考；AiBox只读设计对照，新代码独立编写 |
+| 产品／架构／开源参考 | PASS（工程） | 原生模块化单体、14项固定revision参考；AiBox只读设计对照，新代码独立编写 |
 | 构建与模块 | PASS（本机） | Swift6／macOS14目标，当前27.2 arm64原生构建；最低系统未真实验证 |
 | 启动台／设置／工作区 | PARTIAL | 独立窗口、菜单栏入口、KeyDockUI、系统玻璃材料和中英；基本深浅色／焦点已观察，完整视觉／辅助功能矩阵未完成 |
 | 搜索与快捷键 | PARTIAL | 动作分类、剪贴板专用绑定／别名、目录／generation／过期结果和注册事务测试；Preview录制与重启持久化已观察，物理全局快捷键、IME／全屏／多屏未完整验收 |
