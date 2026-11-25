@@ -3,6 +3,7 @@ import Testing
 import CommandCore
 import MacAdapters
 import KeyDockUI
+import ExecutionCore
 @testable import WorkbenchFeature
 
 @MainActor private final class ShortcutTransactionRegistry: HotkeyRegistering {
@@ -78,6 +79,46 @@ struct ShortcutConfigurationTests {
         let fixture = try ShortcutTransactionFixture()
         do { try await body(fixture); await fixture.cleanup() }
         catch { await fixture.cleanup(); throw error }
+    }
+
+    @Test func contributionSwitchPublishesEpochOnlyAfterOSAndStorageCommitAndKeepsShortcutPreferences() async throws {
+        try await withFixture { fixture in
+            let store = fixture.store
+            let command = SavedCommand(name:"Synthetic contribution shortcut",executable:"/usr/bin/printf",arguments:["synthetic"],workingDirectory:fixture.directory.path)
+            store.configuration.savedCommands = [command]; store.rebuildCatalog()
+            let id = "command."+command.id.uuidString
+            #expect(store.setShortcut(next,for:id))
+            let epoch = store.contributionEpoch, before = try Data(contentsOf:fixture.directory.appendingPathComponent("configuration.json"))
+            let pending = try #require(store.prepareShortcutInvocation(id:id))
+            fixture.afterWrite = { throw CocoaError(.fileWriteUnknown) }
+            #expect(!store.setContributionEnabled(false,id:BuiltinContributionID.commands))
+            #expect(store.contributionEpoch == epoch && store.isContributionEnabled(BuiltinContributionID.commands))
+            #expect(try Data(contentsOf:fixture.directory.appendingPathComponent("configuration.json")) == before)
+            #expect(fixture.registry.bindings.values.contains(next))
+            fixture.afterWrite = nil
+            #expect(store.setContributionEnabled(false,id:BuiltinContributionID.commands))
+            #expect(store.contributionEpoch != epoch && store.configuration.commandShortcuts[id] == next)
+            #expect(!fixture.registry.bindings.values.contains(next))
+            #expect(store.setContributionEnabled(true,id:BuiltinContributionID.commands))
+            #expect(fixture.registry.bindings.values.contains(next))
+            store.performCommand(pending)
+            #expect(store.tasks.isEmpty && store.executionReservations.isEmpty)
+        }
+    }
+
+    @Test func failedContributionEnableRegistrationKeepsDisabledEpochAndBytes() async throws {
+        try await withFixture { fixture in
+            let store = fixture.store, id = "command."+UUID().uuidString
+            #expect(store.setShortcut(next,for:id))
+            #expect(store.setContributionEnabled(false,id:BuiltinContributionID.commands))
+            let epoch = store.contributionEpoch, writes = fixture.writes
+            let bytes = try Data(contentsOf:fixture.directory.appendingPathComponent("configuration.json"))
+            fixture.registry.blocked = [next]
+            #expect(!store.setContributionEnabled(true,id:BuiltinContributionID.commands))
+            #expect(store.contributionEpoch == epoch && !store.isContributionEnabled(BuiltinContributionID.commands))
+            #expect(fixture.writes == writes && !fixture.registry.bindings.values.contains(next))
+            #expect(try Data(contentsOf:fixture.directory.appendingPathComponent("configuration.json")) == bytes)
+        }
     }
 
     @Test func registrationFailureNeverWritesOrPublishesTheCandidate() async throws {

@@ -8,13 +8,17 @@ public enum AgentToolError: Error, Equatable, Sendable { case denied, approvalTi
 public struct ScopedAITool: Sendable {
     public let definition: AIToolDefinition
     public let version: Int
+    public let executionToolID: String?
+    public let actionID: String?
+    public let actionVersion: Int?
     public let effects: Set<ExecutionEffect>
     public let resource: ExecutionResourceScope
     public let approvalSummary: String
     public let invoke: @Sendable ([String: JSONValue], UUID) async throws -> String
-    public init(definition: AIToolDefinition, version: Int = 1, effects: Set<ExecutionEffect>, resource: ExecutionResourceScope,
+    public init(definition: AIToolDefinition, version: Int = 1, executionToolID:String? = nil, actionID:String? = nil, actionVersion:Int? = nil, effects: Set<ExecutionEffect>, resource: ExecutionResourceScope,
                 approvalSummary: String, invoke: @escaping @Sendable ([String: JSONValue], UUID) async throws -> String) {
         self.definition = definition; self.version = version; self.effects = effects; self.resource = resource
+        self.executionToolID = executionToolID; self.actionID = actionID; self.actionVersion = actionVersion
         self.approvalSummary = approvalSummary; self.invoke = invoke
     }
 }
@@ -48,6 +52,10 @@ public actor ScopedToolBroker: AgentToolRouting {
             guard tool.definition.name.range(of:"^[A-Za-z0-9_-]{1,64}$",options:.regularExpression) != nil,
                   tool.version > 0, !tool.effects.isEmpty, entries[tool.definition.name] == nil,
                   tool.approvalSummary.utf8.count <= 16_384 else { throw AgentToolError.invalidDefinition }
+            guard tool.executionToolID.map({ !$0.isEmpty && $0.utf8.count <= 512 }) ?? true,
+                  tool.actionID.map({ !$0.isEmpty && $0.utf8.count <= 512 }) ?? true,
+                  tool.actionVersion.map({$0 > 0}) ?? true,
+                  (tool.actionID == nil) == (tool.actionVersion == nil) else { throw AgentToolError.invalidDefinition }
             try ToolJSONSchema.checkSchema(tool.definition.parameters)
             entries[tool.definition.name] = tool
         }
@@ -90,8 +98,8 @@ public actor ScopedToolBroker: AgentToolRouting {
             guard approved else { throw AgentToolError.denied }
         }
         let command = "keydock.agent." + runID.uuidString
-        let request = ExecutionRequest(invocationID:id,commandID:command,commandVersion:1,toolID:"keydock.agenttool."+call.name,toolVersion:tool.version,caller:.agent,callerInstanceID:runID.uuidString,resourceScope:tool.resource,effects:tool.effects)
-        let grant = PolicyGrant(caller:.agent,callerInstanceID:runID.uuidString,commandID:command,commandVersion:1,toolID:request.toolID,toolVersion:tool.version,resourceScope:tool.resource,allowedEffects:tool.effects,expiresAt:Date().addingTimeInterval(30),sideEffectsApproved:effectful,invocationID:id,agentInvocationApproved:effectful)
+        let request = ExecutionRequest(invocationID:id,commandID:command,commandVersion:1,toolID:tool.executionToolID ?? "keydock.agenttool."+call.name,toolVersion:tool.version,caller:.agent,callerInstanceID:runID.uuidString,resourceScope:tool.resource,effects:tool.effects,actionID:tool.actionID,actionVersion:tool.actionVersion)
+        let grant = PolicyGrant(caller:.agent,callerInstanceID:runID.uuidString,commandID:command,commandVersion:1,toolID:request.toolID,toolVersion:tool.version,resourceScope:tool.resource,allowedEffects:tool.effects,expiresAt:Date().addingTimeInterval(30),sideEffectsApproved:effectful,invocationID:id,actionID:request.actionID,actionVersion:request.actionVersion,agentInvocationApproved:effectful)
         try ExecutionPolicy.authorize(request:request,grant:grant)
         try Task.checkCancellation()
         do { try await journal.begin(id:id,name:call.name,commandID:command,commandVersion:1,caller:"agent",initialMessage:"agent.toolIntent") }

@@ -15,7 +15,10 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
 @MainActor public final class WorkbenchModel: ObservableObject {
     @Published public private(set) var isShuttingDown = false
     @Published public var shortcutsUnavailable = false
-    @Published public var configuration: AppConfiguration
+    @Published public var configuration: AppConfiguration {
+        didSet { if configuration.disabledContributions != oldValue.disabledContributions { contributionEpoch = UUID() } }
+    }
+    @Published public private(set) var contributionEpoch = UUID()
     @Published public private(set) var catalog: [CommandItem] = []
     @Published public private(set) var clipboardRevision: UInt64 = 0
     public let clipboardPreferences = ClipboardPanelPreferences()
@@ -165,6 +168,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     // 剪贴板是全局资源；不同草稿的迟到结果也不能覆盖较新的复制请求。
     var latestAutoCopyRunID: UUID?
     var contextSessions: [UUID: WeakTextContextSession] = [:]
+    let contributions: WorkbenchContributionRuntime
+    var contributionActionTasks: [UUID:Task<Void,Never>] = [:]
+    var fileRevealer: @MainActor ([URL])->Void = { NSWorkspace.shared.activateFileViewerSelecting($0) }
 
     public init(dataDirectory: URL? = nil, allowContextCapture: Bool = true,
                 clipboardWriter: (@MainActor (String) throws -> Void)? = nil,
@@ -181,6 +187,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
                 sessionLimits: SessionRetentionPolicy = SessionRetentionPolicy(),
                 clipboardCaptureSource: (any ClipboardCaptureSource)? = nil,
                 languageApplier: @escaping @MainActor (String) -> Void = { KDLocalizer.setLanguage($0) }) throws {
+        contributions = try WorkbenchContributionRuntime()
         self.sessionLimits = sessionLimits
         let desktop = DesktopService(applicationCatalog: applicationCatalog ?? ApplicationCatalog())
         self.desktop = desktop
@@ -281,10 +288,13 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         let usage = usageMetadataStore; Task { await usage.stop() }
         // 退出围栏与现有工作的取消同步生效，不能等异步终止回调开始后才取消网络。
         for id in Array(taskHandles.keys) { cancelTask(id) }
+        for task in contributionActionTasks.values { task.cancel() }
     }
     public func shutdownAndWait() async {
         shutdown(); let handles = taskHandles
         for handle in handles.values { await handle.value }
+        let contributionHandles = Array(contributionActionTasks.values)
+        for handle in contributionHandles { await handle.value }
         await scheduleTimer?.value
         await mcpConnectionTask?.value
         let clients = Array(mcpClients.values) + mcpRunClients.values.flatMap{$0}
@@ -307,8 +317,11 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         }
     }
     private func commandItems() -> [CommandItem] {
-        let saved = configuration.savedCommands.map { CommandItem(id: "command." + $0.id.uuidString, title: $0.name, subtitle: $0.executable, kind: .command, payload: $0.id.uuidString) }
-        let ai = configuration.aiActions.map { CommandItem(id: "ai." + $0.id.uuidString, title: $0.displayName, subtitle: L("AI action"), kind: .ai, payload: $0.id.uuidString) }
+        let saved = contributionItems()
+        let ai: [CommandItem] = configuration.aiActions.compactMap { action in
+            guard let revision = objectFingerprint(action) else { return nil }
+            return CommandItem(id:"ai."+action.id.uuidString,title:action.displayName,subtitle:L("AI action"),kind:.ai,payload:action.id.uuidString,objectRevision:revision)
+        }
         let builtins = [("clipboard", L("Clipboard history")), ("tasks", L("Running tasks")), ("commands", L("Saved commands")), ("ai", L("AI workspace")), ("agent", L("Agent workspace")), ("settings", L("Settings"))].map { CommandItem(id: "utility." + $0.0, title: $0.1, kind: .utility, payload: $0.0) }
         let layouts = WindowLayout.allCases.map { layout in
             CommandItem(id: "utility.window-layout." + layout.rawValue, title: L(layout.titleKey), subtitle: L("Original window"), keywords: ["window", "layout", "窗口", "布局"], kind: .utility, payload: "window-layout." + layout.rawValue)
@@ -316,15 +329,24 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         let windowActions = WindowCommand.allCases.map { CommandItem(id: "utility.window-command." + $0.rawValue, title: L($0.titleKey), subtitle: L("Original application"), keywords: ["window", "窗口"], kind: .utility, payload: "window-command." + $0.rawValue) }
         let appActions = applicationActions.map { CommandItem(id: "application-action." + $0.id.uuidString, title: $0.name, subtitle: L($0.behavior.titleKey), keywords: ["application", "应用"], kind: .utility, payload: "application-action." + $0.id.uuidString, objectRevision: fingerprint($0.applicationID + "|" + $0.behavior.rawValue + "|" + $0.name)) }
         let additional = [("activity",L("Usage insights")),("workflows",L("Workflows")),("tools",L("Tools")),("capture",L("Capture a region")),("desktop-workspaces",L("Manage desktop workspaces"))].map { CommandItem(id:"utility."+$0.0,title:$0.1,kind:.utility,payload:$0.0) }
-        let workflows = configuration.workflows.map { CommandItem(id:"workflow."+$0.id.uuidString,title:$0.name,subtitle:L("Workflow"),kind:.utility,payload:"workflow."+$0.id.uuidString) }
-        let snippets = configuration.snippets.map { CommandItem(id:"snippet."+$0.id.uuidString,title:$0.name,subtitle:L("Snippet"),kind:.utility,payload:"snippet."+$0.id.uuidString) }
-        let web = configuration.webActions.map { CommandItem(id:"web."+$0.id.uuidString,title:$0.name,subtitle:L("URL action"),kind:.utility,payload:"web."+$0.id.uuidString) }
-        let collections = configuration.collections.map { CommandItem(id:"collection."+$0.id.uuidString,title:$0.name,subtitle:L("Command collection"),kind:.utility,payload:"collection."+$0.id.uuidString) }
+        let workflows: [CommandItem] = configuration.workflows.compactMap { value in
+            guard let revision = objectFingerprint(value) else { return nil }; return CommandItem(id:"workflow."+value.id.uuidString,title:value.name,subtitle:L("Workflow"),kind:.utility,payload:"workflow."+value.id.uuidString,objectRevision:revision)
+        }
+        let snippets: [CommandItem] = configuration.snippets.compactMap { value in
+            guard let revision = objectFingerprint(value) else { return nil }; return CommandItem(id:"snippet."+value.id.uuidString,title:value.name,subtitle:L("Snippet"),kind:.utility,payload:"snippet."+value.id.uuidString,objectRevision:revision)
+        }
+        let web: [CommandItem] = configuration.webActions.compactMap { value in
+            guard let revision = objectFingerprint(value) else { return nil }; return CommandItem(id:"web."+value.id.uuidString,title:value.name,subtitle:L("URL action"),kind:.utility,payload:"web."+value.id.uuidString,objectRevision:revision)
+        }
+        let collections: [CommandItem] = configuration.collections.compactMap { value in
+            guard let revision = objectFingerprint(value) else { return nil }; return CommandItem(id:"collection."+value.id.uuidString,title:value.name,subtitle:L("Command collection"),kind:.utility,payload:"collection."+value.id.uuidString,objectRevision:revision)
+        }
         return saved + ai + builtins + layouts + windowActions + appActions + additional + workflows + snippets + web + collections + desktopWorkspaces.map(desktopWorkspaceItem)
     }
     func rebuildCatalog() { catalog = catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
     public func execute(_ item: CommandItem, caller: ExecutionCaller = .user) {
         guard !isShuttingDown else { launcherNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return }
+        if executeContributionItem(item,caller:caller) { return }
         if isDesktopItem(item) { onDesktopAction?(item, caller); return }
         let previousWorkspaceRuns = desktopWorkspaceGroups.keys.compactMap { taskHandles[$0] }
         cancelDesktopWorkspaceRuns()
@@ -359,7 +381,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         case .window:
             do { try authorizeHostItem(item, caller: caller); try desktop.activateWindow(item.payload); recordDirectActivity(commandID:item.id,category:.window,outcome:.succeeded); onDismiss?(false) } catch { showError(error) }
         case .command:
-            if let command = configuration.savedCommands.first(where: { $0.id.uuidString == item.payload }), runCommand(command, caller: caller, showWorkspace: false) != nil { onDismiss?(true) }
+            contributionUnavailable()
         case .ai:
             guard let action = configuration.aiActions.first(where: { $0.id.uuidString == item.payload }) else { return }
             do { try authorizeHostItem(item, caller: caller) } catch { showError(error); return }
@@ -371,7 +393,6 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             if item.payload.hasPrefix("web."), let id = UUID(uuidString:String(item.payload.dropFirst(4))), let action = configuration.webActions.first(where:{$0.id == id}) { if action.requiresQuery { onOpenWorkspace?(.web(id)) } else { openWebAction(id,caller:caller) }; return }
             if item.payload.hasPrefix("collection."),let id = UUID(uuidString:String(item.payload.dropFirst(11))) { onOpenWorkspace?(.collection(id)); return }
             if item.payload.hasPrefix("snippet."), let id = UUID(uuidString:String(item.payload.dropFirst(8))) { copySnippet(id,caller:caller); onDismiss?(true); return }
-            if item.payload.hasPrefix("calculate.") { do { try copyAuthorizedText(String(item.payload.dropFirst(10)),caller:caller); onDismiss?(true) } catch { showError(error) }; return }
             if item.payload.hasPrefix("workflow.") {
                 if let id = UUID(uuidString:String(item.payload.dropFirst("workflow.".count))) { launchSavedWorkflow(id) }
                 return
@@ -582,5 +603,5 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public var directShortcuts: [(String, HotkeyBinding)] {
         ShortcutPlan.entries(configuration).compactMap { entry in entry.commandID.map { ($0, entry.binding) } }
     }
-    public func performCommand(id: String) { if let item = catalog.first(where: { $0.id == id }) { execute(item, caller: .shortcut) } else { launcherNoticeMessage = noticeKey("The shortcut target is no longer available") } }
+    public func performCommand(id: String) { if let invocation = prepareShortcutInvocation(id:id) { performCommand(invocation) } }
 }

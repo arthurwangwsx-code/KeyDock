@@ -34,6 +34,7 @@ extension WorkbenchModel {
         }
         do {
             let plan = try compileWorkflow(definition)
+            if definition.steps.contains(where:{ if case .savedCommand = $0.operation { true } else { false } }) { _ = try requireCommandContribution() }
             let commandsUsingInput = Set(configuration.savedCommands.filter { $0.arguments.contains("{{input}}") }.map(\.id))
             if plan.requiresInitialInput(commandsUsingInput: commandsUsingInput) { onOpenWorkspace?(.workflowInput(id)) }
             else if runWorkflow(definition, input: "") == nil { launcherNoticeMessage = noticeKey("Workflow could not start. Check its steps and AI configuration.") }
@@ -77,7 +78,12 @@ extension WorkbenchModel {
         do {
             guard !isShuttingDown, !executionReservations.contains(id), !tasks.contains(where:{$0.id == id}), input.utf8.count <= TaskTextLimits.inputBytes else { return nil }
             let plan = try compileWorkflow(definition,interaction:interaction)
-            let commands = Dictionary(uniqueKeysWithValues:configuration.savedCommands.map{($0.id,$0)})
+            let referencedCommands = Set(definition.steps.compactMap { if case .savedCommand(let id) = $0.operation { id } else { nil as UUID? } })
+            var commands: [UUID:PreparedWorkflowCommand] = [:]
+            if !referencedCommands.isEmpty {
+                let contract = try FrozenCommandContribution(requireCommandContribution())
+                for command in configuration.savedCommands where referencedCommands.contains(command.id) { commands[command.id] = .init(command:command,contract:contract) }
+            }
             let referencedAI = Set(definition.steps.compactMap { step -> UUID? in if case .aiAction(let id) = step.operation { id } else { nil } })
             var actions: [UUID:PreparedWorkflowAI] = [:]
             for action in configuration.aiActions where referencedAI.contains(action.id) { actions[action.id] = PreparedWorkflowAI(action:action,provider:try provider(override:action.modelOverride)) }

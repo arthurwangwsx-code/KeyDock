@@ -26,6 +26,25 @@
 - **WHEN** 用户为已保存命令或 AIAction 绑定可用快捷键并触发
 - **THEN** 系统按同一命令合同和已配置范围执行，展示状态，不绕过执行策略
 
+### Requirement: 受信版本化贡献与启停
+系统 SHALL 使用编译期注册的provider／handler与精确版本声明提供计算／单位、保存CLI和异步文件搜索，执行消费同一解析描述。缺失、重复、错版或过期引用 MUST 拒绝，不回退旧分支、最新版或模型指定handler。
+
+#### Scenario: 关闭内置工具
+- **WHEN** 用户关闭某个贡献
+- **THEN** 新查询／直接运行／Workflow或Agent新快照不得绕过关闭状态，定义与绑定偏好保留，有效快捷键同事务更新；旧结果与等待AX捕获的旧按键在重新启用后仍不可执行
+
+#### Scenario: 开关事务失败
+- **WHEN** 候选系统注册失败或配置写入前后抛错
+- **THEN** 原目录、启用代次及输入保持，补偿原文件和注册；补偿失败明确报告，不发布候选snapshot
+
+#### Scenario: 已有运行与新调用
+- **WHEN** 用户切换贡献开关或保存命令定义，而该贡献的CLI／Workflow／Agent已开始
+- **THEN** 已有运行保持冻结版本、参数、工具范围及真实权限／审批，不重放或扩权；新调用按当前目录重新检查
+
+#### Scenario: 三类生产入口
+- **WHEN** 用户从Launcher／Tools复制计算结果、从Launcher／设置／集合运行CLI，或从Launcher／Tools请求Reveal
+- **THEN** 实际注册handler进入同一执行策略；计算仅一次授权／复制、CLI仅一个任务／reservation／intent，异步Reveal复核查询／目录／对象／贡献代次后才请求Finder
+
 ### Requirement: 查询隔离与取消
 系统 MUST 增量返回本地结果并丢弃过期 generation 的结果，网络和 AI 不阻塞本地搜索。
 

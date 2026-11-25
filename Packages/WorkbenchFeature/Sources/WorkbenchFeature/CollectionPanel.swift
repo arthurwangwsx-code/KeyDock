@@ -42,7 +42,7 @@ struct CollectionPanel: View {
                         Text((index + 1).formatted()).monospacedDigit().foregroundStyle(.secondary)
                         Text(store.collectionAction(id)?.title ?? L("Unavailable action")).lineLimit(1); Spacer()
                         Button(store.collectionAction(id)?.kind == .ai ? L("Open AI workspace") : L("Run")) { store.runCollectionAction(id) }
-                            .disabled(store.collectionAction(id) == nil)
+                            .disabled(!store.isCollectionActionEnabled(id))
                             .accessibilityLabel((store.collectionAction(id)?.kind == .ai ? L("Open AI workspace") : L("Run")) + ": " + (store.collectionAction(id)?.title ?? L("Unavailable action")))
                     }
                 }

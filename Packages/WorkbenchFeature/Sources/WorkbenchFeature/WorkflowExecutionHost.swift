@@ -6,11 +6,12 @@ import ExecutionCore
 import AgentCore
 
 struct PreparedWorkflowAI: Sendable { let action: AIActionPreset; let provider: ChatCompletionsProvider }
+struct PreparedWorkflowCommand: Sendable { let command:SavedCommand; let contract:FrozenCommandContribution }
 struct WorkflowAIUsage: Sendable { let id: UUID; let endpoint: URL; let model: String; let usage: AIUsageAccumulator; let outcome: String }
 
 /// 只有已编译且用户已启动的冻结计划能构造宿主。它拥有真实子任务，Core超时不释放资源lease。
 actor WorkflowExecutionHost {
-    let commands: [UUID: SavedCommand]
+    let commands: [UUID: PreparedWorkflowCommand]
     let actions: [UUID: PreparedWorkflowAI]
     let runner: ProcessRunner
     let journal: InvocationStore
@@ -19,7 +20,7 @@ actor WorkflowExecutionHost {
     let approve: @Sendable (AgentToolApproval) async throws -> Bool
     var active: [UUID: Task<WorkflowHostResult,Never>] = [:]
     var closed = false
-    init(commands:[UUID:SavedCommand],actions:[UUID:PreparedWorkflowAI],runner:ProcessRunner,journal:InvocationStore,
+    init(commands:[UUID:PreparedWorkflowCommand],actions:[UUID:PreparedWorkflowAI],runner:ProcessRunner,journal:InvocationStore,
          manual:@escaping @Sendable (WorkflowHostRequest) async -> String?,onUsage:@escaping @Sendable (WorkflowAIUsage) async -> Void,
          approve:@escaping @Sendable (AgentToolApproval) async throws -> Bool) {
         self.commands = commands; self.actions = actions; self.runner = runner; self.journal = journal; self.manual = manual; self.onUsage = onUsage; self.approve = approve
@@ -38,7 +39,7 @@ actor WorkflowExecutionHost {
         if cancel { for handle in handles { handle.cancel() } }
         for handle in handles { _ = await handle.value }
     }
-    nonisolated private static func perform(_ request: WorkflowHostRequest,id:UUID,commands:[UUID:SavedCommand],actions:[UUID:PreparedWorkflowAI],runner:ProcessRunner,journal:InvocationStore,manual:@escaping @Sendable (WorkflowHostRequest) async -> String?,onUsage:@escaping @Sendable (WorkflowAIUsage) async -> Void,approve:@escaping @Sendable (AgentToolApproval) async throws -> Bool) async -> WorkflowHostResult {
+    nonisolated private static func perform(_ request: WorkflowHostRequest,id:UUID,commands:[UUID:PreparedWorkflowCommand],actions:[UUID:PreparedWorkflowAI],runner:ProcessRunner,journal:InvocationStore,manual:@escaping @Sendable (WorkflowHostRequest) async -> String?,onUsage:@escaping @Sendable (WorkflowAIUsage) async -> Void,approve:@escaping @Sendable (AgentToolApproval) async throws -> Bool) async -> WorkflowHostResult {
         var began = false, dispatched = false, finishAttempted = false
         do {
             try Task.checkCancellation()
@@ -48,9 +49,11 @@ actor WorkflowExecutionHost {
             }
             let effect: ExecutionEffect, resource: String
             var resolvedCommand: SavedCommand?
+            var contract: FrozenCommandContribution?
             switch request.operation {
             case .savedCommand(let commandID):
-                guard let command = commands[commandID], !command.interactive else { return .init(outcome:.failed) }
+                guard let prepared = commands[commandID], !prepared.command.interactive else { return .init(outcome:.failed) }
+                let command = prepared.command; contract = prepared.contract
                 let bound = try WorkflowCommandBinding.apply(request.input,to:command); resolvedCommand = bound
                 if command.arguments.contains("{{input}}") {
                     guard request.allowsInteraction else { return .init(outcome:.failed) }
@@ -58,7 +61,7 @@ actor WorkflowExecutionHost {
                     guard try await approve(.init(id:id,runID:request.runID,toolName:"workflow_command",summary:summary,effects:[.executeProcess])) else { return .init(outcome:.cancelled) }
                     try Task.checkCancellation()
                 }
-                effect = .executeProcess; let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]; resource = String(decoding:try encoder.encode(bound),as:UTF8.self)
+                effect = .executeProcess; resource = try prepared.contract.fingerprint(bound)
             case .aiAction(let actionID):
                 guard let ai = actions[actionID] else { return .init(outcome:.failed) }
                 effect = .network; resource = ai.provider.configuration.endpoint.absoluteString+"|"+ai.provider.configuration.model+"|"+ai.action.prompt
@@ -66,8 +69,8 @@ actor WorkflowExecutionHost {
             }
             let scope = ExecutionResourceScope.exact(namespace:"keydock.workflow-resource",identifier:SHA256.hash(data:Data(resource.utf8)).map{String(format:"%02x",$0)}.joined())
             let commandID = "keydock.workflow."+request.definitionID.uuidString
-            let authorization = ExecutionRequest(invocationID:id,commandID:commandID,commandVersion:request.definitionVersion,toolID:"keydock.workflow.step",toolVersion:1,caller:.workflow,callerInstanceID:request.runID.uuidString,resourceScope:scope,effects:[effect])
-            let grant = PolicyGrant(caller:.workflow,callerInstanceID:request.runID.uuidString,commandID:commandID,commandVersion:request.definitionVersion,toolID:authorization.toolID,toolVersion:1,resourceScope:scope,allowedEffects:[effect],expiresAt:Date().addingTimeInterval(30),sideEffectsApproved:true,invocationID:id)
+            let authorization = ExecutionRequest(invocationID:id,commandID:commandID,commandVersion:request.definitionVersion,toolID:contract?.execution.toolID ?? "keydock.workflow.step",toolVersion:contract?.execution.toolVersion ?? 1,caller:.workflow,callerInstanceID:request.runID.uuidString,resourceScope:scope,effects:[effect],actionID:contract?.action.toolID,actionVersion:contract?.action.toolVersion)
+            let grant = PolicyGrant(caller:.workflow,callerInstanceID:request.runID.uuidString,commandID:commandID,commandVersion:request.definitionVersion,toolID:authorization.toolID,toolVersion:authorization.toolVersion,resourceScope:scope,allowedEffects:[effect],expiresAt:Date().addingTimeInterval(30),sideEffectsApproved:true,invocationID:id,actionID:authorization.actionID,actionVersion:authorization.actionVersion)
             try ExecutionPolicy.authorize(request:authorization,grant:grant)
             do { try await journal.begin(id:id,name:"Workflow step",commandID:"keydock.workflow-run."+request.runID.uuidString,commandVersion:request.definitionVersion,caller:"workflow",initialMessage:"workflow.stepIntent"); began = true }
             catch { await journal.abandonUndispatched(id); throw error }

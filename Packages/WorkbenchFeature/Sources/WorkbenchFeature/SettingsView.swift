@@ -49,6 +49,7 @@ public struct SettingsRootView: View {
     @ViewBuilder private var content: some View {
         switch session.pane {
         case .mcp: MCPSettingsContent(store:store,session:session)
+        case .tools: BuiltinToolsSettingsContent(store:store)
         case .general:
             if !store.allowContextCapture { Section { Text(L("Isolated preview: clipboard and selected-text capture, permission requests and credential storage are disabled.")).font(.caption).foregroundStyle(.secondary) } }
             Section(L("Appearance & language")) {
@@ -97,6 +98,10 @@ public struct SettingsRootView: View {
             }
             if !unavailableShortcutIDs.isEmpty {
                 Section(L("Unavailable actions")) {
+                    if !store.configuration.disabledContributions.isEmpty {
+                        Text(L("Actions from tools that are turned off keep their shortcut preferences.")).font(.caption).foregroundStyle(.secondary)
+                        Button(L("Manage built-in tools")) { session.pane = .tools }
+                    }
                     ForEach(unavailableShortcutIDs, id: \.self) { id in
                         if let binding = store.configuration.commandShortcuts[id] {
                             HStack {
@@ -143,13 +148,14 @@ public struct SettingsRootView: View {
         case .desktopWorkspaces:
             DesktopWorkspacesSettingsView(store: store, session: session)
         case .commands:
+            if !store.isContributionEnabled(BuiltinContributionID.commands) { BuiltinToolDisabledContent(store:store) }
             Section(L("Saved commands")) {
                 if store.configuration.savedCommands.isEmpty { Text(L("Create a reusable command")).foregroundStyle(.secondary) }
                 ForEach(store.configuration.savedCommands) { command in
                     HStack(spacing: 12) {
                         Image(systemName: "terminal").foregroundStyle(.secondary)
                         VStack(alignment: .leading, spacing: 4) { Text(command.name).fontWeight(.medium); Text(command.executable).font(.caption.monospaced()).foregroundStyle(.secondary) }
-                        Spacer(); Button(L("Edit")) { session.editCommand(command) }.accessibilityLabel(L("Edit") + " " + command.name); Button(L("Run")) { if let current = store.configuration.savedCommands.first(where: { $0.id == command.id }) { store.runCommand(current) } }.accessibilityLabel(L("Run") + " " + command.name)
+                        Spacer(); Button(L("Edit")) { session.editCommand(command) }.accessibilityLabel(L("Edit") + " " + command.name); Button(L("Run")) { if let current = store.configuration.savedCommands.first(where: { $0.id == command.id }) { store.runCommand(current) } }.accessibilityLabel(L("Run") + " " + command.name).disabled(!store.isContributionEnabled(BuiltinContributionID.commands))
                         Button(L("Remove"), role: .destructive) { session.prepareRemoval(.command(command.id), in: store) }.accessibilityLabel(L("Remove") + " " + command.name)
                     }.padding(.vertical, 7)
                 }
@@ -211,6 +217,7 @@ public struct SettingsRootView: View {
         return store.configuration.commandShortcuts.keys.filter { !current.contains($0) }.sorted()
     }
     private func unavailableActionName(_ id: String) -> String {
+        if let command = store.configuration.savedCommands.first(where:{"command."+$0.id.uuidString == id}) { return command.name }
         if id.hasPrefix("app.") {
             let name = URL(fileURLWithPath: String(id.dropFirst(4))).deletingPathExtension().lastPathComponent
             if !name.isEmpty { return name }

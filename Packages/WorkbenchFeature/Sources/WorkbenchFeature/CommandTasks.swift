@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import ExecutionCore
+import CommandCore
 import MacAdapters
 
 extension WorkbenchModel {
@@ -23,6 +24,15 @@ extension WorkbenchModel {
         } else if receipt.state == .interrupted { tasks[tasks.count - 1].noticeMessage = noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
     }
     @discardableResult public func runCommand(_ command: SavedCommand, caller: ExecutionCaller = .user, showWorkspace: Bool = true) -> UUID? {
+        do {
+            let resolved = try prepareCommandContribution(command)
+            return try contributions.invoke(resolved,payload:PreparedSavedCommand(command:command,showWorkspace:showWorkspace),store:self,caller:caller).taskID
+        } catch is SavedCommandValidationError {
+            let notice = noticeKey("Check name, absolute paths, arguments, environment and timeout")
+            if showWorkspace { settingsNoticeMessage = notice } else { launcherNoticeMessage = notice }; return nil
+        } catch { contributionUnavailable(); return nil }
+    }
+    @discardableResult func runPreparedCommand(_ command: SavedCommand, resolved:ResolvedContributionAction, caller: ExecutionCaller, showWorkspace:Bool) -> UUID? {
         guard !isShuttingDown else { return nil }
         let id = UUID()
         let authorization: ExecutionRequest
@@ -30,7 +40,7 @@ extension WorkbenchModel {
         do {
             try command.validate()
             configFingerprint = try fingerprint(command)
-            authorization = try authorizeHostAction(id: "command." + command.id.uuidString, operation: .runCommand, resource: configFingerprint, availableContext: [.workingDirectory], caller: caller, invocation: id)
+            authorization = try authorizeContribution(resolved,resource:configFingerprint,context:[.workingDirectory],caller:caller,invocation:id)
         } catch is SavedCommandValidationError {
             let notice = noticeKey("Check name, absolute paths, arguments, environment and timeout")
             if showWorkspace { settingsNoticeMessage = notice } else { launcherNoticeMessage = notice }; return nil

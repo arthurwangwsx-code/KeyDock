@@ -10,6 +10,7 @@ public struct ShortcutPlanEntry: Hashable, Sendable {
 /// 逻辑槽位按稳定顺序生成，不使用可能碰撞的命令哈希；传输 token 由 Center 独立管理。
 public enum ShortcutPlan {
     public static func entries(_ configuration: AppConfiguration) -> [ShortcutPlanEntry] {
+        guard let manifests = try? BuiltinContributionManifests.all() else { return [] }
         var result: [ShortcutPlanEntry] = []
         if let binding = configuration.launcherShortcut { result.append(.init(id: 1, binding: binding, commandID: nil)) }
         // 保存的profile热键走专用桌面入口，不经过通用Launcher选区捕获。
@@ -17,7 +18,8 @@ public enum ShortcutPlan {
         for action in configuration.aiActions {
             if let binding = action.shortcut { commands["ai." + action.id.uuidString] = binding }
         }
-        for (offset, commandID) in commands.keys.sorted().enumerated() {
+        let effective = commands.keys.filter { BuiltinContributionManifests.isCommandEnabled($0,disabled:configuration.disabledContributions,manifests:manifests) }.sorted()
+        for (offset, commandID) in effective.enumerated() {
             result.append(.init(id: UInt32(offset) + 2, binding: commands[commandID]!, commandID: commandID))
         }
         return result

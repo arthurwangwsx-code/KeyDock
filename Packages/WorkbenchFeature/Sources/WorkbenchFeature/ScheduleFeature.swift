@@ -13,7 +13,7 @@ extension WorkbenchModel {
             switch step.operation {
             case .savedCommand(let id):
                 guard let value = configuration.savedCommands.first(where:{$0.id == id}) else { throw ScheduleError.notFound }
-                parts.append(String(decoding:try encoder.encode(value),as:UTF8.self))
+                parts.append(try installedCommandContribution().fingerprint(value))
             case .aiAction(let id):
                 guard let value = configuration.aiActions.first(where:{$0.id == id}) else { throw ScheduleError.notFound }
                 guard let endpoint = URL(string:configuration.endpoint) else { throw ScheduleError.invalidDefinition }

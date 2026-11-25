@@ -30,14 +30,19 @@ extension WorkbenchModel {
                   input.utf8.count <= TaskTextLimits.inputBytes else { throw AIProviderError.invalidRequest }
             try definition.validate()
             guard Set(configuration.savedCommands.map(\.id)).count == configuration.savedCommands.count else { throw AgentToolError.invalidDefinition }
+            let selected = configuration.savedCommands.filter { definition.allowedCommandIDs.contains($0.id) }
+            guard Set(selected.map(\.id)) == definition.allowedCommandIDs else { throw AgentToolError.invalidDefinition }
+            let commandContract: FrozenCommandContribution?
+            if selected.isEmpty { commandContract = nil } else { commandContract = try FrozenCommandContribution(requireCommandContribution()) }
             let service = try provider(override:definition.modelOverride)
             let authorization = try authorizeHostAction(id:"agent."+definition.id.uuidString,operation:.runAgent,resource:service.configuration.endpoint.absoluteString+"|"+input,availableContext:[.explicitInput],modelOverride:definition.modelOverride,invocation:id)
-            let selected = configuration.savedCommands.filter { definition.allowedCommandIDs.contains($0.id) }
             let sources = configuration.mcpServers.filter { definition.allowedMCPServerIDs.contains($0.id) && $0.enabled && !mcpSessionDisabled.contains($0.id) }
             guard Set(selected.map(\.id)) == definition.allowedCommandIDs, Set(sources.map(\.id)) == definition.allowedMCPServerIDs else { throw AgentToolError.invalidDefinition }
             let time = CurrentTimeTool()
             var initialTools = [ScopedAITool(definition:time.definition,effects:[.read],resource:.none,approvalSummary:"") { arguments,_ in try await time.call(arguments:arguments) }]
-            for command in selected { initialTools.append(try SavedCommandAITool.make(command:command,resourceFingerprint:fingerprint(command),runner:processRunner)) }
+            if let contract = commandContract {
+                for command in selected { initialTools.append(try SavedCommandAITool.make(command:command,resourceFingerprint:contract.fingerprint(command),runner:processRunner,version:contract.execution.toolVersion,executionToolID:contract.execution.toolID,actionID:contract.action.toolID,actionVersion:contract.action.toolVersion)) }
+            }
             let frozenTools = initialTools
             let draft = createDraft(input:input)
             guard ownsDraft(draft), reserveExecution(id,draft:draft) else { return nil }

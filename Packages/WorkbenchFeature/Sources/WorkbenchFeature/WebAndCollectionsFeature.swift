@@ -75,6 +75,7 @@ extension WorkbenchModel {
     func runCollectionAction(_ id: String, caller: ExecutionCaller = .user) {
         guard !isShuttingDown else { workspaceNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return }
         guard let item = collectionAction(id) else { workspaceNoticeMessage = noticeKey("Unavailable action"); return }
+        guard isCollectionActionEnabled(id) else { contributionUnavailable(); return }
         if item.kind == .ai {
             do { try authorizeHostItem(item, caller: caller) }
             catch { workspaceNoticeMessage = errorNotice(error); return }
@@ -95,8 +96,16 @@ extension WorkbenchModel {
     private func isCollectionAction(_ item: CommandItem) -> Bool {
         item.kind != .window && item.kind != .clipboard && !item.id.hasPrefix("collection.") && !item.payload.hasPrefix("window-layout.") && !item.payload.hasPrefix("window-command.")
     }
-    var collectionActions: [CommandItem] { catalog.filter(isCollectionAction) }
+    var collectionActions: [CommandItem] {
+        let active = catalog.filter(isCollectionAction)
+        guard !isContributionEnabled(BuiltinContributionID.commands) else { return active }
+        return active + configuration.savedCommands.map { CommandItem(id:"command."+$0.id.uuidString,title:$0.name,subtitle:$0.executable,kind:.command,payload:$0.id.uuidString) }
+    }
+    func isCollectionActionEnabled(_ id:String) -> Bool {
+        guard let item = collectionAction(id) else { return false }
+        return contributions.owner(of:item).map { isContributionEnabled($0.manifest.reference.toolID) } ?? true
+    }
     func collectionAction(_ id: String) -> CommandItem? {
-        catalog.first { $0.id == id && isCollectionAction($0) }
+        collectionActions.first { $0.id == id }
     }
 }

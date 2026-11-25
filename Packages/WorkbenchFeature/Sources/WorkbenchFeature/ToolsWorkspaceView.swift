@@ -12,15 +12,16 @@ struct ToolsWorkspaceView: View {
     var body: some View {
         Form {
             Section(L("Calculator")) {
+                if !store.isContributionEnabled(BuiltinContributionID.calculator) { BuiltinToolDisabledContent(store:store) }
                 HStack {
                     TextField(L("Arithmetic expression"),text:$session.calculatorInput).onSubmit(calculate)
                     Button(L("Calculate"),action:calculate)
-                }
+                }.disabled(!store.isContributionEnabled(BuiltinContributionID.calculator))
                 if !session.calculatorResult.isEmpty { Text(session.calculatorResult).font(.title2.monospaced()).textSelection(.enabled) }
                 Text(L("Arithmetic only: +, −, ×, / and parentheses. No scripts or functions are executed.")).font(.caption).foregroundStyle(.secondary)
             }
             Section(L("Unit conversion")) {
-                HStack { TextField(L("Example: 10 km to mi"),text:$session.unitInput).onSubmit(convert); Button(L("Convert"),action:convert) }
+                HStack { TextField(L("Example: 10 km to mi"),text:$session.unitInput).onSubmit(convert); Button(L("Convert"),action:convert) }.disabled(!store.isContributionEnabled(BuiltinContributionID.calculator))
                 if !session.unitResult.isEmpty { Text(session.unitResult).font(.title2.monospaced()).textSelection(.enabled) }
                 Text(L("Length, mass, absolute temperature and data bytes. MB and MiB use different scales. Approximate results.")).font(.caption).foregroundStyle(.secondary)
             }
@@ -71,11 +72,11 @@ struct ToolsWorkspaceView: View {
             .confirmationDialog(L("Remove this snippet?"),isPresented:Binding(get:{confirmSnippetRemoval != nil},set:{if !$0 { confirmSnippetRemoval = nil }})) { Button(L("Remove"),role:.destructive) { if let id = confirmSnippetRemoval { store.removeSnippet(id) }; confirmSnippetRemoval = nil } }
     }
     private func convert() {
-        do { let result = try UnitConversion.convert(session.unitInput); session.unitResult = String(format:"%.12g",result.value)+" "+result.targetUnit }
+        do { session.unitResult = try store.calculate(.conversion(session.unitInput)) }
         catch { session.unitResult = L("Invalid conversion. Use a supported unit and the format: 10 km to mi.") }
     }
     private func calculate() {
-        do { session.calculatorResult = String(format:"%.12g",try UtilityExpression.evaluate(session.calculatorInput)) }
+        do { session.calculatorResult = try store.calculate(.expression(session.calculatorInput)) }
         catch { session.calculatorResult = L("Invalid or unsupported expression") }
     }
 }

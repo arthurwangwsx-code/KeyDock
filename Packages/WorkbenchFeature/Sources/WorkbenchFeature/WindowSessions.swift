@@ -12,20 +12,12 @@ private struct LauncherCatalogProvider: CommandProviding {
     let items: [CommandItem]
     func commands(matching query: String) async throws -> [CommandItem] {
         try Task.checkCancellation()
-        if query.utf8.count <= 256, let value = try? UtilityExpression.evaluate(query) {
-            let result = String(format:"%.12g",value)
-            return [CommandItem(id:"utility.calculator.result",title:result,subtitle:query,keywords:[query],kind:.utility,payload:"calculate."+result)] + items
-        }
-        if let value = try? UnitConversion.convert(query) {
-            let result = String(format:"%.12g",value.value)+" "+value.targetUnit
-            return [CommandItem(id:"utility.calculator.result",title:result,subtitle:query,keywords:[query],kind:.utility,payload:"calculate."+result)] + items
-        }
         return items
     }
 }
 
 @MainActor public final class LauncherSession: ObservableObject {
-    @Published public var query = "" { didSet { if query != oldValue { store.invalidateLauncherReplies() }; search() } }
+    @Published public var query = "" { didSet { if !query.utf8.elementsEqual(oldValue.utf8) { store.invalidateLauncherReplies() }; search() } }
     @Published public var results: [CommandItem] = []
     @Published public var selectedID: String?
     @Published public private(set) var selectionScrollRequest = UUID()
@@ -43,6 +35,7 @@ private struct LauncherCatalogProvider: CommandProviding {
     private let fileService = try? FileSearchService()
     private var generation: UInt64 = 0
     private var searchTask: Task<Void, Never>?
+    private var contributionQueryPlan: ContributionQueryPlan?
     private var subscriptions: Set<AnyCancellable> = []
     public init(store: WorkbenchModel) {
         self.store = store
@@ -61,13 +54,16 @@ private struct LauncherCatalogProvider: CommandProviding {
         searchTask?.cancel(); generation &+= 1
         let request = QueryRequest(generation: generation, text: query, source: "keydock.launcher")
         queryRequest = request; resultBatch = nil
-        let items = store.catalog.filter { !query.isEmpty || $0.kind != .window }
-        let provider = LauncherCatalogProvider(items: items), preferences = store.configuration.preferences
+        let snapshot = store.contributionSnapshot, configuration = store.configuration
+        let items = store.catalog.filter { (!query.isEmpty || $0.kind != .window) && ($0.contribution == nil || $0.contribution?.epoch == snapshot.epoch) }
+        let provider = LauncherCatalogProvider(items: items), preferences = configuration.preferences
+        let plan = (try? store.contributions.queryPlan(configuration:configuration,snapshot:snapshot,files:fileService)) ?? ContributionQueryPlan(epoch:snapshot.epoch,sources:[:])
+        contributionQueryPlan = plan
         searchTask = Task { [weak self] in
             guard let self, !Task.isCancelled else { return }
-            let stream = await coordinator.search(request: request, providers: [provider] + ((!store.configuration.searchFolders.isEmpty && query.trimmingCharacters(in:.whitespacesAndNewlines).count >= 2 ? fileService.map { [FileSearchCommandProvider(service:$0,folders:store.configuration.searchFolders) as any CommandProviding] } : nil) ?? []), preferences: preferences)
+            let stream = await coordinator.search(request:request,providers:[provider]+plan.providers,preferences:preferences)
             for await batch in stream {
-                guard !Task.isCancelled, queryRequest?.queryID == batch.queryID,
+                guard !Task.isCancelled, store.contributionEpoch == snapshot.epoch, queryRequest?.queryID == batch.queryID,
                       queryRequest?.generation == batch.generation else { return }
                 // 初始空批次只是等待状态，不闪出“无结果”，也不使旧结果变成可执行的新结果。
                 guard !batch.items.isEmpty || batch.isComplete else { continue }
@@ -88,13 +84,11 @@ private struct LauncherCatalogProvider: CommandProviding {
         guard let request = queryRequest, let batch = resultBatch,
               request.queryID == batch.queryID, request.generation == batch.generation,
               let selection else { return }
-        if selection.id.hasPrefix("file."), let service = fileService {
-            let captured = request.queryID
-            Task { [weak self] in
-                guard let self, let report = await service.currentReport(), let result = report.results.first(where:{"file."+$0.id == selection.id}), result.objectRevision == selection.objectRevision else { return }
-                await store.revealFile(result,service:service,stillCurrent:{ [weak self] in self?.visible == true && self?.queryRequest?.queryID == captured && self?.selectedID == selection.id })
-            }
-        } else if let onExecute { onExecute(selection) } else { store.execute(selection) }
+        let captured = request.queryID
+        if let plan = contributionQueryPlan, store.dispatchContributionSelection(selection,plan:plan,stillCurrent:{ [weak self] in
+            self?.visible == true && self?.queryRequest?.queryID == captured && self?.selectedID == selection.id
+        }) { return }
+        if let onExecute { onExecute(selection) } else { store.execute(selection) }
     }
 }
 

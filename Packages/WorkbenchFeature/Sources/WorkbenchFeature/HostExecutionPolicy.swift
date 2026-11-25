@@ -13,6 +13,11 @@ extension WorkbenchModel {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return SHA256.hash(data: try encoder.encode(command)).map { String(format: "%02x", $0) }.joined()
     }
+    func objectFingerprint<Value:Encodable>(_ value:Value) -> String? {
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        guard let bytes = try? encoder.encode(value) else { return nil }
+        return SHA256.hash(data:bytes).map { String(format:"%02x",$0) }.joined()
+    }
 
     @discardableResult func authorizeHostAction(
         id: String, operation: HostOperation, resource: String,
@@ -30,6 +35,8 @@ extension WorkbenchModel {
     }
 
     func descriptor(for item: CommandItem) throws -> CommandDescriptor {
+        if let binding = item.contribution { return try resolveContribution(binding,id:item.id,title:item.title,keywords:item.keywords).descriptor }
+        if contributions.owner(of:item) != nil { throw ContributionCatalogError.unavailable }
         let operation: HostOperation
         if item.kind == .utility && item.payload.hasPrefix("window-layout.") { operation = .layoutWindow }
         else if isDesktopWorkspace(item) { operation = .applyDesktopWorkspace }

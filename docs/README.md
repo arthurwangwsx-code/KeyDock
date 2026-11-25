@@ -12,6 +12,8 @@
 | [产品需求](product/requirements.md) | 统一能力模型、AI 快捷动作和核心流程 |
 | [竞品调研](product/competitive-research.md) | 官方来源支持的能力矩阵与产品判断 |
 | [建设路线](product/roadmap.md) | 每阶段闭环、依赖、验收与投入估算 |
+| [受信版本化工具目录](technical/trusted-contributions.md) | 编译期provider／handler、精确版本、工具开关与在途快照 |
+| [工具目录实现与原生复查](implementation/trusted-contributions-2026-11-25.md) | 三个生产路径、失败记录、45项定向回归与双语原生子集 |
 | [系统架构](technical/architecture.md) | 模块、依赖、数据流和架构决策 |
 | [界面与交互规范](product/interface-design.md) | 三窗口职责、Liquid Glass、中英文与视觉验收 |
 | [UI架构与组件库](technical/ui-architecture.md) | 状态所有权、KeyDockUI与本地化边界 |

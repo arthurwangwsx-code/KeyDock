@@ -2,6 +2,7 @@ import AppKit
 import Foundation
 import CommandCore
 import MacAdapters
+import ExecutionCore
 
 public struct SearchFolder: Identifiable, Codable, Sendable, Equatable {
     public let id: UUID
@@ -31,43 +32,50 @@ final class SearchFolderAccess: @unchecked Sendable {
 }
 
 struct FileSearchCommandProvider: CommandProviding {
-    let id = "keydock.files"
+    let id = "keydock.provider.files"
     let service: FileSearchService
     let folders: [SearchFolder]
+    let binding: CommandContributionBinding
+    let limit: Int
+    let minimumQueryCharacters: Int
     func commands(matching query:String) async throws -> [CommandItem] {
-        guard query.trimmingCharacters(in:.whitespacesAndNewlines).count >= 2, !folders.isEmpty else { return [] }
+        guard query.trimmingCharacters(in:.whitespacesAndNewlines).count >= minimumQueryCharacters, !folders.isEmpty else { return [] }
         let folders = folders
         let access = try await Task.detached { try SearchFolderAccess(folders) }.value
-        let report = try await service.search(query:query,roots:access.urls,limit:30)
+        let report = try await service.search(query:query,roots:access.urls,limit:limit)
         withExtendedLifetime(access) {}
-        return report.results.map { CommandItem(id:"file."+$0.id,title:$0.title,subtitle:L("Reveal in Finder"),keywords:[query],kind:.utility,payload:"file."+$0.id,objectRevision:$0.objectRevision) }
+        let issuedBinding = try CommandContributionBinding(reference:binding.reference,epoch:binding.epoch,input:report.requestID.uuidString)
+        return report.results.map { CommandItem(id:"file."+$0.id,title:$0.title,subtitle:L("Reveal in Finder"),keywords:[query],kind:.utility,payload:"file."+$0.id,objectRevision:$0.objectRevision,contribution:issuedBinding) }
     }
 }
 
 @MainActor public final class FileSearchSession: ObservableObject {
-    @Published var query = "" { didSet { if query != oldValue { cancel(); notice = "" } } }
+    @Published var query = "" { didSet { if !query.utf8.elementsEqual(oldValue.utf8) { cancel(); notice = "" } } }
     @Published var report: FileSearchReport?
     @Published var busy = false
     @Published var notice = ""
     let service = try? FileSearchService()
     private var operation: Task<Void,Never>?
     private var generation = UUID()
-    func search(folders:[SearchFolder]) {
+    private(set) var selectionPlan: ContributionQueryPlan?
+    private(set) var resultItems: [String:CommandItem] = [:]
+    func search(plan:ContributionQueryPlan,stillEnabled:@escaping @MainActor ()->Bool) {
         operation?.cancel(); generation = UUID(); let token = generation
         report = nil; notice = ""; busy = true; let submittedQuery = query
+        selectionPlan = plan; resultItems = [:]
         operation = Task { [weak self] in
-            guard let self, let service else { return }
+            guard let self else { return }
             defer { if generation == token { busy = false } }
+            guard let service, let source = plan.sources[BuiltinContributionID.files] else { return }
             do {
-                let access = try await Task.detached { try SearchFolderAccess(folders) }.value
-                let value = try await service.search(query:submittedQuery,roots:access.urls)
-                withExtendedLifetime(access) {}
-                guard !Task.isCancelled, generation == token else { return }; report = value
+                let items = try await source.provider.commands(matching:submittedQuery)
+                guard let value = await service.currentReport(), !Task.isCancelled, generation == token, stillEnabled() else { return }
+                resultItems = Dictionary(items.map { ($0.id,$0) },uniquingKeysWith:{ first,_ in first }); report = value
                 if value.isPartial { notice = L("Partial results: a scope or search budget limited this search.") }
             } catch { if !Task.isCancelled, generation == token { notice = L("Search scope is unavailable or changed. Choose the folder again.") } }
         }
     }
-    func cancel() { generation = UUID(); operation?.cancel(); operation = nil; report = nil; busy = false }
+    func cancel() { generation = UUID(); operation?.cancel(); operation = nil; report = nil; selectionPlan = nil; resultItems = [:]; busy = false }
     deinit { operation?.cancel() }
 }
 
@@ -84,14 +92,27 @@ extension WorkbenchModel {
         } catch { workspaceNoticeMessage = noticeKey("Folder could not be added. Choose a readable directory.") }
     }
     func removeSearchFolder(_ id:UUID) { var next = configuration; next.searchFolders.removeAll{$0.id == id}; _ = commitSettingsConfiguration(next) }
-    func revealFile(_ result:FileSearchResult,service:FileSearchService,stillCurrent:@escaping @MainActor ()->Bool) async {
+    func searchFiles(_ session:FileSearchSession) {
         do {
-            let folders = configuration.searchFolders
-            let access = try await Task.detached { try SearchFolderAccess(folders) }.value
-            let url = try await service.validate(result,allowedRoots:access.urls)
-            guard !isShuttingDown, stillCurrent(), configuration.searchFolders == folders else { return }
-            try authorizeHostAction(id:"files.reveal",operation:.revealFile,resource:result.objectRevision)
-            NSWorkspace.shared.activateFileViewerSelecting([url]); withExtendedLifetime(access) {}
-        } catch { if !isShuttingDown, stillCurrent() { workspaceNoticeMessage = noticeKey("The file or search scope changed. Search again before revealing it.") } }
+            let configuration = configuration, snapshot = contributionSnapshot, folders = configuration.searchFolders
+            guard snapshot.isEnabled(BuiltinContributionID.files) else { session.cancel(); contributionUnavailable(); return }
+            guard !folders.isEmpty, !session.query.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty else { session.cancel(); return }
+            let plan = try contributions.queryPlan(configuration:configuration,snapshot:snapshot,files:session.service,options:.init(resultLimit:50,minimumQueryCharacters:1))
+            session.search(plan:plan,stillEnabled:{ [weak self] in self?.contributionEpoch == snapshot.epoch && self?.configuration.searchFolders == folders })
+        } catch { session.cancel(); contributionUnavailable() }
+    }
+    func revealFileResult(_ result:FileSearchResult,in session:FileSearchSession) {
+        guard let report = session.report, report.results.contains(result), let plan = session.selectionPlan,
+              let item = session.resultItems["file."+result.id] else { contributionUnavailable(); return }
+        _ = dispatchContributionSelection(item,plan:plan,stillCurrent:{ [weak session] in session?.report?.requestID == report.requestID })
+    }
+    func revealPreparedFile(_ prepared:PreparedFileReveal,resolved:ResolvedContributionAction,caller:ExecutionCaller) async throws -> Bool {
+        let access = try await Task.detached { try SearchFolderAccess(prepared.folders) }.value
+        let url = try await prepared.service.validate(prepared.result,allowedRoots:access.urls)
+        guard !Task.isCancelled, !isShuttingDown, prepared.stillCurrent(), contributionEpoch == resolved.epoch,
+              contributionSnapshot.isEnabled(resolved.manifest.reference.toolID), configuration.searchFolders == prepared.folders else { return false }
+        _ = try authorizeContribution(resolved,resource:prepared.result.objectRevision,caller:caller)
+        fileRevealer([url]); withExtendedLifetime(access) {}
+        return true
     }
 }

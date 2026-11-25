@@ -118,6 +118,8 @@ class Handler(BaseHTTPRequestHandler):
                     self.complete_text("Synthetic held result", "synthetic-held-text")
                 else:
                     self.large_response(path, request)
+            elif path == "/agent-command":
+                self.agent_command(json.loads(body))
             elif path in ("/proposal", "/proposal-held", "/agent", "/agent-no-final-usage", "/agent-second-turn-failure", "/unexpected-tool"):
                 request = json.loads(body)
                 if not isinstance(request, dict):
@@ -279,6 +281,32 @@ class Handler(BaseHTTPRequestHandler):
                              "prompt_tokens": 10, "completion_tokens": 4}}) +
                          b"data: [DONE]\r\n\r\n")
         self.wfile.flush()
+
+    def agent_command(self, request):
+        self.server.increment("agent_requests")
+        names = [tool.get("function", {}).get("name", "") for tool in request.get("tools", [])]
+        commands = [name for name in names if name.startswith("command_")]
+        if len(names) != 2 or names.count("current_time") != 1 or len(commands) != 1:
+            self.send_json(422, {"error": MARKER})
+            return
+        name = commands[0]
+        messages = request.get("messages", [])
+        results = [message for message in messages if message.get("role") == "tool"]
+        if not results:
+            self.start_sse()
+            response = {"id": "synthetic-command-agent-1", "choices": [{"index": 0, "delta": {"tool_calls": [
+                {"index": 0, "id": "fixture_command_1", "type": "function", "function": {"name": name, "arguments": "{}"}}]}, "finish_reason": "tool_calls"}]}
+            self.wfile.write(event(response) + b"data: [DONE]\r\n\r\n")
+            self.wfile.flush()
+            return
+        calls = [call for message in messages if message.get("role") == "assistant" for call in message.get("tool_calls", [])]
+        valid_call = any(call.get("id") == "fixture_command_1" and call.get("function", {}).get("name") == name
+                         and call.get("function", {}).get("arguments") == "{}" for call in calls)
+        if len(results) != 1 or results[0].get("content") != "original" or results[0].get("tool_call_id") != "fixture_command_1" or not valid_call:
+            self.send_json(422, {"error": MARKER})
+            return
+        self.server.increment("agent_tool_messages")
+        self.complete_text("Synthetic saved command round-trip complete", "synthetic-command-agent-2")
 
     def agent(self, request, report_final_usage=True, fail_final_turn=False):
         self.server.increment("agent_requests")

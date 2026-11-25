@@ -609,6 +609,22 @@
         }
       }
     },
+    "Actions from tools that are turned off keep their shortcut preferences.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actions from tools that are turned off keep their shortcut preferences."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具关闭后，对应动作的快捷键设置仍会保留。"
+          }
+        }
+      }
+    },
     "Add an API endpoint and model in Settings. Your draft will stay here.": {
       "localizations": {
         "en": {
@@ -1441,6 +1457,22 @@
         }
       }
     },
+    "Built-in tools": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Built-in tools"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内置工具"
+          }
+        }
+      }
+    },
     "Calculate": {
       "localizations": {
         "zh-Hans": {
@@ -1469,6 +1501,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calculator"
+          }
+        }
+      }
+    },
+    "Calculator and unit conversion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculator and unit conversion"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计算与单位换算"
           }
         }
       }
@@ -2289,6 +2337,22 @@
         }
       }
     },
+    "Command line tools": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command line tools"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令行工具"
+          }
+        }
+      }
+    },
     "Command output": {
       "localizations": {
         "en": {
@@ -2349,6 +2413,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "命令"
+          }
+        }
+      }
+    },
+    "Commands, workflows and agents that have already started keep their original settings and permissions. Stop them in Tasks if needed. Enabling a tool does not give agents access to it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commands, workflows and agents that have already started keep their original settings and permissions. Stop them in Tasks if needed. Enabling a tool does not give agents access to it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已启动的命令、工作流和 Agent 会按启动时的设置与权限继续运行。如需停止，请前往任务。启用工具不会自动将它授权给 Agent。"
           }
         }
       }
@@ -3341,6 +3421,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "环境变量（JSON 对象）"
+          }
+        }
+      }
+    },
+    "Evaluate arithmetic and convert units. Results are copied only when selected.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evaluate arithmetic and convert units. Results are copied only when selected."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计算算式并换算单位。仅在选择结果时复制。"
           }
         }
       }
@@ -4669,6 +4765,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manage MCP servers"
+          }
+        }
+      }
+    },
+    "Manage built-in tools": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage built-in tools"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理内置工具"
           }
         }
       }
@@ -6801,6 +6913,22 @@
         }
       }
     },
+    "Run saved commands directly or in workflows and agents. Editing saved commands stays available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run saved commands directly or in workflows and agents. Editing saved commands stays available."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接运行已保存命令，或在工作流和 Agent 中使用。关闭后仍可编辑命令。"
+          }
+        }
+      }
+    },
     "Run workflow": {
       "localizations": {
         "zh-Hans": {
@@ -7389,6 +7517,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "搜索剪贴板历史"
+          }
+        }
+      }
+    },
+    "Search file names in chosen folders and reveal selected results in Finder. Folder permissions stay unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search file names in chosen folders and reveal selected results in Finder. Folder permissions stay unchanged."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在已选文件夹中搜索文件名，并在访达中显示所选结果。文件夹授权范围保持不变。"
           }
         }
       }
@@ -8577,22 +8721,6 @@
         }
       }
     },
-    "The file or search scope changed. Search again before revealing it.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "文件或搜索范围已更改。请重新搜索后再显示其位置。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The file or search scope changed. Search again before revealing it."
-          }
-        }
-      }
-    },
     "The last clipboard item was not recorded: history is full. Delete or unpin some items to make room.": {
       "localizations": {
         "en": {
@@ -9025,6 +9153,22 @@
         }
       }
     },
+    "This tool is turned off. Saved settings are kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This tool is turned off. Saved settings are kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工具已关闭，已保存的设置会保留。"
+          }
+        }
+      }
+    },
     "This tool may change your computer. Review its full arguments. Output may be sent to AI by this run.": {
       "localizations": {
         "zh-Hans": {
@@ -9037,6 +9181,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "This tool may change your computer. Review its full arguments. Output may be sent to AI by this run."
+          }
+        }
+      }
+    },
+    "This tool or result is unavailable. Enable the tool or search again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This tool or result is unavailable. Enable the tool or search again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工具或结果已不可用，请启用工具或重新搜索。"
           }
         }
       }
@@ -9389,6 +9549,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "请更换关键词或清空搜索。"
+          }
+        }
+      }
+    },
+    "Turning a tool off stops new runs and removes its search results and active shortcuts. Saved definitions, folders, aliases, favorites and shortcut preferences are kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turning a tool off stops new runs and removes its search results and active shortcuts. Saved definitions, folders, aliases, favorites and shortcut preferences are kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭工具后将停止接受新任务，并停用对应搜索结果和快捷键。已保存的定义、文件夹、别名、收藏和快捷键设置会保留。"
           }
         }
       }

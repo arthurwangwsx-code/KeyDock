@@ -3,13 +3,13 @@ import AICore
 import ExecutionCore
 
 public enum SavedCommandAITool {
-    public static func make(command: SavedCommand, resourceFingerprint: String, runner: ProcessRunner) throws -> ScopedAITool {
+    public static func make(command: SavedCommand, resourceFingerprint: String, runner: ProcessRunner, version:Int = 1, executionToolID:String? = nil, actionID:String? = nil, actionVersion:Int? = nil) throws -> ScopedAITool {
         try command.validate()
-        guard !command.interactive else { throw AgentToolError.invalidDefinition }
+        guard !command.interactive, version > 0 else { throw AgentToolError.invalidDefinition }
         let name = "command_" + command.id.uuidString.replacingOccurrences(of:"-",with:"").lowercased()
         let definition = AIToolDefinition(name:name,description:"Run the saved command named " + String(command.name.prefix(128)) + ". The user must approve each call. Arguments and environment cannot be changed by the model.",parameters:["type":.string("object"),"properties":.object([:]),"required":.array([]),"additionalProperties":.bool(false)])
         let summary = command.executable + " " + command.arguments.map { String(reflecting:$0) }.joined(separator:" ") + "\n" + command.workingDirectory
-        return ScopedAITool(definition:definition,effects:[.executeProcess],resource:.exact(namespace:"keydock.saved-command",identifier:resourceFingerprint),approvalSummary:summary) { _,id in
+        return ScopedAITool(definition:definition,version:version,executionToolID:executionToolID,actionID:actionID,actionVersion:actionVersion,effects:[.executeProcess],resource:.exact(namespace:"keydock.saved-command",identifier:resourceFingerprint),approvalSummary:summary) { _,id in
             try await withTaskCancellationHandler {
                 var output = "", final: ProcessResult?, exceeded = false
                 for await event in await runner.run(command,id:id) {

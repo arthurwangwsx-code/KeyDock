@@ -90,7 +90,7 @@ import KeyDockUI
     private var generation = UUID()
     private var captureTask: Task<Void, Never>?
     private var originalIdentity: TargetIdentity?
-    private var pendingCommandID: String?
+    private var pendingCommand: ShortcutInvocation?
     private var capturePending = false
     init(store: WorkbenchModel, safeSmoke: Bool) {
         self.store = store; self.safeSmoke = safeSmoke
@@ -111,7 +111,7 @@ import KeyDockUI
         launcherSession.onExecute = { [weak self] item in
             guard let self else { return }
             store.invalidateLauncherReplies()
-            if self.capturePending && item.kind == .ai { self.pendingCommandID = item.id }
+            if self.capturePending && item.kind == .ai { self.pendingCommand = store.prepareShortcutInvocation(id:item.id) }
             else { store.execute(item) }
         }
         store.onDismiss = { [weak self] in self?.dismissLauncher(restore: $0) }
@@ -200,21 +200,23 @@ import KeyDockUI
     }
     func presentLauncher(commandID: String? = nil) {
         guard !store.isShuttingDown else { return }
+        let invocation = commandID.flatMap { store.prepareShortcutInvocation(id:$0) }
+        if commandID != nil && invocation == nil { return }
         revokeDesktopInvocations()
         dismissClipboard(restore: false)
         if launcher == nil { launcher = buildLauncher() }
         guard let launcher else { return }
         if launcher.isKeyWindow {
-            if let commandID {
+            if let invocation {
                 store.invalidateLauncherReplies()
-                if capturePending { pendingCommandID = commandID } else { store.performCommand(id: commandID) }
+                if capturePending { pendingCommand = invocation } else { store.performCommand(invocation) }
             }
             return
         }
         generation = UUID(); let current = generation
         captureTask?.cancel(); originalIdentity = safeSmoke ? nil : store.desktop.frontmostTarget()
         let identity = originalIdentity
-        capturePending = identity != nil; launcherSession.contextCapturePending = capturePending; pendingCommandID = commandID
+        capturePending = identity != nil; launcherSession.contextCapturePending = capturePending; pendingCommand = invocation
         launcherSession.reset(); store.launcherNotice = ""; store.prepareLauncher(target: nil)
         if !launcher.isVisible {
             let point = NSEvent.mouseLocation
@@ -234,9 +236,9 @@ import KeyDockUI
                 let snapshot = await store.desktop.captureTarget(identity)
                 guard !Task.isCancelled, self.generation == current, launcher.isVisible else { return }
                 store.target = snapshot; capturePending = false; launcherSession.contextCapturePending = false
-                if let command = pendingCommandID { pendingCommandID = nil; store.performCommand(id: command) }
+                if let command = pendingCommand { pendingCommand = nil; store.performCommand(command) }
             }
-        } else if let command = pendingCommandID { pendingCommandID = nil; store.performCommand(id: command) }
+        } else if let command = pendingCommand { pendingCommand = nil; store.performCommand(command) }
     }
     private func runDesktopAction(_ item: CommandItem, caller: ExecutionCaller) {
         guard !store.isShuttingDown else { return }
@@ -284,7 +286,7 @@ import KeyDockUI
     func dismissLauncher(restore: Bool) {
         launcherSession.setVisible(false)
         store.invalidateLauncherReplies()
-        generation = UUID(); captureTask?.cancel(); capturePending = false; launcherSession.contextCapturePending = false; pendingCommandID = nil; launcherSession.actionsVisible = false; launcher?.orderOut(nil)
+        generation = UUID(); captureTask?.cancel(); capturePending = false; launcherSession.contextCapturePending = false; pendingCommand = nil; launcherSession.actionsVisible = false; launcher?.orderOut(nil)
         if restore {
             if let target = store.target { store.desktop.restore(target) }
             else if let originalIdentity { store.desktop.restore(identity: originalIdentity) }

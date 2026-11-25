@@ -31,6 +31,7 @@ public struct AppConfiguration: Codable, Sendable {
     public var launcherShortcut: HotkeyBinding? = HotkeyBinding()
     public var commandShortcuts: [String: HotkeyBinding] = [:]
     public var savedCommands: [SavedCommand] = []
+    public var disabledContributions: Set<String> = []
     public var aiActions: [AIActionPreset] = []
     public var agents: [AgentDefinition] = [AgentDefinition()]
     public var activityEnabled = false
@@ -60,7 +61,7 @@ public struct AppConfiguration: Codable, Sendable {
         }
     }
     public init() {}
-    private enum CodingKeys: String, CodingKey { case schemaVersion, preferences, launcherShortcut, commandShortcuts, savedCommands, aiActions, agents, activityEnabled, workflows, snippets, webActions, collections, searchFolders, mcpServers, endpoint, model, localHTTP, tokenLimitParameter, clipboardEnabled, clipboardExclusions, language, appearance }
+    private enum CodingKeys: String, CodingKey { case schemaVersion, preferences, launcherShortcut, commandShortcuts, savedCommands, disabledContributions, aiActions, agents, activityEnabled, workflows, snippets, webActions, collections, searchFolders, mcpServers, endpoint, model, localHTTP, tokenLimitParameter, clipboardEnabled, clipboardExclusions, language, appearance }
     public init(from decoder: any Decoder) throws {
         self.init()
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -69,6 +70,8 @@ public struct AppConfiguration: Codable, Sendable {
         if c.contains(.launcherShortcut) { launcherShortcut = try c.decodeIfPresent(HotkeyBinding.self, forKey: .launcherShortcut) }
         commandShortcuts = try c.decodeIfPresent([String: HotkeyBinding].self, forKey: .commandShortcuts) ?? [:]
         savedCommands = try c.decodeIfPresent([SavedCommand].self, forKey: .savedCommands) ?? []
+        disabledContributions = try c.decodeIfPresent(Set<String>.self,forKey:.disabledContributions) ?? []
+        guard disabledContributions.count <= 64, disabledContributions.allSatisfy({$0.utf8.count <= 512}) else { throw CocoaError(.coderReadCorrupt) }
         aiActions = try c.decodeIfPresent([AIActionPreset].self, forKey: .aiActions) ?? []
         agents = try c.decodeIfPresent([AgentDefinition].self, forKey: .agents) ?? agents
         activityEnabled = try c.decodeIfPresent(Bool.self, forKey: .activityEnabled) ?? false
@@ -177,9 +180,9 @@ public struct RunningTaskItem: Identifiable {
     func discard() { isDiscarded = true; input = ""; sourceTarget = nil; inputProvenance = nil; latestRunID = nil; source = .manual; revision = UUID(); isClosing = false }
 }
 
-public enum SettingsPane: String, CaseIterable { case general, shortcuts, applications, desktopWorkspaces, aiService, aiActions, commands, mcp, clipboard, privacy, about
-    public var title: String { switch self { case .general: L("General"); case .shortcuts: L("Shortcuts"); case .applications: L("Application actions"); case .desktopWorkspaces: L("Desktop workspaces"); case .aiService: L("AI Service"); case .aiActions: L("AI Actions"); case .commands: L("Commands"); case .mcp: L("MCP servers"); case .clipboard: L("Clipboard"); case .privacy: L("Privacy & Permissions"); case .about: L("About") } }
-    public var icon: String { switch self { case .general: "slider.horizontal.3"; case .shortcuts: "command"; case .applications: "app.badge"; case .desktopWorkspaces: "rectangle.3.group"; case .aiService: "network"; case .aiActions: "sparkles"; case .commands: "terminal"; case .mcp: "puzzlepiece.extension"; case .clipboard: "clipboard"; case .privacy: "hand.raised"; case .about: "info.circle" } }
+public enum SettingsPane: String, CaseIterable { case general, shortcuts, tools, applications, desktopWorkspaces, aiService, aiActions, commands, mcp, clipboard, privacy, about
+    public var title: String { switch self { case .general: L("General"); case .shortcuts: L("Shortcuts"); case .tools: L("Built-in tools"); case .applications: L("Application actions"); case .desktopWorkspaces: L("Desktop workspaces"); case .aiService: L("AI Service"); case .aiActions: L("AI Actions"); case .commands: L("Commands"); case .mcp: L("MCP servers"); case .clipboard: L("Clipboard"); case .privacy: L("Privacy & Permissions"); case .about: L("About") } }
+    public var icon: String { switch self { case .general: "slider.horizontal.3"; case .shortcuts: "command"; case .tools: "square.grid.2x2"; case .applications: "app.badge"; case .desktopWorkspaces: "rectangle.3.group"; case .aiService: "network"; case .aiActions: "sparkles"; case .commands: "terminal"; case .mcp: "puzzlepiece.extension"; case .clipboard: "clipboard"; case .privacy: "hand.raised"; case .about: "info.circle" } }
 }
 public enum WorkspaceRoute { case tasks(UUID?), ai(UUID), clipboard, agent, activity, workflows, workflowInput(UUID), tools, web(UUID), collection(UUID) }
 func L(_ key: String) -> String { KDLocalizer.string(key, bundle: .module) }
