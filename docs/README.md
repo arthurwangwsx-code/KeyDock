@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-25。当前已有签名公证的公开alpha.13，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-25。当前已有签名公证的公开alpha.14，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -42,6 +42,7 @@
 | [alpha.10发行说明](releases/v0.1.0-alpha.10.md) | 准确输入提交、导入来源、联合预算与AI草稿显式关闭 |
 | [alpha.12发行与安装证据](implementation/alpha12-release-2026-11-25.md) | 685 Swift／58 Python、独立Time／SDK本机与CI四格、公证／公开回下载、实际About12与alpha.11回退 |
 | [alpha.13发行与安装证据](implementation/alpha13-release-2026-11-25.md) | 702 Swift／58 Python／729 key、工具生命周期／遗留修复、同源CI／公证／公开回下载、实际About13与alpha.12回退 |
+| [alpha.14发行与安装证据](implementation/alpha14-release-2026-11-25.md) | 715 Swift／58 Python／744 key、设置摘要与英文排版修补、同源CI／公证／实际About14及alpha.13回退 |
 | [alpha.11发行与安装证据](implementation/alpha11-release-2026-11-25.md) | 671 Swift／同源CI／受信工具目录／公证／公开回下载／实际About11及alpha.10回退 |
 | [alpha.10发行与安装证据](implementation/alpha10-release-2026-11-25.md) | 650 Swift／同源CI／公证／公开回下载／实际About10及alpha.9回退 |
 | [alpha.9发行与安装证据](implementation/alpha9-release-2026-11-25.md) | 627 Swift／同源CI／公证／公开回下载／实际About9及alpha.8回退 |

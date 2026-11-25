@@ -1,6 +1,6 @@
 # 设置摘要导出复查
 
-2026-11-25。`feature/redacted-settings-export`从master `3b5934b`建立；主Agent独占写入／构建／设备，子Agent只读审查。候选alpha.14尚未发行，常规安装仍为alpha.13，完整产品PARTIAL。详见[摘要合同](../technical/settings-summary-export.md)。
+2026-11-25。`feature/redacted-settings-export`从master `3b5934b`建立；主Agent独占写入／构建／设备，子Agent只读审查。以下为候选阶段记录；最终alpha.14已完整检查、公开并安装，见[发行证据](alpha14-release-2026-11-25.md)。完整产品PARTIAL。详见[摘要合同](../technical/settings-summary-export.md)。
 
 独立Encodable白名单仅包含基础偏好、可选启动器热键及含内置定义的数量，不编码原配置。任意用户文本、ID、路径／bookmark、连接、凭据及历史均排除；未知枚举／非法热键降为固定状态，64KiB／空选择整次拒绝。摘要不能恢复应用，任务28.4完整定义迁移仍开放。
 
