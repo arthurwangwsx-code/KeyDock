@@ -69,6 +69,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     var taskMaterialBuffers: [UUID: TaskMaterialBuffer] = [:]
     @Published var taskMaterialHandles: [TaskMaterialKey: TaskMaterialHandle] = [:]
     @Published var taskMaterialRecords: [TaskMaterialListRecord] = []
+    @Published var taskMaterialIndexPhase: TaskMaterialIndexPhase = .idle
     @Published var taskMaterialNotice: LocalizedNotice = .none
     @Published var taskMaterialGeneration = UUID()
     @Published var taskMaterialClearing = false

@@ -21,6 +21,7 @@ extension WorkbenchModel {
             releaseTaskMaterialBuffer(buffer.id)
         }
         taskMaterialIndexRequest = UUID(); taskMaterialGeneration = taskMaterialFence.current.generation
+        if taskMaterialIndexPhase == .loading { taskMaterialIndexPhase = .idle }
     }
 
     /// 冻结指定时刻的可见正文；不从后来草稿推断输入，取消审阅不写任何正文文件。
@@ -115,7 +116,13 @@ extension WorkbenchModel {
     }
 
     func refreshTaskMaterialIndex() async {
+        guard !isShuttingDown, !isClearingHistory, !taskMaterialClearing else { return }
         let request = UUID(); taskMaterialIndexRequest = request
+        taskMaterialIndexPhase = .loading
+        defer {
+            // 旧请求不覆盖新请求；代次变化的未发布结果回到可重试态，不留下假空库或永久转圈。
+            if request == taskMaterialIndexRequest, taskMaterialIndexPhase == .loading { taskMaterialIndexPhase = .idle }
+        }
         do {
             let inventory = try await taskMaterialStore.inventory()
             let generation = taskMaterialFence.current.generation
@@ -135,8 +142,13 @@ extension WorkbenchModel {
                 let title = TaskTextLimits.prefix(receipt.name, maximumBytes: 1_024)
                 return TaskMaterialListRecord(handle: handle, title: title, titleKey: titleKey, isTerminal: receipt.state.isTerminal)
             }.sorted { $0.handle.header.createdAt > $1.handle.header.createdAt }
+            taskMaterialIndexPhase = !inventory.isComplete && taskMaterialRecords.isEmpty ? .failed : .ready
             if !inventory.isComplete || inventory.handles.count > 200 { taskMaterialNotice = noticeKey("Some retained task content needs attention. Existing files were kept; review or clear it in Privacy settings.") }
-        } catch { if !isShuttingDown, request == taskMaterialIndexRequest { taskMaterialNotice = taskMaterialErrorNotice(error) } }
+        } catch {
+            if !isShuttingDown, request == taskMaterialIndexRequest {
+                taskMaterialIndexPhase = .failed; taskMaterialNotice = taskMaterialErrorNotice(error)
+            }
+        }
     }
     func taskMaterialOwners() async throws -> Set<TaskMaterialKey> {
         let cli = try await invocationStore.materialOwners(), ai = try await aiInvocationStore.materialOwners()

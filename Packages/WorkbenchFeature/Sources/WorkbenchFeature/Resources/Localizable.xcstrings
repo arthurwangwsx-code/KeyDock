@@ -5825,6 +5825,22 @@
         }
       }
     },
+    "Loading saved content…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading saved content…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在载入已保存内容…"
+          }
+        }
+      }
+    },
     "Local data, no product telemetry. AI actions send only their chosen input to your configured service.": {
       "localizations": {
         "en": {
@@ -8129,6 +8145,38 @@
         }
       }
     },
+    "Refresh to load saved content.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh to load saved content."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请刷新以载入已保存内容。"
+          }
+        }
+      }
+    },
+    "Refresh to try again. Existing files have been kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh to try again. Existing files have been kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请刷新重试，现有文件已保留。"
+          }
+        }
+      }
+    },
     "Region OCR": {
       "localizations": {
         "en": {
@@ -9613,6 +9661,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "已保存内容"
+          }
+        }
+      }
+    },
+    "Saved content could not be read": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved content could not be read"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法读取已保存内容"
+          }
+        }
+      }
+    },
+    "Saved item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved item"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存条目"
           }
         }
       }

@@ -57,6 +57,47 @@ private final class MaterialDeleteFault: @unchecked Sendable {
         return try await fixture.store.saveTaskMaterial(.init(input: material.input), buffer: buffer, expected: nil)
     }
 
+    @Test func libraryDistinguishesPendingFailedAndConfirmedEmptyReads() async throws {
+        let gate = MaterialHostGate(), fixture = try WorkflowIntegrationFixture(taskMaterialReadObserver: { kind, _ in if kind == .header { gate.pause() } })
+        await fixture.stopAutomaticWork()
+        do {
+            let id = try await run(fixture), handle = try await save(fixture, id: id), store = fixture.store
+            gate.arm(); let loading = Task { await store.refreshTaskMaterialIndex() }
+            try await fixture.eventually { gate.isWaiting }
+            #expect(store.taskMaterialIndexPhase == .loading)
+            gate.release(); await loading.value
+            #expect(store.taskMaterialIndexPhase == .ready && store.taskMaterialRecords.count == 1 && !gate.timedOut)
+            // 真实坏header不能被当作已确认空库；仅破坏本用例创建的合成文件。
+            let body = fixture.directory.appendingPathComponent("task-materials").appendingPathComponent(handle.key.fileName)
+            try Data("bad synthetic header".utf8).write(to: body, options: .atomic)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: body.path)
+            await store.refreshTaskMaterialIndex()
+            #expect(store.taskMaterialIndexPhase == .failed && store.taskMaterialRecords.isEmpty)
+            try FileManager.default.removeItem(at: body)
+            await store.refreshTaskMaterialIndex()
+            #expect(store.taskMaterialIndexPhase == .ready && store.taskMaterialRecords.isEmpty)
+            await fixture.cleanup()
+        } catch { gate.release(); await fixture.cleanup(); throw error }
+    }
+
+    @Test func disablingCaptureDuringIndexReadReleasesLoadingAndAllowsANewRead() async throws {
+        let gate = MaterialHostGate(), fixture = try WorkflowIntegrationFixture(taskMaterialReadObserver: { kind, _ in if kind == .header { gate.pause() } })
+        await fixture.stopAutomaticWork()
+        do {
+            let id = try await run(fixture), _ = try await save(fixture, id: id), store = fixture.store
+            gate.arm(); let oldRead = Task { await store.refreshTaskMaterialIndex() }
+            try await fixture.eventually { gate.isWaiting }
+            #expect(store.taskMaterialIndexPhase == .loading)
+            #expect(store.setTaskMaterialRetention(false))
+            #expect(store.taskMaterialIndexPhase == .idle && !store.taskMaterialFence.current.enabled)
+            let newRead = Task { await store.refreshTaskMaterialIndex() }
+            try await fixture.eventually { store.taskMaterialIndexPhase == .loading }
+            gate.release(); await oldRead.value; await newRead.value
+            #expect(store.taskMaterialIndexPhase == .ready && store.taskMaterialRecords.count == 1 && !gate.timedOut)
+            await fixture.cleanup()
+        } catch { gate.release(); await fixture.cleanup(); throw error }
+    }
+
     @Test func reviewHasNoSelectedFieldsAndSaveViewRestartDoNotAutomaticallyReadOrExecute() async throws {
         let reads = MaterialHostReadLog(), fixture = try WorkflowIntegrationFixture(taskMaterialReadObserver: reads.observe)
         await fixture.stopAutomaticWork()

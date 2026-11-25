@@ -34,3 +34,11 @@
 ## 待完成
 
 独立内容库原生布局、长正文与保存失败／取消／清除的完整原生矩阵，以及干净源完整本机／指定同源CI／Developer ID与新候选协议App+DMG公证／发布／安装回退继续推进。完整RunStore、P0–P4、真实API与真实系统验收义务不由本轮子集关闭。
+
+## 后续列表状态修补
+
+干净源`d2df5d18e903e17345e5fb5b7aabc0682e29cd1c`已完成916项Swift执行／137项Python／925条中英文案及生产配置合成OCR双轮完整本机检查，`task-material-ui-full-check-v2` exit0，receipt SHA256 `941425217d63f01f6e0f09c4b5a29b31e40bb344cac4805eeec7fb3d0bd6188c`；指定同源原生CI为[45715805578](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45715805578)，状态以运行结果为准。优化Preview `task-material-library-preview-v1`也已构建通过，但以下源码修补不能沿用它的精确源资格。
+
+只读交互评审发现：同名／同日条目缺少区分、首次读取前误显示空态。已增加带秒保存时间、列表序号与包含记录上下文的按钮AX名称，并明确idle／loading／ready／failed。主动撤销索引请求时同步收口旧loading，防止设置关闭保留后永久转圈；旧worker仍不能覆盖新请求状态。
+
+`task-material-library-states-v2`的30项定向检查／3套件通过，receipt SHA256 `c44542ff9101a3848c692316a9c3a571ce87d56693be0316575bc2d150920d91`；真实header阻塞、损坏、移除及关闭捕获后新读取均有覆盖。当前930条中英文案，修补后原生观察与完整同源资格继续执行，35.6／35.7未关闭。
