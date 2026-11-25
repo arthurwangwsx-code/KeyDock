@@ -20,25 +20,38 @@ class PipelineError(RuntimeError):
 
 
 def current_data_compatibility():
-    return {"schemaVersion": 1, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]}}
+    return {"schemaVersion": 2, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]},
+            "taskMaterial": {"readVersions": [1], "writeVersions": [1]}}
 
 
 def validate_data_compatibility(value):
-    if not isinstance(value, dict) or set(value) != {"schemaVersion", "invocationEnvelope"} or type(value.get("schemaVersion")) is not int or value["schemaVersion"] != 1:
+    if not isinstance(value, dict) or type(value.get("schemaVersion")) is not int or value["schemaVersion"] not in (1, 2):
         raise PipelineError("Unsupported App data compatibility declaration")
-    envelope = value["invocationEnvelope"]
+    expected = {"schemaVersion", "invocationEnvelope"} | ({"taskMaterial"} if value["schemaVersion"] == 2 else set())
+    if set(value) != expected: raise PipelineError("Unsupported App data compatibility declaration")
+    result = {"schemaVersion": value["schemaVersion"], "invocationEnvelope": _reader_versions(value["invocationEnvelope"])}
+    if value["schemaVersion"] == 2: result["taskMaterial"] = _reader_versions(value["taskMaterial"], allow_empty=True)
+    return result
+
+
+def _reader_versions(envelope, allow_empty=False):
     if not isinstance(envelope, dict) or set(envelope) != {"readVersions", "writeVersions"}:
         raise PipelineError("Invalid invocation reader declaration")
     normalized = {}
     for key in ("readVersions", "writeVersions"):
         versions = envelope[key]
-        if (not isinstance(versions, list) or not 1 <= len(versions) <= 16 or
+        if (not isinstance(versions, list) or not (0 if allow_empty else 1) <= len(versions) <= 16 or
                 any(type(v) is not int or not 1 <= v <= 64 for v in versions) or len(set(versions)) != len(versions)):
             raise PipelineError("Invalid invocation reader versions")
         normalized[key] = sorted(versions)
     if not set(normalized["writeVersions"]).issubset(normalized["readVersions"]):
         raise PipelineError("App cannot write a format it cannot read")
-    return {"schemaVersion": 1, "invocationEnvelope": normalized}
+    return normalized
+
+
+def task_material_readers(capability):
+    value = validate_data_compatibility(capability)
+    return value.get("taskMaterial", {}).get("readVersions", [])
 
 
 def app_data_compatibility(metadata, release_version):

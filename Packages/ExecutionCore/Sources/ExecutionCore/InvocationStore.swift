@@ -224,6 +224,12 @@ public actor InvocationStore {
         }
     }
 
+    public func materialOwner(_ id: UUID) throws -> RunMaterialOwner? {
+        guard !pendingPersistence else { throw InvocationStoreError.recoveryPersistenceUncertain }
+        guard let metadata = receipts[id]?.runAttempt else { return nil }
+        return .init(invocationID: id, recordIdentity: metadata.recordIdentity, kind: metadata.definition.kind)
+    }
+
     public func inspectRecovery(_ id: UUID) throws -> RunRecoveryCheck {
         guard !pendingPersistence else { throw InvocationStoreError.recoveryPersistenceUncertain }
         guard let receipt = receipts[id], receipt.runAttempt != nil else { throw InvocationStoreError.recoveryUnavailable }

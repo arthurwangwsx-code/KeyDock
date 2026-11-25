@@ -5,6 +5,7 @@ public enum WorkflowRunner {
     /// 不提供恢复／自动重试入口；unknown运行需要用户检查，任何新运行都由宿主创建新attempt。
     public static func run(_ plan: WorkflowPlan, input: String, runID: UUID = UUID(),
                            host: @escaping WorkflowHostOperation,
+                           materialObservation: WorkflowMaterialObservation? = nil,
                            onCheckpoint: @escaping WorkflowCheckpointObserver = { _ in }) async -> WorkflowRunResult {
         let clock = ContinuousClock()
         let deadline = clock.now.advanced(by: .seconds(plan.limits.wallTimeout))
@@ -86,6 +87,9 @@ public enum WorkflowRunner {
             switch response.outcome {
             case .succeeded:
                 completed += 1; checkpoint(index, .succeeded, inputBytes: inputBytes, outputBytes: bytes)
+                materialObservation?.observe(.init(runID: runID, definitionID: plan.definition.id,
+                    definitionVersion: plan.definition.version, stepID: step.id, stepIndex: index,
+                    sequence: checkpoints.count - 1, input: stepInput, output: response.output))
             case .failed:
                 checkpoint(index, .failed, inputBytes: inputBytes, outputBytes: bytes, reason: .hostFailed)
                 return result(.failed, index: index, reason: .hostFailed)

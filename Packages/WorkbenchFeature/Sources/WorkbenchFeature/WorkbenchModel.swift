@@ -62,6 +62,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public var onHistoryRemoved: ((Set<UUID>, Set<UUID>) -> Void)?
     public var onAttemptHistoryChanged: ((Set<UUID>) -> Void)?
     let sessionLimits: SessionRetentionPolicy
+    let taskMaterialFence = TaskMaterialFence()
+    var taskMaterialCaptures: [UUID: TaskMaterialCapture] = [:]
+    var taskMaterialPauseNeedsPersistence = false
     var executionReservations: Set<UUID> = []
     var visibleDraftReferences: [UUID: UUID] = [:]
     var visibleTaskReferences: [UUID: UUID] = [:]
@@ -256,6 +259,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             configuration.activityEnabled = false
         }
         languageApplier(configuration.language)
+        applyTaskMaterialPermission()
         monitor.enabled = allowContextCapture && configuration.clipboardEnabled
         monitor.excludedApplications = Set(configuration.clipboardExclusions)
         monitor.onChange = { [weak self] in self?.refreshClipboard() }
@@ -293,6 +297,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     }
     public func shutdown() {
         isShuttingDown = true; monitor.stop(); desktop.applicationCatalog.stop()
+        revokeTaskMaterialCaptures(disabling: true)
         clearTextContextInputs()
         cancelDesktopWorkspaceRuns(); workspaceApplications.close()
         windowLayouts.close()
@@ -454,6 +459,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         } catch { settingsNoticeMessage = noticeKey("Configuration could not be saved") }
     }
     func applyConfigurationEffects() {
+        applyTaskMaterialPermission()
         monitor.excludedApplications = Set(configuration.clipboardExclusions)
         monitor.enabled = !isShuttingDown && allowContextCapture && configuration.clipboardEnabled
         clipboardPauseNeedsPersistence = false

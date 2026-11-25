@@ -62,6 +62,13 @@ public struct InvocationBeginReceipt: Sendable {
     public let runStamp: RunAttemptStamp?
 }
 
+/// 材料关联只需要稳定出生身份；此只读投影不授予恢复或执行权限。
+public struct RunMaterialOwner: Equatable, Sendable {
+    public let invocationID: UUID
+    public let recordIdentity: UUID
+    public let kind: RecoverableRunKind
+}
+
 /// intent可能已rename但begin未成功返回；此身份仅用于收口，不能据此派发。
 public struct InvocationBeginFailure: Error, Sendable {
     public let cause: InvocationStoreError

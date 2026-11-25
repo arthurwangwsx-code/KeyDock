@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import invocation_compatibility as compatibility
-from keydock_common import PipelineError, app_data_compatibility, current_data_compatibility, validate_data_compatibility
+from keydock_common import PipelineError, app_data_compatibility, current_data_compatibility, validate_data_compatibility, task_material_readers
 
 
 class CapabilityTests(unittest.TestCase):
@@ -32,6 +32,20 @@ class CapabilityTests(unittest.TestCase):
         with self.assertRaises(PipelineError): validate_data_compatibility(value)
         value = current_data_compatibility(); value["invocationEnvelope"]["readVersions"] = [2, 1]
         self.assertEqual(validate_data_compatibility(value), current_data_compatibility())
+
+    def test_schema_one_has_no_material_readers_and_schema_two_lists_are_strict(self):
+        old = {"schemaVersion": 1, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]}}
+        self.assertEqual(validate_data_compatibility(old), old)
+        self.assertEqual(task_material_readers(old), [])
+        self.assertEqual(task_material_readers(current_data_compatibility()), [1])
+        for versions in ([True], [1.0], ["1"], [0], [65], [1, 1], []):
+            value = current_data_compatibility(); value["taskMaterial"]["readVersions"] = versions
+            with self.subTest(versions=versions), self.assertRaises(PipelineError): validate_data_compatibility(value)
+        modern = current_data_compatibility(); modern["taskMaterial"] = {"readVersions": [], "writeVersions": []}
+        self.assertEqual(task_material_readers(modern), [])
+        for extra in ({"schemaVersion": 3}, {"unknown": 1}):
+            value = dict(current_data_compatibility(), **extra)
+            with self.assertRaises(PipelineError): validate_data_compatibility(value)
 
 
 class InvocationDataTests(unittest.TestCase):

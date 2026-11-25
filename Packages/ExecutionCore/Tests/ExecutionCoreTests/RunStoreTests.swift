@@ -42,6 +42,29 @@ private struct RunStoreFixture: Sendable {
 }
 
 @Suite(.serialized) struct RunStoreTests {
+    @Test func materialOwnerIsReadOnlyForActiveAndRevisedRecordsAndChangesAfterRebirth() async throws {
+        let f = try RunStoreFixture(); defer { f.remove() }
+        let store = try f.store(), id = UUID(), legacy = UUID()
+        try await store.begin(id: legacy, name: "Synthetic untyped")
+        #expect(try await store.materialOwner(legacy) == nil)
+        let begun = try await store.begin(id: id, name: "Synthetic typed", runDefinition: f.definition)
+        let owner = try #require(try await store.materialOwner(id))
+        #expect(owner.invocationID == id && owner.recordIdentity == begun.receipt.runAttempt?.recordIdentity && owner.kind == .savedCommand)
+        await #expect(throws: InvocationStoreError.activeRecovery) { try await store.inspectRecovery(id) }
+        try await store.finish(id: id, result: .init(state: .succeeded), expectedRunStamp: begun.runStamp)
+        await store.releaseProtection(for: id, expectedRunStamp: begun.runStamp)
+        let check = try await store.inspectRecovery(id), child = UUID()
+        let next = try await store.begin(id: child, name: "Synthetic attempt", runDefinition: f.definition, recovering: check)
+        #expect(try await store.materialOwner(id) == owner)
+        try await store.finish(id: child, result: .init(state: .succeeded), expectedRunStamp: next.runStamp)
+        await store.releaseProtection(for: child, expectedRunStamp: next.runStamp)
+        _ = await store.clearFinished(onlyIDs: [id, child])
+        #expect(try await store.materialOwner(id) == nil)
+        let reborn = try await store.begin(id: id, name: "Synthetic rebirth", runDefinition: f.definition)
+        let newOwner = try #require(try await store.materialOwner(id))
+        #expect(newOwner.recordIdentity == reborn.receipt.runAttempt?.recordIdentity && newOwner != owner)
+    }
+
     @Test func legacyRecordsStayReadOnlyAndTypedRecordsPersistWithoutPayload() async throws {
         let f = try RunStoreFixture(); defer { f.remove() }
         let store = try f.store(), legacy = UUID()

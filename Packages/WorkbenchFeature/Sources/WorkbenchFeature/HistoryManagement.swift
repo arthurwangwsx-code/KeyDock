@@ -62,6 +62,7 @@ extension WorkbenchModel {
     public func clearFinishedHistory() async {
         guard !isShuttingDown, !isClearingHistory else { return }
         isClearingHistory = true; historyGeneration &+= 1
+        revokeTaskMaterialCaptures(disabling: false)
         onAttemptHistoryChanged?([])
         clearTextContextInputs()
         let generation = historyGeneration

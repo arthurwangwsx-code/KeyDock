@@ -278,3 +278,13 @@
 - [x] 34.2 持久候选索引／单写锁、no-wait提交／立即保存ID、墙钟与取消收口、同ID续查和准确Apple SHA绑定；无ID unknown不自动重投，创建窗口及部分复制／签名／装订恢复回归通过。
 - [x] 34.3 故障／并发／路径／schema／索引丢失及部分image／装订失败恢复回归，28项定向／122 Python通过；最终模块完成历史Accepted输入新inode／真实image与签名验证／只读Apple查询，零新submit。完整新协议发行仍依34.4及原资格／同源CI门禁。
 - [ ] 34.4 后续新版本通过此新候选协议完成真实App／DMG提交至发行；alpha.19历史恢复事实不能升级为新流水线端到端资格，原P0–P4及33.5保持开放。
+
+## 35. 可选任务材料与显式复用（承接5.5）
+
+- [x] 35.1 独立出生key、material identity／revision与固定header格式；actor固定目录FD、有界header-only inventory、按需正文、CAS、预算和原子持久屏障，含Swift／Python golden fixture；定向检查通过，非原生产品验收。
+- [ ] 35.2 body-free删除意图、跨重启pending遮蔽／已授权清理、TTL／孤立／managed tmp维护与部分失败；旧票据／读取不复活，正文不进入导出／日志。
+- [ ] 35.3 默认关闭的许可与未来typed输入捕获、停用先撤销、32MiB联合预算和最近成功Workflow材料独立端口；不保存定义argv/env或恢复授权。
+- [ ] 35.4 独立双语保存／只读查看／删除审阅、全部modal互斥、稳定actual-dismiss、按需读取和新尝试输入回填票据；Agent工具结果默认未选，绝不自动提交／复制。
+- [ ] 35.5 扩展签名数据能力与安装／rollback header-only门禁，旧reader对材料／tmp／未知格式／pending clear拒绝，完全清空后允许；不修改invocation v2。
+- [ ] 35.6 准确输入／成功边界／预算／故障／清除／ABA／重启／费用与签名兼容回归，原生中英明暗／长正文／保存失败和按需复用闭环分别留证。
+- [ ] 35.7 干净本机检查／指定同源CI、原生观察、经任务34新协议真实签名公证／发行／安装回退资格；完整RunStore其余义务及P0–P4不以局部绿测关闭。

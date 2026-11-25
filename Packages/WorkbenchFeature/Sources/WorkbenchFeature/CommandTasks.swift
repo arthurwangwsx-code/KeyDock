@@ -52,6 +52,7 @@ extension WorkbenchModel {
         } catch { showError(error); return nil }
         guard reserveExecution(id) else { return nil }
         tasks.insert(RunningTaskItem(id: id, title: command.name, state: .queued), at: 0)
+        let materialCapture = beginTaskMaterialCapture(id, definition: runDefinition, input: nil)
         registerActivity(id,commandID:"command."+command.id.uuidString,category:.command)
         taskHandles[id] = Task { [weak self] in
             guard let self else { return }
@@ -59,7 +60,7 @@ extension WorkbenchModel {
             do {
                 owner = try await beginOwnedReceipt(store: invocationStore, id: id, name: command.name, authorization: authorization,
                     configurationFingerprint: configFingerprint, initialMessage: command.interactive ? "terminal.handoffIntent" : "",
-                    runDefinition: runDefinition, attempt: attempt)
+                    runDefinition: runDefinition, attempt: attempt, materialCapture: materialCapture)
                 try Task.checkCancellation()
                 guard !isShuttingDown else { throw CancellationError() }
                 if cancelledTaskIDs.contains(id) { throw CancellationError() }

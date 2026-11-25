@@ -73,6 +73,7 @@ extension WorkbenchModel {
         frozenOrigin.apply(to: &tasks[0])
         tasks[0].aiUsageSummary = .pending
         tasks[0].receiptIsAI = true
+        let materialCapture = beginTaskMaterialCapture(id, definition: runDefinition, input: input)
         aiTaskIDs.insert(id)
         registerActivity(id,commandID:"ai.run",category:.ai)
         let request = AIRequest(messages: [.init(role: "system", content: action.prompt), .init(role: "user", content: input)], tools: [])
@@ -82,7 +83,7 @@ extension WorkbenchModel {
             var outcome = "failed", receiptStarted = false
             var owner: InvocationWorkerOwnership?
             do {
-                owner = try await beginAIReceipt(id: id, kind: .text, authorization: authorization, runDefinition: runDefinition, attempt: attempt)
+                owner = try await beginAIReceipt(id: id, kind: .text, authorization: authorization, runDefinition: runDefinition, attempt: attempt, materialCapture: materialCapture)
                 receiptStarted = true
                 try Task.checkCancellation()
                 guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }

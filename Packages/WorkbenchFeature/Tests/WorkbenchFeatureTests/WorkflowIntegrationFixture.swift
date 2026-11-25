@@ -14,6 +14,7 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
     init(configurationWriter: (@MainActor (Data, URL) throws -> Void)? = nil,
          allowContextCapture: Bool = false,
          clipboardChangeCount: @escaping @MainActor () -> Int = { 0 },
+         sessionLimits: SessionRetentionPolicy = .init(),
          invocationPersistenceFault: @escaping @Sendable (String, InvocationPersistencePoint) -> Int32? = { _, _ in nil }) throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Workflow-Integration-" + UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
@@ -29,6 +30,7 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
                 configurationWriter: configurationWriter ?? { try PrivateFiles.write($0, to: $1) },
                 applicationCatalog: ApplicationCatalog(roots: []),
                 applicationLauncher: { _ in throw WorkflowIntegrationFixtureError.unexpectedCapability },
+                sessionLimits: sessionLimits,
                 clipboardCaptureSource: WorkflowIntegrationClipboardSource(), invocationPersistenceFault: invocationPersistenceFault, languageApplier: { _ in })
         } catch { try? FileManager.default.removeItem(at: directory); throw error }
     }

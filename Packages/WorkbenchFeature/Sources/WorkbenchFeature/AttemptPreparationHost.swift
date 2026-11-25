@@ -175,7 +175,8 @@ extension WorkbenchModel {
 
     func beginOwnedReceipt(store: InvocationStore, id: UUID, name: String, authorization: ExecutionRequest,
                            configurationFingerprint: String? = nil, initialMessage: String = "",
-                           runDefinition: RunDefinitionReference? = nil, attempt: AttemptExecutionContext? = nil) async throws -> InvocationWorkerOwnership {
+                           runDefinition: RunDefinitionReference? = nil, attempt: AttemptExecutionContext? = nil,
+                           materialCapture: TaskMaterialCapture? = nil) async throws -> InvocationWorkerOwnership {
         var owner: InvocationWorkerOwnership?
         do {
             // 新尝试在取消／关闭时不得消费旧审阅；普通已接纳任务仍写入取消终态所需的intent。
@@ -192,8 +193,16 @@ extension WorkbenchModel {
                 guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
                 try attempt.accept(ownership, in: self)
             }
+            if let materialCapture, taskMaterialCaptures[id] === materialCapture,
+               let task = tasks.first(where: { $0.id == id }) {
+                materialCapture.bind(begun, namespace: task.receiptIsAI ? .ai : .cli)
+            }
             return ownership
         } catch {
+            if let materialCapture {
+                materialCapture.revoke()
+                if taskMaterialCaptures[id] === materialCapture { taskMaterialCaptures[id] = nil }
+            }
             if let owner { await owner.abandon() }
             else if let failure = error as? InvocationBeginFailure { await store.abandonUndispatched(id, expectedRunStamp: failure.undispatchedStamp) }
             else if runDefinition == nil { await store.abandonUndispatched(id) }

@@ -52,6 +52,7 @@ extension WorkbenchModel {
         return true
     }
     func finishExecutionReservation(_ id: UUID, owner: InvocationWorkerOwnership? = nil) {
+        taskMaterialCaptures[id]?.finish()
         taskHandles[id] = nil; executionReservations.remove(id)
         aiTaskIDs.remove(id); cancelledTaskIDs.remove(id)
         timedOutTaskIDs.remove(id); pausedAgentIDs.remove(id)
@@ -102,9 +103,12 @@ extension WorkbenchModel {
         func include(_ snapshot: TargetSnapshot?) { if let snapshot { snapshots[ObjectIdentifier(snapshot)] = snapshot } }
         for task in tasks where !taskIDs.contains(task.id) {
             let metadata = (task.inputProvenance?.retainedBytes ?? 0) + task.title.utf8.count + task.noticeMessage.retainedByteCount + (task.modelName?.utf8.count ?? 0) + (task.sourceApplication?.utf8.count ?? 0) + task.desktopWorkspaceLabels.values.reduce(0) { $0 + $1.utf8.count } + (task.desktopWorkspaceResult == nil ? 0 : 4_096)
-            bytes += task.output.utf8.count + metadata
+            let capture = taskMaterialCaptures[task.id]
+            let materialBytes = capture?.budgetedBytes ?? 0
+            bytes += task.output.utf8.count + metadata + materialBytes
             if executionReservations.contains(task.id) {
-                bytes += max(0, TaskTextLimits.outputBytes - task.output.utf8.count) + max(0, 16_384 - metadata) + TaskTextLimits.inputBytes
+                let capturedInputBytes = capture?.capturedInputBytes ?? 0
+                bytes += max(0, TaskTextLimits.outputBytes - task.output.utf8.count) + max(0, 16_384 - metadata) + max(0, TaskTextLimits.inputBytes - capturedInputBytes)
             }
             include(resultTargets[task.id])
         }
@@ -137,6 +141,7 @@ extension WorkbenchModel {
         draftOrder.removeAll { draftIDs.contains($0) }
         tasks.removeAll { taskIDs.contains($0.id) }
         for id in taskIDs { workflowUsageDependencies[id] = nil; workflowAIUsage[id] = nil; usageSummaryRevisions[id] = nil }
+        for id in taskIDs { taskMaterialCaptures.removeValue(forKey: id)?.revoke() }
         for id in taskIDs { resultTargets[id] = nil; aiTaskIDs.remove(id); cancelledTaskIDs.remove(id); usageSummaryGenerations[id] = nil; invalidatedUsageRuns.remove(id); workflowCheckpoints[id] = nil; agentRunDefinitions[id] = nil; taskActivity[id] = nil; timedOutTaskIDs.remove(id); pausedAgentIDs.remove(id) }
         for draft in drafts.values where draft.latestRunID.map(taskIDs.contains) == true { draft.latestRunID = nil }
         proposalRequests = proposalRequests.filter { !draftIDs.contains($0.key) && !taskIDs.contains($0.value) }

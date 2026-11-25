@@ -59,6 +59,7 @@ extension WorkbenchModel {
             draft.latestRunID = id; agentRunDefinitions[id] = definition
             tasks.insert(RunningTaskItem(id:id,title:definition.name,state:.running,draftID:draft.id,modelName:service.configuration.model),at:0)
             tasks[0].aiUsageSummary = .pending; tasks[0].receiptIsAI = true; aiTaskIDs.insert(id)
+            let materialCapture = beginTaskMaterialCapture(id, definition: runDefinition, input: input)
             registerActivity(id,commandID:"agent."+definition.id.uuidString,category:.agent)
             taskHandles[id] = Task { [weak self] in
                 guard let self else { return }
@@ -72,7 +73,7 @@ extension WorkbenchModel {
                 var owner: InvocationWorkerOwnership?
                 var broker: ScopedToolBroker?
                 do {
-                    owner = try await beginAIReceipt(id:id,kind:.agent,authorization:authorization,runDefinition:runDefinition,attempt:attempt); started = true
+                    owner = try await beginAIReceipt(id:id,kind:.agent,authorization:authorization,runDefinition:runDefinition,attempt:attempt,materialCapture:materialCapture); started = true
                     try Task.checkCancellation()
                     guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
                     let mcpTools = try await prepareMCPTools(definition,sources:sources,runID:id,attempt:attempt)

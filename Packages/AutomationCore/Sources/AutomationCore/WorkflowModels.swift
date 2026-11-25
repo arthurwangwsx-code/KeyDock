@@ -152,6 +152,27 @@ public struct WorkflowCheckpoint: Codable, Sendable, Equatable {
     public let reason: WorkflowStopReason?
 }
 public typealias WorkflowCheckpointObserver = @Sendable (WorkflowCheckpoint) -> Void
+
+/// 只报告已确认成功的文本边界；不是继续运行的授权或checkpoint执行指令。
+public struct WorkflowSuccessfulMaterial: Sendable {
+    public let runID: UUID
+    public let definitionID: UUID
+    public let definitionVersion: Int
+    public let stepID: UUID
+    public let stepIndex: Int
+    public let sequence: Int
+    public let input: String
+    public let output: String
+}
+public typealias WorkflowSuccessfulMaterialObserver = @Sendable (WorkflowSuccessfulMaterial) -> Void
+
+/// 使用值参数，避免新增闭包改变既有host／onCheckpoint的trailing closure绑定。
+public struct WorkflowMaterialObservation: Sendable {
+    private let observer: WorkflowSuccessfulMaterialObserver
+    public init(_ observer: @escaping WorkflowSuccessfulMaterialObserver) { self.observer = observer }
+    func observe(_ value: WorkflowSuccessfulMaterial) { observer(value) }
+}
+
 public struct WorkflowRunResult: Sendable, Equatable {
     public let runID: UUID
     public let outcome: WorkflowRunOutcome

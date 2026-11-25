@@ -44,3 +44,5 @@ python3 scripts/keydock.py notary-status \
 本轮28项定向通过，最终完整Python为122项通过。首次完整121项中1项旧timeout Mock未提供poll状态而失败，显式补齐该fixture的running状态后通过；另补部分image目录的完成回执与恢复，原timeout=124与SIGTERM断言保留。真实子进程取消和输出恢复单独覆盖，未把模拟进程替身当作真实公证提交。各次失败和成功测量均保留。
 
 首个分支CI `45691090355`（源f67d646）失败日志artifact `15059196291`已回下载，SHA256 `bf20065b33ef321313f108584290c024eb252ba5b67c9bb0d39de6b20ec1ed2f`。它暴露旧timeout fixture的`/var`别名，以及云端Python 3.15中原InterruptedError取消表现为等待超时的差异；夹具显式resolve并用owned别名全套复查，取消改用独立应用异常避免OS重试语义，保留真实子进程和超时断言。本机Python 3.9／3.14各122项别名路径检查通过；3.15复核由新源CI记录，不固定到旧Python规避问题。该失败不能当作后来修补源的CI资格。
+
+最终源`d2c9a01cad6c237f163d423a41897f67284488d9`的[同源CI45691921390](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45691921390)及优化Preview构建通过，日志artifact `15059857372`完整回下载并核对21文件／10个零退出阶段及全部日志摘要，archive SHA256 `dde0d29961c34345356b24aa96899ebcece36f6a1f3790b15787b3456da9fc70`。Python 3.15上的取消回归也通过；云端OCR仍NOT_QUALIFIED。已受控fast-forward晋升master；alpha.19 tag和安装App仍固定原e488496，新协议真实发行保持34.4开放。

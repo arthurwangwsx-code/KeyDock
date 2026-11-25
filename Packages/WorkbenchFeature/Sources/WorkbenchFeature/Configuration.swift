@@ -36,6 +36,7 @@ public struct AppConfiguration: Codable, Sendable {
     public var aiActions: [AIActionPreset] = []
     public var agents: [AgentDefinition] = [AgentDefinition()]
     public var activityEnabled = false
+    public var taskMaterialRetentionEnabled = false
     public var workflows: [WorkflowDefinition] = []
     public var snippets: [SnippetDefinition] = []
     public var webActions: [WebActionDefinition] = []
@@ -63,7 +64,7 @@ public struct AppConfiguration: Codable, Sendable {
         }
     }
     public init() {}
-    private enum CodingKeys: String, CodingKey { case schemaVersion, preferences, launcherShortcut, commandShortcuts, savedCommands, disabledContributions, aiActions, agents, activityEnabled, workflows, snippets, webActions, collections, searchFolders, mcpServers, aiRates, endpoint, model, localHTTP, tokenLimitParameter, clipboardEnabled, clipboardExclusions, language, appearance }
+    private enum CodingKeys: String, CodingKey { case schemaVersion, preferences, launcherShortcut, commandShortcuts, savedCommands, disabledContributions, aiActions, agents, activityEnabled, taskMaterialRetentionEnabled, workflows, snippets, webActions, collections, searchFolders, mcpServers, aiRates, endpoint, model, localHTTP, tokenLimitParameter, clipboardEnabled, clipboardExclusions, language, appearance }
     public init(from decoder: any Decoder) throws {
         self.init()
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -77,6 +78,7 @@ public struct AppConfiguration: Codable, Sendable {
         aiActions = try c.decodeIfPresent([AIActionPreset].self, forKey: .aiActions) ?? []
         agents = try c.decodeIfPresent([AgentDefinition].self, forKey: .agents) ?? agents
         activityEnabled = try c.decodeIfPresent(Bool.self, forKey: .activityEnabled) ?? false
+        taskMaterialRetentionEnabled = try c.decodeIfPresent(Bool.self, forKey: .taskMaterialRetentionEnabled) ?? false
         workflows = try c.decodeIfPresent([WorkflowDefinition].self, forKey: .workflows) ?? []
         snippets = try c.decodeIfPresent([SnippetDefinition].self, forKey: .snippets) ?? []
         webActions = try c.decodeIfPresent([WebActionDefinition].self,forKey:.webActions) ?? []

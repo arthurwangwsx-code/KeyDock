@@ -101,6 +101,7 @@ extension WorkbenchModel {
             guard ownsDraft(draft), reserveExecution(id,draft:draft) else { return nil }
             tasks.insert(RunningTaskItem(id:id,title:definition.name,state:.running,draftID:draft.id),at:0)
             tasks[0].receiptIsAI = true
+            let materialCapture = beginTaskMaterialCapture(id, definition: runDefinition, input: input)
             tasks[0].aiUsageSummary = .pending; workflowAIUsage[id] = WorkflowUsageState()
             aiTaskIDs.insert(id); registerActivity(id,commandID:"workflow."+definition.id.uuidString,category:.workflow)
             let host = WorkflowExecutionHost(commands:commands,actions:actions,runner:processRunner,journal:agentToolStore,manual:{ [weak self] request in await self?.requestWorkflowInput(request) },onUsage:{ [weak self] value in
@@ -112,11 +113,11 @@ extension WorkbenchModel {
                 var started = false
                 var owner: InvocationWorkerOwnership?
                 do {
-                    owner = try await beginAIReceipt(id:id,kind:.workflow,authorization:authorization,runDefinition:runDefinition,attempt:attempt); started = true
+                    owner = try await beginAIReceipt(id:id,kind:.workflow,authorization:authorization,runDefinition:runDefinition,attempt:attempt,materialCapture:materialCapture); started = true
                     try Task.checkCancellation()
                     guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
                     try attempt?.willDispatch(in: self)
-                    let result = await WorkflowRunner.run(plan,input:input,runID:id,host:{ request in try await host.invoke(request) },onCheckpoint:{ [weak self] checkpoint in
+                    let result = await WorkflowRunner.run(plan,input:input,runID:id,host:{ request in try await host.invoke(request) },materialObservation:materialCapture.map { capture in .init { capture.observe($0) } },onCheckpoint:{ [weak self] checkpoint in
                         Task { @MainActor [weak self] in self?.publishWorkflowCheckpoint(checkpoint) }
                     })
                     await host.close(cancel:result.outcome != .succeeded)

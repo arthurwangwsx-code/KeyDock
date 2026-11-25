@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """用隔离Preview的两份签名App在owned目录验证安装、替换和回退。"""
 import argparse
+import base64
 import contextlib
 import importlib.util
 import json
@@ -43,6 +44,7 @@ def main():
         raise PipelineError("Installation qualification uses only an isolated Preview App")
     with qualification_directory() as directory:
         first, second = directory / "First.app", directory / "Second.app"
+        material_legacy = directory / "InvocationV2WithoutMaterials.app"
         destination = directory / "Applications/KeyDock Preview.app"
         for app in (first, second): run(["/usr/bin/ditto", args.app, app])
         # 第一份只模拟旧reader的签名能力声明，不冒充真实旧版二进制运行资格。
@@ -61,6 +63,13 @@ def main():
         atomic_json(metadata_path, metadata); metadata_path.chmod(0o644)
         run(["/usr/bin/codesign", "--force", "--sign", "-", "--options", "runtime", "--timestamp=none", "--identifier", CONFIG["previewBundleIdentifier"], second])
         expected_first, expected_second = inspect_app(first), inspect_app(second)
+        run(["/usr/bin/ditto", args.app, material_legacy])
+        legacy_metadata = material_legacy / "Contents/Resources/BuildInfo.json"
+        legacy_info = json.loads(legacy_metadata.read_text())
+        legacy_info["dataCompatibility"] = {"schemaVersion": 1, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]}}
+        atomic_json(legacy_metadata, legacy_info); legacy_metadata.chmod(0o644)
+        run(["/usr/bin/codesign", "--force", "--sign", "-", "--options", "runtime", "--timestamp=none", "--identifier", CONFIG["previewBundleIdentifier"], material_legacy])
+        expected_material_legacy = inspect_app(material_legacy)
         module_spec = importlib.util.spec_from_file_location("keydock_owned_installer", ROOT / "scripts/install-app.py")
         installer = importlib.util.module_from_spec(module_spec); module_spec.loader.exec_module(installer)
         data_root = directory / "SyntheticRuntimeData"
@@ -100,12 +109,46 @@ def main():
                 raise PipelineError("An incompatible signed capability was admitted")
             require(inspect_app(destination)["bundle_sha256"] == expected_second["bundle_sha256"], "Refused downgrade changed the installed App")
             require(all((data_root / name / "invocations.json").read_bytes() == data for name, data in before_data.items()), "Compatibility qualification changed invocation bytes")
+        # invocation v2一致，唯独材料reader不同，避免被较早的envelope门禁抢先挡住。
+        install(material_legacy, directory / "material-legacy.json")
+        material_receipt = directory / "material-upgrade.json"
+        install(second, material_receipt)
+        material_record = json.loads(material_receipt.read_text())
+        material_backup = Path(material_record["backup_path"])
+        require(inspect_app(material_backup)["bundle_sha256"] == expected_material_legacy["bundle_sha256"], "Material reader backup changed")
+        golden = json.loads((ROOT / "Tools/Fixtures/task-material-v1.json").read_text())
+        material_directory = data_root / "task-materials"; material_directory.mkdir(mode=0o700)
+        temporary_name = ".material-v1-" + golden["fileName"].removesuffix(".kdmaterial") + "-00000000-0000-0000-0000-000000000099.tmp"
+        cases = [(golden["fileName"], base64.b64decode(golden["frameBase64"])),
+                 (temporary_name, b"synthetic interrupted material"),
+                 ("control.json", base64.b64decode(golden["controlDeletionBase64"]))]
+        for index, (name, data) in enumerate(cases):
+            path = material_directory / name; path.write_bytes(data); path.chmod(0o600)
+            for operation in (
+                lambda: installer.rollback(SimpleNamespace(rollback=material_receipt, helper=args.helper, quit_running=False, dry_run=False), data_root_resolver=resolver),
+                lambda: install(material_legacy, directory / ("must-not-install-material-" + str(index) + ".json")),
+            ):
+                try: operation()
+                except PipelineError as error:
+                    require("cannot read the current task material data" in str(error), "Unexpected material refusal: " + str(error))
+                else: raise PipelineError("A signed App without material readers was admitted")
+                require(path.read_bytes() == data, "Material compatibility qualification changed data")
+                require(inspect_app(destination)["bundle_sha256"] == expected_second["bundle_sha256"], "Material refusal changed the installed App")
+                require(inspect_app(material_backup)["bundle_sha256"] == expected_material_legacy["bundle_sha256"], "Material refusal changed the backup App")
+            path.unlink()
+        idle_control = material_directory / "control.json"
+        idle_control.write_bytes(base64.b64decode(golden["controlIdleBase64"])); idle_control.chmod(0o600)
+        installer.rollback(SimpleNamespace(rollback=material_receipt, helper=args.helper, quit_running=False, dry_run=False), data_root_resolver=resolver)
+        require(inspect_app(destination)["bundle_sha256"] == expected_material_legacy["bundle_sha256"], "Actually cleared materials did not permit rollback")
         report = {"state": "PASS", "scope": "owned temporary directory, isolated signed Preview, no app launch or personal data",
                   "dataRootResolver": "owned fixture injection; default runtime domain selection is qualified separately",
                   "firstBuild": expected_first["build_number"], "secondBuild": expected_second["build_number"],
                   "installed": True, "replaced": True, "rolledBack": record["state"] == "rolled-back", "retainedBothVersions": True,
                   "dataCompatibilityQualified": True, "versionTwoUpgrade": True, "incompatibleInstallRefused": True,
                   "incompatibleRollbackRefused": True, "dataBytesPreserved": True,
+                  "taskMaterialCapabilityQualified": True, "taskMaterialBodyAndTemporaryAndPendingRefused": True,
+                  "taskMaterialClearedRollbackAllowed": True,
+                  "taskMaterialReaderScope": "synthetic invocation-v2 / no-material-reader capability, ad-hoc signed Preview; not an actual alpha.19 runtime test",
                   "legacyReaderScope": "synthetic read-v1-only capability, ad-hoc signed Preview; not an actual alpha.18 runtime test",
                   "incompatibleCompensationScope": "unit fault-injection coverage; not exercised with signed Apps here"}
         atomic_json(ROOT / ".local/install-qualification-latest.json", report)

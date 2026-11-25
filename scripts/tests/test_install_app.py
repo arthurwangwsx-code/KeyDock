@@ -106,6 +106,72 @@ class InstallAppTests(unittest.TestCase):
                 self.assertFalse(Path(declined.receipt).exists())
                 path.unlink()
 
+    def test_materials_block_schema_one_reader_install_and_rollback_until_actually_cleared(self):
+        import base64
+        old = self.app("material-old", "synthetic invocation v2 but no material reader")
+        (old / "synthetic-capability.json").write_text(json.dumps({"schemaVersion": 1, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]}}))
+        installer.install(self.arguments(old, "material-old-first"))
+        modern = self.app("material-modern", "synthetic material reader")
+        args = self.arguments(modern, "material-modern-install"); record = installer.install(args)
+        self.envelope(version=2)
+        golden = json.loads((Path(__file__).resolve().parents[2] / "Tools/Fixtures/task-material-v1.json").read_text())
+        folder = self.data_root / "task-materials"; folder.mkdir(mode=0o700)
+        path = folder / golden["fileName"]; original = base64.b64decode(golden["frameBase64"])
+        path.write_bytes(original); path.chmod(0o600)
+        options = SimpleNamespace(rollback=args.receipt, helper=self.helper, quit_running=False, dry_run=False)
+        with self.assertRaisesRegex(PipelineError, "current task material data"): installer.install(self.arguments(old, "declined-material"))
+        with self.assertRaisesRegex(PipelineError, "current task material data"): installer.rollback(options)
+        self.assertEqual(path.read_bytes(), original)
+        self.assertEqual(tree_digest(self.destination), tree_digest(modern))
+        self.assertEqual(tree_digest(Path(record["backup_path"])), tree_digest(old))
+        path.unlink()
+        control = folder / "control.json"; control.write_bytes(base64.b64decode(golden["controlDeletionBase64"])); control.chmod(0o600)
+        with self.assertRaisesRegex(PipelineError, "current task material data"): installer.rollback(options)
+        control.write_bytes(base64.b64decode(golden["controlIdleBase64"]))
+        installer.rollback(options)
+        self.assertEqual(tree_digest(self.destination), tree_digest(old))
+
+    def test_material_created_after_quiesce_is_rechecked_and_prevents_old_swap(self):
+        import base64
+        modern = self.app("material-quiesce-modern", "modern")
+        installer.install(self.arguments(modern, "material-quiesce-first"))
+        old = self.app("material-quiesce-old", "old")
+        (old / "synthetic-capability.json").write_text(json.dumps({"schemaVersion": 1, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]}}))
+        original = installer.quiesce
+        def quiesce(*args):
+            original(*args)
+            golden = json.loads((Path(__file__).resolve().parents[2] / "Tools/Fixtures/task-material-v1.json").read_text())
+            folder = self.data_root / "task-materials"; folder.mkdir(mode=0o700)
+            path = folder / golden["fileName"]; path.write_bytes(base64.b64decode(golden["frameBase64"])); path.chmod(0o600)
+        candidate = self.arguments(old, "material-quiesce-declined")
+        with patch.object(installer, "quiesce", side_effect=quiesce), self.assertRaisesRegex(PipelineError, "current task material data"): installer.install(candidate)
+        self.assertEqual(tree_digest(self.destination), tree_digest(modern))
+        self.assertEqual(json.loads(Path(candidate.receipt).read_text())["state"], "failed-before-exchange")
+
+    def test_material_created_after_swap_blocks_compensation_to_a_reader_without_material_support(self):
+        import base64
+        old = self.app("material-compensation-old", "old")
+        (old / "synthetic-capability.json").write_text(json.dumps({"schemaVersion": 1, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]}}))
+        installer.install(self.arguments(old, "material-compensation-first"))
+        modern = self.app("material-compensation-modern", "modern")
+        candidate = self.arguments(modern, "material-compensation-needs-recovery")
+        original_verify = installer.verify_copy; failed = False
+        golden = json.loads((Path(__file__).resolve().parents[2] / "Tools/Fixtures/task-material-v1.json").read_text())
+        data = base64.b64decode(golden["frameBase64"])
+        folder = self.data_root / "task-materials"; path = folder / golden["fileName"]
+        def verify(location, expected):
+            nonlocal failed
+            if Path(location) == self.destination and not failed:
+                failed = True; folder.mkdir(mode=0o700); path.write_bytes(data); path.chmod(0o600)
+                raise PipelineError("synthetic verification failure after material creation")
+            return original_verify(location, expected)
+        with patch.object(installer, "verify_copy", side_effect=verify), self.assertRaises(PipelineError): installer.install(candidate)
+        record = json.loads(Path(candidate.receipt).read_text())
+        self.assertEqual(record["state"], "needs-recovery")
+        self.assertEqual(path.read_bytes(), data)
+        self.assertEqual(tree_digest(self.destination), tree_digest(modern))
+        self.assertEqual(tree_digest(Path(record["backup_path"])), tree_digest(old))
+
     def test_quiesce_version_change_is_rechecked_before_swap(self):
         modern = self.app("modern", "modern"); installer.install(self.arguments(modern, "first"))
         legacy = self.legacy_app(); self.envelope(version=1)
