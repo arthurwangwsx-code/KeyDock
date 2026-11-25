@@ -19,7 +19,7 @@ class BuildStorageGateTests(unittest.TestCase):
             root = Path(temporary) / "synthetic root"
             tool = Path(temporary) / "governor.py"; tool.write_text("# synthetic tool, never executed\n")
             result = build_storage_gate.entry(["release", "--publish", "--install"], root, tool=tool, cwd=Path(temporary))
-            self.assertEqual(result[result.index("--source-root") + 1], str(root))
+            self.assertEqual(result[result.index("--source-root") + 1], str(root.resolve()))
             self.assertNotIn("--project", result)
             self.assertEqual(result[result.index("--expected-gib") + 1], "12")
             self.assertEqual(result[-3:], ["release", "--publish", "--install"])

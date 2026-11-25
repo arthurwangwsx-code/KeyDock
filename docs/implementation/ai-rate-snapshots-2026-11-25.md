@@ -26,6 +26,8 @@
 
 首个完整检查complete-check-v1在旧AILimit测试失败（2条断言）：旧夹具在wire已发第二轮完整usage，却假定产品输出超限后只能保留第一轮。新provider正确保留了第二轮已报告事实。保留旧失败；将原partial夹具明确改成第二轮wire截断／缺usage，原断言不放宽，并增加同payload带usage且触发产品总预算的独立路径，19项定向通过。再次完整检查必须绑定后续干净提交，不继承首次失败的资格。
 
+干净362a8ba的complete-check-v2通过：803项Swift（含参数化执行）、78项Python、847中英key，本机OCR双轮PASS；原始check-summary在.local/pipeline/20261125T145203379094Z。其独立CI 45638887309在Python新测试暴露/var→/private/var规范化差异，未运行Swift／优化构建；生产入口正确resolve，修正测试期望为canonical路径，不改变共享gate或降低门槛。新候选必须再次取得完整本机及CI资格。
+
 定向measurement位于ispec/changes/keydock-foundation/receipts/ai-rate-*.json，原始本机日志在被gitignore的.local/desktop/ai-rate-*.log。analysis-tests-v3 measurement为7f0dc3a0-9b33-4f56-a27f-e3b02c40ba90，25.417秒；v4继续验证冲突请求计数不依赖枚举顺序，56项通过；localizations-v3为867b5af5-5167-4691-b38f-696127c0bdd9。它们属于apply attempt 9881b6d8-e08e-4176-b6a2-97706ee67811，不能推断整个apply已完成。
 
 ## 待补资格
