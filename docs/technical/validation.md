@@ -34,7 +34,7 @@
 
 热唤起 p95 ≤150ms；缓存本地查询首批结果 p95 ≤50ms。采样至少 100 次，记录硬件、电源模式、系统、数据规模、冷/热条件和测量起止；窗口/API 延迟分别计时。冷启动、常驻内存、CPU/能耗先在 P0 建基线再设门槛，不虚构数值。
 
-`KeyDockDiagnostics`分别测量纯排序与生产使用的QueryRequest→缓存Provider→QueryCoordinator→首个可展示ResultBatch。当前2,000条合成数据、预热10次后100次采样，查询链路p95为20.85ms（macOS27.2，低电量模式关闭）；不包含UI绘制、AX或索引，不能据此宣称热唤起150ms通过。最新输出在忽略的.local/p1-index-shortcut-benchmark.log；首次排序p95 50.37ms超标的失败测量亦保留，详见[本轮复查](../implementation/application-shortcuts-2026-11-23.md)。
+`KeyDockDiagnostics`分别测量纯排序与生产使用的QueryRequest→缓存Provider→QueryCoordinator→首个可展示ResultBatch。固定2,000条合成数据、预热10次后100次采样；本轮先测到查询p95 51.67ms失败，优化值对象的规范化字段后，同一数据与预算复测为9.52ms，目录准备13.91ms另报。原始输出、环境、失败与复测绑定见[性能复查](../implementation/performance-sampling-2026-11-25.md)及[工程合同](performance-sampling.md)。不包含UI绘制、AX或索引，不能据此宣称热唤起150ms通过。历史20.85ms与首次排序50.37ms失败仍按[当时复查](../implementation/application-shortcuts-2026-11-23.md)保留。
 
 Provider 慢/挂起必须有超时与降级；剪贴板轮询在无变更时不读取正文。面板收起后的运行、睡眠/唤醒和权限观察需测耗电。所有性能结论需标记样本数与分位数，不能仅展示一次最好结果。
 

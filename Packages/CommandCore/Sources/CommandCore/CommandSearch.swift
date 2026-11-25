@@ -16,17 +16,16 @@ public enum CommandSearch {
         for item in items {
             // 同 ID 的第一个来源为权威来源，避免到达次序改变同一对象的载荷。
             guard seen.insert(item.id).inserted else { continue }
-            let title = normalize(item.title)
+            let title = item.searchTitle
             let alias = normalize(preferences.aliases[item.id] ?? "")
-            let keywords = item.keywords.map(normalize)
-            let subtitle = normalize(item.subtitle)
             guard let score = score(
                 query: normalizedQuery,
                 tokens: tokens,
                 title: title,
+                titleWords: item.searchTitleWords,
                 alias: alias,
-                keywords: keywords,
-                subtitle: subtitle
+                keywords: item.searchKeywords,
+                subtitle: item.searchSubtitle
             ) else { continue }
             matches.append(Match(
                 item: item,
@@ -62,7 +61,7 @@ public enum CommandSearch {
         var normalizedTitle: String
     }
 
-    private static func normalize(_ value: String) -> String {
+    static func normalize(_ value: String) -> String {
         guard !value.isEmpty else { return "" }
         return value.folding(
             options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
@@ -74,6 +73,7 @@ public enum CommandSearch {
         query: String,
         tokens: [String],
         title: String,
+        titleWords: [Substring],
         alias: String,
         keywords: [String],
         subtitle: String
@@ -89,7 +89,7 @@ public enum CommandSearch {
             }
             if title == token { best = max(best, 1_200) }
             else if title.hasPrefix(token) { best = max(best, 1_000) }
-            else if title.split(separator: " ").contains(where: { $0.hasPrefix(token) }) {
+            else if titleWords.contains(where: { $0.hasPrefix(token) }) {
                 best = max(best, 850)
             } else if title.contains(token) { best = max(best, 650) }
             if keywords.contains(token) { best = max(best, 600) }

@@ -32,6 +32,8 @@
 | [AI草稿显式关闭](implementation/ai-draft-closing-2026-11-25.md) | 冻结确认身份、取消与实际worker收口、共享引用和保留历史 |
 | [复用评估](technical/reuse-assessment.md) | AiBox/Ashot 可借鉴模块与迁移条件 |
 | [验证方案](technical/validation.md) | 合成测试、真实 Mac/API 验收及性能预算 |
+| [性能采样](technical/performance-sampling.md) | 固定查询样本、自有进程资源、CPU单位与短期／长期资格边界 |
+| [性能采样与查询缓存复查](implementation/performance-sampling-2026-11-25.md) | 实际超标、缓存优化、取消修补和真实探针；长期资格仍开放 |
 | [工程流水线](technical/release-pipeline.md) | 共用检查／调试／签名公证／安装回退／上传与回下载 |
 | [GitHub 托管](governance/github-publication.md) | 公开范围、目标账号、分支与发布准备 |
 | [alpha.4发行说明](releases/v0.1.0-alpha.4.md) | 扩展能力、系统资格与验收边界；实际发布状态见Releases及状态总账 |

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -188,7 +189,7 @@ def build(profile="preview", configuration=None, allow_dirty=False, identity=Non
     info.update(KeyDockSafeSmoke=profile == "preview", KeyDockGitCommit=source["commit"], KeyDockReleaseVersion=CONFIG["version"])
     with info_path.open("wb") as stream:
         plistlib.dump(info, stream, fmt=plistlib.FMT_BINARY)
-    metadata = {"schemaVersion": 1, "version": CONFIG["version"], "buildNumber": CONFIG["buildNumber"], "profile": profile,
+    metadata = {"schemaVersion": 1, "version": CONFIG["version"], "buildNumber": CONFIG["buildNumber"], "profile": profile, "configuration": build_configuration,
                 "source": source, "architecture": "arm64", "xcode": xcode.splitlines()[0],
                 "swift": run(["xcrun", "swift", "--version"], capture=True).splitlines()[0]}
     if qualification is not None: metadata["qualificationSHA256"] = quality.digest(qualification)
@@ -532,10 +533,39 @@ def mcp_interop(environment, run_name, scenario):
           "--run-name", run_name, "--scenario", scenario], timeout=300)
 
 
+def performance(mode, app=None, pid=None, duration=1800, interval=5, condition="declared-idle-hidden"):
+    if mode not in {"query", "resident", "probe-check"}:
+        raise PipelineError("Unknown performance mode")
+    if platform.system() != "Darwin" or platform.machine() != CONFIG["architecture"]:
+        raise PipelineError("Performance sampling currently qualifies macOS arm64 only")
+    if mode != "resident" and (app is not None or pid is not None):
+        raise PipelineError("--app and --pid require resident mode")
+    if mode == "resident" and (app is None or type(pid) is not int or pid <= 1 or not math.isfinite(duration) or not math.isfinite(interval)
+                              or not 1 <= duration <= 28800 or not 1 <= interval <= 60):
+        raise PipelineError("Resident sampling requires --app, --pid > 1, duration 1...28800 and interval 1...60")
+    require_build_space()
+    xcode = run(["xcrun", "xcodebuild", "-version"], capture=True).strip()
+    if not xcode.startswith("Xcode " + CONFIG["xcodeVersion"] + "\n"):
+        raise PipelineError("Select Xcode " + CONFIG["xcodeVersion"] + " before performance sampling")
+    product = "KeyDockDiagnostics" if mode == "query" else "KeyDockProcessProbe"
+    stage("performance-build-" + mode, ["xcrun", "swift", "build", "--jobs", "2", "--configuration", "release", "--product", product])
+    binary_directory = Path(run(["xcrun", "swift", "build", "--configuration", "release", "--show-bin-path"], capture=True).strip())
+    command = [sys.executable, ROOT / "scripts/keydock_performance.py", "--mode", mode, "--probe", binary_directory / product,
+               "--output", RUN_DIR / "performance"]
+    if mode == "resident":
+        command += ["--app", app, "--pid", str(pid), "--duration-seconds", str(duration), "--interval-seconds", str(interval), "--condition", condition]
+    stage("performance-" + mode, command, timeout=None if mode == "resident" else 90)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor")
+    p = sub.add_parser("performance")
+    p.add_argument("--mode", choices=["query", "resident", "probe-check"], default="query")
+    p.add_argument("--app", type=Path); p.add_argument("--pid", type=int)
+    p.add_argument("--duration-seconds", type=float, default=1800); p.add_argument("--interval-seconds", type=float, default=5)
+    p.add_argument("--condition", choices=["declared-idle-hidden", "synthetic-interaction", "recovery-idle"], default="declared-idle-hidden")
     p = sub.add_parser("check"); p.add_argument("--ci", action="store_true")
     p = sub.add_parser("build"); p.add_argument("--profile", choices=["release", "preview"], default="preview"); p.add_argument("--configuration", choices=["Release", "Debug"]); p.add_argument("--allow-dirty", action="store_true")
     p = sub.add_parser("package"); p.add_argument("--app", type=Path); p.add_argument("--notary-profile")
@@ -556,6 +586,7 @@ def main():
         print(json.dumps({"source": source_identity(False), "platform": platform.system(), "architecture": platform.machine(), "version": CONFIG["version"],
                           "repository": CONFIG["repository"], "tools": {tool: shutil.which(tool) is not None for tool in ["xcrun", "xcodegen", "gh", "codesign", "hdiutil"]},
                           "notaryProfileConfigured": bool(os.environ.get("KEYDOCK_NOTARY_PROFILE")), "buildStorage": build_storage_status()}, indent=2))
+    elif args.command == "performance": performance(args.mode, args.app, args.pid, args.duration_seconds, args.interval_seconds, args.condition)
     elif args.command == "desktop-fixture": desktop_fixture()
     elif args.command == "prepare-mcp-interop":
         stage("mcp-interop-prepare", [sys.executable, ROOT / "scripts/prepare-mcp-interop.py", "--python", args.python, "--output", args.output], timeout=900)

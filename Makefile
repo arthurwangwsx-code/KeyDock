@@ -1,8 +1,10 @@
-.PHONY: doctor check build debug desktop-fixture mcp-interop-prepare mcp-interop package release publish verify-release install rollback
+.PHONY: doctor check build debug desktop-fixture performance mcp-interop-prepare mcp-interop package release publish verify-release install rollback
 doctor:
 	python3 scripts/keydock.py doctor
 check:
 	python3 scripts/keydock.py check
+performance:
+	python3 scripts/keydock.py performance --mode query
 build:
 	python3 scripts/keydock.py build --profile preview --allow-dirty
 debug:

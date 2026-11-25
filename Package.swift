@@ -16,6 +16,7 @@ let package = Package(
         .library(name: "WorkbenchFeature", targets: ["WorkbenchFeature"]),
         .library(name: "KeyDockUI", targets: ["KeyDockUI"]),
         .executable(name: "KeyDockDiagnostics", targets: ["KeyDockDiagnostics"]),
+        .executable(name: "KeyDockProcessProbe", targets: ["KeyDockProcessProbe"]),
         .executable(name: "KeyDockAIRecoveryProbe", targets: ["KeyDockAIRecoveryProbe"]),
         .executable(name: "KeyDockMCPInteropProbe", targets: ["KeyDockMCPInteropProbe"])
     ],
@@ -28,6 +29,7 @@ let package = Package(
         .testTarget(name: "MCPAdaptersTests", dependencies: ["MCPAdapters", "AICore"], path: "Packages/MCPAdapters/Tests/MCPAdaptersTests", exclude: ["mcp_http_fixture.py", "mcp_stdio_fixture.py"]),
         .testTarget(name: "AutomationCoreTests", dependencies: ["AutomationCore"], path: "Packages/AutomationCore/Tests/AutomationCoreTests"),
         .executableTarget(name: "KeyDockDiagnostics", dependencies: ["CommandCore"], path: "Tools/KeyDockDiagnostics"),
+        .executableTarget(name: "KeyDockProcessProbe", path: "Tools/KeyDockProcessProbe"),
         .executableTarget(name: "KeyDockAIRecoveryProbe", dependencies: ["WorkbenchFeature"], path: "Tools/KeyDockAIRecoveryProbe"),
         .executableTarget(name: "KeyDockMCPInteropProbe", dependencies: ["MCPAdapters", "AICore"], path: "Tools/KeyDockMCPInteropProbe"),
         .target(name: "AgentCore", dependencies: ["AICore", "ExecutionCore"], path: "Packages/AgentCore/Sources/AgentCore"),

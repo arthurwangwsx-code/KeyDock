@@ -1,0 +1,42 @@
+name: Synthetic query performance
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - 'Tools/KeyDockDiagnostics/**'
+      - 'Tools/KeyDockProcessProbe/**'
+      - 'Packages/CommandCore/**'
+      - 'scripts/keydock_performance.py'
+      - 'scripts/performance_metrics.py'
+      - 'scripts/keydock.py'
+      - '.github/workflows/performance.yml'
+permissions:
+  contents: read
+concurrency:
+  group: performance-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  query:
+    runs-on: xcode-27
+    timeout-minutes: 15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Measure Release synthetic queries
+        run: python3 scripts/keydock.py performance --mode query
+      - name: Verify owned process probe contracts
+        run: python3 scripts/keydock.py performance --mode probe-check
+      - name: Preserve raw samples and failures
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: KeyDock-query-performance-${{ github.sha }}-${{ github.run_attempt }}
+          path: .local/pipeline/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: error

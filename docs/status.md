@@ -1,5 +1,7 @@
 # 当前状态总账
 
+任务29正在推进：已增加固定Release查询及独立CI入口、自有App／PID资源采样和准确构建配置；16项Python、36项定向Swift与真实短探针／自有生命周期子集PASS。先导查询p95 51.67ms失败保留，修改规范化字段缓存后同数据／预算复测9.52ms；目录准备单列。干净源完整检查、远端CI、30分钟基线及alpha.15发行待补，不能据此关闭屏幕首帧、8小时驻留或完整产品。见[本轮复查](implementation/performance-sampling-2026-11-25.md)。
+
 任务28的设置摘要已随[alpha.14](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.14)公开并安装，精确源`475e31fb468f4f985166938467bcd69c566356f0`：715 Swift／58 Python／744 key完整本机、指定同源CI与优化构建、公证／公开回下载及发行审计PASS，实际About为alpha.14 (14)，alpha.13回退包保留。54项定向回归与中英明暗审阅／保存／取消／文件字节子集PASS；英文说明截断已复验修补。见[发行证据](implementation/alpha14-release-2026-11-25.md)及[实现复查](implementation/settings-summary-export-2026-11-25.md)。一次焦点切回Launcher的唯一原因未确认，确定的reopen路径已修，实际Dock激活未获资格；摘要不关闭完整定义迁移、性能采样或原完整产品义务。
 
 任务27已随[alpha.13](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.13)公开并安装，精确源`a60e3865352ac2acbbd63fa048c4157d5872b2b9`。702 Swift／58 Python／729 key完整本机、同源feature／master CI与优化构建、公证／公开回下载、发行审计均PASS；实际About为alpha.13 (13)，alpha.12回退包保留。常用工具编辑／删除及遗留偏好修复的原生中英子集通过，完整产品仍PARTIAL。见[发行证据](implementation/alpha13-release-2026-11-25.md)。下述alpha.12记录为前序版本事实。
