@@ -26,8 +26,11 @@ public struct BoundedAgentRunner: Sendable {
         self.maxOutputBytes = min(16_777_216,max(1,maxOutputBytes))
     }
     public func run(messages: [AIMessage], allowedTools: Set<String>) -> AsyncThrowingStream<AgentEvent, any Error> {
-        AsyncThrowingStream { continuation in
+        let recorder = provider.usageRecorder, worker = recorder?.beginWorker()
+        if recorder != nil && worker == nil { return AsyncThrowingStream { $0.finish(throwing: CancellationError()) } }
+        return AsyncThrowingStream { continuation in
             let task = Task {
+                defer { if let worker { recorder?.endWorker(worker) } }
                 do {
                     guard maxToolCalls >= 0, maxTurns > 0, wallTimeout > .zero else { throw AIProviderError.invalidRequest }
                     try await withThrowingTaskGroup(of: Void.self) { group in
@@ -44,7 +47,7 @@ public struct BoundedAgentRunner: Sendable {
                     continuation.finish()
                 } catch { continuation.finish(throwing: error) }
             }
-            continuation.onTermination = { @Sendable _ in task.cancel() }
+            continuation.onTermination = { @Sendable reason in if case .cancelled = reason { task.cancel() } }
         }
     }
     private func execute(messages: [AIMessage], allowedTools: Set<String>,
@@ -77,7 +80,7 @@ public struct BoundedAgentRunner: Sendable {
                 }
             }
             guard completed else { throw AIProviderError.truncatedStream }
-            if !receivedUsage { continuation.yield(.usageUnknown(attemptID: unreportedAttemptID)) }
+            if !receivedUsage && provider.usageRecorder == nil { continuation.yield(.usageUnknown(attemptID: unreportedAttemptID)) }
             if calls.isEmpty { return }
             toolCount += calls.count
             guard toolCount <= maxToolCalls, Set(calls.map(\.id)).count == calls.count else {

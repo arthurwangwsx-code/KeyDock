@@ -213,6 +213,18 @@ enum ConfigurationExportProjection {
     private static func resources(_ source: ConfigurationExportSource, graph: inout ConfigurationExportGraph) throws -> ExportResources {
         let c = source.configuration
         try graph.definitions(.mcp, maximum: 8); try graph.definitions(.folder, maximum: 8)
+        try graph.definitions(.rate, maximum: 64)
+        var rateIdentities: Set<String> = []
+        let rates = try c.aiRates.map { value -> ExportAIRate in
+            let owner = "ai-rate." + value.id.uuidString
+            guard value.isValid, rateIdentities.insert(value.endpointFingerprint + "|" + Data(value.model.utf8).base64EncodedString()).inserted else { throw ConfigurationExportError.invalidDefinition(owner) }
+            for text in [value.endpointFingerprint, value.model, value.currency, value.inputPerMillion, value.outputPerMillion] { try graph.budget.text(text, maximum: 256) }
+            if URL(string: c.endpoint).map({ AIServiceIdentity.fingerprint($0) }) != value.endpointFingerprint {
+                try graph.local(owner: owner, kind: "serviceBinding", reference: "Configure the matching API endpoint")
+            }
+            return .init(id: value.id, revision: value.revision, endpointFingerprint: value.endpointFingerprint, model: value.model, currency: value.currency,
+                         inputPerMillion: value.inputPerMillion, outputPerMillion: value.outputPerMillion, enabled: value.enabled)
+        }
         try graph.budget.text(c.endpoint, maximum: 4096); try graph.budget.text(c.model, maximum: 512)
         guard ["max_tokens", "max_completion_tokens"].contains(c.tokenLimitParameter) else { throw ConfigurationExportError.invalidDefinition("resources.aiService") }
         if !c.endpoint.isEmpty {
@@ -258,6 +270,6 @@ enum ConfigurationExportProjection {
             try graph.local(owner: "search-folder." + v.id.uuidString, kind: "folderSelection", reference: "Choose the folder again")
             return .init(id: v.id, name: v.name)
         }
-        return .init(aiService: .init(endpoint: c.endpoint, model: c.model, localHTTP: c.localHTTP, tokenLimitParameter: c.tokenLimitParameter), mcpServers: servers, searchFolders: folders)
+        return .init(aiService: .init(endpoint: c.endpoint, model: c.model, localHTTP: c.localHTTP, tokenLimitParameter: c.tokenLimitParameter), mcpServers: servers, searchFolders: folders, aiRates: rates)
     }
 }

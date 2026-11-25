@@ -5,9 +5,11 @@ public struct AIHTTPResponse: Sendable {
     public var contentType: String?
     public var body: AsyncThrowingStream<Data, any Error>
     public var cancel: @Sendable () -> Void
+    public var waitForCompletion: @Sendable () async -> Void
     public init(statusCode: Int, contentType: String? = "text/event-stream",
-                body: AsyncThrowingStream<Data, any Error>, cancel: @escaping @Sendable () -> Void = {}) {
-        self.statusCode = statusCode; self.contentType = contentType; self.body = body; self.cancel = cancel
+                body: AsyncThrowingStream<Data, any Error>, cancel: @escaping @Sendable () -> Void = {},
+                waitForCompletion: @escaping @Sendable () async -> Void = {}) {
+        self.statusCode = statusCode; self.contentType = contentType; self.body = body; self.cancel = cancel; self.waitForCompletion = waitForCompletion
     }
 }
 
@@ -41,8 +43,8 @@ public struct URLSessionAITransport: AIHTTPTransport {
                 session.invalidateAndCancel()
                 throw AIProviderError.malformedEvent
             }
-            let body = AsyncThrowingStream<Data, any Error> { continuation in
-                let task = Task {
+            let (body, continuation) = AsyncThrowingStream<Data, any Error>.makeStream()
+            let task = Task {
                     defer { session.invalidateAndCancel() }
                     do {
                         var buffer = Data()
@@ -61,15 +63,13 @@ public struct URLSessionAITransport: AIHTTPTransport {
                         if !buffer.isEmpty { continuation.yield(buffer) }
                         continuation.finish()
                     } catch { continuation.finish(throwing: error) }
-                }
-                continuation.onTermination = { @Sendable _ in
-                    task.cancel()
-                    session.invalidateAndCancel()
-                }
+            }
+            continuation.onTermination = { @Sendable reason in
+                if case .cancelled = reason { task.cancel(); session.invalidateAndCancel() }
             }
             return AIHTTPResponse(statusCode: response.statusCode,
                                   contentType: response.value(forHTTPHeaderField: "Content-Type"), body: body,
-                                  cancel: { session.invalidateAndCancel() })
+                                  cancel: { task.cancel(); session.invalidateAndCancel() }, waitForCompletion: { await task.value })
         } catch {
             session.invalidateAndCancel()
             throw error
@@ -79,50 +79,90 @@ public struct URLSessionAITransport: AIHTTPTransport {
 
 public struct ChatCompletionsProvider: AIProvider {
     public let configuration: AIProviderConfiguration
+    public let usageRecorder: AIUsageRecorder?
     private let apiKey: String
     private let transport: any AIHTTPTransport
 
     public init(configuration: AIProviderConfiguration, apiKey: String,
-                transport: any AIHTTPTransport = URLSessionAITransport()) {
+                transport: any AIHTTPTransport = URLSessionAITransport(), usageRecorder: AIUsageRecorder? = nil) {
         self.configuration = configuration; self.apiKey = apiKey; self.transport = transport
+        self.usageRecorder = usageRecorder
+    }
+
+    /// 工作流每个实际AI步骤独享记录器，仍使用该run准备时冻结的费率与服务。
+    public func withFreshUsageRecorder() -> Self {
+        .init(configuration: configuration, apiKey: apiKey, transport: transport, usageRecorder: AIUsageRecorder(rate: usageRecorder?.frozenRate))
     }
 
     public func stream(_ request: AIRequest) -> AsyncThrowingStream<AIEvent, any Error> {
-        AsyncThrowingStream { continuation in
+        let worker = usageRecorder?.beginWorker()
+        if usageRecorder != nil && worker == nil { return AsyncThrowingStream { $0.finish(throwing: CancellationError()) } }
+        return AsyncThrowingStream { continuation in
             let task = Task {
+                var attempt: UUID?, outcome = AIRecordedCall.Outcome.failed
+                defer {
+                    if let attempt { usageRecorder?.finishAttempt(attempt, outcome: outcome) }
+                    if let worker { usageRecorder?.endWorker(worker) }
+                }
                 do {
                     let wire = try makeURLRequest(request)
                     try Task.checkCancellation()
+                    if let usageRecorder {
+                        guard let worker, let started = usageRecorder.beginAttempt(worker: worker, configuration: configuration) else { throw CancellationError() }
+                        attempt = started
+                    } else { attempt = UUID() }
                     let response = try await transport.open(wire)
-                    defer { response.cancel() }
-                    guard (200..<300).contains(response.statusCode) else {
-                        throw AIProviderError.httpStatus(response.statusCode)
+                    do {
+                        try await withTaskCancellationHandler {
+                            try await consume(response, request: request, attempt: attempt!, continuation: continuation)
+                        } onCancel: { response.cancel() }
+                    } catch {
+                        response.cancel(); await response.waitForCompletion(); throw error
                     }
-                    guard response.contentType?.lowercased().hasPrefix("text/event-stream") == true else {
-                        throw AIProviderError.invalidContentType
-                    }
-                    var parser = SSEEventParser()
-                    var decoder = ChatStreamDecoder(allowedTools: Set(request.tools.map(\.name)))
-                    streamLoop: for try await data in response.body {
-                        try Task.checkCancellation()
-                        for byte in data {
-                            if let payload = try parser.feed(byte) {
-                                for event in try decoder.consume(payload) {
-                                    if case .completed = event { continue }
-                                    continuation.yield(event)
-                                }
-                                if decoder.isComplete { break streamLoop }
-                            }
-                        }
-                    }
-                    try Task.checkCancellation()
-                    try decoder.finish()
+                    response.cancel(); await response.waitForCompletion()
+                    outcome = .succeeded
                     continuation.yield(.completed)
                     continuation.finish()
-                } catch { continuation.finish(throwing: error) }
+                } catch {
+                    if Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled { outcome = .cancelled }
+                    continuation.finish(throwing: error)
+                }
             }
-            continuation.onTermination = { @Sendable _ in task.cancel() }
+            continuation.onTermination = { @Sendable reason in if case .cancelled = reason { task.cancel() } }
         }
+    }
+
+    private func consume(_ response: AIHTTPResponse, request: AIRequest, attempt: UUID,
+                         continuation: AsyncThrowingStream<AIEvent, any Error>.Continuation) async throws {
+        guard (200..<300).contains(response.statusCode) else {
+            throw AIProviderError.httpStatus(response.statusCode)
+        }
+        guard response.contentType?.lowercased().hasPrefix("text/event-stream") == true else {
+            throw AIProviderError.invalidContentType
+        }
+        var parser = SSEEventParser()
+        var decoder = ChatStreamDecoder(allowedTools: Set(request.tools.map(\.name)), attemptID: attempt)
+        streamLoop: for try await data in response.body {
+            try Task.checkCancellation()
+            for byte in data {
+                if let payload = try parser.feed(byte) {
+                    let events: [AIEvent]
+                    do { events = try decoder.consume(payload) }
+                    catch {
+                        if let usage = decoder.latestValidatedUsage { usageRecorder?.observe(usage) }
+                        throw error
+                    }
+                    for event in events {
+                        if case .completed = event { continue }
+                        if case .usage(let value) = event { usageRecorder?.observe(value) }
+                        continuation.yield(event)
+                    }
+                    if decoder.isComplete { break streamLoop }
+                }
+            }
+        }
+        try Task.checkCancellation()
+        try decoder.finish()
     }
 
     public func makeURLRequest(_ request: AIRequest) throws -> URLRequest {

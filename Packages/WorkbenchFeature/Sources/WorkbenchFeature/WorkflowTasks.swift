@@ -100,9 +100,11 @@ extension WorkbenchModel {
             guard ownsDraft(draft), reserveExecution(id,draft:draft) else { return nil }
             tasks.insert(RunningTaskItem(id:id,title:definition.name,state:.running,draftID:draft.id),at:0)
             tasks[0].receiptIsAI = true
+            tasks[0].aiUsageSummary = .pending; workflowAIUsage[id] = WorkflowUsageState()
             aiTaskIDs.insert(id); registerActivity(id,commandID:"workflow."+definition.id.uuidString,category:.workflow)
             let host = WorkflowExecutionHost(commands:commands,actions:actions,runner:processRunner,journal:agentToolStore,manual:{ [weak self] request in await self?.requestWorkflowInput(request) },onUsage:{ [weak self] value in
-                await self?.recordUsage(id:value.id,endpoint:value.endpoint,model:value.model,purpose:"workflow."+definition.id.uuidString,observations:value.usage,outcome:value.outcome)
+                await self?.recordUsage(id:value.id,endpoint:value.endpoint,model:value.model,purpose:"workflow."+definition.id.uuidString,observations:value.usage,outcome:value.outcome,
+                                       recorder:value.recorder,parentRunID:value.parentRunID,workflowStepID:value.stepID)
             },approve:{ [weak self] proposal in guard let self else { return false }; return try await self.requestApproval(proposal) })
             taskHandles[id] = Task { [weak self] in
                 guard let self else { return }
@@ -121,6 +123,7 @@ extension WorkbenchModel {
                     if result.hasUncertainHostOutcome, let index = tasks.firstIndex(where:{$0.id == id}) { tasks[index].noticeMessage = noticeKey("A workflow step may have effects. Check the result before starting a new run; nothing was replayed.") }
                 } catch { await host.close(cancel:true); updateTask(id,state:Task.isCancelled ? .cancelled:.failed,finished:true) }
                 cancelWorkflowInputs(runID:id)
+                await finishWorkflowUsage(id)
                 if started { await finishAIReceipt(id) }; await agentToolStore.releaseParentProtection(for:id); finishExecutionReservation(id)
                 if let onFinished { await onFinished(tasks.first(where:{$0.id == id})?.status ?? .interrupted) }
             }

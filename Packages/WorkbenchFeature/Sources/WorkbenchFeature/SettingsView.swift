@@ -36,6 +36,7 @@ public struct SettingsRootView: View {
             .sheet(item: $session.deletedToolPreferencesReview) { presentation in DeletedToolPreferencesView(store: store, session: session, presentation: presentation) }
             .sheet(item: $session.desktopWorkspaceEditor) { draft in DesktopWorkspaceEditorView(store: store, session: session, draft: draft) }
             .background {
+                if let draft = session.aiRateDraft { AIRateSheetHost(store: store, session: session, draft: draft).id(draft.id) }
                 if let presentation = session.sourceRemoval {
                     SourceRemovalSheetHost(store: store, presentation: presentation, cancel: session.cancelSourceRemoval, didAppear: session.sourceRemovalDidAppear, didDismiss: session.sourceRemovalDidDismiss).id(presentation.id)
                 }
@@ -148,6 +149,7 @@ public struct SettingsRootView: View {
                     Button(L("Remove API key"), role: .destructive) { store.removeCredential(); session.keyStored = store.credentialExists() }.disabled(session.endpoint != store.configuration.endpoint || !session.keyStored)
                 }
             }
+            AIRateSettingsSection(store: store, session: session)
         case .aiActions:
             Section(L("Reusable AI actions")) {
                 ForEach(store.configuration.aiActions) { action in

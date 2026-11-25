@@ -7,7 +7,10 @@ import AgentCore
 
 struct PreparedWorkflowAI: Sendable { let action: AIActionPreset; let provider: ChatCompletionsProvider }
 struct PreparedWorkflowCommand: Sendable { let command:SavedCommand; let contract:FrozenCommandContribution }
-struct WorkflowAIUsage: Sendable { let id: UUID; let endpoint: URL; let model: String; let usage: AIUsageAccumulator; let outcome: String }
+struct WorkflowAIUsage: Sendable {
+    let id: UUID; let endpoint: URL; let model: String; let usage: AIUsageAccumulator; let outcome: String
+    let recorder: AIUsageRecorder?; let parentRunID: UUID; let stepID: UUID
+}
 
 /// 只有已编译且用户已启动的冻结计划能构造宿主。它拥有真实子任务，Core超时不释放资源lease。
 actor WorkflowExecutionHost {
@@ -99,9 +102,10 @@ actor WorkflowExecutionHost {
                 } onCancel: { Task { await runner.cancel(id) } }
             case .aiAction(let actionID):
                 let ai = actions[actionID]!
+                let service = ai.provider.withFreshUsageRecorder()
                 var usage = AIUsageAccumulator(), output = "", succeeded = false
                 do {
-                    for try await event in ai.provider.stream(.init(messages:[.init(role:"system",content:ai.action.prompt),.init(role:"user",content:request.input)],tools:[])) {
+                    for try await event in service.stream(.init(messages:[.init(role:"system",content:ai.action.prompt),.init(role:"user",content:request.input)],tools:[])) {
                         try Task.checkCancellation()
                         switch event {
                         case .text(let text): guard output.utf8.count+text.utf8.count <= TaskTextLimits.outputBytes else { throw AIProviderError.outputLimit }; output += text
@@ -114,7 +118,8 @@ actor WorkflowExecutionHost {
                     guard succeeded, !output.isEmpty else { throw AIProviderError.truncatedStream }
                     response = .init(outcome:.succeeded,output:output)
                 } catch { response = .init(outcome:Task.isCancelled ? .cancelled:.failed,output:output) }
-                await onUsage(.init(id:id,endpoint:ai.provider.configuration.endpoint,model:ai.provider.configuration.model,usage:usage,outcome:response.outcome.rawValue))
+                await onUsage(.init(id:id,endpoint:service.configuration.endpoint,model:service.configuration.model,usage:usage,outcome:response.outcome.rawValue,
+                                    recorder:service.usageRecorder,parentRunID:request.runID,stepID:request.stepID))
             default: response = .init(outcome:.failed)
             }
             let state: ExecutionState = response.outcome == .succeeded ? .succeeded : (response.outcome == .cancelled ? .cancelled:(response.outcome == .unknown ? .interrupted:.failed))

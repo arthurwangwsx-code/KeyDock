@@ -45,7 +45,7 @@ import MacAdapters
         try zero.observe(.init(inputTokens: 0, outputTokens: 0, attemptID: UUID()))
         let knownZero = AIUsageFacts(accumulator: zero, outcome: "succeeded").summary
         #expect(knownZero.state == .reported && knownZero.reportedInputTokens == 0 && knownZero.reportedOutputTokens == 0)
-        #expect(knownZero.costText == L("Cost unknown (no rate configured)"))
+        #expect(knownZero.costText == L("Cost unknown (no historical rate snapshot)"))
     }
 
     @Test func successfulTextWithoutUsageShowsUnknownInsteadOfZero() async throws {
@@ -55,7 +55,8 @@ import MacAdapters
             #expect(fixture.store.tasks.first { $0.id == id }?.aiUsageSummary?.state == .pending)
             try await fixture.drain(id)
             let task = try #require(fixture.store.tasks.first { $0.id == id })
-            #expect(task.status == .completed && task.aiUsageSummary == .unknown)
+            #expect(task.status == .completed && task.aiUsageSummary?.state == .unknown)
+            #expect(task.aiUsageSummary?.cost.amounts.isEmpty == true)
             #expect(task.aiUsageSummary?.inputText == L("Unknown") && task.aiUsageSummary?.outputText == L("Unknown"))
             let receipt = try fixture.usage(id)
             #expect(receipt.hasUnknownUsage && receipt.observations.isEmpty)
@@ -146,7 +147,7 @@ import MacAdapters
         #expect(reported.state == .reported && reported.reportedInputTokens == 7 && reported.reportedOutputTokens == 3)
         let interrupted = AIUsageLedgerReader.summary(data: try? Data(contentsOf: file), runID: id, interrupted: true)
         #expect(interrupted.state == .partial && interrupted.reportedInputTokens == 7)
-        #expect(interrupted.costText == L("Cost unknown (no rate configured)"))
+        #expect(interrupted.costText == L("Cost unknown (no historical rate snapshot)"))
         #expect(AIUsageLedgerReader.summary(data: try? Data(contentsOf: file), runID: UUID(), interrupted: false) == .unknown)
     }
 }

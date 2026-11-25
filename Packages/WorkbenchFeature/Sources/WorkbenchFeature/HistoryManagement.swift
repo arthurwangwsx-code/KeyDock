@@ -104,26 +104,34 @@ extension WorkbenchModel {
 
     func handleUsageMaintenance(_ report: AIUsageMaintenanceReport) {
         guard !isShuttingDown, report.trigger != .clear else { return }
+        invalidateUsageAnalysis()
         for index in tasks.indices where report.removedIDs.contains(tasks[index].id) {
             let id = tasks[index].id
+            guard usageSummaryRevisions[id, default: 0] <= report.revision else { continue }
             invalidatedUsageRuns.insert(id); tasks[index].aiUsageSummary = .unknown
         }
+        invalidateWorkflowUsage(report.removedIDs, revision: report.revision)
         if !report.isComplete { workspaceNoticeMessage = noticeKey("Some AI usage records could not be maintained. Review or clear usage history in Privacy settings.") }
     }
 
     public func clearAIUsageHistory() async {
         guard !isShuttingDown, !isClearingUsage else { return }
         isClearingUsage = true; usageHistoryGeneration &+= 1
+        invalidateUsageAnalysis()
         let generation = usageHistoryGeneration
         let candidates = Set(tasks.filter { $0.aiUsageSummary != nil }.map(\.id))
         defer { isClearingUsage = false }
         let report = await usageMetadataStore.clear()
         guard !isShuttingDown, usageHistoryGeneration == generation else { return }
+        lastUsageClearRevision = max(lastUsageClearRevision, report.revision)
         if report.didReadDirectory {
+            invalidateWorkflowUsage(report.removedIDs, revision: report.revision, remaining: report.remainingIDs)
             for index in tasks.indices where candidates.contains(tasks[index].id) && !report.remainingIDs.contains(tasks[index].id) {
                 let id = tasks[index].id
                 guard report.removedIDs.contains(id) || !executionReservations.contains(id) else { continue }
-                guard usageSummaryGenerations[id, default: 0] < generation else { continue }
+                if report.removedIDs.contains(id) {
+                    guard usageSummaryRevisions[id, default: 0] <= report.revision else { continue }
+                } else { guard usageSummaryGenerations[id, default: 0] < generation else { continue } }
                 tasks[index].aiUsageSummary = .unknown; usageSummaryGenerations[id] = generation
                 invalidatedUsageRuns.insert(id)
             }
@@ -131,5 +139,6 @@ extension WorkbenchModel {
         settingsNoticeMessage = report.isComplete
             ? noticeKey("AI usage history cleared. Running requests may create new records when they finish.")
             : noticeKey("AI usage history was only partly cleared. Some records remain; check permissions and try again.")
+        invalidateUsageAnalysis()
     }
 }

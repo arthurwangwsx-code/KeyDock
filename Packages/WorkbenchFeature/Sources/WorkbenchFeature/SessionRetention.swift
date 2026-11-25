@@ -135,6 +135,7 @@ extension WorkbenchModel {
         for id in draftIDs { drafts[id]?.discard(); drafts[id] = nil }
         draftOrder.removeAll { draftIDs.contains($0) }
         tasks.removeAll { taskIDs.contains($0.id) }
+        for id in taskIDs { workflowUsageDependencies[id] = nil; workflowAIUsage[id] = nil; usageSummaryRevisions[id] = nil }
         for id in taskIDs { resultTargets[id] = nil; aiTaskIDs.remove(id); cancelledTaskIDs.remove(id); usageSummaryGenerations[id] = nil; invalidatedUsageRuns.remove(id); workflowCheckpoints[id] = nil; agentRunDefinitions[id] = nil; taskActivity[id] = nil; timedOutTaskIDs.remove(id); pausedAgentIDs.remove(id) }
         for draft in drafts.values where draft.latestRunID.map(taskIDs.contains) == true { draft.latestRunID = nil }
         proposalRequests = proposalRequests.filter { !draftIDs.contains($0.key) && !taskIDs.contains($0.value) }

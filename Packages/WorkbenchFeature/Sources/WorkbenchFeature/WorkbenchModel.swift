@@ -69,8 +69,16 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     var historyGeneration: UInt64 = 0
     var usageHistoryGeneration: UInt64 = 0
     var usageSummaryGenerations: [UUID: UInt64] = [:]
+    var usageSummaryRevisions: [UUID: UInt64] = [:]
     var invalidatedUsageRuns: Set<UUID> = []
     let usageMetadataStore: AIUsageMetadataStore
+    var workflowAIUsage: [UUID: WorkflowUsageState] = [:]
+    var workflowUsageDependencies: [UUID: [UUID: UInt64]] = [:]
+    var lastUsageClearRevision: UInt64 = 0
+    @Published var usageAnalysisReport: AIUsageAnalysisReport?
+    @Published var usageAnalysisLoading = false
+    @Published var usageAnalysisRefreshToken = UUID()
+    var usageAnalysisRequestID = UUID()
     var receiptMaintenanceTask: Task<Void, Never>?
     public var onDismiss: ((Bool) -> Void)?
     public var onOpenSettings: ((SettingsPane?) -> Void)?

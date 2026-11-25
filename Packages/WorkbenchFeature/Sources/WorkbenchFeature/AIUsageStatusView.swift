@@ -9,8 +9,10 @@ struct AIUsageStatusView: View {
             HStack(spacing: 8) {
                 Text(summary.stateTitle).fontWeight(.medium)
                 Spacer(minLength: 0)
-                Text(L("Input tokens") + ": " + summary.inputText)
-                Text(L("Output tokens") + ": " + summary.outputText)
+                if summary.state != .notRequested {
+                    Text(L("Input tokens") + ": " + summary.inputText)
+                    Text(L("Output tokens") + ": " + summary.outputText)
+                }
             }
             if summary.state == .partial { Text(L("Reported counts may be incomplete. Missing values are not zero.")) }
             Text(summary.costText)

@@ -616,9 +616,20 @@ def main():
         if args.publish: publish()
 
 
-if __name__ == "__main__":
+def run_cli():
     try:
         main()
+        return 0
     except (PipelineError, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+        print("FAIL: " + str(error), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    try:
+        from build_storage_gate import entry
+        guarded = entry(sys.argv[1:], ROOT)
+        sys.exit(subprocess.call(guarded) if guarded is not None else run_cli())
+    except (OSError, RuntimeError) as error:
         print("FAIL: " + str(error), file=sys.stderr)
         sys.exit(1)

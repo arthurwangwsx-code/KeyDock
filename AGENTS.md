@@ -29,6 +29,9 @@
 - 本仓库原创代码与文档采用 MIT；引用资料、第三方及未来迁移代码仍遵循各自许可证。
 
 ## 工程流水线
+
+- 个人Mac遵循共享存储合同：日常目标200 GB，硬底线120 GiB；检查`/Users/ai/project/_workspace/tools/build_storage.py status`的活跃预算与buildHeadroomGiB。构建／测试／导出／安装／证据整段通过其`run --source-root <canonical> --expected-gib N -- COMMAND ARG`，不以绝对编译器路径、伪预算或移除活跃租约绕过拒绝。
+- `scripts/keydock.py`在共享工具存在时自动包裹完整CLI流程，嵌套仍由共享工具核验和复用租约；通用原生命令在外层显式包裹。KeyDock当前为admission-only，不自动登记或扩大清理范围；固定SDK／配置缓存复用，保留最新两份完整原始发行及被引用失败证据，空间治理不作为产品验收。
 - 统一入口 `python3 scripts/keydock.py`／Makefile；版本、架构、bundleID、签名team与源仓库在 release/config.json。
 - `make debug` 构建并安装独立KeyDock Preview；其bundleID与数据／权限能力和正式应用分离。调试流程不读真实剪贴板／凭据。
 - `KEYDOCK_NOTARY_PROFILE=<已有profile> make release` 执行检查、干净提交的Release构建、Developer ID签名、App/DMG公证装订、Gatekeeper与摘要。凭据留在钥匙串，禁止导出私钥到工程或日志。

@@ -7,6 +7,7 @@ import MacAdapters
 private enum AITextResultError: Error { case empty }
 
 private struct UsageReceipt: Codable {
+    let formatVersion: Int
     let runID: UUID
     let endpointHost: String
     let model: String
@@ -17,6 +18,9 @@ private struct UsageReceipt: Codable {
     let hasUnknownUsage: Bool
     let outcome: String
     let costBasis: String
+    let recordedUsage: AIRecordedUsage?
+    let parentRunID: UUID?
+    let workflowStepID: UUID?
 }
 
 extension WorkbenchModel {
@@ -34,7 +38,7 @@ extension WorkbenchModel {
     }
     /// 只检查配置结构，不读取凭据或测试服务联通；匿名服务不要求密钥。
     public func hasValidAIConfiguration(modelOverride: String = "") -> Bool { (try? providerConfiguration(override: modelOverride)) != nil }
-    private func providerConfiguration(override: String) throws -> AIProviderConfiguration {
+    func providerConfiguration(override: String) throws -> AIProviderConfiguration {
         guard let url = URL(string: configuration.endpoint), !configuration.endpoint.isEmpty else { throw AIProviderError.invalidConfiguration }
         let selectedModel = override.isEmpty ? configuration.model : override
         let config = AIProviderConfiguration(endpoint: url, model: selectedModel, allowsLocalHTTP: configuration.localHTTP, tokenLimitParameter: TokenLimitParameter(rawValue: configuration.tokenLimitParameter) ?? .maxCompletionTokens)
@@ -44,7 +48,8 @@ extension WorkbenchModel {
     func provider(override: String = "") throws -> ChatCompletionsProvider {
         let config = try providerConfiguration(override: override)
         let key = allowContextCapture ? (try credentialReader(configuration.endpoint) ?? "") : ""
-        return ChatCompletionsProvider(configuration: config, apiKey: key)
+        return ChatCompletionsProvider(configuration: config, apiKey: key,
+            usageRecorder: AIUsageRecorder(rate: AIRateDefinition.snapshot(in: configuration.aiRates, configuration: config)))
     }
     @discardableResult public func runAI(action: AIActionPreset, draft: AIDraftDocument, caller: ExecutionCaller = .user) -> UUID? {
         guard let input = validatedAIInput(draft) else { return nil }
@@ -112,7 +117,7 @@ extension WorkbenchModel {
                 updateTask(id, state: cancelled ? .cancelled : .failed, finished: true)
                 if !cancelled { taskError(error, id: id, draft: draft, revision: revision) }
             }
-            await recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: action.id.uuidString, observations: observations, outcome: outcome)
+            await recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: action.id.uuidString, observations: observations, outcome: outcome, recorder: service.usageRecorder)
             if receiptStarted { await finishAIReceipt(id) }
             finishExecutionReservation(id)
         }
@@ -167,7 +172,7 @@ extension WorkbenchModel {
                 outcome = cancelled ? "cancelled" : "failed"
                 updateTask(id, state: cancelled ? .cancelled : .failed, finished: true); if !cancelled { taskError(error, id: id, draft: draft, revision: revision) }
             }
-            await recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: "command-proposal", observations: observations, outcome: outcome)
+            await recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: "command-proposal", observations: observations, outcome: outcome, recorder: service.usageRecorder)
             if receiptStarted { await finishAIReceipt(id) }
             finishExecutionReservation(id)
         }
@@ -218,7 +223,7 @@ extension WorkbenchModel {
                 updateTask(id, state: cancelled ? .cancelled : .failed, finished: true)
                 if !cancelled { taskError(error, id: id, draft: draft, revision: revision) }
             }
-            await recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: "readonly-agent", observations: usage, outcome: outcome)
+            await recordUsage(id: id, endpoint: service.configuration.endpoint, model: service.configuration.model, purpose: "readonly-agent", observations: usage, outcome: outcome, recorder: service.usageRecorder)
             if receiptStarted { await finishAIReceipt(id) }
             finishExecutionReservation(id)
         }
@@ -243,14 +248,25 @@ extension WorkbenchModel {
         catch { accumulator.markUnknown(attemptID: usage.attemptID) }
         publishAIUsage(id, facts: AIUsageFacts(accumulator: accumulator, outcome: "running"))
     }
-    func recordUsage(id: UUID, endpoint: URL, model: String, purpose: String, observations: AIUsageAccumulator, outcome: String) async {
-        let facts = AIUsageFacts(accumulator: observations, outcome: outcome)
+    func recordUsage(id: UUID, endpoint: URL, model: String, purpose: String, observations: AIUsageAccumulator, outcome: String,
+                     recorder: AIUsageRecorder? = nil, parentRunID: UUID? = nil, workflowStepID: UUID? = nil) async {
+        let recorded = await recorder?.closeAndSnapshot()
+        let facts = recorded.map { AIUsageFacts.recorded($0, outcome: outcome) } ?? AIUsageFacts(accumulator: observations, outcome: outcome)
         publishAIUsage(id, facts: facts)
-        let receipt = UsageReceipt(runID: id, endpointHost: endpoint.host ?? "", model: model, purpose: purpose, recordedAt: Date(), observations: facts.observations, unknownAttempts: facts.unknownAttempts, hasUnknownUsage: facts.hasUnknownUsage, outcome: outcome, costBasis: "unknown")
+        if let parentRunID, let workflowStepID, let recorded { retainWorkflowUsage(parent: parentRunID, child: id, step: workflowStepID, recorded: recorded) }
+        let receipt = UsageReceipt(formatVersion: 2, runID: id, endpointHost: endpoint.host ?? "", model: model, purpose: purpose, recordedAt: Date(), observations: facts.observations, unknownAttempts: facts.unknownAttempts, hasUnknownUsage: facts.hasUnknownUsage, outcome: outcome, costBasis: facts.summary.cost.amounts.isEmpty ? "unknown" : "userProvidedFlatEstimate", recordedUsage: recorded, parentRunID: parentRunID, workflowStepID: workflowStepID)
         do {
             let result = await usageMetadataStore.save(id: id, data: try JSONEncoder().encode(receipt))
+            if let parentRunID { markWorkflowUsageSaved(parent: parentRunID, child: id, revision: result.report.revision, stored: result.stored) }
+            if result.stored, usageMetadataStore.revisionFence.current == result.report.revision, result.report.revision > lastUsageClearRevision {
+                publishAIUsage(id, facts: facts, metadataRevision: result.report.revision)
+                if let parentRunID, let workflowStepID, let recorded { retainWorkflowUsage(parent: parentRunID, child: id, step: workflowStepID, recorded: recorded, savedRevision: result.report.revision) }
+            }
             if !result.stored { workspaceNoticeMessage = noticeKey("Usage metadata could not be saved") }
-        } catch { workspaceNoticeMessage = noticeKey("Usage metadata could not be saved") }
+        } catch {
+            if let parentRunID { markWorkflowUsageSaved(parent: parentRunID, child: id, revision: 0, stored: false) }
+            workspaceNoticeMessage = noticeKey("Usage metadata could not be saved")
+        }
     }
     func aiErrorNotice(_ error: Error) -> LocalizedNotice {
         switch error {

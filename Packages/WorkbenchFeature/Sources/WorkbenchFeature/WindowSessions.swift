@@ -94,6 +94,8 @@ private struct LauncherCatalogProvider: CommandProviding {
 
 @MainActor public final class SettingsSession: ObservableObject {
     @Published public var mcpDraft = MCPServerDraft()
+    @Published var aiRateDraft: AIRateEditorDraft?
+    @Published var aiRateDismissing = false
     var mcpDraftEpoch = UUID()
     @Published public var pane: SettingsPane = .general { didSet { UserDefaults.standard.set(pane.rawValue, forKey: panePreferenceKey); onPaneChanged?() } }
     private var panePreferenceKey = "KeyDock.SettingsPane"
@@ -118,7 +120,7 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published var sourceRemovalDismissing = false
     @Published var desktopWorkspaceEditor: DesktopWorkspaceEditorDraft?
     var canBeginSavedItemEditor: Bool {
-        store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil && settingsSummaryExport == nil && !settingsSummaryDismissing && configurationExport == nil && !configurationExportDismissing && sourceRemoval == nil && !sourceRemovalDismissing
+        store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && aiRateDraft == nil && !aiRateDismissing && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil && settingsSummaryExport == nil && !settingsSummaryDismissing && configurationExport == nil && !configurationExportDismissing && sourceRemoval == nil && !sourceRemovalDismissing
     }
     @Published public var apiKey = ""
     @Published public var keyStored = false
@@ -165,7 +167,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         editedCommandExistingID = nil; editedCommandSourceRunID = review.id; editedCommand = review.command
         return true
     }
-    public func setVisible(_ value: Bool) { visible = value; if !value { invalidateSettingsSummaryExport(); invalidateConfigurationExport(); invalidateSourceRemoval(); mcpDraftEpoch = UUID(); mcpDraft.apiKey = "" }; updateVisibleReferences() }
+    public func setVisible(_ value: Bool) { visible = value; if !value { invalidateSettingsSummaryExport(); invalidateConfigurationExport(); invalidateSourceRemoval(); if let draft = aiRateDraft { cancelAIRate(draft.id) }; mcpDraftEpoch = UUID(); mcpDraft.apiKey = "" }; updateVisibleReferences() }
     private func updateVisibleReferences() {
         guard let store else { return }
         if visible { store.setVisibleReferences(owner: visibilityOwner, draftID: nil, taskID: editedCommandSourceRunID) }

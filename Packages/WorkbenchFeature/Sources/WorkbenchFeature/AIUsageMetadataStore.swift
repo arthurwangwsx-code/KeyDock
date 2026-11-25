@@ -19,6 +19,7 @@ enum AIUsageStorageProblem: Sendable, Equatable {
 
 struct AIUsageMaintenanceReport: Sendable {
     let trigger: AIUsageMaintenanceTrigger
+    var revision: UInt64 = 0
     var removedIDs: Set<UUID> = []
     var remainingIDs: Set<UUID> = []
     var failedIDs: Set<UUID> = []
@@ -48,10 +49,12 @@ struct AIUsageMetadataWriteResult: Sendable {
 struct AIUsageMetadataReadResult: Sendable {
     let data: Data?
     let problem: AIUsageStorageProblem?
+    var revision: UInt64 = 0
 }
 
 /// 文件I/O在actor上串行执行，不阻塞MainActor，也不持有Store或窗口。
 actor AIUsageMetadataStore {
+    nonisolated let revisionFence = AIUsageRevisionFence()
     typealias ReportHandler = @Sendable (AIUsageMaintenanceReport) -> Void
     typealias RemoveEntry = @Sendable (Int32, String) throws -> Void
 
@@ -123,6 +126,9 @@ actor AIUsageMetadataStore {
     }
 
     func read(id: UUID) -> AIUsageMetadataReadResult {
+        var result = readImpl(id: id); result.revision = revisionFence.current; return result
+    }
+    private func readImpl(id: UUID) -> AIUsageMetadataReadResult {
         do {
             guard let descriptor = try openDirectory(create: false) else { return .init(data: nil, problem: nil) }
             defer { close(descriptor) }
@@ -137,9 +143,54 @@ actor AIUsageMetadataStore {
         } catch { return .init(data: nil, problem: .directoryUnavailable) }
     }
 
+    /// 只读逐叶折叠；同时约束枚举、记录、单条及累计读取量，不依赖维护后通常满足预算。
+    func readAnalysis(from: Date, to: Date) throws -> AIUsageAnalysisReport {
+        let span = to.timeIntervalSince(from)
+        guard from.timeIntervalSinceReferenceDate.isFinite, to.timeIntervalSinceReferenceDate.isFinite,
+              span.isFinite, span > 0, span <= 90 * 86_400 else { throw CocoaError(.coderReadCorrupt) }
+        var accumulator = AIUsageAnalysisAccumulator(from: from, to: to, revision: revisionFence.current, now: clock())
+        do {
+            guard let descriptor = try openDirectory(create: false) else { return accumulator.finish() }
+            defer { close(descriptor) }
+            let cursor = openat(descriptor, ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC)
+            guard cursor >= 0 else { throw POSIXFailure.operation }
+            guard let stream = fdopendir(cursor) else { close(cursor); throw POSIXFailure.operation }
+            defer { closedir(stream) }
+            var records = 0, bytes: UInt64 = 0
+            while true {
+                try Task.checkCancellation()
+                errno = 0
+                guard let item = readdir(stream) else { if errno != 0 { accumulator.problem() }; break }
+                let name = withUnsafePointer(to: item.pointee.d_name) {
+                    $0.withMemoryRebound(to: CChar.self, capacity: Int(MAXNAMLEN) + 1) { String(cString: $0) }
+                }
+                if name == "." || name == ".." { continue }
+                guard accumulator.report.scannedEntries < 10_000 else { accumulator.problem(); break }
+                accumulator.entry()
+                guard let id = managedID(name) else { continue }
+                guard records < min(5_000, policy.maximumCount) else { accumulator.problem(); break }
+                records += 1
+                guard let entry = inspect(descriptor, name: name, id: id, readHeader: false), entry.kind == .valid else { accumulator.problem(); continue }
+                guard bytes <= policy.maximumTotalBytes, entry.size <= policy.maximumTotalBytes - bytes else { accumulator.problem(); break }
+                let remaining = min(UInt64(policy.maximumRecordBytes), policy.maximumTotalBytes - bytes)
+                var consumed = 0
+                do {
+                    let data = try readRecord(descriptor, entry: entry, maximumBytes: Int(remaining), observeRead: { consumed += $0 })
+                    bytes += UInt64(consumed); accumulator.consume(data, id: id)
+                } catch {
+                    // 后置身份检查失败仍保留已读字节，不能靠坏文件绕过累计预算。
+                    bytes += UInt64(consumed); accumulator.failedRead(bytes: consumed)
+                }
+            }
+        } catch is CancellationError { throw CancellationError() }
+        catch { accumulator.problem() }
+        return accumulator.finish()
+    }
+
     /// 保存前先验证，按包含新记录的投影预算逐出旧记录，容量无法满足时拒绝写入。
     func save(id: UUID, data: Data) -> AIUsageMetadataWriteResult {
         var report = AIUsageMaintenanceReport(trigger: .afterSave)
+        report.revision = revisionFence.advance()
         guard data.count <= policy.maximumRecordBytes else {
             report.add(.oversizedRecord(id), id: id)
             return completeWrite(stored: false, report: report)
@@ -196,6 +247,7 @@ actor AIUsageMetadataStore {
 
     private func performMaintenance(trigger: AIUsageMaintenanceTrigger) -> AIUsageMaintenanceReport {
         var report = AIUsageMaintenanceReport(trigger: trigger)
+        report.revision = revisionFence.advance()
         do {
             guard let descriptor = try openDirectory(create: trigger != .clear) else {
                 report.didReadDirectory = true
@@ -300,7 +352,7 @@ actor AIUsageMetadataStore {
         return entries
     }
 
-    private func inspect(_ descriptor: Int32, name: String, id: UUID) -> Entry? {
+    private func inspect(_ descriptor: Int32, name: String, id: UUID, readHeader: Bool = true) -> Entry? {
         var info = stat()
         guard fstatat(descriptor, name, &info, AT_SYMLINK_NOFOLLOW) == 0 else { return nil }
         let regular = info.st_mode & S_IFMT == S_IFREG
@@ -308,6 +360,7 @@ actor AIUsageMetadataStore {
                           inode: info.st_ino, isRegular: regular, kind: regular ? .valid : .unsafe)
         guard regular else { return entry }
         guard info.st_size <= policy.maximumRecordBytes else { entry.kind = .oversized; return entry }
+        if !readHeader { return entry }
         do {
             let data = try readRecord(descriptor, entry: entry)
             if let header = decodeHeader(data, id: id) { entry.recordedAt = header.recordedAt }
@@ -321,21 +374,25 @@ actor AIUsageMetadataStore {
         info.st_mode & S_IFMT == S_IFREG && info.st_dev == entry.device && info.st_ino == entry.inode
     }
 
-    private func readRecord(_ directoryFD: Int32, entry: Entry) throws -> Data {
+    private func readRecord(_ directoryFD: Int32, entry: Entry, maximumBytes: Int? = nil, observeRead: ((Int) -> Void)? = nil) throws -> Data {
+        let limit = min(policy.maximumRecordBytes, maximumBytes ?? policy.maximumRecordBytes)
         let descriptor = openat(directoryFD, entry.name, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC)
         guard descriptor >= 0 else { throw RecordFailure.read }
         defer { close(descriptor) }
         var info = stat()
         guard fstat(descriptor, &info) == 0, matches(info, entry) else { throw RecordFailure.changed }
-        guard info.st_size <= policy.maximumRecordBytes else { throw RecordFailure.oversized }
+        guard info.st_size <= limit else { throw RecordFailure.oversized }
         var result = Data(), buffer = [UInt8](repeating: 0, count: 4_096)
         while true {
-            let count = buffer.withUnsafeMutableBytes { Darwin.read(descriptor, $0.baseAddress!, $0.count) }
+            if result.count == limit { break }
+            let count = buffer.withUnsafeMutableBytes { Darwin.read(descriptor, $0.baseAddress!, min($0.count, limit - result.count)) }
             if count == 0 { break }
             if count < 0 { if errno == EINTR { continue }; throw RecordFailure.read }
-            guard count <= policy.maximumRecordBytes - result.count else { throw RecordFailure.oversized }
+            observeRead?(count)
+            guard count <= limit - result.count else { throw RecordFailure.oversized }
             result.append(contentsOf: buffer.prefix(count))
         }
+        guard fstat(descriptor, &info) == 0, matches(info, entry), info.st_size <= limit else { throw RecordFailure.changed }
         return result
     }
 

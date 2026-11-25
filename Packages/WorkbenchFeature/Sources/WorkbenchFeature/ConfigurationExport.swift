@@ -191,11 +191,19 @@ struct ExportMCPServer: Encodable {
     let timeoutSeconds: TimeInterval
 }
 struct ExportSearchFolder: Encodable { let id: UUID; let name: String }
+struct ExportAIRate: Encodable {
+    let id: UUID, revision: UUID
+    let endpointFingerprint: String, model: String, currency: String
+    let inputPerMillion: String, outputPerMillion: String
+    let enabled: Bool
+    let unitTokens = 1_000_000
+}
 struct ExportResources: Encodable {
-    let schemaVersion = 1
+    let schemaVersion = 2
     let aiService: ExportAIService
     let mcpServers: [ExportMCPServer]
     let searchFolders: [ExportSearchFolder]
+    let aiRates: [ExportAIRate]
 }
 
 struct ConfigurationExportBudget {

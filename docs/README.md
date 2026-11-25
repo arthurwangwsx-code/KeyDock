@@ -18,6 +18,8 @@
 | [界面与交互规范](product/interface-design.md) | 三窗口职责、Liquid Glass、中英文与视觉验收 |
 | [UI架构与组件库](technical/ui-architecture.md) | 状态所有权、KeyDockUI与本地化边界 |
 | [AI 与自动化](technical/ai-and-automation.md) | Provider、快捷 AI、CLI、分析、Agent/MCP/ACP |
+| [可选AI费率与调用快照](technical/ai-rate-snapshots.md) | 准确模型／服务、逐请求冻结、父子归因与独立本地分析 |
+| [AI费率与用量实现复查](implementation/ai-rate-snapshots-2026-11-25.md) | 定向回归、评审修补与独立记录的完整／原生／发行资格 |
 | [后续能力与AiBox设计参考](technical/capability-expansion.md) | P2–P4产品目标、模块拆分、实现合同与完整验收义务 |
 | [Agent与外部协议边界](technical/agent-protocol-boundaries.md) | MCP版本、来源授权、回路与ACP评估结果 |
 | [独立MCP互通](technical/mcp-independent-interoperability.md) | 官方Time固定环境、schema语义、HTTP取消／会话清理和四格验证入口 |

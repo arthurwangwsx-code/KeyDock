@@ -75,6 +75,8 @@ public struct ChatStreamDecoder: Sendable {
     private var responseID: String?
     private var finishReason: String?
     private var lastUsage: AIUsage?
+    /// 同一payload后续内容失败也不能抹去已验证的token事实。
+    public var latestValidatedUsage: AIUsage? { lastUsage }
     private var outputBytes = 0
     public let attemptID: UUID
     public private(set) var isComplete = false

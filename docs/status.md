@@ -2,7 +2,7 @@
 
 [alpha.17](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.17)已公开并替换正式App，精确源`3e681f00efa54ed3763effd64047fba3a5797bd5`。工作流／MCP独立移除审阅、全部引用检查、旧稿／迟到围栏及配置worker退出等待已交付；54项定向／8套件、760 Swift／74 Python／789 key干净本机、指定同源CI／优化构建、公证／Gatekeeper、公开回下载和发行资产审计PASS。实际About为alpha.17 (17)，alpha.16回退保留。中文浅色／英文深色原生观察子集通过，完整产品仍PARTIAL。见[发行证据](implementation/alpha17-release-2026-11-25.md)及[实现复查](implementation/source-removal-2026-11-25.md)。
 
-下一优先项为32的[可选AI费率与调用快照](technical/ai-rate-snapshots.md)：三位只读Agent已核查KeyDock及AiBox设计参考，方案／规格／任务已建立，代码尚未实现。将补准确模型匹配、逐请求元数据、工作流父子归因、历史和按币种的独立用量分析；不读取AiBox凭据，不自动配置真实API或把估算称为账单。
+任务32的[可选AI费率与调用快照](technical/ai-rate-snapshots.md)已在feature/ai-rate-snapshots实现：可选手工费率、provider逐次请求记录、工作流父子索引、历史恢复及独立7／30／90天用量分析。56项定向及847中英key通过，完整本机／原生／同源CI及发行尚待验证；正式App仍是alpha.17。见[本轮实现复查](implementation/ai-rate-snapshots-2026-11-25.md)。不读取AiBox凭据，不自动配置真实API或把估算称为账单。
 
 现有主要工具已有代码，未勾选任务仍包含大量真实验收义务，不能统一理解为“未开发”。完整RunStore显式恢复、原图多模态附件、ACP adapter及实际首帧链路仍有独立工程／评估缺口；真实模型、目标插入／AX、多屏、IME／VoiceOver、最低系统、完整视觉及长期驻留保持开放。
 

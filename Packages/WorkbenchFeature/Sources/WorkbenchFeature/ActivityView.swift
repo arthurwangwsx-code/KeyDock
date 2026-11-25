@@ -19,6 +19,7 @@ struct ActivityView: View {
     @State private var document = AggregateDocument(data:Data())
     var body: some View {
         Form {
+            AIUsageAnalysisSection(store: store)
             Section(L("Usage insights")) {
                 Toggle(L("Record KeyDock usage"),isOn:Binding(get:{store.configuration.activityEnabled},set:{ value in Task { await store.setActivityTracking(value) } })).disabled(store.activityChanging)
                 Text(L("Optional, local statistics for KeyDock actions only. Stores command IDs, outcomes, durations and dates for 30 days. No window titles, arguments, clipboard text or model input is recorded. This is partial coverage, not whole-computer tracking.")).font(.caption).foregroundStyle(.secondary)

@@ -81,6 +81,22 @@
         }
       }
     },
+    "A rate already exists for this exact service and model. Edit that rate instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A rate already exists for this exact service and model. Edit that rate instead."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此服务与准确模型已设有费率，请编辑现有费率。"
+          }
+        }
+      }
+    },
     "A schedule was paused because its workflow, command or AI target changed. Review it before enabling again.": {
       "localizations": {
         "zh-Hans": {
@@ -337,6 +353,38 @@
         }
       }
     },
+    "AI usage and estimates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI usage and estimates"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 用量与估算"
+          }
+        }
+      }
+    },
+    "AI usage could not be read. Refresh to try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI usage could not be read. Refresh to try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法读取 AI 用量，请刷新重试。"
+          }
+        }
+      }
+    },
     "AI usage history cleared. Running requests may create new records when they finish.": {
       "localizations": {
         "en": {
@@ -365,6 +413,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "AI 用量记录仅部分清除，仍有记录保留。请检查权限后重试。"
+          }
+        }
+      }
+    },
+    "AI usage time range": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI usage time range"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 用量时间范围"
           }
         }
       }
@@ -493,6 +557,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "已达到 API 速率限制，请稍后重试"
+          }
+        }
+      }
+    },
+    "API service": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API service"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API 服务"
           }
         }
       }
@@ -749,6 +829,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "添加收藏"
+          }
+        }
+      }
+    },
+    "Add model rate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add model rate"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加模型费率"
           }
         }
       }
@@ -1553,6 +1649,22 @@
         }
       }
     },
+    "Bind to the saved API service": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bind to the saved API service"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "绑定到已保存的 API 服务"
+          }
+        }
+      }
+    },
     "Blank line": {
       "localizations": {
         "en": {
@@ -1565,6 +1677,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "空行"
+          }
+        }
+      }
+    },
+    "Bound to a different API service": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bound to a different API service"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "绑定于其他 API 服务"
+          }
+        }
+      }
+    },
+    "Bound to the saved API service": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bound to the saved API service"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "绑定于已保存的 API 服务"
           }
         }
       }
@@ -2737,6 +2881,22 @@
         }
       }
     },
+    "Configure rates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure rates"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配置费率"
+          }
+        }
+      }
+    },
     "Confirm review": {
       "localizations": {
         "zh-Hans": {
@@ -2961,18 +3121,50 @@
         }
       }
     },
-    "Cost unknown (no rate configured)": {
+    "Cost pending": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cost unknown (no rate configured)"
+            "value": "Cost pending"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "费用未知（未配置费率）"
+            "value": "费用待统计"
+          }
+        }
+      }
+    },
+    "Cost unknown (missing rate or reported usage)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cost unknown (missing rate or reported usage)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "费用未知（缺少费率或用量报告）"
+          }
+        }
+      }
+    },
+    "Cost unknown (no historical rate snapshot)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cost unknown (no historical rate snapshot)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "费用未知（无历史费率快照）"
           }
         }
       }
@@ -3037,6 +3229,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Credentials are stored in Keychain and bound to this server and endpoint. Changing the endpoint does not reuse the old key."
+          }
+        }
+      }
+    },
+    "Currency code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Currency code"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "币种代码"
           }
         }
       }
@@ -3409,6 +3617,22 @@
         }
       }
     },
+    "Different API service": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Different API service"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他 API 服务"
+          }
+        }
+      }
+    },
     "Disable": {
       "localizations": {
         "zh-Hans": {
@@ -3585,6 +3809,22 @@
         }
       }
     },
+    "Edit rate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit rate"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑费率"
+          }
+        }
+      }
+    },
     "Edit shortcuts and aliases": {
       "localizations": {
         "en": {
@@ -3713,6 +3953,22 @@
         }
       }
     },
+    "Enable rate for new runs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable rate for new runs"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "为新运行启用此费率"
+          }
+        }
+      }
+    },
     "Enable schedule": {
       "localizations": {
         "zh-Hans": {
@@ -3777,6 +4033,22 @@
         }
       }
     },
+    "Enter an exact model, a three-letter uppercase currency and nonnegative decimal prices. Use up to 18 significant digits and 18 decimal places; leave no price blank.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an exact model, a three-letter uppercase currency and nonnegative decimal prices. Use up to 18 significant digits and 18 decimal places; leave no price blank."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请填写准确模型、三位大写币种代码及非负十进制单价。最多 18 位有效数字和 18 位小数，单价不能留空。"
+          }
+        }
+      }
+    },
     "Enter input for this workflow. Nothing runs until you choose Run workflow.": {
       "localizations": {
         "en": {
@@ -3809,6 +4081,54 @@
         }
       }
     },
+    "Estimate from known usage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimate from known usage"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已知用量估算"
+          }
+        }
+      }
+    },
+    "Estimated cost at custom rates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated cost at custom rates"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按自定义费率估算"
+          }
+        }
+      }
+    },
+    "Estimated reported portion; remainder unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated reported portion; remainder unknown"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已报告部分的估算，其余未知"
+          }
+        }
+      }
+    },
     "Evaluate arithmetic and convert units. Results are copied only when selected.": {
       "localizations": {
         "en": {
@@ -3837,6 +4157,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Every %d minutes"
+          }
+        }
+      }
+    },
+    "Exact request model": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact request model"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "准确请求模型"
           }
         }
       }
@@ -4513,6 +4849,38 @@
         }
       }
     },
+    "Incomplete workflow records": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incomplete workflow records"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不完整的工作流记录"
+          }
+        }
+      }
+    },
+    "Input / output per 1M tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Input / output per 1M tokens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每百万 token 的输入／输出单价"
+          }
+        }
+      }
+    },
     "Input is too long. Split it into smaller parts; nothing was sent.": {
       "localizations": {
         "en": {
@@ -4541,6 +4909,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "输入来源"
+          }
+        }
+      }
+    },
+    "Input token price": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Input token price"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入 token 单价"
           }
         }
       }
@@ -4929,6 +5313,22 @@
         }
       }
     },
+    "Last 90 days": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 90 days"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近 90 天"
+          }
+        }
+      }
+    },
     "Launch or activate": {
       "localizations": {
         "en": {
@@ -4973,6 +5373,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "启动器快捷键"
+          }
+        }
+      }
+    },
+    "Legacy records without request snapshots": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legacy records without request snapshots"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无逐请求快照的旧记录"
+          }
+        }
+      }
+    },
+    "Legacy reported input tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legacy reported input tokens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧记录已报告输入 token"
+          }
+        }
+      }
+    },
+    "Legacy reported output tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legacy reported output tokens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧记录已报告输出 token"
+          }
+        }
+      }
+    },
+    "Legacy usage is grouped by record date and kept separate from request totals. Current rates are never applied to old records.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legacy usage is grouped by record date and kept separate from request totals. Current rates are never applied to old records."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧用量按记录日期归组，与逐请求总计分开显示；不会套用当前费率。"
           }
         }
       }
@@ -5085,6 +5549,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Local process"
+          }
+        }
+      }
+    },
+    "Local request metadata only. Prices are frozen when a run starts. Estimates are not provider bills; currencies are kept separate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local request metadata only. Prices are frozen when a run starts. Estimates are not provider bills; currencies are kept separate."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅分析本地请求元数据。费率在运行开始时冻结；估算并非服务商账单，不同币种分别显示。"
           }
         }
       }
@@ -5825,6 +6305,38 @@
         }
       }
     },
+    "No direct model request was made. External tools may have their own charges.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No direct model request was made. External tools may have their own charges."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有直接发起模型请求，外部工具可能另有费用。"
+          }
+        }
+      }
+    },
+    "No direct model requests": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No direct model requests"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无直接模型请求"
+          }
+        }
+      }
+    },
     "No input": {
       "localizations": {
         "en": {
@@ -5917,6 +6429,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "暂无输出"
+          }
+        }
+      }
+    },
+    "No priced subtotal is available. Missing rates or usage are not treated as zero.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No priced subtotal is available. Missing rates or usage are not treated as zero."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无可计价的小计。缺少费率或用量不会视为零。"
           }
         }
       }
@@ -6113,6 +6641,22 @@
         }
       }
     },
+    "Only retained, readable request records are included. Missing, cleared, expired, incomplete and unpriced usage can leave gaps.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only retained, readable request records are included. Missing, cleared, expired, incomplete and unpriced usage can leave gaps."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅包含仍保留且可读取的请求记录。缺失、已清除、已过期、不完整或未配置费率的用量可能留下缺口。"
+          }
+        }
+      }
+    },
     "Only shortcut, favorite, alias and recent preferences for missing snippets, URL actions, collections and workflows are cleared. Saved definitions, collection contents, tasks and history are kept.": {
       "localizations": {
         "en": {
@@ -6257,6 +6801,22 @@
         }
       }
     },
+    "Optional model rates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional model rates"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可选模型费率"
+          }
+        }
+      }
+    },
     "Optional, local statistics for KeyDock actions only. Stores command IDs, outcomes, durations and dates for 30 days. No window titles, arguments, clipboard text or model input is recorded. This is partial coverage, not whole-computer tracking.": {
       "localizations": {
         "zh-Hans": {
@@ -6385,6 +6945,22 @@
         }
       }
     },
+    "Output token price": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output token price"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输出 token 单价"
+          }
+        }
+      }
+    },
     "Output tokens": {
       "localizations": {
         "en": {
@@ -6413,6 +6989,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "PDF 正文"
+          }
+        }
+      }
+    },
+    "Partial coverage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial coverage"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "覆盖不完整"
           }
         }
       }
@@ -6625,6 +7217,22 @@
         }
       }
     },
+    "Price per 1,000,000 tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price per 1,000,000 tokens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每百万 token 单价"
+          }
+        }
+      }
+    },
     "Privacy & Permissions": {
       "localizations": {
         "en": {
@@ -6721,6 +7329,38 @@
         }
       }
     },
+    "Rates are optional. Estimates use reported input and output tokens at your custom flat rates, without cache discounts, currency conversion or other provider charges. They are not a provider bill.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rates are optional. Estimates use reported input and output tokens at your custom flat rates, without cache discounts, currency conversion or other provider charges. They are not a provider bill."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "费率可选。按已报告的输入／输出 token 和自定义统一单价估算，不计缓存折扣、汇率转换或其他服务费用。估算并非服务商账单。"
+          }
+        }
+      }
+    },
+    "Read or validation gaps": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read or validation gaps"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "读取或校验缺口"
+          }
+        }
+      }
+    },
     "Read-only agent": {
       "localizations": {
         "en": {
@@ -6733,6 +7373,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "只读 Agent"
+          }
+        }
+      }
+    },
+    "Reading AI usage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading AI usage"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在读取 AI 用量"
           }
         }
       }
@@ -6849,6 +7505,22 @@
         }
       }
     },
+    "Recorded model requests": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded model requests"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已记录模型请求"
+          }
+        }
+      }
+    },
     "Recording is optional. Sensitive marked content is skipped.": {
       "localizations": {
         "en": {
@@ -6893,6 +7565,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Refresh"
+          }
+        }
+      }
+    },
+    "Refresh AI usage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh AI usage"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新 AI 用量"
           }
         }
       }
@@ -7105,6 +7793,22 @@
         }
       }
     },
+    "Remove saved rate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved rate"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除已保存费率"
+          }
+        }
+      }
+    },
     "Remove saved tool": {
       "localizations": {
         "en": {
@@ -7313,6 +8017,38 @@
         }
       }
     },
+    "Reported input tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported input tokens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已报告输入 token"
+          }
+        }
+      }
+    },
+    "Reported output tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported output tokens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已报告输出 token"
+          }
+        }
+      }
+    },
     "Request normal quit": {
       "localizations": {
         "en": {
@@ -7357,6 +8093,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "请求直接发送至此端点，仅在运行 AI 动作时发送输入内容。密钥保存在钥匙串中，不写入配置或日志。"
+          }
+        }
+      }
+    },
+    "Requests use their start time in this range; the end is exclusive. The ledger retains up to 90 days within count and storage limits. Action statistics and their AI summary do not include this ledger.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requests use their start time in this range; the end is exclusive. The ledger retains up to 90 days within count and storage limits. Action statistics and their AI summary do not include this ledger."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请求按开始时间归入范围，不含结束时刻。账本在数量与容量预算内最多保留 90 天。动作统计及其 AI 总结不包含此账本。"
+          }
+        }
+      }
+    },
+    "Requests with incomplete usage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requests with incomplete usage"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用量不完整的请求"
+          }
+        }
+      }
+    },
+    "Requests without a usable rate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requests without a usable rate"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无可用费率的请求"
           }
         }
       }
@@ -7809,6 +8593,22 @@
         }
       }
     },
+    "Save a valid API endpoint before adding a rate. No connection, default model or key is needed to edit rates.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a valid API endpoint before adding a rate. No connection, default model or key is needed to edit rates."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先保存有效的 API 端点，再添加费率。编辑费率不需要联网、默认模型或密钥。"
+          }
+        }
+      }
+    },
     "Save action": {
       "localizations": {
         "en": {
@@ -7937,6 +8737,22 @@
         }
       }
     },
+    "Save rate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save rate"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存费率"
+          }
+        }
+      }
+    },
     "Save selected preferences, the launcher shortcut and configuration counts as JSON for viewing or sharing. This file cannot restore the app.": {
       "localizations": {
         "en": {
@@ -7997,6 +8813,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save workflow"
+          }
+        }
+      }
+    },
+    "Saved API service": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved API service"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存的 API 服务"
           }
         }
       }
@@ -8077,6 +8909,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "已保存版本"
+          }
+        }
+      }
+    },
+    "Saving or removing a rate affects new runs. Existing runs and history keep their frozen rate snapshots.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving or removing a rate affects new runs. Existing runs and history keep their frozen rate snapshots."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存或移除费率只影响新运行，在途运行和历史保留原费率快照。"
           }
         }
       }
@@ -8637,6 +9485,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "服务启动超时（秒）"
+          }
+        }
+      }
+    },
+    "Service and model": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Service and model"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务与模型"
+          }
+        }
+      }
+    },
+    "Service fingerprint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Service fingerprint"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务指纹"
           }
         }
       }
@@ -9793,6 +10673,22 @@
         }
       }
     },
+    "The rate limit is 64 saved service and model pairs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The rate limit is 64 saved service and model pairs."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最多保存 64 组服务与模型费率。"
+          }
+        }
+      }
+    },
     "The result was generated, but copying could not be confirmed. The clipboard may have changed. Your result was kept.": {
       "localizations": {
         "en": {
@@ -10141,6 +11037,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "此项目仍被引用。请先移除相关引用，再重新检查。"
+          }
+        }
+      }
+    },
+    "This rate was removed or changed. Your draft was kept; edit the current rate or create a new one.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This rate was removed or changed. Your draft was kept; edit the current rate or create a new one."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此费率已被移除或更改。已保留草稿，请编辑当前费率或新建。"
           }
         }
       }
@@ -11325,6 +12237,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "使用剪贴板内容"
+          }
+        }
+      }
+    },
+    "Use plain decimal numbers and an uppercase three-letter currency. Zero must be entered explicitly; missing rates and usage stay unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use plain decimal numbers and an uppercase three-letter currency. Zero must be entered explicitly; missing rates and usage stay unknown."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请使用普通十进制数字及三位大写币种代码。零需明确填写，缺失的费率和用量保持未知。"
           }
         }
       }

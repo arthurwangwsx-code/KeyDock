@@ -3,16 +3,16 @@ import CommandCore
 
 enum ExportDefinitionKind: String {
     case command, ai, agent, workflow, snippet, web, collection
-    case applicationAction = "application-action", workspace = "desktop-workspace", schedule, mcp = "mcp-server", folder = "search-folder"
+    case applicationAction = "application-action", workspace = "desktop-workspace", schedule, mcp = "mcp-server", folder = "search-folder", rate = "ai-rate"
     var section: ConfigurationExportSection {
         switch self {
         case .command, .ai, .agent, .workflow, .snippet, .web, .collection: .definitions
         case .applicationAction, .workspace: .desktop
         case .schedule: .schedules
-        case .mcp, .folder: .resources
+        case .mcp, .folder, .rate: .resources
         }
     }
-    var isCommand: Bool { ![Self.agent, .schedule, .mcp, .folder].contains(self) }
+    var isCommand: Bool { ![Self.agent, .schedule, .mcp, .folder, .rate].contains(self) }
 }
 
 /// 仅检查冻结定义图。资源存在、服务目录和执行授权都不由此证明。
@@ -47,6 +47,7 @@ struct ConfigurationExportGraph {
         case .schedule: source.schedules.count
         case .mcp: c.mcpServers.count
         case .folder: c.searchFolders.count
+        case .rate: c.aiRates.count
         }
     }
     private func ids(_ kind: ExportDefinitionKind) -> [UUID] {
@@ -64,6 +65,7 @@ struct ConfigurationExportGraph {
         case .schedule: return source.schedules.map(\.id)
         case .mcp: return c.mcpServers.map(\.id)
         case .folder: return c.searchFolders.map(\.id)
+        case .rate: return c.aiRates.map(\.id)
         }
     }
     private mutating func index(_ kind: ExportDefinitionKind) throws -> Set<UUID> {

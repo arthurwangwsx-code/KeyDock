@@ -130,8 +130,10 @@ public enum AIEvent: Sendable {
 }
 
 public protocol AIProvider: Sendable {
+    var usageRecorder: AIUsageRecorder? { get }
     func stream(_ request: AIRequest) -> AsyncThrowingStream<AIEvent, any Error>
 }
+public extension AIProvider { var usageRecorder: AIUsageRecorder? { nil } }
 
 /// 错误只含稳定类别；不能把服务端正文、prompt 或凭据拼入普通日志。
 public enum AIProviderError: Error, Equatable, Sendable {

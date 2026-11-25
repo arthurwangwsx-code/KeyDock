@@ -7,6 +7,7 @@ import KeyDockUI
 import AgentCore
 import AutomationCore
 import MCPAdapters
+import AICore
 
 public enum AIInputSource: String, Codable, CaseIterable, Sendable { case selection, clipboard, manual }
 public enum AIDraftSource: String { case selection, clipboard, manual, commandOutput, importedContext
@@ -41,6 +42,7 @@ public struct AppConfiguration: Codable, Sendable {
     public var collections: [CommandCollection] = []
     public var searchFolders: [SearchFolder] = []
     public var mcpServers: [MCPServerConfiguration] = []
+    public var aiRates: [AIRateDefinition] = []
     public var endpoint = ""
     public var model = ""
     public var localHTTP = false
@@ -61,7 +63,7 @@ public struct AppConfiguration: Codable, Sendable {
         }
     }
     public init() {}
-    private enum CodingKeys: String, CodingKey { case schemaVersion, preferences, launcherShortcut, commandShortcuts, savedCommands, disabledContributions, aiActions, agents, activityEnabled, workflows, snippets, webActions, collections, searchFolders, mcpServers, endpoint, model, localHTTP, tokenLimitParameter, clipboardEnabled, clipboardExclusions, language, appearance }
+    private enum CodingKeys: String, CodingKey { case schemaVersion, preferences, launcherShortcut, commandShortcuts, savedCommands, disabledContributions, aiActions, agents, activityEnabled, workflows, snippets, webActions, collections, searchFolders, mcpServers, aiRates, endpoint, model, localHTTP, tokenLimitParameter, clipboardEnabled, clipboardExclusions, language, appearance }
     public init(from decoder: any Decoder) throws {
         self.init()
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -81,6 +83,9 @@ public struct AppConfiguration: Codable, Sendable {
         collections = try c.decodeIfPresent([CommandCollection].self,forKey:.collections) ?? []
         searchFolders = try c.decodeIfPresent([SearchFolder].self, forKey: .searchFolders) ?? []
         mcpServers = try c.decodeIfPresent([MCPServerConfiguration].self, forKey: .mcpServers) ?? []
+        aiRates = try c.decodeIfPresent([AIRateDefinition].self, forKey: .aiRates) ?? []
+        guard aiRates.count <= 64, aiRates.allSatisfy(\.isValid), Set(aiRates.map(\.id)).count == aiRates.count,
+              Set(aiRates.map { $0.endpointFingerprint + "|" + Data($0.model.utf8).base64EncodedString() }).count == aiRates.count else { throw CocoaError(.coderReadCorrupt) }
         endpoint = try c.decodeIfPresent(String.self, forKey: .endpoint) ?? ""
         model = try c.decodeIfPresent(String.self, forKey: .model) ?? ""
         localHTTP = try c.decodeIfPresent(Bool.self, forKey: .localHTTP) ?? false

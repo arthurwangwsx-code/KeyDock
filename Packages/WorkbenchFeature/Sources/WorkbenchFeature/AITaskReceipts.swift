@@ -55,11 +55,12 @@ extension WorkbenchModel {
             startedAt: receipt.startedAt, finishedAt: receipt.finishedAt, titleKey: kind.rawValue)
         task.restoredFromReceipt = true
         task.receiptIsAI = true
-        if kind != .context && kind != .workflow { task.aiUsageSummary = .unknown }
+        if kind != .context { task.aiUsageSummary = .unknown }
         task.outputIsIncomplete = status == .interrupted
         if status == .interrupted { task.noticeMessage = noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }
         // 没有 draft、Task、resultTarget 或 callback；恢复只展示，不重发、不复制、不审阅。
         tasks.append(task)
-        if kind != .context && kind != .workflow { loadRestoredAIUsage(receipt.id, interrupted: status == .interrupted) }
+        if kind == .workflow { loadRestoredWorkflowUsage(receipt.id) }
+        else if kind != .context { loadRestoredAIUsage(receipt.id, interrupted: status == .interrupted) }
     }
 }

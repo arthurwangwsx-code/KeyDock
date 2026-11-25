@@ -105,7 +105,7 @@ extension WorkbenchModel {
                     }
                 }
                 cancelApprovals(runID:id)
-                await recordUsage(id:id,endpoint:service.configuration.endpoint,model:service.configuration.model,purpose:"agent."+definition.id.uuidString,observations:usage,outcome:outcome)
+                await recordUsage(id:id,endpoint:service.configuration.endpoint,model:service.configuration.model,purpose:"agent."+definition.id.uuidString,observations:usage,outcome:outcome,recorder:service.usageRecorder)
                 if started { await finishAIReceipt(id) }; await agentToolStore.releaseParentProtection(for:id); finishExecutionReservation(id)
             }
             onOpenWorkspace?(.tasks(id)); return id

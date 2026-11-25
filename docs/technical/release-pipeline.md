@@ -2,6 +2,10 @@
 
 2026-11-23。统一入口为 `python3 scripts/keydock.py`，Makefile提供短命令；Python3.9+标准库、Xcode27.2、XcodeGen、Git与GitHub CLI即可运行。版本／build、架构、bundleID、签名team与目标仓库由 [release/config.json](../../release/config.json)管理。
 
+2026-11-25个人Mac补充：统一CLI在共享`build_storage.py`存在时自动包裹整个命令，包括release内的检查／构建／导出／安装／上传及回执；已持有外层租约时仍经共享工具验证后复用。可用`PERSONAL_BUILD_STORAGE_TOOL`指定治理器，显式配置缺失时失败，不转未包裹编译器。其他开源开发机及CI未部署此个人工具时保留原工程容量检查。
+
+通用Swift／iSpec原生命令须在整段外层使用`python3 /Users/ai/project/_workspace/tools/build_storage.py run --source-root <canonical> --expected-gib N -- COMMAND ARG`。日常目标200 GB、物理硬底线120 GiB，按status的活跃预留和buildHeadroomGiB准入；当前KeyDock为admission-only，不自动扩大清理白名单。复用固定缓存，保留最新两份完整原始发行和引用中的失败证据，结束记录源身份／退出状态／证据位置并仅收尾任务自有scratch。空间治理与产品验收分别报告。
+
 ```mermaid
 flowchart LR
   Source[已审查源提交] --> Check[文档 / 本地化 / Python / Swift测试]
