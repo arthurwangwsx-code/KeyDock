@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-25。当前已有签名公证的公开alpha.14，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-25。当前已有签名公证的公开alpha.15，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -24,6 +24,7 @@
 | [MCP互通增量复查](implementation/mcp-interoperability-2026-11-25.md) | 原始目录失败、真实调用、会话清理、进程组与环境证据修补 |
 | [数据与权限](technical/data-and-permissions.md) | TCC、上下文、存储、采集与执行策略 |
 | [设置摘要导出](technical/settings-summary-export.md) | 字段白名单、冻结预览与系统保存；完整定义迁移另行建设 |
+| [完整配置定义导出方案](technical/configuration-export.md) | 任务28.4待实现的只读快照、完整引用、排除字段与保存合同；未来import独立建设 |
 | [设置摘要实现与原生复查](implementation/settings-summary-export-2026-11-25.md) | 敏感哨兵、关闭／保存身份、英文截断修复及实际文件字节 |
 | [P1会话保留](technical/session-retention.md) | 已实现的总预算、元数据维护、清除和恢复围栏及待验收边界 |
 | [导入文本上下文](technical/imported-text-context.md) | 单槽来源、AI冻结、联合预算与清除；alpha.10候选 |
@@ -45,6 +46,7 @@
 | [alpha.12发行与安装证据](implementation/alpha12-release-2026-11-25.md) | 685 Swift／58 Python、独立Time／SDK本机与CI四格、公证／公开回下载、实际About12与alpha.11回退 |
 | [alpha.13发行与安装证据](implementation/alpha13-release-2026-11-25.md) | 702 Swift／58 Python／729 key、工具生命周期／遗留修复、同源CI／公证／公开回下载、实际About13与alpha.12回退 |
 | [alpha.14发行与安装证据](implementation/alpha14-release-2026-11-25.md) | 715 Swift／58 Python／744 key、设置摘要与英文排版修补、同源CI／公证／实际About14及alpha.13回退 |
+| [alpha.15发行与安装证据](implementation/alpha15-release-2026-11-25.md) | 719 Swift／74 Python／744 key、查询缓存／性能CI、准确候选基线、菜单语义修补与实际About15 |
 | [alpha.11发行与安装证据](implementation/alpha11-release-2026-11-25.md) | 671 Swift／同源CI／受信工具目录／公证／公开回下载／实际About11及alpha.10回退 |
 | [alpha.10发行与安装证据](implementation/alpha10-release-2026-11-25.md) | 650 Swift／同源CI／公证／公开回下载／实际About10及alpha.9回退 |
 | [alpha.9发行与安装证据](implementation/alpha9-release-2026-11-25.md) | 627 Swift／同源CI／公证／公开回下载／实际About9及alpha.8回退 |
