@@ -16,8 +16,9 @@ public struct InvocationReceipt: Identifiable, Codable, Sendable, Equatable {
     public var desktopWorkspace: DesktopWorkspaceReceiptContext?
     public var desktopWorkspaceRun: DesktopWorkspaceRunContext?
     public var desktopWorkspaceResult: DesktopWorkspaceRunResult?
+    public var runAttempt: RunAttemptMetadata?
 
-    public init(id: UUID, name: String, state: ExecutionState, startedAt: Date = Date(), finishedAt: Date? = nil, exitCode: Int32? = nil, message: String = "", commandID: String? = nil, commandVersion: Int? = nil, configurationFingerprint: String? = nil, caller: String? = nil, desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil) {
+    public init(id: UUID, name: String, state: ExecutionState, startedAt: Date = Date(), finishedAt: Date? = nil, exitCode: Int32? = nil, message: String = "", commandID: String? = nil, commandVersion: Int? = nil, configurationFingerprint: String? = nil, caller: String? = nil, desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil, runAttempt: RunAttemptMetadata? = nil) {
         self.id = id
         self.name = name
         self.state = state
@@ -30,6 +31,7 @@ public struct InvocationReceipt: Identifiable, Codable, Sendable, Equatable {
         self.desktopWorkspace = desktopWorkspace
         self.desktopWorkspaceRun = desktopWorkspaceRun
         self.desktopWorkspaceResult = desktopWorkspaceResult
+        self.runAttempt = runAttempt
     }
 }
 
@@ -37,6 +39,7 @@ public enum InvocationStoreError: Error, Equatable, Sendable {
     case invalidDirectory, unsupportedVersion, duplicateInvocation, missingInvocation, nonterminalResult, io(Int32)
     case invalidPolicy, invalidClock, invalidMetadata, invalidFile, loadLimitExceeded, capacityExceeded
     case durabilityUncertain(Int32)
+    case recoveryUnavailable, staleRecovery, foreignRecovery, activeRecovery, recoveryPersistenceUncertain, revisionExhausted
 }
 
 /// 只记录最小元数据；不保存正文、不重放任务。维护与显式清除只处理未保护的终态。
@@ -53,11 +56,15 @@ public actor InvocationStore {
     private var liveProtectedIDs: Set<UUID> = []
     private var liveParentIDs: Set<UUID> = []
     private var pendingPersistence = false
+    private let runStoreIdentity = UUID()
+    private var liveRecoverySources: [UUID: UUID] = [:]
+    private let persistenceFault: @Sendable (InvocationPersistencePoint) -> Int32?
     // finish仅增加固定元数据；begin为每个intent预留结果空间，避免正常完成被自身预算卡住。
     private static let completionReserveBytes = 4_096
 
     public init(directory: URL, retention: InvocationRetentionPolicy = .init(),
-                clock: @escaping @Sendable () -> Date = { Date() }) throws {
+                clock: @escaping @Sendable () -> Date = { Date() },
+                persistenceFault: @escaping @Sendable (InvocationPersistencePoint) -> Int32? = { _ in nil }) throws {
         guard retention.maxFinishedAge.isFinite, retention.maxFinishedAge >= 0,
               retention.maxFinishedCount >= 0, retention.maxFileBytes >= 128,
               retention.maxLoadBytes >= retention.maxFileBytes,
@@ -82,9 +89,10 @@ public actor InvocationStore {
         var values: [UUID: InvocationReceipt] = [:], recovered: Set<UUID> = []
         if let data = try Self.readBounded(directoryFD: pinnedDirectory, maximum: retention.maxLoadBytes) {
             let envelope = try JSONDecoder().decode(Envelope.self, from: data)
-            guard envelope.version == 1 else { throw InvocationStoreError.unsupportedVersion }
+            guard envelope.version == 1 || envelope.version == 2 else { throw InvocationStoreError.unsupportedVersion }
             for var receipt in envelope.receipts {
                 guard values[receipt.id] == nil else { throw InvocationStoreError.duplicateInvocation }
+                guard envelope.version == 2 || receipt.runAttempt == nil else { throw InvocationStoreError.invalidMetadata }
                 guard receipt.startedAt.timeIntervalSinceReferenceDate.isFinite,
                       receipt.finishedAt?.timeIntervalSinceReferenceDate.isFinite != false else { throw InvocationStoreError.invalidMetadata }
                 try Self.validateWorkspaceContext(receipt.desktopWorkspace, commandID: receipt.commandID, id: receipt.id)
@@ -100,17 +108,20 @@ public actor InvocationStore {
             }
         }
         for value in values.values { try Self.validateWorkspaceParent(value.desktopWorkspace, in: values) }
+        try RunAttemptValidation.validate(values)
         // 父恢复前不能裁掉已确认的child；孤立进行中child也保护其已知父及兄弟事实。
         let recoveredFamilies = recovered.union(recovered.compactMap { Self.parentID(values[$0]?.commandID) })
         recovered.formUnion(values.values.filter { value in
             recoveredFamilies.contains(value.id) || Self.parentID(value.commandID).map(recoveredFamilies.contains) == true
         }.map(\.id))
+        // 冷启动只保护未确认尝试的直接来源，不能把整条逻辑历史永久豁免保留预算。
+        recovered.formUnion(recovered.compactMap { values[$0]?.runAttempt?.recoveryOf })
         let maintained = try Self.pruned(values, retention: retention, now: now, protecting: recovered)
-        self.retention = retention; self.clock = clock
+        self.retention = retention; self.clock = clock; self.persistenceFault = persistenceFault
         self.receipts = maintained; self.recoveredProtection = recovered
         let data = try Self.encoded(maintained)
         if Self.byteBudgetFits(maintained, encodedBytes: data.count, retention: retention) {
-            do { try Self.persist(data, directoryFD: pinnedDirectory) }
+            do { try Self.persist(data, directoryFD: pinnedDirectory, fault: persistenceFault) }
             catch let failure as WriteFailure { throw Self.publicError(failure) }
         } else {
             // 旧intent证据优先；原文件保持不动，先让宿主展示unknown，再ack与maintain。
@@ -122,10 +133,14 @@ public actor InvocationStore {
 
     deinit { Darwin.close(directoryFD) }
 
-    public func begin(id: UUID, name: String, commandID: String? = nil, commandVersion: Int? = nil,
+    @discardableResult public func begin(id: UUID, name: String, commandID: String? = nil, commandVersion: Int? = nil,
                       configurationFingerprint: String? = nil, caller: String? = nil, initialMessage: String = "",
-                      desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil) throws {
+                      desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil,
+                      runDefinition: RunDefinitionReference? = nil,
+                      recovering check: RunRecoveryCheck? = nil) throws -> InvocationBeginReceipt {
         guard receipts[id] == nil else { throw InvocationStoreError.duplicateInvocation }
+        // 缺失但仍被引用的历史ID不能重用，否则会重绑旧祖先，甚至把合法历史写成坏图。
+        guard !receipts.values.contains(where: { $0.runAttempt?.logicalRunID == id || $0.runAttempt?.recoveryOf == id }) else { throw InvocationStoreError.duplicateInvocation }
         guard (commandID?.utf8.count ?? 0) <= 512, (configurationFingerprint?.utf8.count ?? 0) <= 256,
               (caller?.utf8.count ?? 0) <= 128, initialMessage.utf8.count <= 512,
               commandVersion.map({ $0 > 0 }) != false else { throw InvocationStoreError.invalidMetadata }
@@ -136,17 +151,57 @@ public actor InvocationStore {
         guard parent == nil || liveParentIDs.contains(parent!) || liveParentIDs.count < 64 else { throw InvocationStoreError.capacityExceeded }
         let now = try currentTime()
         var next = receipts
+        var runAttempt: RunAttemptMetadata?
+        var recoverySource: UUID?
+        if let check {
+            let source = try checkedRecovery(check)
+            guard let definition = runDefinition, definition.isValid, var original = source.runAttempt,
+                  definition.kind == original.definition.kind, definition.definitionID == original.definition.definitionID,
+                  original.logicalRunID != id else { throw InvocationStoreError.invalidMetadata }
+            guard original.revision < UInt64.max else { throw InvocationStoreError.revisionExhausted }
+            runAttempt = .init(logicalRunID: original.logicalRunID, recoveryOf: source.id, definition: definition)
+            original.revision += 1
+            next[source.id]?.runAttempt = original
+            recoverySource = source.id
+        } else if let definition = runDefinition {
+            guard definition.isValid else { throw InvocationStoreError.invalidMetadata }
+            runAttempt = .init(logicalRunID: id, definition: definition)
+        }
         next[id] = .init(id: id, name: String(Self.boundedName(name).prefix(256)), state: .running,
             startedAt: now, message: initialMessage, commandID: commandID, commandVersion: commandVersion,
-            configurationFingerprint: configurationFingerprint, caller: caller, desktopWorkspace: desktopWorkspace, desktopWorkspaceRun: desktopWorkspaceRun)
-        do { try commit(next); liveProtectedIDs.insert(id); if let parent { liveParentIDs.insert(parent) } }
+            configurationFingerprint: configurationFingerprint, caller: caller, desktopWorkspace: desktopWorkspace, desktopWorkspaceRun: desktopWorkspaceRun, runAttempt: runAttempt)
+        if runAttempt != nil { try RunAttemptValidation.validate(next) }
+        do {
+            try commit(next); liveProtectedIDs.insert(id); if let parent { liveParentIDs.insert(parent) }
+            if let recoverySource { liveRecoverySources[id] = recoverySource }
+            let receipt = next[id]!
+            return .init(receipt: receipt, runStamp: runAttempt.map { .init(invocationID: id, metadata: $0, storeIdentity: runStoreIdentity) })
+        }
         catch {
-            if receipts[id] != nil { liveProtectedIDs.insert(id); if let parent { liveParentIDs.insert(parent) } }
+            if receipts[id] != nil {
+                liveProtectedIDs.insert(id); if let parent { liveParentIDs.insert(parent) }
+                if let recoverySource { liveRecoverySources[id] = recoverySource }
+                if let metadata = receipts[id]?.runAttempt, let cause = error as? InvocationStoreError {
+                    throw InvocationBeginFailure(cause: cause, undispatchedStamp: .init(invocationID: id, metadata: metadata, storeIdentity: runStoreIdentity))
+                }
+            }
             throw error
         }
     }
 
-    public func finish(id: UUID, result: ProcessResult, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil) throws {
+    public func finish(id: UUID, result: ProcessResult, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil, expectedRunStamp: RunAttemptStamp? = nil) throws {
+        guard let receipt = receipts[id] else { throw InvocationStoreError.missingInvocation }
+        guard receipt.runAttempt == nil || expectedRunStamp != nil else { throw InvocationStoreError.staleRecovery }
+        if let expectedRunStamp {
+            guard !pendingPersistence else { throw InvocationStoreError.recoveryPersistenceUncertain }
+            guard expectedRunStamp.storeIdentity == runStoreIdentity else { throw InvocationStoreError.foreignRecovery }
+            guard expectedRunStamp.invocationID == id, receipt.runAttempt?.revision == expectedRunStamp.revision,
+                  receipt.runAttempt?.recordIdentity == expectedRunStamp.recordIdentity else { throw InvocationStoreError.staleRecovery }
+        }
+        try finishResult(id: id, result: result, desktopWorkspaceResult: desktopWorkspaceResult)
+    }
+
+    private func finishResult(id: UUID, result: ProcessResult, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil) throws {
         guard var receipt = receipts[id] else { throw InvocationStoreError.missingInvocation }
         guard result.state.isTerminal else { throw InvocationStoreError.nonterminalResult }
         // 不覆盖取消/恢复后的终态；不确定的持久状态由显式维护重试确认。
@@ -169,15 +224,62 @@ public actor InvocationStore {
         }
     }
 
+    public func inspectRecovery(_ id: UUID) throws -> RunRecoveryCheck {
+        guard !pendingPersistence else { throw InvocationStoreError.recoveryPersistenceUncertain }
+        guard let receipt = receipts[id], receipt.runAttempt != nil else { throw InvocationStoreError.recoveryUnavailable }
+        let check = RunRecoveryCheck(receipt: receipt, storeIdentity: runStoreIdentity)
+        _ = try checkedRecovery(check)
+        return check
+    }
+
+    private func checkedRecovery(_ check: RunRecoveryCheck) throws -> InvocationReceipt {
+        guard check.storeIdentity == runStoreIdentity else { throw InvocationStoreError.foreignRecovery }
+        guard !pendingPersistence else { throw InvocationStoreError.recoveryPersistenceUncertain }
+        guard let current = receipts[check.receipt.id], let metadata = current.runAttempt,
+              metadata == check.receipt.runAttempt else { throw InvocationStoreError.staleRecovery }
+        guard current.state.isTerminal else { throw InvocationStoreError.activeRecovery }
+        guard !receipts.values.contains(where: { $0.runAttempt?.logicalRunID == metadata.logicalRunID &&
+            (!$0.state.isTerminal || liveProtectedIDs.contains($0.id)) }) else { throw InvocationStoreError.activeRecovery }
+        guard metadata.revision < UInt64.max else { throw InvocationStoreError.revisionExhausted }
+        return current
+    }
+
+    public func runStoreSnapshot() throws -> RunStoreSnapshot {
+        guard !pendingPersistence else { throw InvocationStoreError.recoveryPersistenceUncertain }
+        let values = list(), groups = Dictionary(grouping: values.filter { $0.runAttempt != nil }, by: { $0.runAttempt!.logicalRunID })
+        let runs = groups.map { id, attempts in
+            LogicalRunRecord(id: id, attempts: attempts,
+                hasMissingAncestors: attempts.contains { $0.runAttempt?.recoveryOf.map { receipts[$0] == nil } ?? false },
+                hasLiveAttempts: attempts.contains { !$0.state.isTerminal || liveProtectedIDs.contains($0.id) })
+        }.sorted { left, right in
+            let l = left.attempts.first?.startedAt ?? .distantPast, r = right.attempts.first?.startedAt ?? .distantPast
+            return l == r ? left.id.uuidString < right.id.uuidString : l > r
+        }
+        return .init(logicalRuns: runs, legacyReceipts: values.filter { $0.runAttempt == nil })
+    }
+
     /// 宿主已经消费首次恢复快照后调用；读取list本身不隐式解除保护。
     public func acknowledgeRecovery() { recoveredProtection.removeAll() }
     /// handle/reservation与结果消费已收口后，由宿主显式释放；不解除旧恢复证据的保护。
-    public func releaseProtection(for id: UUID) { liveProtectedIDs.remove(id) }
+    public func releaseProtection(for id: UUID, expectedRunStamp: RunAttemptStamp? = nil) {
+        guard receipts[id]?.runAttempt == nil || expectedRunStamp != nil else { return }
+        if let expectedRunStamp, !matches(expectedRunStamp, id: id) { return }
+        liveProtectedIDs.remove(id); liveRecoverySources[id] = nil
+    }
     public func releaseParentProtection(for id:UUID) { liveParentIDs.remove(id) }
     /// begin可能已rename后才抛错；尚未派发时尽力结束intent，并始终解除本进程lease。
-    public func abandonUndispatched(_ id:UUID) {
-        if receipts[id]?.state.isTerminal == false { try? finish(id:id,result:.init(state:.cancelled,message:"invocation.notDispatched")) }
+    public func abandonUndispatched(_ id:UUID, expectedRunStamp: RunAttemptStamp? = nil) {
+        guard receipts[id]?.runAttempt == nil || expectedRunStamp != nil else { return }
+        if let expectedRunStamp, !matches(expectedRunStamp, id: id) { return }
+        // 已核对本worker出生身份；未派发的补偿写可收口rename后的不确定intent，不能作为派发成功。
+        if receipts[id]?.state.isTerminal == false { try? finishResult(id:id,result:.init(state:.cancelled,message:"invocation.notDispatched")) }
         liveProtectedIDs.remove(id)
+        liveRecoverySources[id] = nil
+    }
+
+    private func matches(_ stamp: RunAttemptStamp, id: UUID) -> Bool {
+        stamp.storeIdentity == runStoreIdentity && stamp.invocationID == id &&
+        receipts[id]?.runAttempt?.recordIdentity == stamp.recordIdentity && receipts[id]?.runAttempt?.revision == stamp.revision
     }
 
     public func maintain(protecting ids: Set<UUID> = [], protectingParents parents: Set<UUID> = []) -> InvocationCleanupReport {
@@ -232,12 +334,12 @@ public actor InvocationStore {
         return now
     }
     private func protectedIDs(_ supplied: Set<UUID>) -> Set<UUID> {
-        supplied.union(recoveredProtection).union(liveProtectedIDs).union(children(of:liveParentIDs)).union(receipts.values.filter { !$0.state.isTerminal }.map(\.id))
+        supplied.union(recoveredProtection).union(liveProtectedIDs).union(liveRecoverySources.values).union(children(of:liveParentIDs)).union(receipts.values.filter { !$0.state.isTerminal }.map(\.id))
     }
     private func commit(_ next: [UUID: InvocationReceipt]) throws {
         let data = try Self.encoded(next)
         guard Self.byteBudgetFits(next, encodedBytes: data.count, retention: retention) else { throw InvocationStoreError.capacityExceeded }
-        do { try Self.persist(data, directoryFD: directoryFD); receipts = next; pendingPersistence = false }
+        do { try Self.persist(data, directoryFD: directoryFD, fault: persistenceFault); receipts = next; pendingPersistence = false }
         catch let failure as WriteFailure {
             if failure.renamed { receipts = next; pendingPersistence = true }
             throw Self.publicError(failure)
@@ -314,7 +416,9 @@ public actor InvocationStore {
         return String(decoding: bytes[..<end], as: UTF8.self)
     }
     private static func encoded(_ values: [UUID: InvocationReceipt]) throws -> Data {
-        try JSONEncoder().encode(Envelope(version: 1, receipts: values.values.sorted { $0.id.uuidString < $1.id.uuidString }))
+        // 新恢复元数据使用v2：旧App明确拒读，避免忽略字段后重写并丢失恢复关联。
+        try JSONEncoder().encode(Envelope(version: values.values.contains { $0.runAttempt != nil } ? 2 : 1,
+            receipts: values.values.sorted { $0.id.uuidString < $1.id.uuidString }))
     }
     private static func readBounded(directoryFD: Int32, maximum: Int) throws -> Data? {
         let fd = Darwin.openat(directoryFD, fileName, O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK)
@@ -339,7 +443,8 @@ public actor InvocationStore {
         guard data.count <= maximum else { throw InvocationStoreError.loadLimitExceeded }
         return data
     }
-    private static func persist(_ data: Data, directoryFD: Int32) throws {
+    private static func persist(_ data: Data, directoryFD: Int32, fault: @Sendable (InvocationPersistencePoint) -> Int32? = { _ in nil }) throws {
+        if let code = fault(.beforeWrite) { throw WriteFailure(code: code > 0 ? code : EIO, renamed: false) }
         let temporary = ".invocations-\(UUID().uuidString).tmp"
         let fd = Darwin.openat(directoryFD, temporary, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, mode_t(0o600))
         guard fd >= 0 else { throw WriteFailure(code: errno, renamed: false) }
@@ -358,7 +463,9 @@ public actor InvocationStore {
         guard fsync(fd) == 0 else { throw WriteFailure(code: errno, renamed: false) }
         let closeStatus = Darwin.close(fd); closed = true
         guard closeStatus == 0 else { throw WriteFailure(code: errno, renamed: false) }
+        if let code = fault(.beforeRename) { throw WriteFailure(code: code > 0 ? code : EIO, renamed: false) }
         guard Darwin.renameat(directoryFD, temporary, directoryFD, fileName) == 0 else { throw WriteFailure(code: errno, renamed: false) }
+        if let code = fault(.afterRename) { throw WriteFailure(code: code > 0 ? code : EIO, renamed: true) }
         guard fsync(directoryFD) == 0 else { throw WriteFailure(code: errno, renamed: true) }
     }
 }

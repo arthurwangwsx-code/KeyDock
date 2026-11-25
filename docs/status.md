@@ -1,5 +1,7 @@
 # 当前状态总账
 
+2026-11-26开发进度：任务33.1的类型化Core／来源CAS、worker出生身份、固定定义指纹及MCP选中合同已完成80条定向测试定义，仍在`feature/task-attempt-recovery`工程分支。独立准备页、生产重新授权与数据回退检查尚未接线，完整RunStore及P0–P4仍PARTIAL。此增量未发行或替换App；正式安装仍为下述alpha.18。见[Core复查](implementation/task-recovery-core-2026-11-26.md)。
+
 当前[alpha.18](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.18)已公开并安装，精确源`6baaee827131a31e342ced8dbc0955c5f2a768ae`。可选AI费率／逐请求快照、Workflow父子索引、历史恢复及7／30／90天独立分析已交付；804 Swift／78 Python／847中英key、本机OCR双轮、指定同源CI／优化构建、公证／公开回下载及发布审计PASS。实际About18确认，alpha.17回退保留。中英明暗仅已观察子集通过，完整产品仍PARTIAL。见[发行证据](implementation/alpha18-release-2026-11-25.md)和[实现复查](implementation/ai-rate-snapshots-2026-11-25.md)。
 
 [alpha.17](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.17)已公开并替换正式App，精确源`3e681f00efa54ed3763effd64047fba3a5797bd5`。工作流／MCP独立移除审阅、全部引用检查、旧稿／迟到围栏及配置worker退出等待已交付；54项定向／8套件、760 Swift／74 Python／789 key干净本机、指定同源CI／优化构建、公证／Gatekeeper、公开回下载和发行资产审计PASS。实际About为alpha.17 (17)，alpha.16回退保留。中文浅色／英文深色原生观察子集通过，完整产品仍PARTIAL。见[发行证据](implementation/alpha17-release-2026-11-25.md)及[实现复查](implementation/source-removal-2026-11-25.md)。

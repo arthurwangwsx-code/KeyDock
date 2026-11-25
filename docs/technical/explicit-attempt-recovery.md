@@ -1,6 +1,6 @@
 # 任务持久化与显式新尝试
 
-2026-11-25，任务33计划，尚未实现。承接原5.5的完整RunStore义务，首个切片是“持久类型化记录 → 重启只读检查 → 准备新尝试 → 重新授权与持久化 → 新UUID执行”。原输入／输出的可选保留、完整checkpoint材料及真正续接另行建设；本切片不能代替完整RunStore验收。
+2026-11-26，任务33实施中：类型化记录／CAS、四类定义指纹与MCP选中工具合同已完成Core切片，App生产入口和独立准备页尚未接线。承接原5.5的完整RunStore义务，产品切片是“持久类型化记录 → 重启只读检查 → 准备新尝试 → 重新授权与持久化 → 新UUID执行”。原输入／输出的可选保留、完整checkpoint材料及真正续接另行建设；本切片不能代替完整RunStore验收。见[Core复查](../implementation/task-recovery-core-2026-11-26.md)。
 
 ## 产品闭环
 
@@ -16,9 +16,17 @@
 
 持久DTO仅允许类型化kind、逻辑关联、当前attempt／recoveryOf、定义ID／版本／指纹、revision、时间及既有invocation／usage引用。旧metadata-only回执保持只读，不从标题或任意commandID猜恢复入口，不伪造原正文。首版不保存prompt、正文、argv/env、完整endpoint、工具参数／输出、隐藏推理、授权grant、AX引用、窗口／选区／剪贴板身份、调度claim或可执行callback；内容不进入配置导出。
 
-RunStore负责逻辑快照与CAS，既有InvocationStore继续负责实际副作用intent／result。不得建立第二份互相覆盖的效果真值。最终派发必须先完成新的接纳和全部所需持久写入；写失败零执行。跨store中断可能留下准备记录或unknown intent，冷启动只检查，不排队重试。只有落盘成功才发布快照；后置fsync不确定保持durabilityUncertain，不能回退到旧文件后执行。
+RunStore是既有InvocationStore同一actor上的类型化查询与CAS；逻辑关联与副作用intent／result共用文件、原子提交及预算，不建立第二份互相覆盖的效果真值。新intent和来源revision递增同一事务持久化，成功后才返回worker出生身份／actor／revision stamp。类型化finish／release／abandon必须带准确stamp，旧无stamp调用不能操作后来重建的类型化记录。最终派发仍须由App完成新的接纳和全部所需持久写入；写失败零执行。冷启动只检查，不排队重试。后置fsync不确定保持durabilityUncertain；失败返回的undispatchedStamp只允许收口，不能作为执行成功或派发授权。
 
 复用目录fd固定、owner/no-follow、原子写、单条／数量／字节预算与90天保留合同；新记录纳入现有任务总预算及清除generation，不另给恢复记录分配第二份200项预算。恢复记录不占8个执行槽，真正提交才接纳；旧worker未收口时不能重叠启动。清除／TTL、旧加载及迟到结果不能复活被删除记录。
+
+## Core切片的固定合同与回退边界
+
+保存CLI／AIAction使用定义ID及专用fingerprint v1，Agent／Workflow另带已有定义version。专用白名单DTO不依赖整个模型的默认Codable：Set／environment按准确UTF8键排序，argv／steps保序；nil与空、Unicode字节差异及有限Double位模式保留。四类固定SHA-256向量防止日后编码漂移；摘要不是依赖或授权快照，配置／contribution／history发布代次仍需App重验。
+
+MCP合同仅比较完整选中工具、来源ID／配置revision、原名／模型名／描述／schema及不可信只读hint，不包含连接generation／catalog.revision；后两者继续由当前会话用于迟到围栏。流式长度分帧hash沿用生产64KiB单schema、256KiB目录、8192节点／32层预算，不因投影膨胀拒绝合法目录。它不连接服务、不读取密钥，也不产生工具权限。
+
+含类型化元数据的文件使用Envelope v2，新App读v1／v2；纯legacy仍写v1。alpha.18仅支持v1，会明确拒读v2，不能忽略字段后重写。当前App入口尚未生成v2。正式接线／发行前必须补齐安装／回退的数据版本检查与可验证恢复策略；仅保留旧App不能宣称已具备完整数据回退。
 
 ## 恢复事务
 
@@ -26,7 +34,7 @@ RunStore负责逻辑快照与CAS，既有InvocationStore继续负责实际副作
 2. 主线程创建稳定准备呈现，冻结history generation、record revision和当前定义审阅；独立有界输入不覆盖原草稿。
 3. 用户提交时复查呈现／revision、定义及contribution、MCP enabled／session-disabled／catalog/schema、文件范围、模型／API结构、OS权限及预算。检查结构不代替真正提交时的凭据与网络检查。
 4. 创建新UUID，重新走现有生产admission／authorization／intent入口，成功持久化后才派发；任何await后重新核对身份／代次。旧审批、provider／broker session及调度授权不恢复。
-5. 终态与checkpoint按expectedRevision保存后发布；保存结果失败保留unknown，不提示“可安全重试”。旧attempt保留，新费用由新调用快照决定。
+5. 终态按本worker出生身份／actor／revision stamp保存后发布；checkpoint仍按其独立合同校验。保存结果失败保留unknown，不提示“可安全重试”。旧attempt保留，新费用由新调用快照决定。
 
 ## AiBox参考与验收
 

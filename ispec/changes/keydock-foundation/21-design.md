@@ -91,6 +91,8 @@ Workspace工作流编辑保存原指纹，MCPServerDraft保存原revision与独�
 
 任务32沿用现有usage actor及累计accumulator，新增可选手工平价输入／输出费率与Decimal估算。运行先冻结精确服务／请求模型及费率配置集，各实际open前创建独立attempt并绑定冻结依据，provider记录端口不依赖UI消费；后续改价只影响新run。Workflow保存子调用parent／step归因，父只汇总叶子，所有入口使用同一事实计算。旧记录不追套当前价，缺报／失败／取消不抹去已知部分；不存完整endpoint／query或正文，不猜缓存折扣与汇率。单次、历史和按币种的有界分析共用口径，清除／TTL围栏不另造第二RunStore。详细合同见docs/technical/ai-rate-snapshots.md；alpha.18已实现并发行，804 Swift／78 Python／847 key与原生观察子集及流水线资格见发行证据，稳定delta及完整产品义务保持开放。
 
-## 2026-11-25 任务持久化与显式新尝试（计划）
+## 2026-11-26 任务持久化与显式新尝试（Core切片实施）
 
 任务33采用类型化逻辑run／执行attempt／恢复引用及revision CAS，持久成功后发布；既有InvocationStore继续拥有实际副作用真值。冷启动与检查只读，缺正文须重新提供，不恢复grant、provider session、AX／选区或旧审批。用户经独立稳定准备页明确提交后，重新核对当前定义、贡献／MCP来源与schema、权限、预算和history generation，以新UUID走生产入口和持久intent。旧终态与费率快照保留，恢复输出默认展示。首切片不关闭原5.5完整RunStore及可选正文／checkpoint义务，详见docs/technical/explicit-attempt-recovery.md。
+
+Core已在InvocationStore同一actor／文件实现类型化查询、来源CAS与新intent原子提交，worker使用actor／出生身份／revision stamp条件收口；原格式只读恢复，typed Envelope v2不让旧App忽略字段后覆盖。四类定义采用固定v1白名单指纹，MCP选中合同使用有界流式摘要，均不读取资源或产生授权。生产入口、稳定准备页、await后的发布代次围栏及数据回退检查仍待接线；不能以Core测试关闭33.2–33.5或全产品资格。
