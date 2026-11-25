@@ -28,6 +28,8 @@ MCP合同仅比较完整选中工具、来源ID／配置revision、原名／模�
 
 含类型化元数据的文件使用Envelope v2，新App读v1／v2；纯legacy仍写v1。alpha.18仅支持v1，会明确拒读v2，不能忽略字段后重写。当前App入口尚未生成v2。正式接线／发行前必须补齐安装／回退的数据版本检查与可验证恢复策略；仅保留旧App不能宣称已具备完整数据回退。
 
+下一切片的安装门禁计划从已验签候选App的BuildInfo读取能力声明，不用当前checkout配置推断；正式交换前正常退出并持有既有runtime-owner data lease，再有界只读复查三个固定回执文件的Envelope版本。install／rollback／失败补偿及“已经回退”快路都须覆盖，dry-run不创建目录或锁、不退出App。已知alpha.18只读v1，遇到v2拒绝交换并保留双方App；不剥离字段或删除数据来放行。旧安装回执的结构兼容与本次fresh capability检查分离；archive／restore属于独立的多库一致性与显式恢复点方案。本计划尚未实现，不为当前安装器新增资格，手工拖拽与历史脚本亦不在统一工具门禁范围内。
+
 ## 恢复事务
 
 1. 只读检查版本化manifest与既有回执，非终态显示interrupted／unknown；无可信引用的旧记录只读。

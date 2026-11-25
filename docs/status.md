@@ -1,6 +1,6 @@
 # 当前状态总账
 
-2026-11-26开发进度：任务33.1的类型化Core／来源CAS、worker出生身份、固定定义指纹及MCP选中合同已完成80条定向测试定义，仍在`feature/task-attempt-recovery`工程分支。独立准备页、生产重新授权与数据回退检查尚未接线，完整RunStore及P0–P4仍PARTIAL。此增量未发行或替换App；正式安装仍为下述alpha.18。见[Core复查](implementation/task-recovery-core-2026-11-26.md)。
+2026-11-26开发进度：任务33.1的类型化Core／来源CAS、worker出生身份、固定定义指纹及MCP选中合同已完成80条定向测试定义；工程源`7dc3851`的834 Swift／78 Python／847 key与本机OCR双轮、指定同源core CI／Release优化构建及日志回下载核验PASS。独立准备页、生产重新授权与数据回退检查尚未接线，完整RunStore及P0–P4仍PARTIAL。此工程增量未发行或替换App；正式安装仍为下述alpha.18。见[Core复查](implementation/task-recovery-core-2026-11-26.md)。
 
 当前[alpha.18](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.18)已公开并安装，精确源`6baaee827131a31e342ced8dbc0955c5f2a768ae`。可选AI费率／逐请求快照、Workflow父子索引、历史恢复及7／30／90天独立分析已交付；804 Swift／78 Python／847中英key、本机OCR双轮、指定同源CI／优化构建、公证／公开回下载及发布审计PASS。实际About18确认，alpha.17回退保留。中英明暗仅已观察子集通过，完整产品仍PARTIAL。见[发行证据](implementation/alpha18-release-2026-11-25.md)和[实现复查](implementation/ai-rate-snapshots-2026-11-25.md)。
 

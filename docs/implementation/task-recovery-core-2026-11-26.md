@@ -29,7 +29,13 @@
 
 以上为测试定义数量，参数化测试另有子案例。原始日志在`.local/desktop/`同名`.log`，回执在iSpec change的`receipts/`。v3复审修补typed缺stamp绕口；v5修补静态复审发现的合法大schema投影拒绝，新增测试先用生产ToolJSONSchema确认4×8000个examples可接受，再验证重连合同一致。没有把原未覆盖的绿测称为这些边界已验证。
 
-本切片的完整工程检查／CI后续分别记录。未运行本轮原生UI／真实API／AX／Terminal操作或新发行，不升级视觉和日用资格。alpha.18文档提交64e7739的既有[core CI 45648526661](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45648526661)已回查为success，仅属于该提交。
+工程源[`7dc38517175990da4b2ca079cec2db41fcb23728`](https://github.com/arthurwangwsx-code/KeyDock/commit/7dc38517175990da4b2ca079cec2db41fcb23728)已在干净工作区完成统一`check`：834 Swift执行／813测试定义、78 Python、847中英key，生产配置下合成OCR双轮PASS。资格文件`.local/pipeline/20261125T163907658674Z/check-summary.json` SHA-256 `04c648e5e050b8784200a0609171703daa0b8c52f57c428194b716e0ce0fe5cb`，逐日志大小／哈希核对通过；iSpec `task-recovery-full-check-v1`回执SHA-256 `4bcaaa45ddb0bd634114d1641909069f99ae7f264035227b3e557b7efd8789ef`，exit0。
+
+指定相同源的[规划CI 45656266685](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45656266685)及[core CI 45656266583](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45656266583)均success，native job `139353675111`完成833 Swift（不含系统OCR）／78 Python／847 key及Release优化Preview构建。日志artifact `15043437969`已通过GitHub连接器下载并核对：103051 bytes，SHA-256 `63be392845d9bb45f2b4b67b2a9766de2ccef688ec6093f279121fad20021ccf`，21文件／10个exit0阶段，check-summary来源与每条日志哈希一致。原包及`.local/desktop/task-recovery-ci-7dc3851-summary.json`保留，iSpec `task-recovery-ci-proof-v1`回执SHA-256 `7323d3a9a98cf9013630c950f89e4f35f885983bb48c7a52b183f3705b2840a0`。云端OCR仍为NOT_QUALIFIED，不替代本机资格。
+
+本轮声明的测量回执仍按当前attempt核对，快照／审计在`.local/desktop/task-recovery-core-metrics-final-v1.json`及`task-recovery-core-metrics-audit-final-v1.json`。历史unfinished `a17c06c5-0ab4-4750-b2ca-be7f5e2bf4d2`与两条legacy开始记录缺口继续保留，不宣称全局审计完整，不把阶段apply或产品目标标为完成。
+
+未运行本轮原生UI／真实API／AX／Terminal操作或新发行，不升级视觉和日用资格。alpha.18文档提交64e7739的既有[core CI 45648526661](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45648526661)已回查为success，仅属于该提交。
 
 ## 后续接线顺序
 
