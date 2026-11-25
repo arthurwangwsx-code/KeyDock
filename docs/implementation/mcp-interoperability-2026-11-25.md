@@ -13,3 +13,5 @@ schema／client／stdio／wire／Broker及新增HTTP生命周期定向回归共4
 复核发现准备脚本的依赖版本变量覆盖解释器版本字段；旧环境／回执原样保留，其版本metadata不作为最终资格。已独立命名并加形状负测，重新准备time-20261125-4环境（18054be9-74bc-4dba-a3d8-b06774183e00，PREPARED_NOT_QUALIFIED），后续最终重放只使用该环境。文件均在忽略的.local/interop及.local/desktop中，不含个人正文或凭据，不进入发行包。原测试包许可／notice按[互通合同](../technical/mcp-independent-interoperability.md)保留，不加入App。
 
 全部验证绑定当前apply attempt 9881b6d8-e08e-4176-b6a2-97706ee67811；原始receipt位于change下receipts，成功和失败均不覆盖。版本候选的干净源码、完整本机／CI、签名公证、公开回下载及安装尚待各自通过，不借此关闭24.5或全产品义务。
+
+首次干净候选a7c2921完整本机685 Swift／58 Python／708 key与系统OCR PASS（3bcf883f-08de-4684-9764-2e152a8f83eb），新v4独立Time四格PASS（3c8e760f-837e-4a51-a732-fd48ca7bfe94）。SDK四格的业务取消均PASS，但legacy stdio单格进程观察失败，整组FAIL（492f913c-0438-43b1-bdb1-ce44a3812496）；错误未留具体类型，不能断言根因。进程已回收、无组残留，但该FAIL仍阻止发行。将ps从全局进程表缩为仅查询自有组，保留5秒时限、失败门禁和未回收leader围栏，新增错误类型诊断；后续修补提交必须重做同源资格。

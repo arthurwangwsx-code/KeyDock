@@ -17,7 +17,7 @@ class MCPInteropProcessTests(unittest.TestCase):
 
     def test_normal_exit_needs_no_group_cleanup(self):
         result=self.run_owned('pass')
-        self.assertEqual(result,{'exitCode':0,'timedOut':False,'requiredCleanup':False,'forcedTermination':False,'observationFailed':False,'signalFailed':False,'waitUnconfirmed':False,'groupGone':True})
+        self.assertEqual(result,{'exitCode':0,'timedOut':False,'requiredCleanup':False,'forcedTermination':False,'observationFailed':False,'signalFailed':False,'observationError':None,'waitUnconfirmed':False,'groupGone':True})
 
     def test_probe_exit_with_live_child_is_failed_and_owned_group_is_closed(self):
         result=self.run_owned('import subprocess,sys; subprocess.Popen([sys.executable,"-I","-S","-c","import time;time.sleep(30)"])')
@@ -34,4 +34,5 @@ class MCPInteropProcessTests(unittest.TestCase):
         with patch('mcp_interop_process.live_members',side_effect=subprocess.TimeoutExpired('/bin/ps',5)):
             result=self.run_owned('import time;time.sleep(30)')
         self.assertTrue(result['observationFailed'] and result['requiredCleanup'] and result['forcedTermination'] and result['groupGone'])
+        self.assertEqual(result['observationError'],'TimeoutExpired')
         self.assertNotEqual(result['exitCode'],0)
