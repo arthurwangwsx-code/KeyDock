@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-25。当前已有签名公证的公开alpha.15，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-25。当前已有签名公证的公开alpha.16，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -24,8 +24,9 @@
 | [MCP互通增量复查](implementation/mcp-interoperability-2026-11-25.md) | 原始目录失败、真实调用、会话清理、进程组与环境证据修补 |
 | [数据与权限](technical/data-and-permissions.md) | TCC、上下文、存储、采集与执行策略 |
 | [设置摘要导出](technical/settings-summary-export.md) | 字段白名单、冻结预览与系统保存；完整定义迁移另行建设 |
-| [完整配置定义导出方案](technical/configuration-export.md) | 任务28.4的只读快照、完整引用、排除字段与保存合同；alpha.16候选，未来import独立建设 |
-| [完整配置定义导出复查](implementation/configuration-export-2026-11-25.md) | 16项定向、735 Swift与双语原生保存／取消及准确字节；同源CI与发行待完成 |
+| [完整配置定义导出方案](technical/configuration-export.md) | 任务28.4的只读快照、完整引用、排除字段与保存合同；alpha.16已发行，未来import独立建设 |
+| [完整配置定义导出复查](implementation/configuration-export-2026-11-25.md) | 16项定向、735 Swift与双语原生保存／取消及准确字节 |
+| [alpha.16发行与安装证据](implementation/alpha16-release-2026-11-25.md) | 干净本机／同源CI、公证／公开回下载、实际About16和alpha.15回退 |
 | [设置摘要实现与原生复查](implementation/settings-summary-export-2026-11-25.md) | 敏感哨兵、关闭／保存身份、英文截断修复及实际文件字节 |
 | [P1会话保留](technical/session-retention.md) | 已实现的总预算、元数据维护、清除和恢复围栏及待验收边界 |
 | [导入文本上下文](technical/imported-text-context.md) | 单槽来源、AI冻结、联合预算与清除；alpha.10候选 |
