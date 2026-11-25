@@ -84,7 +84,7 @@ extension WorkbenchModel {
         guard let storage = desktopWorkspaceStore, desktopWorkspacesWritable else { settingsNoticeMessage = noticeKey("Desktop workspaces are read-only. Existing data has been preserved."); return false }
         guard desktopWorkspaces.first(where: { $0.id == reviewed.id }) == reviewed else { settingsNoticeMessage = noticeKey("This workspace changed or was removed. Keep your draft and reopen it before saving."); return false }
         let id = reviewed.commandID
-        guard configuration.commandShortcuts[id] == nil, !configuration.preferences.favorites.contains(id), configuration.preferences.aliases[id] == nil,
+        guard configuration.commandShortcuts[id] == nil, !configuration.preferences.favorites.contains(id), (configuration.preferences.aliases[id]?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true),
               !configuration.collections.contains(where: { $0.commandIDs.contains(id) }) else {
             settingsNoticeMessage = noticeKey("This workspace has saved references. Remove its shortcut, alias, favorite or collection references first."); return false
         }

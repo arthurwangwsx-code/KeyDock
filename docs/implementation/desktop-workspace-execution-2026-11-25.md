@@ -34,3 +34,7 @@
 本轮原生观察仅覆盖上述子集；没有将缩放窗口当成多显示器验收，没有运行实际AX布局、后台应用启动或真实外部AI请求，也未关闭完整视觉／VoiceOver／IME矩阵。
 
 干净源码ee324e21f4c00ebe88e5b36b9ae628e4e295ff78的完整本机e835bf4b-0474-46fe-9e77-64691a4b6674 PASS：624 Swift／46 Python／680 key，inventory603（core593／Terminal9／OCR1），原accurate／revision3／自动语言／语言修正及支持CPU保持，合成图06db6e05双轮命中。check-summary绑定同源及当前host，耗时120.795秒。后续补即时“正在应用”反馈，精确最终源仍按原流水线重新资格；旧OCR故障及长期可靠性义务不因此删除。
+
+发布前发现并实际复现别名生命周期缺陷：1ef8d016的UI等价路径将空字符串保存为引用，清空后仍无法删除工作区。现setAlias通过候选配置事务提交，空／纯空白真正移除key，非空保留原文；删除将历史blank视作无有效引用。e674db21-5bce-4632-919f-da0c1e3130c4的19 tests／2 suites PASS，涵盖清空后磁盘读取、历史空值、写前／写后故障保留原内存及原字节，失败时删除仍被阻止。原失败保留，没有用测试改判覆盖它。
+
+fc67419同源CI 45531953322及Release构建bc083942均PASS，但发现该缺陷后没有发布；App／xcarchive／build-result已原子保存在release-history/alpha9-candidate-fc67419-f683b376-5fdf-4e69-b4f8-49a1d88bf20f，DerivedData保留作增量缓存。最终修补源重新走完整检查、CI和构建；alpha.8仍是已安装公开版本。

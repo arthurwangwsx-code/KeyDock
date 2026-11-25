@@ -71,3 +71,5 @@ DesktopWorkspaceRunner共用可注入端口和NativeDesktopWorkspaceRun适配。
 profile贡献真实descriptor／catalog，支持Launcher、设置应用与直接快捷键。失效热键按前缀拒绝并打开设置，不读取选区。快捷键复用既有注册／文件补偿；删除仍要求先移除快捷键／别名／收藏／集合引用。成功修改才取消对应旧运行，保存失败保留它。运行中设置提供Stop并禁用View result；仅隔离Preview提供进程内结果样例，不写回执或触发系统操作。
 
 本节更新当前候选状态，前面尚待接通的文字保留为alpha.8阶段记录，不代表该发行版本具备新执行器。检查见[本轮复查](../implementation/desktop-workspace-execution-2026-11-25.md)。
+
+别名清空通过候选配置事务真正移除key，纯空白同样处理；非空保留原文。写前／写后失败保留旧内存与原文件，删除仍受有效引用阻止；历史blank不算有效引用。该修补不引入跨档案原子删除承诺。

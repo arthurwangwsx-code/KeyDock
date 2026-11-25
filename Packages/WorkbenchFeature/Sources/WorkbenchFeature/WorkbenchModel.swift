@@ -393,7 +393,11 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         if configuration.preferences.favorites.contains(item.id) { configuration.preferences.favorites.remove(item.id) } else { configuration.preferences.favorites.insert(item.id) }
         save()
     }
-    public func setAlias(_ alias: String, for id: String) { configuration.preferences.aliases[id] = alias; save() }
+    @discardableResult public func setAlias(_ alias: String, for id: String) -> Bool {
+        var next = configuration
+        next.preferences.aliases[id] = alias.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : alias
+        return commitSettingsConfiguration(next)
+    }
     public func save() {
         do {
             let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

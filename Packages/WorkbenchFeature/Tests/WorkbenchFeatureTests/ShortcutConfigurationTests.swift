@@ -179,6 +179,27 @@ struct ShortcutConfigurationTests {
         }
     }
 
+    @Test(arguments: [false,true]) func failedWorkspaceAliasClearPreservesMemoryBytesAndDeletionGuard(afterWrite: Bool) async throws {
+        try await withFixture { fixture in
+            let store = fixture.store, appID = "app./Applications/SyntheticWorkspace.app"
+            store.desktop.applicationCatalog.onChange?([CommandItem(id: appID, title: "Synthetic", kind: .application, payload: "/Applications/SyntheticWorkspace.app")])
+            let workspace = try SavedDesktopWorkspace(name: "Synthetic workspace", entries: [.init(applicationID: appID)])
+            #expect(store.saveDesktopWorkspace(workspace, expectedRevision: nil))
+            let saved = store.setAlias("synthetic-desk", for: workspace.commandID); #expect(saved)
+            let file = fixture.directory.appendingPathComponent("configuration.json"), bytes = try Data(contentsOf: file), baseline = fixture.writes
+            let fail: () throws -> Void = { if fixture.writes == baseline+1 { throw CocoaError(.fileWriteUnknown) } }
+            if afterWrite { fixture.afterWrite = fail } else { fixture.beforeWrite = fail }
+            let cleared = store.setAlias("", for: workspace.commandID)
+            #expect(!cleared && store.configuration.preferences.aliases[workspace.commandID] == "synthetic-desk")
+            #expect(try Data(contentsOf: file) == bytes)
+            #expect(!store.removeDesktopWorkspace(workspace))
+            fixture.beforeWrite = nil; fixture.afterWrite = nil
+            let retried = store.setAlias("  ", for: workspace.commandID)
+            #expect(retried && store.configuration.preferences.aliases[workspace.commandID] == nil)
+            #expect(store.removeDesktopWorkspace(workspace))
+        }
+    }
+
     @Test func acceptedShortcutIsWrittenExactlyOnceAndMatchesTheActivePlan() async throws {
         try await withFixture { fixture in
             #expect(fixture.store.setLauncherShortcut(next))

@@ -151,6 +151,33 @@ import MacAdapters
         }
     }
 
+    @Test func workspaceAliasCanBeClearedPersistentlyBeforeRemovingDefinition() async throws {
+        try await withStore { store, _, directory in
+            let session = SettingsSession(store: store), draft = try prepare(in: session, store: store)
+            #expect(session.saveDesktopWorkspaceEdit(draft.id, in: store))
+            let value = try #require(store.desktopWorkspaces.first)
+            store.setAlias("synthetic-desk", for: value.commandID)
+            #expect(!store.removeDesktopWorkspace(value))
+            store.setAlias("", for: value.commandID)
+            let persisted = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: directory.appendingPathComponent("configuration.json")))
+            #expect(persisted.preferences.aliases[value.commandID] == nil && store.configuration.preferences.aliases[value.commandID] == nil)
+            let removed = store.removeDesktopWorkspace(value)
+            #expect(removed && store.desktopWorkspaces.isEmpty)
+        }
+    }
+
+    @Test(arguments: ["", "   ", "\n"])
+    func legacyBlankAliasDoesNotBlockDefinitionRemoval(blank: String) async throws {
+        try await withStore { store, _, _ in
+            let session = SettingsSession(store: store), draft = try prepare(in: session, store: store)
+            #expect(session.saveDesktopWorkspaceEdit(draft.id, in: store))
+            let value = try #require(store.desktopWorkspaces.first)
+            store.configuration.preferences.aliases[value.commandID] = blank; store.save()
+            let removed = store.removeDesktopWorkspace(value)
+            #expect(removed && store.desktopWorkspaces.isEmpty)
+        }
+    }
+
     @Test func staleProfileShortcutUsesVisibleSettingsFailureWithoutGenericLauncherCapture() async throws {
         try await withStore { store, _, _ in
             var pane: SettingsPane?, routed = false
