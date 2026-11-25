@@ -13,8 +13,10 @@ public struct InvocationReceipt: Identifiable, Codable, Sendable, Equatable {
     public var commandVersion: Int?
     public var configurationFingerprint: String?
     public var caller: String?
+    public var desktopWorkspace: DesktopWorkspaceReceiptContext?
+    public var desktopWorkspaceRun: DesktopWorkspaceRunContext?
 
-    public init(id: UUID, name: String, state: ExecutionState, startedAt: Date = Date(), finishedAt: Date? = nil, exitCode: Int32? = nil, message: String = "", commandID: String? = nil, commandVersion: Int? = nil, configurationFingerprint: String? = nil, caller: String? = nil) {
+    public init(id: UUID, name: String, state: ExecutionState, startedAt: Date = Date(), finishedAt: Date? = nil, exitCode: Int32? = nil, message: String = "", commandID: String? = nil, commandVersion: Int? = nil, configurationFingerprint: String? = nil, caller: String? = nil, desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil) {
         self.id = id
         self.name = name
         self.state = state
@@ -24,6 +26,8 @@ public struct InvocationReceipt: Identifiable, Codable, Sendable, Equatable {
         self.message = message
         self.commandID = commandID; self.commandVersion = commandVersion
         self.configurationFingerprint = configurationFingerprint; self.caller = caller
+        self.desktopWorkspace = desktopWorkspace
+        self.desktopWorkspaceRun = desktopWorkspaceRun
     }
 }
 
@@ -81,6 +85,8 @@ public actor InvocationStore {
                 guard values[receipt.id] == nil else { throw InvocationStoreError.duplicateInvocation }
                 guard receipt.startedAt.timeIntervalSinceReferenceDate.isFinite,
                       receipt.finishedAt?.timeIntervalSinceReferenceDate.isFinite != false else { throw InvocationStoreError.invalidMetadata }
+                try Self.validateWorkspaceContext(receipt.desktopWorkspace, commandID: receipt.commandID, id: receipt.id)
+                guard receipt.desktopWorkspace == nil || receipt.desktopWorkspaceRun == nil else { throw InvocationStoreError.invalidMetadata }
                 if !receipt.state.isTerminal {
                     recovered.insert(receipt.id)
                     receipt.state = .interrupted; receipt.finishedAt = now; receipt.exitCode = nil
@@ -89,6 +95,12 @@ public actor InvocationStore {
                 values[receipt.id] = receipt
             }
         }
+        for value in values.values { try Self.validateWorkspaceParent(value.desktopWorkspace, in: values) }
+        // 父恢复前不能裁掉已确认的child；孤立进行中child也保护其已知父及兄弟事实。
+        let recoveredFamilies = recovered.union(recovered.compactMap { Self.parentID(values[$0]?.commandID) })
+        recovered.formUnion(values.values.filter { value in
+            recoveredFamilies.contains(value.id) || Self.parentID(value.commandID).map(recoveredFamilies.contains) == true
+        }.map(\.id))
         let maintained = try Self.pruned(values, retention: retention, now: now, protecting: recovered)
         self.retention = retention; self.clock = clock
         self.receipts = maintained; self.recoveredProtection = recovered
@@ -107,18 +119,22 @@ public actor InvocationStore {
     deinit { Darwin.close(directoryFD) }
 
     public func begin(id: UUID, name: String, commandID: String? = nil, commandVersion: Int? = nil,
-                      configurationFingerprint: String? = nil, caller: String? = nil, initialMessage: String = "") throws {
+                      configurationFingerprint: String? = nil, caller: String? = nil, initialMessage: String = "",
+                      desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil) throws {
         guard receipts[id] == nil else { throw InvocationStoreError.duplicateInvocation }
         guard (commandID?.utf8.count ?? 0) <= 512, (configurationFingerprint?.utf8.count ?? 0) <= 256,
               (caller?.utf8.count ?? 0) <= 128, initialMessage.utf8.count <= 512,
               commandVersion.map({ $0 > 0 }) != false else { throw InvocationStoreError.invalidMetadata }
+        try Self.validateWorkspaceContext(desktopWorkspace, commandID: commandID, id: id)
+        guard desktopWorkspace == nil || desktopWorkspaceRun == nil else { throw InvocationStoreError.invalidMetadata }
+        try Self.validateWorkspaceParent(desktopWorkspace, in: receipts, requireActive: true)
         let parent = Self.parentID(commandID)
         guard parent == nil || liveParentIDs.contains(parent!) || liveParentIDs.count < 64 else { throw InvocationStoreError.capacityExceeded }
         let now = try currentTime()
         var next = receipts
         next[id] = .init(id: id, name: String(Self.boundedName(name).prefix(256)), state: .running,
             startedAt: now, message: initialMessage, commandID: commandID, commandVersion: commandVersion,
-            configurationFingerprint: configurationFingerprint, caller: caller)
+            configurationFingerprint: configurationFingerprint, caller: caller, desktopWorkspace: desktopWorkspace, desktopWorkspaceRun: desktopWorkspaceRun)
         do { try commit(next); liveProtectedIDs.insert(id); if let parent { liveParentIDs.insert(parent) } }
         catch {
             if receipts[id] != nil { liveProtectedIDs.insert(id); if let parent { liveParentIDs.insert(parent) } }
@@ -181,11 +197,24 @@ public actor InvocationStore {
     /// 与清理共享actor事务，避免宿主快照之后新完成的子回执失去父运行保护。
     private static func parentID(_ commandID:String?) -> UUID? {
         guard let commandID else { return nil }
-        for prefix in ["keydock.agent.","keydock.workflow-run."] where commandID.hasPrefix(prefix) {
+        for prefix in ["keydock.agent.","keydock.workflow-run.",DesktopWorkspaceReceiptContext.commandPrefix] where commandID.hasPrefix(prefix) {
             let suffix = String(commandID.dropFirst(prefix.count))
             if suffix.count == 36 { return UUID(uuidString:suffix) }
         }
         return nil
+    }
+    private static func validateWorkspaceContext(_ context: DesktopWorkspaceReceiptContext?, commandID: String?, id: UUID) throws {
+        if let context {
+            guard context.commandID == commandID, context.parentID != id else { throw InvocationStoreError.invalidMetadata }
+        } else if commandID?.hasPrefix(DesktopWorkspaceReceiptContext.commandPrefix) == true { throw InvocationStoreError.invalidMetadata }
+    }
+    private static func validateWorkspaceParent(_ context: DesktopWorkspaceReceiptContext?, in values: [UUID: InvocationReceipt], requireActive: Bool = false) throws {
+        guard let context else { return }
+        guard let parent = values[context.parentID] else {
+            if requireActive { throw InvocationStoreError.invalidMetadata }; return
+        }
+        guard let run = parent.desktopWorkspaceRun, run.entryIDs.indices.contains(context.entryIndex), run.entryIDs[context.entryIndex] == context.entryID,
+              !requireActive || !parent.state.isTerminal else { throw InvocationStoreError.invalidMetadata }
     }
     private func children(of parents: Set<UUID>) -> Set<UUID> {
         Set(receipts.values.filter { value in Self.parentID(value.commandID).map(parents.contains) ?? false }.map(\.id))

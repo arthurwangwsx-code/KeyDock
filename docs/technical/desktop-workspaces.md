@@ -38,9 +38,15 @@ DesktopApplicationFocus仍仅允许KeyDock→目标或目标已前台。新增`W
 
 session持续覆盖准备／步骤间隙／布局／worker收口，显式close或释放均撤销fence；原生通知同步推进围栏，不能延迟到Task里再处理。`DesktopOperationGroup`原子封闭新child注册并撤销已有lease，保留pending计数，真实worker完成后才release；group本身不假装等待worker。预取消也进入取消处理器。上述内核已有合成回归，但尚未接入工作区执行组合根。
 
-ApplicationControlService现有启动／实例helper是private，仍需抽出有界后台准备端口；launchOrActivate会激活，不能当作无副作用预检。
+应用准备现由独立`DesktopApplicationPreparationService`承担。`inspectWorkspace`冻结全部目录修订、缺失策略、唯一运行实例及同一fence，并在全量检查后统一复核；原running变为absent或原absent已被外部启动均拒绝旧计划，不改变策略或重新绑定。`PreparedDesktopApplication`按service／调用围栏绑定且只能claim一次，`ReadyDesktopApplication`只表示身份就绪，不代表窗口已准备或布局成功。原`ApplicationControlService.perform`保持行为与启动gate，共享的唯一实例查询只做等价提取。
 
-父子回执的新前缀必须进入InvocationStore.parentID保护，避免父运行仍在时子回执被清理。恢复仅展示已发生／未知事实，不重放启动、激活或布局。
+`ensureRunning`只有冻结策略允许缺失启动时才提交一次请求。原生配置为activates=false、promptsUserIfNeeded=false、allowsRunningApplicationSubstitution=false，不创建第二实例、不添加Recent Items。回调转为Sendable候选身份，返回Ready前重新核对目录／精确路径／唯一实例及最终fence／lease。参考[Apple异步启动合同](https://developer.apple.com/documentation/appkit/nsworkspace/openapplication(at:configuration:completionhandler:))及[activates](https://developer.apple.com/documentation/appkit/nsworkspace/openconfiguration/activates)，回调线程不直接改UI或继续执行。
+
+每个计划保留notSubmitted／submittedUnconfirmed／confirmedReady事实；最后一种仅表示请求后候选实例已重新核验，不声称由本次请求独占创建。同步／重复／并发回调与期限由一次性gate收口。取消立即撤销授权，已提交请求仍等待回调或三秒观测期限；迟到候选不能恢复执行或升级事实。应用自行抢焦点也会停止，不把计划内全部应用加入豁免。
+
+`InvocationStore`已支持精确前缀keydock.desktop-workspace-run.<parentUUID>、父`DesktopWorkspaceRunContext`和子`DesktopWorkspaceReceiptContext`。父保存workspace UUID／revision及1–8个有序条目UUID，子保存parent UUID／entry UUID／0–7索引／launch、focus或layout；这些字段独立于恢复时会替换的message，不保存PID／路径／frame／AX。旧档案无需新字段；错误索引、未知阶段、关联不符或parent／child双重context会拒绝且保留原文件。
+
+新子回执必须关联仍在运行、含对应manifest的父回执，条目ID与索引一致；缺失父、普通CLI父和已结束父均不能产生新子intent。历史已裁剪的孤立子事实允许只读恢复，不能用它继续旧调用。初始化在prune之前保护恢复中的父／子／兄弟事实，避免先裁掉已确认项；消费恢复快照前不解除保护。运行中的child依既有liveParentIDs原子保护，所有worker与回执收口后宿主再释放parent。缺少回执不能从可变定义推断为未执行。组合根的durable intent→单次原生派发→结果落盘及逐项partial汇总仍需接通。
 
 ## 验收与状态
 
@@ -48,7 +54,7 @@ ApplicationControlService现有启动／实例helper是private，仍需抽出有
 
 1. 纯定义／Archive、独立`desktop-workspaces.json`与设置编辑器已经接入，原存储字节内核已抽取并保留wrapper与故障回归。中文浅色／英文深色的添加、重排、保存重开、校验失败保留及取消已观察；完整验证证据见[定义管理复查](../implementation/desktop-workspace-definitions-2026-11-25.md)。
 2. 当前仅贡献`utility.desktop-workspaces`管理入口，归入窗口管理快捷键分类。profile不进入执行catalog，setShortcut拒绝新执行绑定，ShortcutPlan过滤此阶段不受支持的profile配置项；管理快捷键直接打开设置，不读取选区。
-3. 冻结布局／全目标窗口复核、专用焦点交接和child撤销内核已实现；应用准备、父子回执及组合根仍待串联，完整接通后再开放工作区执行目录与快捷键事务。见[执行内核复查](../implementation/desktop-workspace-kernel-2026-11-25.md)。定义管理或内核合成通过不能代替20.3完整执行或20.4真实系统验收。
+3. 冻结布局／全目标窗口复核、专用焦点交接和child撤销内核已实现；独立应用准备与父子回执存储后续接入，77项定向回归通过，见[准备与回执复查](../implementation/desktop-workspace-preparation-2026-11-25.md)。运行组合根、逐项汇总及profile快捷键仍待串联，完整接通后再开放执行目录。定义管理或内核合成通过不能代替20.3完整执行或20.4真实系统验收。
 
 需覆盖应用替换／多实例、同App换窗口不重绑、全部冻结后再写、第二项失败保留第一项事实、第三方焦点变化、屏幕变化、取消与worker drain、启动／布局unknown重启不重放，以及存储／快捷键回滚。
 

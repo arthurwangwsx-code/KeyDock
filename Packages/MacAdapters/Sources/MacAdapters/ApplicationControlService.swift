@@ -116,9 +116,7 @@ public enum ApplicationControlError: Error { case unavailable, changed, ambiguou
         return try await transaction.execute(behavior, wasFrontmost: wasFrontmost, lease: lease, timeout: .milliseconds(650))
     }
     private func instance(at path: String) throws -> NSRunningApplication? {
-        let matches = NSWorkspace.shared.runningApplications.filter { !$0.isTerminated && $0.bundleURL?.path == path }
-        guard matches.count <= 1 else { throw ApplicationControlError.ambiguous }
-        return matches.first
+        try WorkspaceApplicationInstanceResolver.instance(at: path)
     }
     private struct Launched: Sendable { let pid: pid_t; let date: Date? }
     private func launch(_ url: URL) async -> Launched? {

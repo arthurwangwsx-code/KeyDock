@@ -24,6 +24,8 @@ Agent／工作流的保存反馈后续已实现：验证或写入失败在发起
 
 执行内核继续接入：同一拓扑下的全部窗口冻结／统一复核、单次消费、Restore独立基线、工作区专用焦点交接和原子child撤销已经实现，43 tests／5 suites定向通过。审查发现并修补零frame写入污染Restore、旧Restore消费新基线及焦点等待／取消竞争，见[内核复查](implementation/desktop-workspace-kernel-2026-11-25.md)。干净`fc25979`的本机完整检查被原2GiB空间门禁拦截（当时1.32GiB）；[同源云端core／优化构建45513759647](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45513759647)为573 Swift／46 Python／660 key PASS，并已回下载核对诊断artifact，系统OCR仍NOT_QUALIFIED。应用后台准备、父子回执和执行组合根／profile快捷键仍未串联，UI仍仅提供定义管理；没有执行真实AX／多屏操作，任务20.3和完整产品保持PARTIAL。
 
+应用准备与回执存储继续实现：全应用inspect／统一复核、冻结缺失策略、单次有界后台请求及取消／迟到候选隔离；父manifest和子阶段context、active typed parent约束与恢复family保护已经接入。77 tests／7 suites定向通过，见[准备与回执复查](implementation/desktop-workspace-preparation-2026-11-25.md)。本轮初始空间约1.14GiB，随后恢复至100GiB以上，未由本轮清理产生；原检查／OCR门禁保持。运行组合根、逐项汇总、总任务槽位和profile快捷键尚未接通，真实AX／多屏／视觉验收未新增PASS。
+
 本轮已发布并安装alpha.7：有序多选合并、完整预览与可配置主动作，最多20项／1MiB。中文浅色／英文深色、跨查询、重排、空行与Shift-Return、偏好重启保留及实际合并复制均已观察。AI生成成功但复制失败会保留完整结果和成功回执。当前源472项Swift、46项Python、583条文案、同源CI及公证／公开回下载通过；真实自动插入仍依10.1验收。详见[本轮证据](implementation/clipboard-composition-2026-11-25.md)及[合并合同](technical/clipboard-composition.md)。
 
 2026-11-25交付增量：alpha.6已加入直接窗口／应用动作、独立应用动作设置与事务存储；457项Swift、46项Python、556个中英UI key、同源CI及发行门禁通过，并已替换正式alpha.5。首次编辑和显示提前短路已修补，合成应用真实隐藏→显示、退出只请求一次和正常结束得到确认。原生双语视觉仅通过已观察子集，完整目标仍未关闭。详见[本轮增量复查](implementation/desktop-controls-2026-11-25.md)。
