@@ -73,8 +73,11 @@ extension WorkbenchModel {
                 var broker: ScopedToolBroker?
                 do {
                     owner = try await beginAIReceipt(id:id,kind:.agent,authorization:authorization,runDefinition:runDefinition,attempt:attempt); started = true
+                    try Task.checkCancellation()
+                    guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
                     let mcpTools = try await prepareMCPTools(definition,sources:sources,runID:id,attempt:attempt)
                     try Task.checkCancellation()
+                    guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
                     try attempt?.willDispatch(in: self)
                     let tools = frozenTools+mcpTools
                     let routing = try ScopedToolBroker(runID:id,tools:tools,journal:agentToolStore) { [weak self] proposal in guard let self else { return false }; return try await self.requestApproval(proposal) }

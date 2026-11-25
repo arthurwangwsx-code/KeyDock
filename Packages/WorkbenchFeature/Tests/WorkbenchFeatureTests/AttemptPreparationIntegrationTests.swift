@@ -102,6 +102,7 @@ private final class AttemptTestIO: @unchecked Sendable {
             let newTask = try f.task(newID)
             #expect(newTask.status == .completed && newTask.output.contains("Synthetic NEW input") && !newTask.output.contains("Synthetic OLD input"))
             #expect(newTask.runAttempt?.recoveryOf == oldID && newTask.aiUsageSummary?.cost.amounts.first?.amount == "0.00017")
+            #expect(store.latestAutoCopyRunID == nil && store.resultTargets[newID] == nil && newTask.notice.isEmpty)
             #expect(try f.task(oldID).output == oldTask.output && f.task(oldID).aiUsageSummary == oldTask.aiUsageSummary)
             #expect(try await server.stats()["post_requests"] == 2)
         }

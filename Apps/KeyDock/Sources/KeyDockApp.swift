@@ -22,6 +22,10 @@ import Darwin
     private var dataLease: RuntimeDirectoryLease?
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
+            #if !KEYDOCK_PREVIEW
+            // 显式合成域只属于Preview；正式App拒绝此参数，不能误落入真实用户数据域。
+            guard !ProcessInfo.processInfo.arguments.contains("--review-fixture-root") else { throw RuntimeDirectoryLeaseError.invalidDirectory }
+            #endif
             let smoke = (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true) || ProcessInfo.processInfo.arguments.contains("--safe-smoke")
             if let id = Bundle.main.bundleIdentifier, NSRunningApplication.runningApplications(withBundleIdentifier:id).contains(where:{$0.processIdentifier != ProcessInfo.processInfo.processIdentifier && !$0.isTerminated}) { throw RuntimeDirectoryLeaseError.alreadyOwned }
             let directory: URL

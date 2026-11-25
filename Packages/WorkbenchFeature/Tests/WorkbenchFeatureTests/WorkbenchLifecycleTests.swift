@@ -2,9 +2,50 @@ import Foundation
 import Testing
 import CommandCore
 import ExecutionCore
+import AgentCore
+import AutomationCore
+import Combine
 @testable import WorkbenchFeature
 
 @Suite(.serialized) @MainActor struct WorkbenchLifecycleTests {
+    @Test(arguments: ["ai", "proposal", "readOnly", "agent", "workflow"], [true, false])
+    func publishedTaskObserverCanCancelBeforeHandleAssignment(_ kind: String, _ quit: Bool) async throws {
+        try await withStoreHTTPFixture(path: "usage") { fixture in
+            let store = fixture.store
+            var agent = AgentDefinition(); agent.name = "Synthetic early-published agent"
+            #expect(store.saveAgent(agent)); agent = try #require(store.configuration.agents.first { $0.id == agent.id })
+            let flow = WorkflowDefinition(name: "Synthetic early-published workflow", steps: [.init(operation: .aiAction(fixture.action.id))])
+            #expect(store.saveWorkflow(flow))
+            let saved = try #require(store.configuration.workflows.first { $0.id == flow.id })
+            var intercepted = false
+            let subscription = store.$tasks.sink { incoming in
+                MainActor.assumeIsolated {
+                    guard !intercepted, let id = incoming.first?.id,
+                          store.tasks.contains(where: { $0.id == id }), store.taskHandles[id] == nil else { return }
+                    intercepted = true
+                    if quit { store.shutdown() } else { store.cancelTask(id) }
+                }
+            }
+            defer { subscription.cancel() }
+            let id: UUID
+            switch kind {
+            case "agent": id = try #require(store.runAgent(agent, input: "Synthetic early-published input"))
+            case "workflow": id = try #require(store.runWorkflow(saved, input: "Synthetic early-published input"))
+            default:
+                let draft = store.createDraft(input: "Synthetic early-published input")
+                if kind == "ai" { id = try #require(store.runAI(action: fixture.action, draft: draft)) }
+                else {
+                    if kind == "proposal" { store.generateCommandProposal(draft: draft) } else { store.runReadOnlyAgent(draft: draft) }
+                    id = try #require(store.tasks.first?.id)
+                }
+            }
+            try await fixture.drain(id)
+            #expect(intercepted && store.tasks.first { $0.id == id }?.status == .cancelled)
+            #expect(await store.aiInvocationStore.list().first { $0.id == id }?.state == .cancelled)
+            #expect(try await fixture.server.stats()["post_requests"] == 0)
+            #expect(store.workflowCheckpoints[id] == nil && store.pendingApprovals.isEmpty)
+        }
+    }
     @Test(arguments: [true, false]) func navigationCallbackCanQuitBeforeAnyAgentRequestOrCommandStarts(agent: Bool) async throws {
         try await withStoreHTTPFixture(path: "agent") { fixture in
             let store = fixture.store

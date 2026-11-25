@@ -114,6 +114,7 @@ extension WorkbenchModel {
                 do {
                     owner = try await beginAIReceipt(id:id,kind:.workflow,authorization:authorization,runDefinition:runDefinition,attempt:attempt); started = true
                     try Task.checkCancellation()
+                    guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
                     try attempt?.willDispatch(in: self)
                     let result = await WorkflowRunner.run(plan,input:input,runID:id,host:{ request in try await host.invoke(request) },onCheckpoint:{ [weak self] checkpoint in
                         Task { @MainActor [weak self] in self?.publishWorkflowCheckpoint(checkpoint) }
@@ -124,7 +125,10 @@ extension WorkbenchModel {
                     switch result.outcome { case .succeeded: state = .completed; case .cancelled: state = .cancelled; case .timedOut: state = .timedOut; case .unknown: state = .interrupted; case .failed: state = .failed }
                     _ = appendOutput(id,text:result.output); updateTask(id,state:result.hasUncertainHostOutcome ? .interrupted:state,finished:true)
                     if result.hasUncertainHostOutcome, let index = tasks.firstIndex(where:{$0.id == id}) { tasks[index].noticeMessage = noticeKey("A workflow step may have effects. Check the result before starting a new run; nothing was replayed.") }
-                } catch { attempt?.fail(error); await host.close(cancel:true); updateTask(id,state:Task.isCancelled ? .cancelled:.failed,finished:true) }
+                } catch {
+                    attempt?.fail(error); await host.close(cancel:true)
+                    updateTask(id,state:Task.isCancelled || error is CancellationError ? .cancelled:.failed,finished:true)
+                }
                 cancelWorkflowInputs(runID:id)
                 await finishWorkflowUsage(id)
                 if started { await finishAIReceipt(id, owner: owner) }; await agentToolStore.releaseParentProtection(for:id); finishExecutionReservation(id, owner: owner)
