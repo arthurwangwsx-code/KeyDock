@@ -2,6 +2,8 @@
 
 更新：2026-11-25。用户已授权在保留P0/P1验收义务的同时推进P2–P4。**完整产品仍为PARTIAL**；当前源码、真实系统验收、已发布版本分别记录，不能用代码或CI绿测替代日用验收。
 
+最新干净实现`8c2c600`已通过完整本机native-system（601 Swift／46 Python／660 key，含原生产OCR双轮）及[同源core／优化构建45518861646](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45518861646)；此前OCR失败和首轮长耗时保留，根因与长期可靠性仍未确认。alpha.8进入发行准备，正式安装仍为alpha.7；工作区组合运行／profile快捷键仍待接通。以下旧source的FAIL／NOT_QUALIFIED是对应历史范围，不能替代或覆盖本次结果，详见[准备与回执复查](implementation/desktop-workspace-preparation-2026-11-25.md)。
+
 后续修补分支`fix/ui-semantics-and-text-sync`从master `703b9a1`创建，已实现任务13的文本字节同步、编辑器AX名称、计划时区与Launcher副标题，33项定向执行及Agent／计划中英深浅四组合等原生子集通过。前一候选`36812e0`的474 Swift／46 Python／587 key完整检查、Release构建及同源CI通过，但未发布。随后`57f308d`补URL运行／编辑隔离及工作区失败提示，27项定向执行和合成原生操作通过，共590个中英UI key；其core CI通过，完整本机检查却在OCR失败。增加轮次日志后真实提取首轮也失败，三个独立对照均未解决；未改变生产模式或门禁。alpha.8发行保持未放行，正式版本继续为alpha.7。详见[语义复查](implementation/ui-semantics-2026-11-25.md)、[URL编辑复查](implementation/url-action-editing-2026-11-25.md)及[OCR复发记录](implementation/ocr-recurrence-2026-11-25.md)。
 
 后续有序集合增量已实现：32项有序草稿、浏览／编辑隔离、明确失效清理、AI空白手动草稿和CLI可见任务。23项定向检查及原生重排／保存／双语／AI入口子集通过；首版Form运行行与编辑行混用的真实渲染缺陷已复验修补。干净源`0d3a0c2`本机cloud-core检查为491 Swift／46 Python／602 key，[同源core CI 45477121418](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45477121418)通过；此范围的OCR明确NOT_QUALIFIED，完整本机／发行仍未放行，见[集合复查](implementation/command-collections-2026-11-25.md)。

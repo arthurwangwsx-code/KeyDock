@@ -29,9 +29,14 @@ InvocationReceipt增加可选、无正文的父manifest和子context，旧归档
 | `beee0ef4-6056-4798-a522-032c074ddae3` | PASS | 71 tests／7 suites，96.860s；应用准备、取消／回调、焦点／布局和旧回执容量回归 |
 | `57e41158-db5a-4f92-b329-9c844efaf0d0` | PASS | 73 tests／7 suites，134.340s；父manifest、条目顺序及三种parent前缀保护 |
 | `422f17f1-97a3-4bdf-8cba-aed62fb20456` | PASS | 77 tests／7 suites，46.083s；并发回调／期限、末次查询取消、active typed parent及历史孤立事实 |
+| `c643f20e-57f2-40ff-a8b8-3c478ee728a8` | PASS | 干净8c2c600完整本机native-system，601 Swift／46 Python／660 key，301.254s，含原生产OCR双轮 |
 
 计数采用两个测试进程的Swift Testing test-run结果求和，参数化case另列日志；没有把所有case当成独立声明。上述三轮没有编译失败或弱化断言，所有测量与日志保留。
 
 开始时可用空间约1.14GiB，随后外部空间状态恢复到100GiB以上。本轮没有删除缓存、发行、安装回退或其他项目文件，也没有修改OS服务／TCC。原2GiB完整检查门禁保持不变；空间恢复不是OCR恢复证据，原生产模式与双轮180秒资格仍以实际结果为准。
+
+干净源`8c2c60063303fa218b9803257d8a66441b1d6cb7`完整检查于2026-11-25T00:32:39Z–00:37:40Z通过；原accurate／revision3／自动语言／纠正／支持CPU配置的OCR两轮分别约107.875s和0.460s匹配，未改配置、图片、断言或180s门禁。资格summary SHA256 `9b8d9c92c8e2f15294ba7d50c8843b9515d177bb6c679e5238427328444fa7d5`，8份原始stage日志摘要／字节数均核对。首次长耗时与此前FAIL保留，不能据这次PASS认定唯一根因或长期稳定性。
+
+[同源CI 45518861646](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45518861646)及job `138885286276`PASS：600 Swift／46 Python／660 key，Release优化Preview、归档及上传通过，云端OCR NOT_QUALIFIED。回下载artifact `14978983810`（84,751字节，SHA256 `797aeea86007cd0b657bc8209b14db687da89ef4001e99dc39e2ad18c5840928`），核对clean source与7份stage日志。清单580个声明ID（core570／Terminal9／OCR1），SHA256 `ddba92550532f0d16d878d50bf362746009882dd383b3da8e4621dfb7258426f`；执行数包含参数化。安装／公证／发行以随后独立证据为准。
 
 下一段是运行组合根：先保护父intent并核验全部既有窗口，再执行允许的缺失应用准备；全窗口冻结／统一复核后逐项focus／layout，保证每个child的intent先于原生请求、取消等待真实worker，分别保留confirmed／unexecuted／unknown及receiptUncertain。接通总任务槽位、定义变化／新入口取消、profile目录与快捷键后再做原生入口和真实AX／多屏验收。此段尚未实现，不用本轮绿测代替。

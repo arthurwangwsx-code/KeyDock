@@ -33,3 +33,9 @@
 [Apple设备选择](https://developer.apple.com/documentation/vision/vnrequest/setcomputedevice(_:for:))要求支持范围校验，允许nil恢复框架选择；[支持设备查询](https://developer.apple.com/documentation/vision/vnrequest/supportedcomputestagedevices)可抛错且没有无初始化成本保证。[Apple OCR示例](https://developer.apple.com/documentation/vision/extracting-phone-numbers-from-text-in-images)展示成功请求串行复用，但没有证明本次错误原因；[cancel](https://developer.apple.com/documentation/vision/vnrequest/cancel())也没有承诺取消后的复用恢复。
 
 保留根因未确认状态，暂不修改生产模式或调度模型。后续应以明确条件变化或生产修复进行有界验证，不能反复重跑直到变绿；新源码仍需完整本机PASS、同源CI及全部发行门禁。其余URL／集合／视觉工作可独立推进，不能把发行等待报告为整个产品已完成。
+
+## 空间状态变化后的完整验证
+
+后续开发期间，卷可用空间从约1.14GiB恢复至100GiB以上；本次KeyDock工作没有清理缓存、改OS服务／TCC或结束其他项目进程。以此明确条件变化，在干净`8c2c60063303fa218b9803257d8a66441b1d6cb7`执行了一次原流程完整本机check：测量`c643f20e-57f2-40ff-a8b8-3c478ee728a8`，2026-11-25T00:32:39Z–00:37:40Z，601 Swift／46 Python／660 key PASS。
+
+生产OCR第一轮107.875秒、第二轮约0.460秒均实际匹配，仍为同一PNG、accurate／revision3／自动语言／纠正／支持阶段CPU、双轮与180秒门禁；没有新fallback或改断言。8份原日志摘要和精确source已核对，[同源CI与优化Preview 45518861646](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45518861646)亦通过，云端OCR仍NOT_QUALIFIED。原失败、三种对照及长首轮耗时保留；空间变化与本次PASS的相关性不是唯一根因证明，长期可靠性仍PARTIAL。后续发行只消费其实际精确源码的新资格，不把这份旧source PASS移植到新提交。
