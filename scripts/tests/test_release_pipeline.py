@@ -158,14 +158,6 @@ class ReleasePipelineTests(unittest.TestCase):
             (directory / "SHA256SUMS.txt").write_text("a" * 64 + "  ../outside\n")
             with self.assertRaises(PipelineError): keydock.verify_assets(directory)
 
-    def test_failed_notarization_never_advances_to_stapling_or_publishing(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            log = Path(temporary) / "notary.json"
-            log.write_text(json.dumps({"id": "11111111-2222-3333-4444-555555555555", "status": "Invalid"}))
-            with patch.object(keydock, "stage", return_value=log) as command:
-                with self.assertRaises(PipelineError): keydock.notarize(Path("synthetic.zip"), "synthetic-profile", "synthetic-notary")
-                self.assertEqual(command.call_count, 1)
-
     def test_packaging_refuses_a_debug_app_without_notary_or_file_mutations(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)

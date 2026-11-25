@@ -271,3 +271,10 @@
 - [x] 33.3 重新验证定义／contribution／MCP来源与schema／权限／预算，new UUID及recoveryOf接入生产admission／intent；保存失败零执行，旧授权／目标／终态／价格不复用。真实owned进程／loopback／stdio及原子写故障、配置ABA、MCP合同变化验证通过；真实API／系统资格独立。
 - [x] 33.4 工作区任务详情、AI／Agent／Workflow及保存CLI接入，旧缺材料记录保持只读；恢复默认展示，不自动复制／替换／继续步骤或重投unknown。typed worker准确owner与出生stamp贯穿finish／drain／release；安装数据兼容门禁及签名合成v2／旧reader拒绝通过。
 - [ ] 33.5 合成故障／中断／撤权／ABA／clear／迟到／容量／drain及新旧费用归因；原生中英明暗与重启闭环、完整检查／CI／发行分别留证，原5.5及完整P0–P4仍独立。
+
+## 34. 冻结发行候选与公证恢复
+
+- [x] 34.1 独立creator／签名提交输入／最终装订资产、三段复制摘要、新inode、只读冻结与保留边界；28项定向／122 Python通过，不处理非自有卷或系统helper。
+- [x] 34.2 持久候选索引／单写锁、no-wait提交／立即保存ID、墙钟与取消收口、同ID续查和准确Apple SHA绑定；无ID unknown不自动重投，创建窗口及部分复制／签名／装订恢复回归通过。
+- [x] 34.3 故障／并发／路径／schema／索引丢失及部分image／装订失败恢复回归，28项定向／122 Python通过；最终模块完成历史Accepted输入新inode／真实image与签名验证／只读Apple查询，零新submit。完整新协议发行仍依34.4及原资格／同源CI门禁。
+- [ ] 34.4 后续新版本通过此新候选协议完成真实App／DMG提交至发行；alpha.19历史恢复事实不能升级为新流水线端到端资格，原P0–P4及33.5保持开放。

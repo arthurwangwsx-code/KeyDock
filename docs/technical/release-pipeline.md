@@ -41,6 +41,8 @@ check与build要求工程所在卷至少2GiB可用空间，doctor的buildStorage
 
 `python3 scripts/keydock.py release --install --publish`可组合正式流程。首次开源先建立并核对仓库、受控fast-forward并推送master与tag；发布入口不会隐式创建tag或修改分支。每步退出码、耗时和日志留在忽略的 `.local/pipeline/<run>/`；package／publish可独立重试。已存在版本只复用相同源和摘要；签名时间戳会使重复构建字节不同，不承诺逐位可复现。
 
+公证／打包中断按[冻结候选与公证恢复](release-candidate-recovery.md)处理。`.local/release-delivery`和被引用candidate是协议状态，不能当可重建缓存清理；package默认继续原候选，unknown无ID不自动重投。已Accept的输入不修改，装订在独立副本进行。
+
 Swift检查采用互补独立阶段：主体、Terminal生命周期和生产Vision OCR。原有两秒退出／回执时限断言不变；完整本机任一阶段失败或没有匹配用例都会停止。`--jobs 2`仅限制构建并发，不会串行Swift Testing的MainActor套件；拆分避免大批合成磁盘／主线程工作污染时间测量，不表示繁忙系统具备硬实时保证。完整本机合并覆盖全部Swift用例，云端scope另行标识，禁止失败后自动fallback或重试变绿。
 
 从alpha.4起，测试清单分为core、Terminal和生产Vision OCR三个互补分区，发现的清单必须包含精确OCR用例，分区非空且无遗漏。参数化用例使执行数量可高于声明数量。云端`check --ci`仅运行前两个分区，summary明确`system OCR: NOT_QUALIFIED`；此前VM上的真实OCR错误保留，不宣称云端识别通过。完整本机check还必须独立运行生产OCR，先在新测试进程提取，再重复提取同一合成PNG；校验accurate／revision3／自动语言／纠正／支持CPU设备配置和实际识别结果。该阶段180秒超时即失败，只结束其独占验证进程组。

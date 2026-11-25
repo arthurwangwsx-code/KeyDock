@@ -18,10 +18,12 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 import zipfile
 
 from keydock_common import CONFIG, ROOT, PipelineError, atomic_json, inspect_app, run, sha256, source_identity, validate_version, current_data_compatibility, app_data_compatibility
 import release_quality as quality
+import release_delivery as delivery
 
 BUILD = ROOT / "build/pipeline"
 DIST = ROOT / "build/releases" / CONFIG["version"]
@@ -42,24 +44,37 @@ def require_build_space():
 
 
 def stage(name, command, timeout=None):
-    RUN_DIR.mkdir(parents=True, exist_ok=True)
+    delivery.mkdir_durable(RUN_DIR)
     path = RUN_DIR / (name + ".log")
     started = time.monotonic()
     print("[%s] %s" % (name, path.relative_to(ROOT)), flush=True)
     with path.open("w") as stream:
-        if timeout is None:
-            result = subprocess.run([str(value) for value in command], cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT)
-            exit_code = result.returncode
-        else:
-            # 只结束该资格验证创建的独立进程组，不操作其他项目或真实App。
+        with delivery.cancellation_signals() as cancellation:
             process = subprocess.Popen([str(value) for value in command], cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
-            try: exit_code = process.wait(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                os.killpg(process.pid, signal.SIGTERM)
+            def stop():
+                cancellation["interruptible"] = False
+                if process.poll() is not None: return
+                # hdiutil只收口自有client，不能借进程组处理系统image helper。
+                group = Path(str(command[0])).name not in ("hdiutil", "diskutil")
+                if group: os.killpg(process.pid, signal.SIGTERM)
+                else: process.terminate()
                 try: process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
-                    os.killpg(process.pid, signal.SIGKILL); process.wait()
+                    if group: os.killpg(process.pid, signal.SIGKILL)
+                    else: process.kill()
+                    process.wait()
+            try:
+                cancellation["interruptible"] = True
+                if cancellation["signal"] is not None: raise InterruptedError("Stage cancelled during child creation")
+                exit_code = process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                stop()
                 exit_code = 124
+            except BaseException as error:
+                stop()
+                stream.write("stage stopped: " + type(error).__name__ + "\n")
+                exit_code = 128 + (cancellation["signal"] or signal.SIGINT)
+            finally: cancellation["interruptible"] = False
     record = {"stage": name, "exitCode": exit_code, "seconds": round(time.monotonic() - started, 3)}
     atomic_json(RUN_DIR / (name + ".json"), record)
     if exit_code:
@@ -210,19 +225,16 @@ def build(profile="preview", configuration=None, allow_dirty=False, identity=Non
     return app
 
 
-def notarize(path, profile, name):
-    log = stage(name, ["xcrun", "notarytool", "submit", path, "--keychain-profile", profile, "--wait", "--timeout", "20m", "--output-format", "json"])
-    text = log.read_text()
-    try:
-        result = json.loads(text[text.index("{"):text.rindex("}") + 1])
-    except (ValueError, json.JSONDecodeError):
-        raise PipelineError("Notary service did not return a valid JSON result; retain " + str(log))
-    if result.get("status") != "Accepted" or not re.fullmatch(r"[0-9a-fA-F-]{36}", result.get("id", "")):
-        raise PipelineError("Notarization was not accepted; no distribution was published")
-    return result["id"]
+def notarize(path, profile, name, binding):
+    return delivery.notarize(path, profile, Path(path).parent / (name + ".json"), binding)
 
 
-def package(app=None, profile=None):
+def package(app=None, profile=None, resume_work=None):
+    with delivery.exclusive(ROOT / ".local/release-delivery/package.lock"):
+        return package_candidate(app, profile, resume_work)
+
+
+def package_candidate(app=None, profile=None, resume_work=None):
     identity = source_identity()
     qualification = quality.require_local(identity)
     if DIST.exists():
@@ -232,8 +244,46 @@ def package(app=None, profile=None):
         quality.core_ci(identity, manifest["coreCI"]["id"])
         print("Reused verified immutable package: " + str(DIST), flush=True)
         return DIST
-    app = Path(app or BUILD / "release/KeyDock.app")
-    facts = inspect_app(app)
+    registry = ROOT / ".local/release-delivery/candidates" / (CONFIG["version"] + ".json")
+    work = None
+    if registry.exists():
+        registered = delivery.read_receipt(registry)
+        delivery.require_schema(registered)
+        if registered.get("source") != identity:
+            raise PipelineError("This version has a candidate from another source; preserve it and bump the version")
+        work = Path(registered["work"])
+        if resume_work and Path(resume_work).absolute() != work:
+            raise PipelineError("Resume path differs from the registered candidate")
+    elif resume_work:
+        work = Path(resume_work).absolute()
+    else:
+        # 索引缺失时仅发现并拒绝遗留候选，不按时间或名称认领／重新提交。
+        known = list((ROOT / ".local/pipeline").glob("*/package/candidate.json"))
+        if len(known) > 2048: raise PipelineError("Candidate discovery exceeds its budget; use an explicit resume path")
+        for path in known:
+            delivery.require_candidate(path.parent, ROOT / ".local/pipeline")
+            previous = delivery.read_receipt(path)
+            delivery.require_schema(previous)
+            if previous.get("version") == CONFIG["version"]:
+                raise PipelineError("An unindexed candidate was retained; resume its explicit work path")
+    if work:
+        delivery.require_candidate(work, ROOT / ".local/pipeline")
+        candidate = delivery.read_receipt(work / "candidate.json")
+        delivery.require_schema(candidate)
+        if (candidate.get("source") != identity or candidate.get("version") != CONFIG["version"] or
+                candidate.get("buildNumber") != CONFIG["buildNumber"] or candidate.get("teamID") != CONFIG["teamID"] or
+                candidate.get("qualificationSHA256") != quality.digest(qualification)):
+            raise PipelineError("Frozen candidate no longer matches the release source, signing team or qualification")
+        app = work / "app/KeyDock.app"
+        delivery.require_candidate(app.parent, ROOT / ".local/pipeline")
+        facts = inspect_app(app)
+        compare_unstapled_app(facts, candidate["appFacts"])
+        core_ci = quality.core_ci(identity, candidate["coreCI"]["id"])
+        if not registry.exists():
+            delivery.durable_json(registry, {"schemaVersion": 1, "source": identity, "work": str(work)})
+    else:
+        app = Path(app or BUILD / "release/KeyDock.app")
+        facts = inspect_app(app)
     if facts.get("qualification_sha256") != quality.digest(qualification):
         raise PipelineError("Release App was not built with the current native OCR qualification")
     if facts["profile"] != "release" or facts["safe_smoke"] or facts["source_dirty"] or facts["commit"] != identity["commit"]:
@@ -243,33 +293,90 @@ def package(app=None, profile=None):
     profile = profile or os.environ.get("KEYDOCK_NOTARY_PROFILE")
     if not profile:
         raise PipelineError("Set KEYDOCK_NOTARY_PROFILE to an existing notarytool Keychain profile; credentials stay in Keychain")
-    core_ci = quality.core_ci(identity)
-    work = RUN_DIR / "package"
-    work.mkdir(parents=True, exist_ok=True)
-    payload = work / "notary-payload.zip"
-    run(["/usr/bin/ditto", "-c", "-k", "--keepParent", app, payload])
-    app_submission = notarize(payload, profile, "notary-app")
+    if work is None:
+        core_ci = quality.core_ci(identity)
+        work = RUN_DIR / "package"
+        delivery.mkdir_durable(work)
+        staged = work / "app/KeyDock.app"
+        delivery.mkdir_durable(staged.parent)
+        stage("copy-release-app", ["/usr/bin/ditto", app, staged])
+        copied = inspect_app(staged)
+        compare_app_payloads(copied, facts)
+        app = staged
+        candidate = {"schemaVersion": 1, "source": identity, "version": CONFIG["version"], "buildNumber": CONFIG["buildNumber"],
+                     "teamID": CONFIG["teamID"], "qualificationSHA256": quality.digest(qualification), "coreCI": core_ci, "appFacts": copied}
+        delivery.durable_json(work / "candidate.json", candidate)
+        delivery.durable_json(registry, {"schemaVersion": 1, "source": identity, "work": str(work)})
+    print("Frozen package candidate: " + str(work), flush=True)
+    files = delivery.FrozenFiles(work)
+    binding = {"source": identity, "version": CONFIG["version"], "teamID": CONFIG["teamID"],
+               "qualificationSHA256": quality.digest(qualification), "coreCI": core_ci["id"]}
+    payload = work / "inputs/notary-app.zip"
+    delivery.mkdir_durable(payload.parent)
+    delivery.require_candidate(payload.parent, ROOT / ".local/pipeline")
+    files.file("app-input", payload, lambda: stage("archive-app-input", ["/usr/bin/ditto", "-c", "-k", "--keepParent", app, payload]),
+               rebuild=not os.path.lexists(payload.parent / "notary-app.json"))
+    app_submission = notarize(payload, profile, "notary-app", dict(binding, role="app"))
     stage("staple-app", ["xcrun", "stapler", "staple", app])
     stage("validate-app-ticket", ["xcrun", "stapler", "validate", app])
     stage("gatekeeper-app", ["/usr/sbin/spctl", "--assess", "--type", "execute", "--verbose=2", app])
     facts = inspect_app(app)
+    compare_unstapled_app(facts, candidate["appFacts"])
+    app_receipt = work / "stapled-app.json"
+    if app_receipt.exists(): compare_app_payloads(facts, delivery.read_receipt(app_receipt))
+    else: delivery.durable_json(app_receipt, facts)
     assets = work / "assets"
-    assets.mkdir()
+    delivery.mkdir_durable(assets)
+    delivery.require_candidate(assets, ROOT / ".local/pipeline")
     stem = "KeyDock-" + CONFIG["version"] + "-macos-arm64"
     zip_path = assets / (stem + ".zip")
-    run(["/usr/bin/ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", app, zip_path])
+    files.file("zip", zip_path, lambda: stage("archive-release-zip", ["/usr/bin/ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", app, zip_path]), rebuild=True)
     image_root = work / "image"
-    image_root.mkdir()
-    run(["/usr/bin/ditto", app, image_root / "KeyDock.app"])
-    os.symlink("/Applications", image_root / "Applications")
-    shutil.copyfile(ROOT / "release/INSTALL.txt", image_root / "INSTALL.txt")
+    image_receipt = work / "image-complete.json"
+    dmg_request = work / "inputs/notary-dmg.json"
+    if not image_receipt.exists():
+        if os.path.lexists(dmg_request): raise PipelineError("Submitted candidate has no confirmed image contents; preserve its input")
+        if image_root.exists() or image_root.is_symlink():
+            delivery.require_candidate(image_root, ROOT / ".local/pipeline")
+            delivery.durable_rename(image_root, work / ("incomplete-image-" + str(uuid.uuid4())))
+        delivery.mkdir_durable(image_root)
+        stage("copy-image-app", ["/usr/bin/ditto", app, image_root / "KeyDock.app"])
+        os.symlink("/Applications", image_root / "Applications")
+        shutil.copyfile(ROOT / "release/INSTALL.txt", image_root / "INSTALL.txt")
+    delivery.require_candidate(image_root, ROOT / ".local/pipeline")
+    if ({p.name for p in image_root.iterdir()} != {"KeyDock.app", "Applications", "INSTALL.txt"} or
+            not (image_root / "Applications").is_symlink() or os.readlink(image_root / "Applications") != "/Applications" or
+            (image_root / "INSTALL.txt").is_symlink() or sha256(image_root / "INSTALL.txt") != sha256(ROOT / "release/INSTALL.txt")):
+        raise PipelineError("Frozen DMG contents changed or were never completed")
+    compare_app_payloads(inspect_app(image_root / "KeyDock.app"), facts)
+    image_facts = {"schemaVersion": 1, "appBundleSHA256": facts["bundle_sha256"], "installSHA256": sha256(ROOT / "release/INSTALL.txt")}
+    if image_receipt.exists():
+        if delivery.read_receipt(image_receipt) != image_facts: raise PipelineError("Confirmed image contents changed")
+    else: delivery.durable_json(image_receipt, image_facts)
     dmg = assets / (stem + ".dmg")
-    stage("dmg", ["/usr/bin/hdiutil", "create", "-volname", "KeyDock", "-srcfolder", image_root, "-format", "UDZO", dmg])
-    stage("sign-dmg", ["/usr/bin/codesign", "--force", "--sign", CONFIG["signingIdentity"], "--timestamp", dmg])
-    dmg_submission = notarize(dmg, profile, "notary-dmg")
-    stage("staple-dmg", ["xcrun", "stapler", "staple", dmg])
-    stage("validate-dmg-ticket", ["xcrun", "stapler", "validate", dmg])
-    stage("gatekeeper-dmg", ["/usr/sbin/spctl", "--assess", "--type", "open", "--context", "context:primary-signature", "--verbose=2", dmg])
+    creator = work / "creator/generated.dmg"
+    delivery.mkdir_durable(creator.parent)
+    delivery.require_candidate(creator.parent, ROOT / ".local/pipeline")
+    allow_dmg_rebuild = not os.path.lexists(dmg_request)
+    files.file("creator", creator, lambda: stage("dmg", ["/usr/bin/hdiutil", "create", "-volname", "KeyDock", "-srcfolder", image_root, "-format", "UDZO", creator]), rebuild=allow_dmg_rebuild)
+    # creator可能仍被系统helper持有。消费独立inode；不杀系统helper、不强制detach。
+    signed_input = work / "inputs" / (stem + ".dmg")
+    def prepare_dmg():
+        copied = delivery.copy_payload(creator, signed_input)
+        if copied["source"] != delivery.read_receipt(work / "creator-file.json"):
+            raise PipelineError("Creator image changed before consumption; both files were retained")
+        delivery.durable_json(work / "creator-copy.json", copied)
+        stage("verify-generated-dmg", ["/usr/bin/hdiutil", "verify", signed_input], timeout=120)
+        stage("sign-dmg", ["/usr/bin/codesign", "--sign", CONFIG["signingIdentity"], "--timestamp", signed_input], timeout=120)
+        stage("verify-signed-dmg", ["/usr/bin/codesign", "--verify", "--strict", signed_input], timeout=60)
+    files.file("dmg-input", signed_input, prepare_dmg, rebuild=allow_dmg_rebuild)
+    dmg_submission = notarize(signed_input, profile, "notary-dmg", dict(binding, role="dmg"))
+    def finish_dmg():
+        delivery.copy_payload(signed_input, dmg)
+        stage("staple-dmg", ["xcrun", "stapler", "staple", dmg], timeout=120)
+        stage("validate-dmg-ticket", ["xcrun", "stapler", "validate", dmg], timeout=60)
+        stage("gatekeeper-dmg", ["/usr/sbin/spctl", "--assess", "--type", "open", "--context", "context:primary-signature", "--verbose=2", dmg], timeout=60)
+    files.file("final-dmg", dmg, finish_dmg, rebuild=True)
     manifest = {"schemaVersion": 2, "version": CONFIG["version"], "tag": "v" + CONFIG["version"], "source": identity,
                 "architecture": "arm64", "minimumTarget": "14.0", "qualifiedHost": "macOS " + qualification["host"]["osVersion"] + " arm64",
                 "qualification": qualification, "qualificationSHA256": quality.digest(qualification), "coreCI": core_ci, "cloudOCR": "NOT_QUALIFIED",
@@ -287,10 +394,16 @@ def package(app=None, profile=None):
         raise PipelineError("Source changed during notarization; verified files were kept in the local staging directory")
     if quality.digest(quality.require_local(identity)) != manifest["qualificationSHA256"]:
         raise PipelineError("Qualification changed during packaging")
-    DIST.parent.mkdir(parents=True, exist_ok=True)
-    os.rename(assets, DIST)
+    delivery.durable_rename(assets, DIST)
     print("Packaged: " + str(DIST), flush=True)
     return DIST
+
+
+def compare_unstapled_app(actual, expected):
+    fields = ("bundle_id", "profile", "safe_smoke", "source_dirty", "commit", "release_version", "build_number", "architecture",
+              "qualification_sha256", "binary_sha256", "code_signature", "data_compatibility")
+    if any(key not in expected or actual.get(key) != expected[key] for key in fields):
+        raise PipelineError("Staged App differs from its original signed build")
 
 
 def verify_assets(directory):
@@ -573,7 +686,8 @@ def main():
     p.add_argument("--condition", choices=["declared-idle-hidden", "synthetic-interaction", "recovery-idle"], default="declared-idle-hidden")
     p = sub.add_parser("check"); p.add_argument("--ci", action="store_true")
     p = sub.add_parser("build"); p.add_argument("--profile", choices=["release", "preview"], default="preview"); p.add_argument("--configuration", choices=["Release", "Debug"]); p.add_argument("--allow-dirty", action="store_true")
-    p = sub.add_parser("package"); p.add_argument("--app", type=Path); p.add_argument("--notary-profile")
+    p = sub.add_parser("package"); p.add_argument("--app", type=Path); p.add_argument("--notary-profile"); p.add_argument("--resume-work", type=Path)
+    p = sub.add_parser("notary-status"); p.add_argument("--receipt", type=Path, required=True); p.add_argument("--notary-profile"); p.add_argument("--submission-id")
     sub.add_parser("publish")
     sub.add_parser("install-release")
     p = sub.add_parser("verify-release"); p.add_argument("--repo", default=CONFIG["repository"]); p.add_argument("--tag", default="v" + CONFIG["version"])
@@ -599,7 +713,30 @@ def main():
     elif args.command == "mcp-interop": mcp_interop(args.environment, args.run_name, args.scenario)
     elif args.command == "check": check(args.ci)
     elif args.command == "build": build(args.profile, args.configuration, args.allow_dirty)
-    elif args.command == "package": package(args.app, args.notary_profile)
+    elif args.command == "package": package(args.app, args.notary_profile, args.resume_work)
+    elif args.command == "notary-status":
+        profile = args.notary_profile or os.environ.get("KEYDOCK_NOTARY_PROFILE")
+        if not profile: raise PipelineError("Provide an existing notarytool Keychain profile")
+        receipt = args.receipt.absolute()
+        delivery.require_candidate(receipt.parent.parent, ROOT / ".local/pipeline")
+        delivery.require_candidate(receipt.parent, ROOT / ".local/pipeline")
+        registered = delivery.read_receipt(ROOT / ".local/release-delivery/candidates" / (CONFIG["version"] + ".json"))
+        delivery.require_schema(registered)
+        if registered.get("work") != str(receipt.parent.parent) or receipt.parent.name != "inputs":
+            raise PipelineError("Status receipt is not inside the registered candidate")
+        state = delivery.read_receipt(receipt)
+        delivery.validate_request(state, receipt)
+        identity = source_identity()
+        qualification = quality.require_local(identity)
+        role = state.get("binding", {}).get("role")
+        payload_name = "notary-app.zip" if role == "app" else "KeyDock-" + CONFIG["version"] + "-macos-arm64.dmg"
+        if receipt.name != "notary-" + str(role) + ".json" or state.get("payload", {}).get("path") != str(receipt.parent / payload_name):
+            raise PipelineError("Status receipt does not name its frozen role input")
+        delivery.preflight_request(receipt)
+        expected = {"source": identity, "version": CONFIG["version"], "teamID": CONFIG["teamID"], "role": role,
+                    "qualificationSHA256": quality.digest(qualification), "coreCI": state["binding"]["coreCI"]}
+        quality.core_ci(identity, expected["coreCI"])
+        print(delivery.query_request(receipt, profile, expected_binding=expected, attach_id=args.submission_id))
     elif args.command == "publish": publish()
     elif args.command == "install-release": install_release()
     elif args.command == "verify-release": print(json.dumps(verify_remote(args.repo, args.tag), indent=2))

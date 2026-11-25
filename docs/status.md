@@ -1,8 +1,10 @@
 # 当前状态总账
 
-2026-11-26开发进度：任务33.1–33.4的类型化Core、独立准备／四类生产新授权、默认仅展示和安装数据版本门禁已接通。新增14条Swift定向定义（含真实loopback／stdio参数案例）及95 Python通过，合成原生中英明暗子集、20步执行、取消／重启与签名v2准入／旧reader拒绝已复查。alpha.19候选尚待当前源完整检查／CI／发行；正式安装仍为下述alpha.18，完整RunStore及P0–P4仍PARTIAL。见[App接线复查](implementation/explicit-attempt-ui-2026-11-26.md)；先前Core源`7dc3851`的834 Swift／78 Python／847 key、本机OCR及同源CI资格仅属于该历史源。
+2026-11-26：任务33.1–33.4已随[alpha.19](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.19)公开并替换正式App，固定源`e4884968c196a0f6c19ee104eb448e65ba9df8d5`。849 Swift执行工具计数／95 Python／876中英key、本机生产OCR双轮、指定同源CI／优化Preview、公证／装订／Gatekeeper、公开回下载和发行资产审计均通过。正式二进制为alpha.19(19)，About19未观察；合成原生中英明暗已观察子集、20步执行、取消／重启与签名v2准入／旧reader拒绝另行留证。完整视觉、33.5、完整RunStore与P0–P4仍PARTIAL。见[发行证据](implementation/alpha19-release-2026-11-26.md)和[App接线复查](implementation/explicit-attempt-ui-2026-11-26.md)；历史资格仅属于各自精确源。
 
-当前[alpha.18](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.18)已公开并安装，精确源`6baaee827131a31e342ced8dbc0955c5f2a768ae`。可选AI费率／逐请求快照、Workflow父子索引、历史恢复及7／30／90天独立分析已交付；804 Swift／78 Python／847中英key、本机OCR双轮、指定同源CI／优化构建、公证／公开回下载及发布审计PASS。实际About18确认，alpha.17回退保留。中英明暗仅已观察子集通过，完整产品仍PARTIAL。见[发行证据](implementation/alpha18-release-2026-11-25.md)和[实现复查](implementation/ai-rate-snapshots-2026-11-25.md)。
+后续工程修补：永久候选／公证回执、新inode消费副本、同ID续查、unknown不自动重投、Accepted后失败资产重建及信号收口已实现，28项定向／122 Python和历史Accepted输入的真实只读探针通过。文档检查及分支CI另记，尚未通过新版本完整提交发行；不改写alpha.19历史过程。见[冻结候选与公证恢复](technical/release-candidate-recovery.md)。
+
+历史[alpha.18](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.18)当时已公开并安装，现保留为回退App，精确源`6baaee827131a31e342ced8dbc0955c5f2a768ae`。可选AI费率／逐请求快照、Workflow父子索引、历史恢复及7／30／90天独立分析已交付；804 Swift／78 Python／847中英key、本机OCR双轮、指定同源CI／优化构建、公证／公开回下载及发布审计PASS。实际About18确认，alpha.17回退保留。中英明暗仅已观察子集通过，完整产品仍PARTIAL。见[发行证据](implementation/alpha18-release-2026-11-25.md)和[实现复查](implementation/ai-rate-snapshots-2026-11-25.md)。
 
 [alpha.17](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.17)已公开并替换正式App，精确源`3e681f00efa54ed3763effd64047fba3a5797bd5`。工作流／MCP独立移除审阅、全部引用检查、旧稿／迟到围栏及配置worker退出等待已交付；54项定向／8套件、760 Swift／74 Python／789 key干净本机、指定同源CI／优化构建、公证／Gatekeeper、公开回下载和发行资产审计PASS。实际About为alpha.17 (17)，alpha.16回退保留。中文浅色／英文深色原生观察子集通过，完整产品仍PARTIAL。见[发行证据](implementation/alpha17-release-2026-11-25.md)及[实现复查](implementation/source-removal-2026-11-25.md)。
 
@@ -10,7 +12,7 @@
 
 现有主要工具已有代码，未勾选任务仍包含大量真实验收义务，不能统一理解为“未开发”。完整RunStore显式恢复、原图多模态附件、ACP adapter及实际首帧链路仍有独立工程／评估缺口；真实模型、目标插入／AX、多屏、IME／VoiceOver、最低系统、完整视觉及长期驻留保持开放。
 
-下述alpha.17及更早段落保留各轮历史状态，当前正式安装以上述alpha.18为准。
+下述alpha.17及更早段落保留各轮历史状态，当前正式安装以本文顶部alpha.19为准。
 
 [alpha.16](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.16)当时公开并替换正式App，精确源`20854e3edf924ec0f4e64b153ec5caddca9c17e9`；735 Swift／74 Python／768 key干净本机、指定同源core CI／优化构建、Developer ID、公证／Gatekeeper、公开回下载和发布资产审计PASS，当时About为alpha.16 (16)，alpha.15回退保留。28.4／30的完整定义导出完成：16项定向及中文浅色／英文深色系统保存与预览字节核验子集PASS。见[发行证据](implementation/alpha16-release-2026-11-25.md)和[实现复查](implementation/configuration-export-2026-11-25.md)。完整产品仍PARTIAL，未来import及原真实系统／AI／视觉／长期资格保持开放。
 

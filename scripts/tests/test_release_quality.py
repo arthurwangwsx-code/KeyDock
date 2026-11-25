@@ -111,7 +111,8 @@ class ReleaseQualityTests(unittest.TestCase):
     def test_qualification_timeout_is_failure_even_after_the_owned_group_exits(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            process = Mock(pid=12345); process.wait.side_effect = [subprocess.TimeoutExpired("synthetic", 1), 0]
+            process = Mock(pid=12345); process.poll.return_value = None
+            process.wait.side_effect = [subprocess.TimeoutExpired("synthetic", 1), 0]
             with patch.object(keydock, "ROOT", root), patch.object(keydock, "RUN_DIR", root / "logs"), patch.object(keydock.subprocess, "Popen", return_value=process), patch.object(keydock.os, "killpg") as kill:
                 with self.assertRaises(PipelineError): keydock.stage("synthetic-ocr", ["synthetic"], timeout=1)
                 kill.assert_called_once_with(12345, signal.SIGTERM)
