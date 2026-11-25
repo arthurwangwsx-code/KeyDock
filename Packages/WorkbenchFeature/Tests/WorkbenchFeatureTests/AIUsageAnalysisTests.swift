@@ -70,6 +70,26 @@ import AICore
             #expect(report.calls == 1 && report.incompleteCalls == 1 && report.unpricedCalls == 0 && report.invalidRecords == 1)
         }
     }
+    @Test func threeConflictingCurrenciesHaveTheSameTotalsInEveryReadOrder() throws {
+        let inside = try makeCall(currency: "JPY")
+        let original = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(inside)) as? [String: Any])
+        let outside: [AIRecordedCall] = try ["USD", "EUR"].map { currency in
+            var object = original
+            object["startedAt"] = from.addingTimeInterval(-60).timeIntervalSinceReferenceDate
+            var snapshot = try #require(object["rate"] as? [String: Any]), rate = try #require(snapshot["rate"] as? [String: Any])
+            rate["currency"] = currency; snapshot["rate"] = rate; object["rate"] = snapshot
+            return try JSONDecoder().decode(AIRecordedCall.self, from: JSONSerialization.data(withJSONObject: object))
+        }
+        let variants = [outside[0], outside[1], inside], eur = try makeCall(currency: "EUR"), gbp = try makeCall(currency: "GBP")
+        for order in [[0,1,2], [1,0,2], [2,0,1], [2,1,0], [0,2,1], [1,2,0]] {
+            var fold = AIUsageAnalysisAccumulator(from: from, to: now, revision: 0)
+            for call in [eur, gbp] + order.map({ variants[$0] }) { let id = UUID(); fold.consume(try leaf(id, calls: [call]), id: id) }
+            let report = fold.finish()
+            #expect(report.calls == 3 && report.duplicateAttempts == 2 && report.incompleteCalls == 1 && report.invalidRecords == 1)
+            #expect(report.inputTokens == nil && report.outputTokens == nil && report.hasCoverageGaps)
+            #expect(report.amounts == [.init(currency: "GBP", amount: "0.000044")])
+        }
+    }
     @Test func missingAndUnlinkedWorkflowRecordsRemainVisibleCoverageGaps() throws {
         let parent = UUID(), missing = UUID(), orphanParent = UUID(), leafID = UUID()
         var fold = AIUsageAnalysisAccumulator(from: from, to: now, revision: 0)

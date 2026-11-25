@@ -95,6 +95,9 @@ class Handler(BaseHTTPRequestHandler):
             path = urlsplit(self.path).path
             if path == "/stream":
                 self.stream()
+            elif path == "/usage":
+                # 用量／费率归因用真实URLSession SSE但无人工逐字节延时；/stream继续专门覆盖跨字节解码。
+                self.complete_text("Synthetic usage result", "synthetic-usage-response")
             elif path == "/empty":
                 self.complete_text("", "synthetic-empty-response")
             elif path == "/no-usage":

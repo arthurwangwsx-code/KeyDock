@@ -39,7 +39,7 @@ struct AIUsageAnalysisAccumulator {
         let workflowStepID: UUID?
     }
     private struct SeenCall {
-        let fingerprint: String; let currency: String?
+        let fingerprint: String; var currencies: Set<String>
         var relevant: Bool; var duplicates = 0; var conflicted = false
         let cost: AICostSummary?
     }
@@ -104,19 +104,20 @@ struct AIUsageAnalysisAccumulator {
         guard let fingerprint = SavedItemIdentity.fingerprint(call) else { report.invalidRecords += 1; return }
         let currency = call.rate?.rate.currency
         if var old = seenCalls[call.attemptID] {
+            if let currency { old.currencies.insert(currency) }
             old.relevant = old.relevant || relevant
             old.duplicates += 1
             old.conflicted = old.conflicted || old.fingerprint != fingerprint
             seenCalls[call.attemptID] = old
             if old.conflicted && old.relevant {
-                for key in [old.currency, currency].compactMap({ $0 }) { invalidCurrencies.insert(key); totals[key] = nil }
+                for key in old.currencies { invalidCurrencies.insert(key); totals[key] = nil }
                 inputOverflow = true; outputOverflow = true; report.inputTokens = nil; report.outputTokens = nil
             }
             return
         }
         guard seenCalls.count < Self.maximumCalls else { report.readProblems += 1; return }
         let cost = relevant ? AICostSummary.estimate(.init(calls: [call])) : nil
-        seenCalls[call.attemptID] = .init(fingerprint: fingerprint, currency: currency, relevant: relevant, cost: cost)
+        seenCalls[call.attemptID] = .init(fingerprint: fingerprint, currencies: Set([currency].compactMap { $0 }), relevant: relevant, cost: cost)
         guard relevant else { return }
         Self.add(call.usage?.inputTokens, to: &report.inputTokens, overflow: &inputOverflow)
         Self.add(call.usage?.outputTokens, to: &report.outputTokens, overflow: &outputOverflow)

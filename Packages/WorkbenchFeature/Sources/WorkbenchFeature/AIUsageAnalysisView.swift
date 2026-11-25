@@ -35,7 +35,7 @@ struct AIUsageAnalysisSection: View {
                     LabeledContent(L("Estimate from known usage")) {
                         Text(amount.currency + " " + amount.amount).monospacedDigit().textSelection(.enabled)
                     }
-                }
+                }.id(displayLocale.identifier)
                 if report.amounts.isEmpty {
                     Text(L("No priced subtotal is available. Missing rates or usage are not treated as zero.")).font(.caption).foregroundStyle(.secondary)
                 }

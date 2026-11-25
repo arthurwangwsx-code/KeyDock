@@ -33,7 +33,7 @@ private actor UsageRestoreReadProbe {
 
 @Suite(.serialized) @MainActor struct AIRateIntegrationTests {
     @Test func completedRequestKeepsFrozenRateAcrossEditAndHistoryRestore() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let store = fixture.store
             let original = try addRate(store, currency: "USD", input: "2", output: "4")
             let draft = store.createDraft(input: "Synthetic private priced input")
@@ -58,7 +58,7 @@ private actor UsageRestoreReadProbe {
         }
     }
     @Test func productParsingFailureDoesNotUndoSuccessfulModelUsage() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             _ = try addRate(fixture.store, currency: "USD", input: "2", output: "4")
             let draft = fixture.store.createDraft(input: "Synthetic invalid proposal response")
             fixture.store.generateCommandProposal(draft: draft)
@@ -88,7 +88,7 @@ private actor UsageRestoreReadProbe {
         }
     }
     @Test func workflowParentIsAnIndexAndRestoresMultipleModelsAndCurrencies() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let store = fixture.store
             var second = AIActionPreset(name: "Synthetic second model", prompt: "Use only synthetic input.")
             second.modelOverride = "synthetic-other-model"; store.configuration.aiActions.append(second)
@@ -119,7 +119,7 @@ private actor UsageRestoreReadProbe {
         }
     }
     @Test func clearingBetweenWorkflowStepsNeverRevivesDeletedLeafCounts() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let store = fixture.store, original = try addRate(fixture.store, currency: "USD", input: "2", output: "4")
             let flow = WorkflowDefinition(name: "Synthetic clear between model calls", steps: [.init(operation: .aiAction(fixture.action.id)), .init(operation: .manualInput, input: .previousOutput), .init(operation: .aiAction(fixture.action.id), input: .previousOutput)])
             let id = try #require(store.runWorkflow(flow, input: "Synthetic input"))
@@ -163,7 +163,7 @@ private actor UsageRestoreReadProbe {
         }
     }
     @Test func lateClearSnapshotCannotInvalidateANewerCompletedWorkflowFamily() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let store = fixture.store
             _ = try addRate(store, currency: "USD", input: "2", output: "4")
             let oldClear = await store.usageMetadataStore.clear()
@@ -178,7 +178,7 @@ private actor UsageRestoreReadProbe {
         }
     }
     @Test func familyRejectsWrongParentOrStepWithoutFollowingOtherIndices() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let flow = WorkflowDefinition(name: "Synthetic family validation", steps: [.init(operation: .aiAction(fixture.action.id))])
             let id = try #require(fixture.store.runWorkflow(flow, input: "Synthetic input"))
             try await fixture.drain(id)
@@ -197,7 +197,7 @@ private actor UsageRestoreReadProbe {
         }
     }
     @Test func unrelatedWriteRereadsDirectUsageInsteadOfLeavingValidHistoryUnknown() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let store = fixture.store; _ = try addRate(store, currency: "USD", input: "2", output: "4")
             let id = try #require(store.runAI(action: fixture.action, draft: store.createDraft(input: "Synthetic restore race")))
             try await fixture.drain(id)
@@ -216,7 +216,7 @@ private actor UsageRestoreReadProbe {
         }
     }
     @Test func unrelatedWriteRereadsWorkflowFamilyAndClearStillRejectsOldRead() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let store = fixture.store; _ = try addRate(store, currency: "USD", input: "2", output: "4")
             let flow = WorkflowDefinition(name: "Synthetic restore family race", steps: [.init(operation: .aiAction(fixture.action.id))])
             let id = try #require(store.runWorkflow(flow, input: "Synthetic input"))
@@ -244,7 +244,7 @@ private actor UsageRestoreReadProbe {
         }
     }
     @Test func analysisClearAndNewerQueriesRejectLateSnapshots() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let store = fixture.store; _ = try addRate(store, currency: "USD", input: "2", output: "4")
             let id = try #require(store.runAI(action: fixture.action, draft: store.createDraft(input: "Synthetic analysis race")))
             try await fixture.drain(id)
@@ -271,7 +271,7 @@ private actor UsageRestoreReadProbe {
         }
     }
     @Test func analysisRereadsUnrelatedWritesAndMaintenanceInvalidatesPublishedResults() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let store = fixture.store
             let id = try #require(store.runAI(action: fixture.action, draft: store.createDraft(input: "Synthetic analysis refresh")))
             try await fixture.drain(id)
