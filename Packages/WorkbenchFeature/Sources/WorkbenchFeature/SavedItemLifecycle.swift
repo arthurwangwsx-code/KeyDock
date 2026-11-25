@@ -5,8 +5,17 @@ import AutomationCore
 import Combine
 
 enum SavedItemTarget: Equatable {
-    case command(UUID), aiAction(UUID)
-    var commandID: String { switch self { case .command(let id): "command." + id.uuidString; case .aiAction(let id): "ai." + id.uuidString } }
+    case command(UUID), aiAction(UUID), snippet(UUID), webAction(UUID), collection(UUID)
+    var commandID: String {
+        switch self {
+        case .command(let id): "command." + id.uuidString
+        case .aiAction(let id): "ai." + id.uuidString
+        case .snippet(let id): "snippet." + id.uuidString
+        case .webAction(let id): "web." + id.uuidString
+        case .collection(let id): "collection." + id.uuidString
+        }
+    }
+    var isWorkspaceTool: Bool { switch self { case .snippet, .webAction, .collection: true; default: false } }
 }
 
 struct SavedItemDependency: Identifiable, Equatable {
@@ -40,37 +49,55 @@ struct SavedItemRemovalReview: Identifiable {
 
 extension WorkbenchModel {
     func reviewSavedItemRemoval(_ target: SavedItemTarget) -> SavedItemRemovalReview? {
-        guard !isShuttingDown else { settingsNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return nil }
+        guard !isShuttingDown else { savedItemNotice(noticeKey("KeyDock is quitting. No new action was started."), for: target); return nil }
         guard let review = savedItemRemovalSnapshot(target) else {
-            settingsNoticeMessage = noticeKey("This saved item is no longer available."); return nil
+            savedItemNotice(noticeKey("This saved item is no longer available."), for: target); return nil
         }
-        settingsNoticeMessage = .none
+        savedItemNotice(.none, for: target)
         return review
+    }
+
+    func validateSavedToolEdit(_ target: SavedItemTarget, expected: String?) -> Bool {
+        guard target.isWorkspaceTool, !isShuttingDown, let expected,
+              savedItemRemovalSnapshot(target)?.fingerprint == expected else {
+            workspaceNoticeMessage = noticeKey("This saved tool was removed or changed. Keep this draft and start a new item or edit the current version.")
+            return false
+        }
+        return true
+    }
+
+    private func savedItemNotice(_ message: LocalizedNotice, for target: SavedItemTarget) {
+        if target.isWorkspaceTool { workspaceNoticeMessage = message } else { settingsNoticeMessage = message }
     }
 
     /// 最终确认与持久化之间不悬挂；当前引用再次核对，不级联改写其他定义。
     @discardableResult func removeSavedItem(_ reviewed: SavedItemRemovalReview) -> Bool {
-        guard !isShuttingDown else { settingsNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return false }
+        guard !isShuttingDown else { savedItemNotice(noticeKey("KeyDock is quitting. No new action was started."), for: reviewed.target); return false }
         guard let current = savedItemRemovalSnapshot(reviewed.target) else {
-            settingsNoticeMessage = noticeKey("This saved item is no longer available."); return false
+            savedItemNotice(noticeKey("This saved item is no longer available."), for: reviewed.target); return false
         }
-        guard current.fingerprint == reviewed.fingerprint else {
-            settingsNoticeMessage = noticeKey("This saved item changed. Review it again before removing it."); return false
+        guard current.fingerprint == reviewed.fingerprint, current.dependencies == reviewed.dependencies else {
+            savedItemNotice(noticeKey("This saved item changed. Review it again before removing it."), for: reviewed.target); return false
         }
         guard current.dependencies.isEmpty else {
-            settingsNoticeMessage = noticeKey("This item is still in use. Remove its references, then review again."); return false
+            savedItemNotice(noticeKey("This item is still in use. Remove its references, then review again."), for: reviewed.target); return false
         }
         var next = configuration
         switch reviewed.target {
         case .command(let id): next.savedCommands.removeAll { $0.id == id }
         case .aiAction(let id): next.aiActions.removeAll { $0.id == id }
+        case .snippet(let id): next.snippets.removeAll { $0.id == id }
+        case .webAction(let id): next.webActions.removeAll { $0.id == id }
+        case .collection(let id): next.collections.removeAll { $0.id == id }
         }
         let commandID = reviewed.target.commandID
         next.commandShortcuts[commandID] = nil
         next.preferences.favorites.remove(commandID)
         next.preferences.aliases[commandID] = nil
         next.preferences.recent[commandID] = nil
-        return commitShortcutConfiguration(next)
+        let saved = commitShortcutConfiguration(next)
+        if reviewed.target.isWorkspaceTool { workspaceNoticeMessage = saved ? .none : settingsNoticeMessage }
+        return saved
     }
 
     private func savedItemRemovalSnapshot(_ target: SavedItemTarget) -> SavedItemRemovalReview? {
@@ -83,6 +110,15 @@ extension WorkbenchModel {
         case .aiAction(let id):
             guard let value = configuration.aiActions.first(where: { $0.id == id }), let data = try? encoder.encode(value) else { return nil }
             name = value.displayName; bytes = data
+        case .snippet(let id):
+            guard let value = configuration.snippets.first(where: { $0.id == id }), let data = try? encoder.encode(value) else { return nil }
+            name = value.name; bytes = data
+        case .webAction(let id):
+            guard let value = configuration.webActions.first(where: { $0.id == id }), let data = try? encoder.encode(value) else { return nil }
+            name = value.name; bytes = data
+        case .collection(let id):
+            guard let value = configuration.collections.first(where: { $0.id == id }), let data = try? encoder.encode(value) else { return nil }
+            name = value.name; bytes = data
         }
         var dependencies: [SavedItemDependency] = []
         let workflows = configuration.workflows.filter { workflow in
@@ -106,17 +142,36 @@ extension WorkbenchModel {
     }
 }
 
+extension WorkspaceSession {
+    func prepareToolRemoval(_ target: SavedItemTarget, in store: WorkbenchModel) {
+        guard target.isWorkspaceTool, savedToolRemoval == nil, workflowLaunch == nil else { return }
+        savedToolRemoval = store.reviewSavedItemRemoval(target).map(SavedItemRemovalPresentation.init)
+    }
+    func refreshToolRemoval(_ presentationID: UUID, in store: WorkbenchModel) {
+        guard let current = savedToolRemoval, current.id == presentationID else { return }
+        if let review = store.reviewSavedItemRemoval(current.review.target) { current.update(review) }
+    }
+    func cancelToolRemoval(_ presentationID: UUID) {
+        guard savedToolRemoval?.id == presentationID else { return }; savedToolRemoval = nil
+    }
+    @discardableResult func confirmToolRemoval(_ reviewID: UUID, in store: WorkbenchModel) -> Bool {
+        guard let current = savedToolRemoval, current.review.id == reviewID, store.removeSavedItem(current.review) else { return false }
+        savedToolRemoval = nil
+        return true
+    }
+}
+
 extension SettingsSession {
     func editCommand(_ value: SavedCommand) {
-        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, desktopWorkspaceEditor == nil else { return }
+        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, deletedToolPreferencesReview == nil, desktopWorkspaceEditor == nil else { return }
         editedCommandExistingID = value.id; editedCommandSourceRunID = nil; editedCommand = value
     }
     func editAction(_ value: AIActionPreset) {
-        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, desktopWorkspaceEditor == nil else { return }
+        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, deletedToolPreferencesReview == nil, desktopWorkspaceEditor == nil else { return }
         editedActionExistingID = value.id; editedAction = value
     }
     func reviewCommand(_ value: SavedCommand, sourceRunID: UUID) {
-        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, desktopWorkspaceEditor == nil else { return }
+        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, deletedToolPreferencesReview == nil, desktopWorkspaceEditor == nil else { return }
         editedCommandExistingID = nil; editedCommandSourceRunID = sourceRunID; editedCommand = value
     }
     @discardableResult func saveEditedCommand(_ value: SavedCommand, in store: WorkbenchModel) -> Bool {
@@ -134,7 +189,7 @@ extension SettingsSession {
         return store.saveAction(value)
     }
     func prepareRemoval(_ target: SavedItemTarget, in store: WorkbenchModel) {
-        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, desktopWorkspaceEditor == nil else { return }
+        guard editedCommand == nil, editedAction == nil, savedItemRemoval == nil, deletedToolPreferencesReview == nil, desktopWorkspaceEditor == nil else { return }
         savedItemRemoval = store.reviewSavedItemRemoval(target).map(SavedItemRemovalPresentation.init)
     }
     func refreshRemoval(_ presentationID: UUID, in store: WorkbenchModel) {

@@ -60,6 +60,7 @@
 | [工作区定义保存复查](implementation/definition-saving-2026-11-25.md) | Agent／工作流失败提示、原文件补偿、编辑状态与真实保存版本 |
 | [保存动作生命周期](technical/saved-item-lifecycle.md) | 独立移除审阅、引用阻止、事务清理与旧编辑／在途快照边界 |
 | [保存动作生命周期复查](implementation/saved-item-lifecycle-2026-11-25.md) | 精确事务／引用／恢复、保留的测试失败与在途结果回归 |
+| [常用工具生命周期复查](implementation/saved-tool-lifecycle-2026-11-25.md) | 片段／网页／集合编辑与删除、历史遗留偏好修复及原生双语重启子集 |
 | [桌面工作区组合执行复查](implementation/desktop-workspace-execution-2026-11-25.md) | alpha.9运行／回执／取消／profile入口及已知失败复查 |
 | [桌面工作区建设方案](technical/desktop-workspaces.md) | 独立定义、冻结／焦点／两阶段执行与真实系统验收合同 |
 | [桌面工作区定义管理复查](implementation/desktop-workspace-definitions-2026-11-25.md) | 共用存储回归、版本与外部变化围栏、中英编辑原生子集 |

@@ -39,10 +39,8 @@ extension WorkbenchModel {
         } catch { workspaceNoticeMessage = noticeKey("URL could not be opened. Check the saved address and query.") }
     }
     @discardableResult func removeWebAction(_ id:UUID) -> Bool {
-        var next = configuration; next.webActions.removeAll { $0.id == id }
-        guard commitSettingsConfiguration(next) else { workspaceNoticeMessage = settingsNoticeMessage; return false }
-        workspaceNoticeMessage = .none
-        return true
+        guard let review = reviewSavedItemRemoval(.webAction(id)) else { return false }
+        return removeSavedItem(review)
     }
     @discardableResult func saveCollection(id:UUID?,name:String,commandIDs:[String]) -> Bool {
         if let id, !configuration.collections.contains(where: { $0.id == id }) {
@@ -67,10 +65,8 @@ extension WorkbenchModel {
         } catch { workspaceNoticeMessage = noticeKey("Collection could not be saved. Choose up to 32 available actions."); return false }
     }
     @discardableResult func removeCollection(_ id:UUID) -> Bool {
-        var next = configuration; next.collections.removeAll { $0.id == id }
-        guard commitSettingsConfiguration(next) else { workspaceNoticeMessage = settingsNoticeMessage; return false }
-        workspaceNoticeMessage = .none
-        return true
+        guard let review = reviewSavedItemRemoval(.collection(id)) else { return false }
+        return removeSavedItem(review)
     }
     func runCollectionAction(_ id: String, caller: ExecutionCaller = .user) {
         guard !isShuttingDown else { workspaceNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return }

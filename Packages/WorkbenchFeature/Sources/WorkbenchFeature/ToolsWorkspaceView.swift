@@ -8,7 +8,6 @@ struct ToolsWorkspaceView: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: WorkspaceSession
     @State private var chooseFile = false
-    @State private var confirmSnippetRemoval: UUID?
     var body: some View {
         Form {
             Section(L("Calculator")) {
@@ -49,18 +48,17 @@ struct ToolsWorkspaceView: View {
                 ForEach(store.configuration.snippets) { snippet in
                     HStack {
                         Text(snippet.name).lineLimit(1); Spacer()
-                        Button(L("Copy")) { store.copySnippet(snippet.id) }
-                        Button(L("Edit")) { session.selectedSnippetID = snippet.id; session.snippetName = snippet.name; session.snippetText = snippet.text }
-                        Button(L("Remove"),role:.destructive) { confirmSnippetRemoval = snippet.id }
+                        Button(L("Copy")) { store.copySnippet(snippet.id) }.accessibilityLabel(L("Copy snippet") + " · " + snippet.name)
+                        Button(L("Edit")) { session.editSnippet(snippet) }.accessibilityLabel(L("Edit snippet") + " · " + snippet.name)
+                        Button(L("Remove"),role:.destructive) { session.prepareToolRemoval(.snippet(snippet.id), in: store) }.accessibilityLabel(L("Remove snippet") + " · " + snippet.name)
                     }
                 }
-                TextField(L("Name"),text:$session.snippetName)
-                TextEditor(text:$session.snippetText).frame(minHeight:80,maxHeight:160).modifier(KDReadingSurface()).accessibilityLabel(L("Snippet text"))
+                Text(session.snippetDraft.editingID == nil ? L("New snippet") : L("Editing snippet")).font(.headline)
+                TextField(L("Snippet name"),text:$session.snippetDraft.name)
+                TextEditor(text:$session.snippetDraft.text).frame(minHeight:80,maxHeight:160).modifier(KDReadingSurface()).accessibilityLabel(L("Snippet text"))
                 HStack {
-                    Button(L("Save snippet")) {
-                        if store.saveSnippet(id:session.selectedSnippetID,name:session.snippetName,text:session.snippetText) { session.selectedSnippetID = nil; session.snippetName = ""; session.snippetText = "" }
-                    }
-                    Button(L("New snippet")) { session.selectedSnippetID = nil; session.snippetName = ""; session.snippetText = "" }
+                    Button(L("Save snippet")) { session.saveSnippet(in: store) }
+                    Button(L("New snippet")) { session.newSnippet() }
                 }
                 Text(L("Snippets are copied only when you choose them. KeyDock does not listen to your typing or expand hidden templates.")).font(.caption).foregroundStyle(.secondary)
             }
@@ -69,7 +67,6 @@ struct ToolsWorkspaceView: View {
             MCPContentPanel(store:store,session:session)
         }.formStyle(.grouped)
             .fileImporter(isPresented:$chooseFile,allowedContentTypes:[.text,.pdf,.image]) { result in if case .success(let url) = result { store.importDocument(url,session:session) } }
-            .confirmationDialog(L("Remove this snippet?"),isPresented:Binding(get:{confirmSnippetRemoval != nil},set:{if !$0 { confirmSnippetRemoval = nil }})) { Button(L("Remove"),role:.destructive) { if let id = confirmSnippetRemoval { store.removeSnippet(id) }; confirmSnippetRemoval = nil } }
     }
     private func convert() {
         do { session.unitResult = try store.calculate(.conversion(session.unitInput)) }

@@ -14,9 +14,7 @@ extension WorkbenchModel {
         return SHA256.hash(data: try encoder.encode(command)).map { String(format: "%02x", $0) }.joined()
     }
     func objectFingerprint<Value:Encodable>(_ value:Value) -> String? {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
-        guard let bytes = try? encoder.encode(value) else { return nil }
-        return SHA256.hash(data:bytes).map { String(format:"%02x",$0) }.joined()
+        SavedItemIdentity.fingerprint(value)
     }
 
     @discardableResult func authorizeHostAction(

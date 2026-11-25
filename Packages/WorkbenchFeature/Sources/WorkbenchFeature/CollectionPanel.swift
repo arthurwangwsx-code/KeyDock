@@ -33,8 +33,8 @@ struct CollectionPanel: View {
             if let collection = store.configuration.collections.first(where: { $0.id == session.selectedCollectionID }) {
                 HStack {
                     Text(collection.name).font(.headline); Spacer()
-                    Button(L("Edit")) { session.editCollection(collection) }
-                    Button(L("Remove collection"), role: .destructive) { onRemove(collection.id) }
+                    Button(L("Edit")) { session.editCollection(collection) }.accessibilityLabel(L("Edit collection") + " · " + collection.name)
+                    Button(L("Remove collection"), role: .destructive) { onRemove(collection.id) }.accessibilityLabel(L("Remove collection") + " · " + collection.name)
                 }
                 ForEach(CollectionPresentationRow.rows(collection.commandIDs, scope: .saved(collection.id))) { row in
                     let index = row.index, id = row.commandID

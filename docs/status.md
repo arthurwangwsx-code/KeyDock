@@ -6,7 +6,7 @@
 
 当前[alpha.12](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.12)已公开并安装，精确源`d99fee8078f807ce3803f2829181c69509468cc2`：685 Swift／58 Python／708 key完整本机PASS（含原配置系统OCR双轮）；同源core与优化构建、独立互通CI、Developer ID、公证／装订／Gatekeeper、原子替换、公开回下载和[发行审计45562087011](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45562087011)均PASS。实际About为alpha.12 (12)，alpha.11直接回退包与更早证据保留。见[发行证据](implementation/alpha12-release-2026-11-25.md)。alpha.11及其历史资格保持原记录。
 
-只读复查仍确认实际工程缺口：Snippet等常用工具的旧编辑稿／删除关联配置闭环、脱敏配置导出和UI首帧采样。它们与真实系统／API验收分别推进，完整产品不能归为“只剩权限或配置”。
+任务27候选alpha.13补齐Snippet／网页／集合的旧编辑稿与删除关联配置闭环，提供历史遗留偏好显式修复。74项定向回归、729个文案key、中文浅色／英文深色保存／删除／Esc／重启与修复子集PASS；尚未完整资格或发行，常规App保持alpha.12。见[本轮复查](implementation/saved-tool-lifecycle-2026-11-25.md)。脱敏配置导出和UI首帧采样仍是实际工程缺口，与真实系统／API验收分别推进。
 
 桌面工作区组合运行、profile快捷键、设置应用、父子同库与有序阶段结果、取消／drain及恢复不重放已经接通；别名清除和文件补偿已修补。中文浅色／英文深色、窄卡片／宽表格及设置入口已观察并修复实际挤压。任务20.2／20.3完成工程范围，20.4实际AX／多屏、真实模型、完整视觉／辅助功能与长期可靠性仍开放；此前FAIL保留。
 

@@ -108,7 +108,11 @@ private struct LauncherCatalogProvider: CommandProviding {
     var editedCommandExistingID: UUID?
     var editedActionExistingID: UUID?
     @Published var savedItemRemoval: SavedItemRemovalPresentation?
+    @Published var deletedToolPreferencesReview: DeletedToolPreferencePresentation?
     @Published var desktopWorkspaceEditor: DesktopWorkspaceEditorDraft?
+    var canBeginSavedItemEditor: Bool {
+        store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil
+    }
     @Published public var apiKey = ""
     @Published public var keyStored = false
     @Published public var endpoint = ""
@@ -140,13 +144,19 @@ private struct LauncherCatalogProvider: CommandProviding {
         localHTTP = store.configuration.localHTTP; tokenParameter = store.configuration.tokenLimitParameter
     }
     public func beginNewCommand() {
-        guard store?.isShuttingDown == false, editedCommand == nil, editedAction == nil, savedItemRemoval == nil, desktopWorkspaceEditor == nil else { return }
+        guard canBeginSavedItemEditor else { return }
         editedCommandSourceRunID = nil; editedCommandExistingID = nil
         editedCommand = SavedCommand(name: "", executable: "/usr/bin/printf")
     }
     public func beginNewAction() {
-        guard store?.isShuttingDown == false, editedCommand == nil, editedAction == nil, savedItemRemoval == nil, desktopWorkspaceEditor == nil else { return }
+        guard canBeginSavedItemEditor else { return }
         editedActionExistingID = nil; editedAction = AIActionPreset(name: "", prompt: "")
+    }
+    @discardableResult func beginNextCommandReview(in store: WorkbenchModel) -> Bool {
+        // 先确认呈现所有权，再消费待审队列；已有sheet时迟到按钮不得产生无人持有的active审阅。
+        guard canBeginSavedItemEditor, let review = store.takeNextCommandReview() else { return false }
+        editedCommandExistingID = nil; editedCommandSourceRunID = review.id; editedCommand = review.command
+        return true
     }
     public func setVisible(_ value: Bool) { visible = value; updateVisibleReferences() }
     private func updateVisibleReferences() {
@@ -186,9 +196,8 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var unitResult = ""
     @Published public var calculatorInput = ""
     @Published public var calculatorResult = ""
-    @Published public var snippetName = ""
-    @Published public var snippetText = ""
-    @Published public var selectedSnippetID: UUID?
+    @Published var snippetDraft = SnippetEditorDraft()
+    @Published var savedToolRemoval: SavedItemRemovalPresentation?
     @Published public var selectedMCPSourceID: UUID?
     @Published public var mcpPromptArguments = "{}"
     var contextGeneration = UUID()

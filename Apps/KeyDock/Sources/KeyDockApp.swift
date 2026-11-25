@@ -613,6 +613,13 @@ import KeyDockUI
                     self.revokeDesktopInvocations(); self.dismissClipboard(restore: false); self.dismissLauncher(restore: false)
                     self.store.performWorkflowShortcut(id: command)
                 }
+                else if let command = entry.commandID, self.store.isSavedToolShortcut(command) {
+                    guard let invocation = self.store.prepareSavedToolShortcut(id: command) else { return }
+                    self.revokeDesktopInvocations(); self.dismissClipboard(restore: false); self.dismissLauncher(restore: false)
+                    // 三类工具不需要原目标；复制完成后的通用dismiss也不能恢复旧Launcher目标。
+                    self.originalIdentity = nil
+                    self.store.performCommand(invocation)
+                }
                 else if let command = entry.commandID { self.presentLauncher(commandID: command) }
                 else if self.launcher?.isKeyWindow == true { self.dismissLauncher(restore: true) }
                 else { self.presentLauncher() }

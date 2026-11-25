@@ -6,6 +6,28 @@ struct SavedItemRemovalView: View {
     @ObservedObject var session: SettingsSession
     @ObservedObject var presentation: SavedItemRemovalPresentation
     var body: some View {
+        SavedItemRemovalContent(presentation: presentation, notice: store.settingsNotice,
+            cancel: { session.cancelRemoval($0) }, refresh: { session.refreshRemoval($0, in: store) }, confirm: { session.confirmRemoval($0, in: store) })
+    }
+}
+
+struct SavedToolRemovalView: View {
+    @ObservedObject var store: WorkbenchModel
+    @ObservedObject var session: WorkspaceSession
+    @ObservedObject var presentation: SavedItemRemovalPresentation
+    var body: some View {
+        SavedItemRemovalContent(presentation: presentation, notice: store.workspaceNotice,
+            cancel: { session.cancelToolRemoval($0) }, refresh: { session.refreshToolRemoval($0, in: store) }, confirm: { session.confirmToolRemoval($0, in: store) })
+    }
+}
+
+private struct SavedItemRemovalContent: View {
+    @ObservedObject var presentation: SavedItemRemovalPresentation
+    let notice: String
+    let cancel: (UUID) -> Void
+    let refresh: (UUID) -> Void
+    let confirm: (UUID) -> Bool
+    var body: some View {
         let review = presentation.review
         VStack(alignment: .leading, spacing: 16) {
             Text(L("Remove saved item?")).font(.title2.bold())
@@ -19,12 +41,14 @@ struct SavedItemRemovalView: View {
                     }.padding(12)
                 }.frame(maxHeight: 180).modifier(KDReadingSurface())
             }
-            if !store.settingsNotice.isEmpty { KDInlineNotice(store.settingsNotice) }
+            if !notice.isEmpty { KDInlineNotice(notice) }
             HStack {
-                Button(L("Cancel")) { session.cancelRemoval(presentation.id) }.keyboardShortcut(.cancelAction)
-                Button(L("Review again")) { session.refreshRemoval(presentation.id, in: store) }
+                Button(L("Cancel")) { cancel(presentation.id) }.keyboardShortcut(.cancelAction)
+                Button(L("Review again")) { refresh(presentation.id) }
+                    .accessibilityLabel(L("Review again") + " · " + review.name)
                 Spacer()
-                Button(L("Remove"), role: .destructive) { session.confirmRemoval(review.id, in: store) }.disabled(!review.dependencies.isEmpty)
+                Button(L("Remove"), role: .destructive) { _ = confirm(review.id) }.disabled(!review.dependencies.isEmpty)
+                    .accessibilityLabel(L("Remove") + " · " + review.name)
             }
         }.padding(24).frame(width: 520)
     }

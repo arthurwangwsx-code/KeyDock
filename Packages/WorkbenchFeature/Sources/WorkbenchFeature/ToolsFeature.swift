@@ -5,21 +5,28 @@ import ExecutionCore
 
 extension WorkbenchModel {
     @discardableResult public func saveSnippet(id: UUID? = nil,name: String,text: String) -> Bool {
+        if let id, !configuration.snippets.contains(where: { $0.id == id }) {
+            workspaceNoticeMessage = noticeKey("This saved tool was removed or changed. Keep this draft and start a new item or edit the current version.")
+            return false
+        }
         do {
             let snippet = try SnippetDefinition(id:id ?? UUID(),name:name,text:text)
             var next = configuration
             if let index = next.snippets.firstIndex(where:{$0.id == snippet.id}) { next.snippets[index] = snippet }
             else { guard next.snippets.count < 200 else { throw SnippetValidationError.textTooLong }; next.snippets.append(snippet) }
             guard try JSONEncoder().encode(next).count <= 4*1_048_576 else { throw SnippetValidationError.textTooLong }
-            return commitSettingsConfiguration(next)
+            guard commitSettingsConfiguration(next) else { workspaceNoticeMessage = settingsNoticeMessage; return false }
+            workspaceNoticeMessage = .none
+            return true
         } catch { workspaceNoticeMessage = noticeKey("Snippet could not be saved. Check its name and text size."); return false }
     }
     public func copySnippet(_ id: UUID, caller: ExecutionCaller = .user) {
         guard let snippet = configuration.snippets.first(where:{$0.id == id}) else { return }
         do { try copyAuthorizedText(snippet.text,caller:caller); recordDirectActivity(commandID:"snippet."+id.uuidString,category:.utility,outcome:.succeeded) } catch { workspaceNoticeMessage = noticeKey("Text could not be copied") }
     }
-    public func removeSnippet(_ id: UUID) {
-        var next = configuration; next.snippets.removeAll{$0.id == id}; _ = commitSettingsConfiguration(next)
+    @discardableResult public func removeSnippet(_ id: UUID) -> Bool {
+        guard let review = reviewSavedItemRemoval(.snippet(id)) else { return false }
+        return removeSavedItem(review)
     }
     public func importDocument(_ url: URL, session: WorkspaceSession) {
         runContextOperation(resource:url.path,operation:.importContext,session:session,work:{

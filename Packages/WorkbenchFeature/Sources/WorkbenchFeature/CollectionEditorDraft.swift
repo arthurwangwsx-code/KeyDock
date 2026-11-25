@@ -4,6 +4,7 @@ import CommandCore
 /// 浏览选择独立于编辑身份；数组保留用户顺序，过滤不改变清单。
 struct CollectionEditorDraft: Equatable {
     var editingID: UUID? = nil
+    var expectedFingerprint: String? = nil
     var name = ""
     var commandIDs: [String] = []
     var actionFilter = ""
@@ -28,9 +29,10 @@ struct CollectionEditorDraft: Equatable {
 
 extension WorkspaceSession {
     func editCollection(_ collection: CommandCollection) {
-        collectionDraft = CollectionEditorDraft(editingID: collection.id, name: collection.name, commandIDs: collection.commandIDs)
+        guard savedToolRemoval == nil else { return }
+        collectionDraft = CollectionEditorDraft(editingID: collection.id, expectedFingerprint: SavedItemIdentity.fingerprint(collection), name: collection.name, commandIDs: collection.commandIDs)
     }
-    func newCollection() { collectionDraft = CollectionEditorDraft() }
+    func newCollection() { guard savedToolRemoval == nil else { return }; collectionDraft = CollectionEditorDraft() }
     func reconcileCollectionSelection(in store: WorkbenchModel) {
         if let id = selectedCollectionID, !store.configuration.collections.contains(where: { $0.id == id }) { selectedCollectionID = nil }
     }
@@ -41,7 +43,9 @@ extension WorkspaceSession {
         }
     }
     @discardableResult func saveCollection(in store: WorkbenchModel) -> Bool {
+        guard savedToolRemoval == nil else { return false }
         let draft = collectionDraft
+        if let id = draft.editingID, !store.validateSavedToolEdit(.collection(id), expected: draft.expectedFingerprint) { return false }
         guard store.saveCollection(id: draft.editingID, name: draft.name, commandIDs: draft.commandIDs) else { return false }
         newCollection()
         return true

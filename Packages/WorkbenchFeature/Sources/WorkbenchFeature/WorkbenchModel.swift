@@ -346,6 +346,11 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     func rebuildCatalog() { catalog = catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
     public func execute(_ item: CommandItem, caller: ExecutionCaller = .user) {
         guard !isShuttingDown else { launcherNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return }
+        if isSavedToolShortcut(item.id), !isCurrentCommandItem(item) {
+            workspaceNoticeMessage = noticeKey("This saved tool changed or is no longer available. Choose it again.")
+            launcherNoticeMessage = workspaceNoticeMessage
+            return
+        }
         if executeContributionItem(item,caller:caller) { return }
         if isDesktopItem(item) { onDesktopAction?(item, caller); return }
         let previousWorkspaceRuns = desktopWorkspaceGroups.keys.compactMap { taskHandles[$0] }

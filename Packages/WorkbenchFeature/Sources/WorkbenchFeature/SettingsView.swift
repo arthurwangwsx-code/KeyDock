@@ -26,13 +26,14 @@ public struct SettingsRootView: View {
                         Button(L("Retry shortcuts")) { store.retryShortcuts() }
                     }
                 }
-                if !store.pendingCommandReviews.isEmpty { Section { HStack { Text(L("Command draft ready for review")); Spacer(); Button(L("Review")) { if let review = store.takeNextCommandReview() { session.reviewCommand(review.command, sourceRunID: review.id) } }.disabled(session.editedCommand != nil || session.editedAction != nil) } } }
+                if !store.pendingCommandReviews.isEmpty { Section { HStack { Text(L("Command draft ready for review")); Spacer(); Button(L("Review")) { session.beginNextCommandReview(in: store) }.disabled(!session.canBeginSavedItemEditor) } } }
                 content
             }.formStyle(.grouped)
         }.frame(minWidth: 740, minHeight: 530).environment(\.locale, KDLocalizer.locale)
             .sheet(item: $session.editedCommand, onDismiss: { session.editedCommandSourceRunID = nil; session.editedCommandExistingID = nil }) { command in CommandEditor(command: command, failureMessage: { store.settingsNoticeMessage }) { session.saveEditedCommand($0, in: store) } }
             .sheet(item: $session.editedAction, onDismiss: { session.editedActionExistingID = nil }) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureMessage: { store.settingsNoticeMessage }) { session.saveEditedAction($0, in: store) } }
             .sheet(item: $session.savedItemRemoval) { presentation in SavedItemRemovalView(store: store, session: session, presentation: presentation) }
+            .sheet(item: $session.deletedToolPreferencesReview) { presentation in DeletedToolPreferencesView(store: store, session: session, presentation: presentation) }
             .sheet(item: $session.desktopWorkspaceEditor) { draft in DesktopWorkspaceEditorView(store: store, session: session, draft: draft) }
             .onAppear { exclusions = store.configuration.clipboardExclusions.joined(separator: "\n"); session.keyStored = store.credentialExists() }
             .confirmationDialog(L("Clear finished tasks and idle drafts?"), isPresented: $confirmTaskClear) {
@@ -79,6 +80,12 @@ public struct SettingsRootView: View {
                 }
                 TextField(L("Find an action to customize"), text: Binding(get: { session.shortcutQuery }, set: { session.editShortcutQuery($0) }))
                 Text(L("Choose Applications to assign app shortcuts. Window layouts and tools can be configured without adding favorites.")).font(.caption).foregroundStyle(.secondary)
+            }
+            if store.hasDeletedToolPreferences {
+                Section(L("Deleted tool preferences")) {
+                    Text(L("Older versions may leave shortcut, favorite, alias or recent preferences after a tool was deleted. Review the exact items before clearing them.")).font(.caption).foregroundStyle(.secondary)
+                    Button(L("Review deleted tool preferences")) { session.prepareDeletedToolPreferences(in: store) }
+                }
             }
             Section(L("Global shortcut")) {
                 HStack { Text(L("Open KeyDock")); Spacer(); recorder(Binding(get: { store.configuration.launcherShortcut }, set: { store.setLauncherShortcut($0) })) }

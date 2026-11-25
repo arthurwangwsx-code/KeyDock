@@ -81,7 +81,7 @@ import MacAdapters
         try await withFixture { fixture in
             let store = fixture.store, target = try fixture.add(ai: ai)
             let operation: WorkflowOperation
-            switch target { case .command(let id): operation = .savedCommand(id); case .aiAction(let id): operation = .aiAction(id) }
+            switch target { case .command(let id): operation = .savedCommand(id); case .aiAction(let id): operation = .aiAction(id); default: throw CocoaError(.fileReadUnknown) }
             let workflow = WorkflowDefinition(name: "Synthetic reference", steps: [.init(operation: operation)])
             #expect(store.saveWorkflow(workflow))
             var next = store.configuration
@@ -107,6 +107,7 @@ import MacAdapters
             switch target {
             case .command(let id): var value = try #require(store.configuration.savedCommands.first { $0.id == id }); value.name += " edited"; #expect(store.saveCommand(value))
             case .aiAction(let id): var value = try #require(store.configuration.aiActions.first { $0.id == id }); value.prompt += " edited"; #expect(store.saveAction(value))
+            default: throw CocoaError(.fileReadUnknown)
             }
             #expect(!store.removeSavedItem(old))
             let current = try #require(store.reviewSavedItemRemoval(target))
@@ -183,6 +184,7 @@ import MacAdapters
             switch target {
             case .command(let id): session.editCommand(try #require(store.configuration.savedCommands.first { $0.id == id }))
             case .aiAction(let id): session.editAction(try #require(store.configuration.aiActions.first { $0.id == id }))
+            default: throw CocoaError(.fileReadUnknown)
             }
             #expect(store.removeSavedItem(try #require(store.reviewSavedItemRemoval(target))))
             let bytes = try Data(contentsOf: fixture.file)

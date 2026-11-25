@@ -1921,6 +1921,38 @@
         }
       }
     },
+    "Clear preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear preferences"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清理偏好"
+          }
+        }
+      }
+    },
+    "Clear preferences for deleted tools?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear preferences for deleted tools?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清理已删除工具的偏好？"
+          }
+        }
+      }
+    },
     "Clear selection": {
       "localizations": {
         "en": {
@@ -2705,6 +2737,22 @@
         }
       }
     },
+    "Copy snippet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy snippet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制片段"
+          }
+        }
+      }
+    },
     "Cost unknown (no rate configured)": {
       "localizations": {
         "en": {
@@ -2993,6 +3041,38 @@
         }
       }
     },
+    "Deleted tool preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted tool preferences"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已删除工具的偏好"
+          }
+        }
+      }
+    },
+    "Deleted tool preferences changed. Review them again before clearing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted tool preferences changed. Review them again before clearing."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已删除工具的偏好发生变化，请重新检查后再清理。"
+          }
+        }
+      }
+    },
     "Deny": {
       "localizations": {
         "zh-Hans": {
@@ -3233,6 +3313,38 @@
         }
       }
     },
+    "Edit URL action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit URL action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑 URL 动作"
+          }
+        }
+      }
+    },
+    "Edit collection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit collection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑集合"
+          }
+        }
+      }
+    },
     "Edit shortcuts and aliases": {
       "localizations": {
         "en": {
@@ -3245,6 +3357,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "编辑快捷键与别名"
+          }
+        }
+      }
+    },
+    "Edit snippet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit snippet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑片段"
           }
         }
       }
@@ -3293,6 +3421,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "编辑集合"
+          }
+        }
+      }
+    },
+    "Editing snippet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editing snippet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑片段"
           }
         }
       }
@@ -3649,6 +3793,22 @@
         }
       }
     },
+    "Favorite": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorite"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏"
+          }
+        }
+      }
+    },
     "File name": {
       "localizations": {
         "zh-Hans": {
@@ -3725,6 +3885,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "请先完成或取消当前工作流输入，再打开另一个。"
+          }
+        }
+      }
+    },
+    "Finish or cancel the saved item review before opening another action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish or cancel the saved item review before opening another action."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先完成或取消当前移除审阅，再打开其他动作。"
           }
         }
       }
@@ -5521,6 +5697,22 @@
         }
       }
     },
+    "Older versions may leave shortcut, favorite, alias or recent preferences after a tool was deleted. Review the exact items before clearing them.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older versions may leave shortcut, favorite, alias or recent preferences after a tool was deleted. Review the exact items before clearing them."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧版本移除工具后，可能留下快捷键、收藏、别名或最近项。清理前请核对具体项目。"
+          }
+        }
+      }
+    },
     "One text input is kept in this session. A new import replaces it. Clear input removes its text and source; existing AI drafts and task results are kept in history.": {
       "localizations": {
         "en": {
@@ -5549,6 +5741,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Only enable sources you trust. Local servers run as your user and can access files or run commands outside KeyDock. This is not an OS sandbox. Connections start only when you connect or start an allowed Agent run."
+          }
+        }
+      }
+    },
+    "Only shortcut, favorite, alias and recent preferences for missing snippets, URL actions and collections are cleared. Saved definitions, collection contents, tasks and history are kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only shortcut, favorite, alias and recent preferences for missing snippets, URL actions and collections are cleared. Saved definitions, collection contents, tasks and history are kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅清理已不存在的片段、URL 动作和集合所遗留的快捷键、收藏、别名和最近项。保留现有定义、集合内容、任务和历史记录。"
           }
         }
       }
@@ -6161,6 +6369,22 @@
         }
       }
     },
+    "Recent actions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近动作"
+          }
+        }
+      }
+    },
     "Record KeyDock usage": {
       "localizations": {
         "zh-Hans": {
@@ -6369,6 +6593,22 @@
         }
       }
     },
+    "Remove URL action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove URL action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除 URL 动作"
+          }
+        }
+      }
+    },
     "Remove application target": {
       "localizations": {
         "en": {
@@ -6465,6 +6705,22 @@
         }
       }
     },
+    "Remove snippet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove snippet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除片段"
+          }
+        }
+      }
+    },
     "Remove this Agent profile? Running tasks keep their original snapshot.": {
       "localizations": {
         "zh-Hans": {
@@ -6497,22 +6753,6 @@
         }
       }
     },
-    "Remove this saved item?": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remove this saved item?"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移除这个已保存的项目？"
-          }
-        }
-      }
-    },
     "Remove this schedule?": {
       "localizations": {
         "zh-Hans": {
@@ -6525,22 +6765,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove this schedule?"
-          }
-        }
-      }
-    },
-    "Remove this snippet?": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移除此文本片段？"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remove this snippet?"
           }
         }
       }
@@ -6861,6 +7085,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "检查命令"
+          }
+        }
+      }
+    },
+    "Review deleted tool preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review deleted tool preferences"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查已删除工具的偏好"
           }
         }
       }
@@ -8033,6 +8273,22 @@
         }
       }
     },
+    "Snippet name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snippet name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "片段名称"
+          }
+        }
+      }
+    },
     "Snippet text": {
       "localizations": {
         "zh-Hans": {
@@ -8849,6 +9105,22 @@
         }
       }
     },
+    "There are no deleted tool preferences to clear.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no deleted tool preferences to clear."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有需要清理的已删除工具偏好。"
+          }
+        }
+      }
+    },
     "This AI action is unavailable. Existing tasks keep their settings. Choose an action for your next task.": {
       "localizations": {
         "en": {
@@ -9085,6 +9357,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "此已保存项目已不可用。"
+          }
+        }
+      }
+    },
+    "This saved tool changed or is no longer available. Choose it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved tool changed or is no longer available. Choose it again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工具已更改或不可用，请重新选择。"
+          }
+        }
+      }
+    },
+    "This saved tool was removed or changed. Keep this draft and start a new item or edit the current version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved tool was removed or changed. Keep this draft and start a new item or edit the current version."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工具已被移除或修改。草稿已保留，请新建一项，或重新编辑当前版本。"
           }
         }
       }
@@ -9601,6 +9905,22 @@
         }
       }
     },
+    "URL action name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL action name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL 动作名称"
+          }
+        }
+      }
+    },
     "URL actions": {
       "localizations": {
         "zh-Hans": {
@@ -10013,6 +10333,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Use"
+          }
+        }
+      }
+    },
+    "Use URL action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use URL action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用 URL 动作"
           }
         }
       }
