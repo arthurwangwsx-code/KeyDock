@@ -52,3 +52,11 @@
 三轮原生进程均正常退出；`task-material-library-native-v3`只记录生命周期，receipt SHA256 `139d3510c954cea545a9a588c38d771e332a67cd143d76c4e8a5539387f52d8d`。后置条件检查`task-material-library-native-proof-v1`另行核验：第一隔离域确认删除后正文0份而父metadata2份保留；第二隔离域只有一份三字段正文，input／result／checkpoint input／checkpoint output各为131072字节，旧两份回执逐字段未变，合计3份成功回执，重启及回填后没有新增attempt，CLI／工具回执均为空，control无待完成操作，捕获设置已关闭。证明文件为`.local/desktop/task-material-library-native-proof.json`，不输出或上传正文。截图仅通过CUA在对话中实际观察，未声称存在本地截图文件。
 
 第一次原生AX合并与空态布局FAIL保持为历史证据；修补后的子集PASS不扩张为完整VoiceOver／IME／全屏多屏、1MiB结果、物理热键或全部视觉验收。真实API仍按用户决定待配置。本轮代码随后只追加文档／任务进度，最终干净本机和指定同源CI另记，不能由前序d2df5d1的绿测替代。
+
+## 1MiB场景触发的结果显示卡顿
+
+`94f5311`的918 Swift／137 Python／930 key完整本机与[同源CI45718684585](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45718684585)通过，但随后的合成1MiB原生场景暴露实际产品缺陷，因此尚未晋升master或发行。命令在独立owned域中通过原生Run明确启动，使用非交互Python分别向stdout和stderr输出524288个B／C，不使用shell、Terminal、模型或个人文件。
+
+结果区两次CUA观察超时；进程持续约99% CPU，RSS从约736MiB增长到约1096MiB，采样主线程集中在SwiftUI的AppKitTextInteractionView／TextSelection／TextLayoutManager。普通⌘Q未响应，随后仅对已核对PID／路径／owned fixture的本次Preview发送SIGTERM，保留exit-15和E2E非零回执，不称正常退出或App自行崩溃。CLI父metadata仍为running，不把进程输出计划当作已完整接收1MiB的证明。
+
+失败域为`KeyDock-Review-d017f527-e262-4283-99fb-79613f5f0d81`，采样在`.local/desktop/large-result-hang.sample.txt`；`task-material-large-result-native-v1` receipt SHA256 `6df9f9fecfe192248639cd6baf81368092cb36831b0438cc8ff41a4e87e2c06c`。结果区改为复用现有AppKit只读文本组件，保留完整正文、选择、独立滚动与原复制动作；这项修补必须重新做大结果原生验证，不能沿用前序绿测。正式App仍为alpha.19。

@@ -11297,6 +11297,22 @@
         }
       }
     },
+    "Task output": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task output"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务输出"
+          }
+        }
+      }
+    },
     "Tasks": {
       "localizations": {
         "en": {

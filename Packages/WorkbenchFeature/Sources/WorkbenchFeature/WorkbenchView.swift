@@ -106,7 +106,9 @@ public struct WorkspaceView: View {
                     if let result = task.desktopWorkspaceResult {
                         DesktopWorkspaceResultView(result: result, labels: task.desktopWorkspaceLabels)
                     } else {
-                    ScrollView { Text(task.output.isEmpty ? (task.restoredFromReceipt ? L("Session output is not restored here. Use Task content to view text you saved.") : L("No output")) : task.output).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(16) }
+                    ReadOnlyTextPreview(text: task.output.isEmpty ? (task.restoredFromReceipt ? L("Session output is not restored here. Use Task content to view text you saved.") : L("No output")) : task.output,
+                        accessibilityLabel: L("Task output"), monospaced: true)
+                        .frame(maxWidth: .infinity, minHeight: 160, maxHeight: .infinity)
                         .modifier(KDReadingSurface())
                     }
                     HStack {
