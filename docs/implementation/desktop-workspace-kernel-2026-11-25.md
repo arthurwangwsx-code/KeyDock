@@ -26,8 +26,16 @@
 | `e0a351c8-fa34-4644-aebb-43501f63729c` | PASS | 37 tests／5 suites，41.214s；新增focus／group和旧应用／激活回归 |
 | `40e0e02f-2fdf-4588-8c2d-54d27f8a045b` | PASS | 41 tests／5 suites，15.459s；统一复核、单plan竞争、写中拓扑变化、holding围栏 |
 | `c2f0432a-14b2-4fca-883c-813604c2a12a` | PASS | 43 tests／5 suites，9.552s；最终读回无额外等待、预取消 |
+| `46194520-470a-4e02-950f-4280c688b9e0` | PASS | 73份文档、13参考、37 requirements／99 scenarios／126 tasks |
+| `69e9c034-74d5-4b1d-ac46-ea05f5c9cd92` | FAIL（空间预检） | 干净`fc259796d54b4187a14f8d388687a48f9ab191fe`的本机check --ci在2GiB原门禁前停止，实测1.32GiB；未执行全套检查／新构建 |
 
 计数采用Swift Testing的test-run结果，参数化case另在日志列出，不能把每条日志都算成独立声明。前几轮测试存在未使用返回值编译警告，随后显式丢弃；没有弱化断言或删除失败日志。开发中一次apply_patch因同补丁重复文件操作在校验阶段拒绝，随后顺序修正，没有编译缺文件状态。
+
+代码提交`fc259796d54b4187a14f8d388687a48f9ab191fe`已推送已授权仓库的同名分支，master保持原值。完整本机检查的空间门禁没有降低；本轮不再清除warm测试缓存，也不删除旧发行／安装回退证据或操作其他项目。
+
+[同源run 45513759647](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45513759647)及job `138867797327`最终PASS：cloud-core为**573 Swift／46 Python／660中英文key**，Release优化版Preview构建、归档及两个artifact上传均通过。core检查于2026-11-24T23:54:17Z–23:59:52Z，优化构建至2026-11-25T00:02:34Z；OCR diagnostic job按原条件skipped，系统OCR为NOT_QUALIFIED。
+
+已回下载同源诊断artifact `14976419889`（83,285字节，SHA256 `5a6e256b8bba69b20dd5c44dad61adeb244fd2923174c457f040ad1f2bd01a1a`），核对summary的精确clean source与7份stage log摘要／字节数。test inventory共553个声明ID（core543／Terminal9／OCR1），SHA256 `08078b8cf1ae53a723249749becda9fdfbc88271777805f9ea9a8a5938ca548b`，执行次数另计。该云端检查不代替本机受空间门禁阻止的完整检查，也不是正式Developer ID发行包或真实系统验收。
 
 ## 尚未完成
 

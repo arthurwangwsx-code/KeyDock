@@ -22,7 +22,7 @@ Agent／工作流的保存反馈后续已实现：验证或写入失败在发起
 
 桌面工作区第一段定义管理已接入：独立档案／有序目标／屏幕策略／revision，设置编辑器与仅管理入口快捷键；30项档案定向、48项编辑／事务回归，以及中文浅色／英文深色添加、重排、保存重开、失败保留和取消子集通过。原应用动作存储算法抽成共用内核，保留旧wrapper与完整事务回归；no-op外部变化校验已补齐。干净源`d1af256`完整cloud-core为545 Swift／46 Python／660 key通过，[同源core与优化构建45509658224](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45509658224)PASS，系统OCR仍NOT_QUALIFIED；见[定义复查](implementation/desktop-workspace-definitions-2026-11-25.md)。**完整批量执行与profile快捷键生命周期仍未接通**，任务20保持未关闭。
 
-执行内核继续接入：同一拓扑下的全部窗口冻结／统一复核、单次消费、Restore独立基线、工作区专用焦点交接和原子child撤销已经实现，43 tests／5 suites定向通过。审查发现并修补零frame写入污染Restore、旧Restore消费新基线及焦点等待／取消竞争，见[内核复查](implementation/desktop-workspace-kernel-2026-11-25.md)。应用后台准备、父子回执和执行组合根／profile快捷键仍未串联，UI仍仅提供定义管理；没有执行真实AX／多屏操作，任务20.3和完整产品保持PARTIAL。
+执行内核继续接入：同一拓扑下的全部窗口冻结／统一复核、单次消费、Restore独立基线、工作区专用焦点交接和原子child撤销已经实现，43 tests／5 suites定向通过。审查发现并修补零frame写入污染Restore、旧Restore消费新基线及焦点等待／取消竞争，见[内核复查](implementation/desktop-workspace-kernel-2026-11-25.md)。干净`fc25979`的本机完整检查被原2GiB空间门禁拦截（当时1.32GiB）；[同源云端core／优化构建45513759647](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45513759647)为573 Swift／46 Python／660 key PASS，并已回下载核对诊断artifact，系统OCR仍NOT_QUALIFIED。应用后台准备、父子回执和执行组合根／profile快捷键仍未串联，UI仍仅提供定义管理；没有执行真实AX／多屏操作，任务20.3和完整产品保持PARTIAL。
 
 本轮已发布并安装alpha.7：有序多选合并、完整预览与可配置主动作，最多20项／1MiB。中文浅色／英文深色、跨查询、重排、空行与Shift-Return、偏好重启保留及实际合并复制均已观察。AI生成成功但复制失败会保留完整结果和成功回执。当前源472项Swift、46项Python、583条文案、同源CI及公证／公开回下载通过；真实自动插入仍依10.1验收。详见[本轮证据](implementation/clipboard-composition-2026-11-25.md)及[合并合同](technical/clipboard-composition.md)。
 
