@@ -1,6 +1,6 @@
 # 受信工具目录实现与原生复查
 
-2026-11-25，任务25。主Agent独占canonical checkout、构建与设备，两个只读Agent评审执行和版本边界。基线master e159301；本记录为alpha.11候选，正式安装仍是alpha.10。完整产品仍PARTIAL。
+2026-11-25，任务25。主Agent独占canonical checkout、构建与设备，两个只读Agent评审执行和版本边界。基线master e159301；实现与Preview观察发生在alpha.11候选阶段；现已发行安装，见[alpha.11证据](alpha11-release-2026-11-25.md)。完整产品仍PARTIAL。
 
 ## 实现与合同
 

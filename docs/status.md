@@ -2,13 +2,13 @@
 
 更新：2026-11-25。用户已授权在保留P0/P1验收义务的同时推进P2–P4。**完整产品仍为PARTIAL**；当前源码、真实系统验收、已发布版本分别记录，不能用代码或CI绿测替代日用验收。
 
-当前[alpha.10](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.10)已公开并安装，精确源`64254e55dcb21b97527a011ff3b831da75101ef8`：650 Swift／46 Python／697 key完整本机PASS（含原配置系统OCR双轮），同源feature／master core与优化构建、Developer ID、公证／装订／Gatekeeper、原子替换、公开回下载和发行审计均PASS。实际About为alpha.10 (10)，alpha.9直接回退包及更早证据保留。见[发行证据](implementation/alpha10-release-2026-11-25.md)。
+当前[alpha.11](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.11)已公开并安装，精确源`9f8d6d5b39579c85f1edeec55cace27fb8fcf62a`：671 Swift／46 Python／708 key完整本机PASS（含原配置系统OCR双轮），同源feature core与优化构建、Developer ID、公证／装订／Gatekeeper、原子替换、公开回下载和[发行审计45551838751](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45551838751)均PASS。实际About为alpha.11 (11)，alpha.10直接回退包及更早证据保留。见[发行证据](implementation/alpha11-release-2026-11-25.md)。
 
 桌面工作区组合运行、profile快捷键、设置应用、父子同库与有序阶段结果、取消／drain及恢复不重放已经接通；别名清除和文件补偿已修补。中文浅色／英文深色、窄卡片／宽表格及设置入口已观察并修复实际挤压。任务20.2／20.3完成工程范围，20.4实际AX／多屏、真实模型、完整视觉／辅助功能与长期可靠性仍开放；此前FAIL保留。
 
 alpha.10修补真实代码缺口：[准确输入与提交](implementation/ai-input-commit-2026-11-25.md)修复等价Unicode字节修改未更新revision、旧命令建议误采纳及输入法组字提交门禁。[导入来源](implementation/imported-text-context-2026-11-25.md)接通Tools／文档／OCR／MCP到AI草稿和三类运行的来源快照、联合接纳／预算、清除与迟到围栏；文本／PDF、合成HTTP和stdio MCP两版本回归，以及中英明暗原生子集PASS。最终精确源的完整本机／CI／发行资格见上述发行证据；原始失败没有删除。
 
-任务25已接通受信版本化能力目录、计算／单位、保存CLI、异步文件搜索及独立设置开关；45项定向回归与原生双语、持久化子集PASS，准备alpha.11，尚未发布或替换正式App。见[工具目录复查](implementation/trusted-contributions-2026-11-25.md)。完整目标仍有未关闭的工程和真实验收义务。[显式草稿关闭](implementation/ai-draft-closing-2026-11-25.md)已随alpha.10发行，已补工程闭环及中英明暗原生子集，取消／真实worker drain由owned gate与loopback验证；原生在途关闭仍依24.5。独立第三方MCP互通、真实API、AX／多屏、真实IME／VoiceOver、全应用视觉和驻留性能验收亦开放。不能把“只剩用户配置或授权”作为当前全产品结论。本轮实际alpha.10隐私页仍显示需要辅助功能授权，未更改TCC。
+任务25已接通受信版本化能力目录、计算／单位、保存CLI、异步文件搜索及独立设置开关；45项定向回归与原生双语、持久化子集PASS，已随alpha.11发行并替换正式App。见[工具目录复查](implementation/trusted-contributions-2026-11-25.md)。完整目标仍有未关闭的工程和真实验收义务。[显式草稿关闭](implementation/ai-draft-closing-2026-11-25.md)已随alpha.10发行，已补工程闭环及中英明暗原生子集，取消／真实worker drain由owned gate与loopback验证；原生在途关闭仍依24.5。独立第三方MCP互通、真实API、AX／多屏、真实IME／VoiceOver、全应用视觉和驻留性能验收亦开放。不能把“只剩用户配置或授权”作为当前全产品结论。本轮实际alpha.11隐私页仍显示需要辅助功能授权，未更改TCC。
 
 ## 前序增量记录（历史时点）
 
@@ -81,7 +81,8 @@ canonical目录唯一；alpha.9精确源5f52658已受控fast-forward至master，
 
 公开仓库为[arthurwangwsx-code/KeyDock](https://github.com/arthurwangwsx-code/KeyDock)，默认分支master。用户已授权公开此项目源码、Release本地打包上传、流水线及本地安装替换。
 
-- 当前为[alpha.10／build10](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.10)，精确源64254e5，tag不变；已安装至/Applications/KeyDock.app，实际About为alpha.10 (10)。650 Swift／46 Python／697 key、原生产OCR双轮、本机Developer ID构建、同源CI、公证／装订／Gatekeeper、ZIP／DMG一致性、公开回下载和[发行审计45543899933](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45543899933)通过，完整产品仍PARTIAL。alpha.9为当前直接回退旧包；见[alpha.10证据](implementation/alpha10-release-2026-11-25.md)。
+- 当前为[alpha.11／build11](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.11)，源9f8d6d5，实际About11；671 Swift／46 Python／708 key、本机OCR、同源CI、公证／装订、公开回下载与发行审计通过。直接回退alpha.10保留，见[alpha.11证据](implementation/alpha11-release-2026-11-25.md)。
+- 上一版本[alpha.10／build10](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.10)，精确源64254e5，tag不变；当时已安装至/Applications/KeyDock.app，About为alpha.10 (10)，现已被alpha.11替换并保留为直接回退。650 Swift／46 Python／697 key、原生产OCR双轮、本机Developer ID构建、同源CI、公证／装订／Gatekeeper、ZIP／DMG一致性、公开回下载和[发行审计45543899933](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45543899933)通过，完整产品仍PARTIAL。alpha.9为其历史直接回退旧包；见[alpha.10证据](implementation/alpha10-release-2026-11-25.md)。
 - [alpha.9／build9](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.9)源5f52658，历史627 Swift／46 Python／680 key及公证／回下载通过，旧alpha.8回退亦保留；见[alpha.9证据](implementation/alpha9-release-2026-11-25.md)。
 - [alpha.8／build8](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.8)源0095326，历史601 Swift／46 Python／660 key及公证／回下载通过；该包和alpha.7回退继续保留，见[alpha.8证据](implementation/alpha8-release-2026-11-25.md)。
 
@@ -89,7 +90,7 @@ canonical目录唯一；alpha.9精确源5f52658已受控fast-forward至master，
 - [GitHub发行资产审计45461512603](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45461512603)已通过，核验精确alpha.7资产；不是云端OCR或真实自动插入验收。
 - alpha.7阶段曾实际启动并观察About7、Preview中文浅色／英文深色、主动作／分隔符、重启持久化及实际合并复制；语言／外观与默认主动作均恢复。该历史子集未代授予TCC，物理全局热键未计PASS；没有保存MCP来源、运行外部服务或配置真实API。
 - [alpha.6／build6](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.6)是历史发行，源`d61598a`；当时457 Swift／46 Python／556 key、发行及资产审计通过，见[桌面控制证据](implementation/desktop-controls-2026-11-25.md)。alpha.5及更旧历史发行与备份继续保留。
-- alpha.2／build2的历史源为`ace56efdf67faae0f8dd2df3f0871b8e61a7829f`，历史发行／安装验收见[alpha.2证据](implementation/native-actions-2026-11-24.md)。当前alpha.10的直接回退目标是alpha.9；alpha.3／build3仅保留本地候选，Preview的dirty源码构建不作为正式分发包。
+- alpha.2／build2的历史源为`ace56efdf67faae0f8dd2df3f0871b8e61a7829f`，历史发行／安装验收见[alpha.2证据](implementation/native-actions-2026-11-24.md)。当前alpha.11的直接回退目标是alpha.10；alpha.3／build3仅保留本地候选，Preview的dirty源码构建不作为正式分发包。
 - 所有旧版tag和资产字节保持不变。个人配置、bookmark、密钥、截图、剪贴板、正文和本机日志不进入公开资产。
 
 ## 历史证据与边界
