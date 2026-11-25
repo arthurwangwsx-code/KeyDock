@@ -133,6 +133,7 @@ struct InvocationWorkerOwnership: Sendable {
     private(set) var appeared = false
     private(set) var admittedTaskID: UUID?
     private(set) var inputRevision = UUID()
+    let materialInput = AttemptMaterialInput()
     private var operation: Task<Void, Never>?
     var isSubmitting: Bool { if case .submitting = phase { true } else { false } }
     var isReading: Bool { if case .reading = phase { true } else { false } }
@@ -141,10 +142,11 @@ struct InvocationWorkerOwnership: Sendable {
     func didAppear() { if !shouldDismiss { appeared = true } }
     func editInput(_ value: String) {
         guard !isSubmitting, !shouldDismiss else { return }
+        if !input.utf8.elementsEqual(value.utf8) { inputRevision = UUID(); materialInput.invalidate() }
         guard value.utf8.count <= TaskTextLimits.inputBytes else {
             inputRejected = true; notice = noticeKey("Input is too long. Split it into smaller parts; nothing was sent."); return
         }
-        if !input.utf8.elementsEqual(value.utf8) { inputRevision = UUID(); input = value }
+        if !input.utf8.elementsEqual(value.utf8) { input = value }
         inputRejected = false
         if phase == .ready { notice = .none }
     }
@@ -156,7 +158,7 @@ struct InvocationWorkerOwnership: Sendable {
     }
     @discardableResult func refresh(in store: WorkbenchModel) -> Task<Void, Never>? {
         guard !isSubmitting, !shouldDismiss else { return nil }
-        operation?.cancel(); let token = UUID(); phase = .reading(token); notice = .none; effectsChecked = false
+        materialInput.invalidate(); operation?.cancel(); let token = UUID(); phase = .reading(token); notice = .none; effectsChecked = false
         operation = Task { [weak self] in
             do {
                 guard let self else { return }
@@ -170,6 +172,7 @@ struct InvocationWorkerOwnership: Sendable {
     }
     @discardableResult func confirm(_ reviewID: UUID, in store: WorkbenchModel) -> Task<Void, Never>? {
         guard canSubmit(in: store), let review, review.id == reviewID else { return nil }
+        materialInput.invalidate()
         let nonce = UUID(), revision = inputRevision, text = input
         phase = .submitting(nonce); notice = .none
         operation = Task { [weak self] in
@@ -188,10 +191,12 @@ struct InvocationWorkerOwnership: Sendable {
     }
     func validateReview(in store: WorkbenchModel) {
         guard phase == .ready, let review, !store.isCurrentAttemptReview(review) else { return }
+        materialInput.invalidate()
         phase = .needsReview; notice = noticeKey("This attempt or its settings changed. Review again before starting. Your input was kept.")
     }
     func sourceRemoved() {
         guard !shouldDismiss, !isSubmitting else { return }
+        materialInput.invalidate()
         operation?.cancel(); operation = nil; phase = .unavailable
         notice = noticeKey("This attempt or its saved definition is no longer available. History remains read-only.")
     }
@@ -214,5 +219,5 @@ struct InvocationWorkerOwnership: Sendable {
             phase = .needsReview; notice = noticeKey("The new attempt could not be admitted. Your input was kept; review settings and try again.")
         }
     }
-    func invalidate() { phase = .closed; operation?.cancel(); operation = nil }
+    func invalidate() { materialInput.invalidate(); phase = .closed; operation?.cancel(); operation = nil }
 }

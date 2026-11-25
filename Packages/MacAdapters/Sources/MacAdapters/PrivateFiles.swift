@@ -3,6 +3,12 @@ import Security
 import Darwin
 
 public enum PrivateFiles {
+    /// 只解析OS给出的临时目录基址；调用方追加的项目路径仍由各自no-follow层验证。
+    public static func physicalTemporaryDirectory() throws -> URL {
+        guard let physical = realpath(FileManager.default.temporaryDirectory.path, nil) else { throw POSIXError(.ENOENT) }
+        defer { free(physical) }
+        return URL(fileURLWithPath: String(cString: physical), isDirectory: true)
+    }
     public static func applicationDirectory() throws -> URL {
         let directory = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("KeyDock", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])

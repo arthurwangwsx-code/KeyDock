@@ -11,6 +11,7 @@ public struct SettingsRootView: View {
     @State private var aliases: [String: String] = [:]
     @State private var confirmTaskClear = false
     @State private var confirmUsageClear = false
+    @State private var confirmMaterialClear = false
     public init(store: WorkbenchModel, session: SettingsSession) { self.store = store; self.session = session }
     public var body: some View {
         NavigationSplitView {
@@ -51,12 +52,17 @@ public struct SettingsRootView: View {
             .confirmationDialog(L("Clear finished tasks and idle drafts?"), isPresented: $confirmTaskClear) {
                 Button(L("Clear finished history"), role: .destructive) { Task { await store.clearFinishedHistory() } }
             } message: {
-                Text(L("This discards finished task output, idle unsaved AI drafts, command suggestions and the Tools text input with its source. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept."))
+                Text(L("This discards finished task output, retained text for those finished tasks, idle unsaved AI drafts, command suggestions and the Tools text input with its source. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept."))
             }
             .confirmationDialog(L("Clear AI usage history?"), isPresented: $confirmUsageClear) {
                 Button(L("Clear AI usage history"), role: .destructive) { Task { await store.clearAIUsageHistory() } }
             } message: {
                 Text(L("This removes stored usage metadata. Running requests keep their current usage and may create new records when they finish. AI actions and API credentials are kept."))
+            }
+            .confirmationDialog(L("Clear retained task content?"), isPresented: $confirmMaterialClear) {
+                Button(L("Clear retained task content"), role: .destructive) { Task { await store.clearTaskMaterials() } }
+            } message: {
+                Text(L("This deletes saved task text and temporary captures. Ordinary session results, task metadata and running work are kept."))
             }
     }
     @ViewBuilder private var content: some View {
@@ -203,7 +209,7 @@ public struct SettingsRootView: View {
                 Button(L("Export configuration definitions")) { session.prepareConfigurationExport(in: store) }.disabled(!session.canBeginSavedItemEditor)
             }
             Section(L("Task and usage history")) {
-                Text(L("KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Output stays in memory; after restarting, only task metadata is restored. Finished task and usage records expire after 90 days.")).font(.caption).foregroundStyle(.secondary)
+                Text(L("KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Task metadata and usage expire after 90 days. Text is retained only when you enable task content retention and explicitly save it.")).font(.caption).foregroundStyle(.secondary)
                 HStack {
                     Button(L("Clear finished history"), role: .destructive) { confirmTaskClear = true }.disabled(store.isClearingHistory)
                     if store.isClearingHistory { ProgressView().controlSize(.small) }
@@ -212,6 +218,20 @@ public struct SettingsRootView: View {
                     Button(L("Clear AI usage history"), role: .destructive) { confirmUsageClear = true }.disabled(store.isClearingUsage)
                     if store.isClearingUsage { ProgressView().controlSize(.small) }
                 }
+            }
+            Section(L("Retained task content")) {
+                Toggle(L("Allow task content retention"), isOn: Binding(get: { store.taskMaterialFence.current.enabled }, set: { _ = store.setTaskMaterialRetention($0) }))
+                    .disabled(store.taskMaterialClearing || store.taskMaterialPermissionChanging)
+                Text(L("Off by default. When enabled, future saved AI, Agent and workflow runs can capture their original input. Review and select content in Tasks before saving. Saved text expires after 7 days, with up to 200 records and 64 MiB in total.")).font(.caption).foregroundStyle(.secondary)
+                Text(L("Turning this off stops new capture and saving, and clears temporary reviews. Existing saved content stays until expiry or deletion and can still be viewed.")).font(.caption).foregroundStyle(.secondary)
+                if store.taskMaterialPermissionChanging { ProgressView(L("Stopping task content capture…")).controlSize(.small) }
+                if store.taskMaterialPauseNeedsPersistence { KDInlineNotice(L("Capture is off for this session, but the setting could not be saved. The previous setting may return after restarting. Try turning it off again.")) }
+                if store.taskMaterialPauseNeedsPersistence { Button(L("Save the off setting again")) { _ = store.setTaskMaterialRetention(false) }.disabled(store.taskMaterialPermissionChanging) }
+                if !store.taskMaterialNotice.rendered().isEmpty { KDInlineNotice(store.taskMaterialNotice.rendered()) }
+                Button(L("View retained content…")) { store.onOpenWorkspace?(.retainedTaskContent) }
+                Button(L("Clear retained task content"), role: .destructive) { confirmMaterialClear = true }
+                    .disabled(store.taskMaterialClearing || store.isClearingHistory)
+                if store.taskMaterialClearing { ProgressView().controlSize(.small) }
             }
         case .about:
             Section {

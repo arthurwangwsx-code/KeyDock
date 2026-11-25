@@ -81,22 +81,6 @@
         }
       }
     },
-    "A new attempt rechecks current scope and may repeat completed work. Unknown effects must be checked first.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新的尝试会重新检查当前授权范围，并可能重复已完成的操作。请先核实结果不明的操作是否已产生影响。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A new attempt rechecks current scope and may repeat completed work. Unknown effects must be checked first."
-          }
-        }
-      }
-    },
     "A rate already exists for this exact service and model. Edit that rate instead.": {
       "localizations": {
         "en": {
@@ -1137,6 +1121,22 @@
         }
       }
     },
+    "Allow task content retention": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow task content retention"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允许保留任务内容"
+          }
+        }
+      }
+    },
     "Already running": {
       "localizations": {
         "en": {
@@ -1761,6 +1761,22 @@
         }
       }
     },
+    "Browse saved text independently of current task history. Text is loaded only when you open a record.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse saved text independently of current task history. Text is loaded only when you open a record."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "独立浏览已保存文本，不受当前任务列表影响。仅在打开记录时读取正文。"
+          }
+        }
+      }
+    },
     "Built-in tools": {
       "localizations": {
         "en": {
@@ -1901,6 +1917,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Capture a region"
+          }
+        }
+      }
+    },
+    "Capture is off for this session, but the setting could not be saved. The previous setting may return after restarting. Try turning it off again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture is off for this session, but the setting could not be saved. The previous setting may return after restarting. Try turning it off again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本次会话已停止捕获，但设置未能保存。重启后可能恢复原设置，请再次尝试关闭。"
           }
         }
       }
@@ -2317,6 +2349,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "清理已删除工具的偏好？"
+          }
+        }
+      }
+    },
+    "Clear retained task content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear retained task content"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除保留的任务内容"
+          }
+        }
+      }
+    },
+    "Clear retained task content?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear retained task content?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除保留的任务内容？"
           }
         }
       }
@@ -3585,6 +3649,22 @@
         }
       }
     },
+    "Delete saved content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete saved content"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除已保存内容"
+          }
+        }
+      }
+    },
     "Delete this application action? Its shortcut will become unavailable until removed.": {
       "localizations": {
         "en": {
@@ -3597,6 +3677,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "删除这个应用动作？已绑定的快捷键将变为不可用，可在快捷键设置中移除。"
+          }
+        }
+      }
+    },
+    "Delete this saved content from this Mac": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this saved content from this Mac"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从这台 Mac 删除此保存内容"
           }
         }
       }
@@ -4397,6 +4493,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "退出码"
+          }
+        }
+      }
+    },
+    "Expires": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expires"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "到期时间"
           }
         }
       }
@@ -5297,6 +5409,22 @@
         }
       }
     },
+    "Keep current input": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep current input"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留当前输入"
+          }
+        }
+      }
+    },
     "Key stored · leave blank to keep": {
       "localizations": {
         "en": {
@@ -5361,18 +5489,18 @@
         }
       }
     },
-    "KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Output stays in memory; after restarting, only task metadata is restored. Finished task and usage records expire after 90 days.": {
+    "KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Task metadata and usage expire after 90 days. Text is retained only when you enable task content retention and explicitly save it.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Output stays in memory; after restarting, only task metadata is restored. Finished task and usage records expire after 90 days."
+            "value": "KeyDock manages up to 8 tasks at once, with 200 task records, 32 AI drafts and 32 MiB of session text. Task metadata and usage expire after 90 days. Text is retained only when you enable task content retention and explicitly save it."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "KeyDock 同时管理最多 8 个任务，保留最多 200 条任务记录、32 份 AI 草稿和 32 MiB 会话文本。输出只保存在内存中；重启后仅恢复任务元数据。已结束任务和用量记录的保留期为 90 天。"
+            "value": "KeyDock 最多同时管理 8 个任务，保留 200 条任务记录、32 份 AI 草稿及 32 MiB 会话文本。任务元数据和用量记录在 90 天后到期。只有开启任务内容保留并明确保存，文本才会跨重启保留。"
           }
         }
       }
@@ -5469,6 +5597,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "最近 90 天"
+          }
+        }
+      }
+    },
+    "Latest successful step": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest successful step"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近成功步骤"
           }
         }
       }
@@ -6801,6 +6945,22 @@
         }
       }
     },
+    "Nothing available to view": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing available to view"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无可查看的内容"
+          }
+        }
+      }
+    },
     "OCR runs locally. Files are limited to 16 MiB, images to 20 million pixels and PDFs to 30 pages. Text is limited to 128 KiB. Nothing is sent to AI until you choose an action.": {
       "localizations": {
         "zh-Hans": {
@@ -6813,6 +6973,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "OCR runs locally. Files are limited to 16 MiB, images to 20 million pixels and PDFs to 30 pages. Text is limited to 128 KiB. Nothing is sent to AI until you choose an action."
+          }
+        }
+      }
+    },
+    "Off by default. When enabled, future saved AI, Agent and workflow runs can capture their original input. Review and select content in Tasks before saving. Saved text expires after 7 days, with up to 200 records and 64 MiB in total.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off by default. When enabled, future saved AI, Agent and workflow runs can capture their original input. Review and select content in Tasks before saving. Saved text expires after 7 days, with up to 200 records and 64 MiB in total."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "默认关闭。开启后，后续运行已保存的 AI 动作、Agent 和工作流时可以捕获原始输入。请在“任务”中审阅并选择内容后保存。保存文本在 7 天后到期，最多 200 份、总计 64 MiB。"
           }
         }
       }
@@ -6977,6 +7153,22 @@
         }
       }
     },
+    "Open Privacy settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Privacy settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开隐私设置"
+          }
+        }
+      }
+    },
     "Open URL": {
       "localizations": {
         "zh-Hans": {
@@ -7105,6 +7297,38 @@
         }
       }
     },
+    "Original input was not captured for this run.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original input was not captured for this run."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本次运行未捕获原始输入。"
+          }
+        }
+      }
+    },
+    "Original run input": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original run input"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原始运行输入"
+          }
+        }
+      }
+    },
     "Original selection is unavailable": {
       "localizations": {
         "en": {
@@ -7165,22 +7389,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "输出"
-          }
-        }
-      }
-    },
-    "Output is not retained after restarting KeyDock.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Output is not retained after restarting KeyDock."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重启 KeyDock 后不保留输出正文。"
           }
         }
       }
@@ -7261,6 +7469,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "覆盖不完整"
+          }
+        }
+      }
+    },
+    "Partial result at capture time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial result at capture time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "捕获时的部分结果"
           }
         }
       }
@@ -7677,6 +7901,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在读取 AI 用量"
+          }
+        }
+      }
+    },
+    "Reading retained input…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading retained input…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在读取保留输入…"
           }
         }
       }
@@ -8273,6 +8513,22 @@
         }
       }
     },
+    "Replace current input": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace current input"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "替换当前输入"
+          }
+        }
+      }
+    },
     "Replace original selection": {
       "localizations": {
         "en": {
@@ -8497,6 +8753,70 @@
         }
       }
     },
+    "Retained input filled. Review the current scope before starting a new attempt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retained input filled. Review the current scope before starting a new attempt."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已填入保留输入，请审阅当前范围后再开始新尝试。"
+          }
+        }
+      }
+    },
+    "Retained input preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retained input preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留输入预览"
+          }
+        }
+      }
+    },
+    "Retained task content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retained task content"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留的任务内容"
+          }
+        }
+      }
+    },
+    "Retained task content cleared. Ordinary session results and running tasks were kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retained task content cleared. Ordinary session results and running tasks were kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已清除保留的任务内容，普通会话结果和运行中的任务保持不变。"
+          }
+        }
+      }
+    },
     "Retry shortcuts": {
       "localizations": {
         "en": {
@@ -8609,6 +8929,22 @@
         }
       }
     },
+    "Review and save chosen text from Tasks. Existing saved content stays available when new capture is off.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review and save chosen text from Tasks. Existing saved content stays available when new capture is off."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在任务页审阅并保存所选文本。即使关闭新内容捕获，已有保存内容仍可查看。"
+          }
+        }
+      }
+    },
     "Review command": {
       "localizations": {
         "en": {
@@ -8621,6 +8957,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "检查命令"
+          }
+        }
+      }
+    },
+    "Review content to save…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review content to save…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "审阅要保存的内容…"
           }
         }
       }
@@ -8669,6 +9021,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "保存 JSON 前请审阅配置定义与偏好。提示词、片段、命令参数、别名、URL 及本机资源描述可能含私人信息，此导出并非匿名文件。"
+          }
+        }
+      }
+    },
+    "Review task content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review task content"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "审阅任务内容"
           }
         }
       }
@@ -9057,6 +9425,22 @@
         }
       }
     },
+    "Save selected content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save selected content"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存所选内容"
+          }
+        }
+      }
+    },
     "Save selected preferences, the launcher shortcut and configuration counts as JSON for viewing or sharing. This file cannot restore the app.": {
       "localizations": {
         "en": {
@@ -9101,6 +9485,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save snippet"
+          }
+        }
+      }
+    },
+    "Save the off setting again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save the off setting again"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再次保存关闭状态"
           }
         }
       }
@@ -9201,6 +9601,38 @@
         }
       }
     },
+    "Saved content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved content"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存内容"
+          }
+        }
+      }
+    },
+    "Saved text expires after 7 days; files are removed during the next app maintenance. It may contain sensitive information. Only fields you select are saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved text expires after 7 days; files are removed during the next app maintenance. It may contain sensitive information. Only fields you select are saved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存文本在 7 天后到期，到期文件会在下次应用维护时清除。文本可能含有敏感信息，仅保存你勾选的内容。"
+          }
+        }
+      }
+    },
     "Saved version": {
       "localizations": {
         "en": {
@@ -9213,6 +9645,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "已保存版本"
+          }
+        }
+      }
+    },
+    "Saving could not be confirmed. Inspect retained content before saving again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving could not be confirmed. Inspect retained content before saving again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未能确认保存结果，请先查看保留内容，再决定是否重新保存。"
           }
         }
       }
@@ -9697,6 +10145,22 @@
         }
       }
     },
+    "Selected task content saved on this Mac.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected task content saved on this Mac."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所选任务内容已保存到这台 Mac。"
+          }
+        }
+      }
+    },
     "Selected text": {
       "localizations": {
         "en": {
@@ -9821,6 +10285,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "服务指纹"
+          }
+        }
+      }
+    },
+    "Session output is not restored here. Use Task content to view text you saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session output is not restored here. Use Task content to view text you saved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这里不会恢复会话输出。可通过“任务内容”查看你保存的文本。"
           }
         }
       }
@@ -10241,6 +10721,22 @@
         }
       }
     },
+    "Some retained task content needs attention. Existing files were kept; review or clear it in Privacy settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some retained task content needs attention. Existing files were kept; review or clear it in Privacy settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分保留内容需要处理。现有文件已保留，请在隐私设置中查看或清除。"
+          }
+        }
+      }
+    },
     "Some task records could not be maintained. Running and unconfirmed tasks were kept.": {
       "localizations": {
         "en": {
@@ -10321,22 +10817,6 @@
         }
       }
     },
-    "Start a new attempt?": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "开始新的尝试？"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start a new attempt?"
-          }
-        }
-      }
-    },
     "Start new attempt": {
       "localizations": {
         "zh-Hans": {
@@ -10401,6 +10881,22 @@
         }
       }
     },
+    "Step output": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step output"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步骤输出"
+          }
+        }
+      }
+    },
     "Steps": {
       "localizations": {
         "en": {
@@ -10445,6 +10941,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "停止"
+          }
+        }
+      }
+    },
+    "Stopping task content capture…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stopping task content capture…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在停止任务内容捕获…"
           }
         }
       }
@@ -10605,6 +11117,102 @@
           "stringUnit": {
             "state": "translated",
             "value": "任务与用量记录"
+          }
+        }
+      }
+    },
+    "Task content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task content"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务内容"
+          }
+        }
+      }
+    },
+    "Task content could not be cleared completely. Its task records were kept; try clearing again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task content could not be cleared completely. Its task records were kept; try clearing again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务内容未能完全清除，对应任务记录已保留，请再次尝试清除。"
+          }
+        }
+      }
+    },
+    "Task content is at its text or storage limit. Clear older content or close a review, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task content is at its text or storage limit. Clear older content or close a review, then try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务内容已达到文本或存储上限，请清除旧内容或关闭审阅后重试。"
+          }
+        }
+      }
+    },
+    "Task content is unavailable or changed. Review it again; nothing was executed or copied.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task content is unavailable or changed. Review it again; nothing was executed or copied."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务内容不可用或已变化，请重新审阅。没有执行任务或复制内容。"
+          }
+        }
+      }
+    },
+    "Task content retention is off. Existing saved content can still be viewed or deleted.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task content retention is off. Existing saved content can still be viewed or deleted."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务内容保留已关闭，仍可查看或删除已有保存内容。"
+          }
+        }
+      }
+    },
+    "Task content was only partly cleared. Some files remain. Try clearing again in Privacy settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task content was only partly cleared. Some files remain. Try clearing again in Privacy settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务内容仅部分清除，仍有文件残留。请在隐私设置中再次清除。"
           }
         }
       }
@@ -11249,6 +11857,22 @@
         }
       }
     },
+    "This Agent result includes model text and tool returns. Review it before selecting.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Agent result includes model text and tool returns. Review it before selecting."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 Agent 结果包含模型文本和工具返回，请审阅后再勾选。"
+          }
+        }
+      }
+    },
     "This MCP source was removed or changed. Keep this draft and choose New server or edit the current source.": {
       "localizations": {
         "en": {
@@ -11377,18 +12001,34 @@
         }
       }
     },
-    "This discards finished task output, idle unsaved AI drafts, command suggestions and the Tools text input with its source. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept.": {
+    "This deletes saved task text and temporary captures. Ordinary session results, task metadata and running work are kept.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This discards finished task output, idle unsaved AI drafts, command suggestions and the Tools text input with its source. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept."
+            "value": "This deletes saved task text and temporary captures. Ordinary session results, task metadata and running work are kept."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "此操作会丢弃已完成任务的输出、空闲且未保存的 AI 草稿、命令建议，以及工具页文本与来源。运行中的任务会保留。终端命令可能仍在运行，清除历史不会停止它们。已保存的命令、设置、凭据和剪贴板历史会保留。"
+            "value": "这会删除已保存的任务文本和临时捕获内容，普通会话结果、任务元数据和运行中的工作保持不变。"
+          }
+        }
+      }
+    },
+    "This discards finished task output, retained text for those finished tasks, idle unsaved AI drafts, command suggestions and the Tools text input with its source. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This discards finished task output, retained text for those finished tasks, idle unsaved AI drafts, command suggestions and the Tools text input with its source. Running tasks are kept. Terminal commands may still be running; clearing history does not stop them. Saved commands, settings, credentials and clipboard history are kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这会丢弃已结束任务的输出及对应保留文本、闲置且未保存的 AI 草稿、命令建议，以及工具页输入和来源。运行中的任务会保留。终端命令可能仍在运行，清除历史不会停止它们。已保存命令、设置、凭据和剪贴板历史不受影响。"
           }
         }
       }
@@ -11469,6 +12109,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "这是一次新尝试。已保留上次结果和记录的费用。"
+          }
+        }
+      }
+    },
+    "This is saved text only. It cannot resume or repeat a workflow step.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is saved text only. It cannot resume or repeat a workflow step."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这只是保存的文本，不能恢复或重放工作流步骤。"
           }
         }
       }
@@ -12161,6 +12817,22 @@
         }
       }
     },
+    "Turning this off stops new capture and saving, and clears temporary reviews. Existing saved content stays until expiry or deletion and can still be viewed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turning this off stops new capture and saving, and clears temporary reviews. Existing saved content stays until expiry or deletion and can still be viewed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭后停止新的捕获和保存，并清空临时审阅。已有保存内容仍可查看，直到到期或手动删除。"
+          }
+        }
+      }
+    },
     "URL action": {
       "localizations": {
         "zh-Hans": {
@@ -12737,6 +13409,22 @@
         }
       }
     },
+    "Use retained input": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use retained input"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用保留输入"
+          }
+        }
+      }
+    },
     "View result": {
       "localizations": {
         "en": {
@@ -12749,6 +13437,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "查看结果"
+          }
+        }
+      }
+    },
+    "View retained content…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View retained content…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看保留内容…"
+          }
+        }
+      }
+    },
+    "Visible result": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visible result"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可见结果"
           }
         }
       }
@@ -13201,6 +13921,22 @@
         }
       }
     },
+    "Working with task content…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Working with task content…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在处理任务内容…"
+          }
+        }
+      }
+    },
     "Workspace cancelled before any confirmed change. Check any unknown steps before retrying.": {
       "localizations": {
         "en": {
@@ -13293,6 +14029,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "选项已更改，请更新预览后再保存。"
+          }
+        }
+      }
+    },
+    "Your current input is kept until you explicitly replace it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your current input is kept until you explicitly replace it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在你明确确认替换前，当前输入会保持不变。"
           }
         }
       }

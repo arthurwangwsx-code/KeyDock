@@ -39,6 +39,7 @@ extension WorkbenchModel {
         let visibleRuns = visibleDraftReferences.values.compactMap { drafts[$0]?.latestRunID }
         return Set(visibleTaskReferences.values).union(visibleRuns).union(executionReservations)
             .union(pendingCommandReviews.map(\.id)).union(activeCommandReviews.keys)
+            .union(taskMaterialBuffers.values.filter { !$0.invalidated }.map { $0.key.invocationID })
     }
 
     /// 整份输出在任何Published更新/窗口回调之前预留，避免同步重入绕过并发上限。
@@ -100,6 +101,10 @@ extension WorkbenchModel {
     func retainedSessionBytes(excludingTasks taskIDs: Set<UUID> = [], excludingDrafts draftIDs: Set<UUID> = []) -> Int {
         // 为下一次面板上下文预留一个固定槽位，捕获完成不会绕过全局预算。
         var bytes = TaskTextLimits.inputBytes + 1_024 + retainedContextSlotBytes, snapshots: [ObjectIdentifier: TargetSnapshot] = [:]
+        bytes += taskMaterialBuffers.values.reduce(0) { $0 + $1.budgetedBytes }
+        bytes += taskMaterialWriteReservations.values.reduce(0, +)
+        // 库存最多200条，每个标题最多1024字节；固定预留，异步header发布不挤穿总文本预算。
+        bytes += 200 * 1_024
         func include(_ snapshot: TargetSnapshot?) { if let snapshot { snapshots[ObjectIdentifier(snapshot)] = snapshot } }
         for task in tasks where !taskIDs.contains(task.id) {
             let metadata = (task.inputProvenance?.retainedBytes ?? 0) + task.title.utf8.count + task.noticeMessage.retainedByteCount + (task.modelName?.utf8.count ?? 0) + (task.sourceApplication?.utf8.count ?? 0) + task.desktopWorkspaceLabels.values.reduce(0) { $0 + $1.utf8.count } + (task.desktopWorkspaceResult == nil ? 0 : 4_096)

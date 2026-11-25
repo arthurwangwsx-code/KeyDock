@@ -62,9 +62,24 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public var onHistoryRemoved: ((Set<UUID>, Set<UUID>) -> Void)?
     public var onAttemptHistoryChanged: ((Set<UUID>) -> Void)?
     let sessionLimits: SessionRetentionPolicy
-    let taskMaterialFence = TaskMaterialFence()
+    let taskMaterialFence: TaskMaterialFence
+    let taskMaterialStore: TaskMaterialStore
     var taskMaterialCaptures: [UUID: TaskMaterialCapture] = [:]
     var taskMaterialPauseNeedsPersistence = false
+    var taskMaterialBuffers: [UUID: TaskMaterialBuffer] = [:]
+    @Published var taskMaterialHandles: [TaskMaterialKey: TaskMaterialHandle] = [:]
+    @Published var taskMaterialRecords: [TaskMaterialListRecord] = []
+    @Published var taskMaterialNotice: LocalizedNotice = .none
+    @Published var taskMaterialGeneration = UUID()
+    @Published var taskMaterialClearing = false
+    var taskMaterialIndexRequest = UUID()
+    var taskMaterialReadOperations: [UUID: Task<TaskMaterialBuffer, Error>] = [:]
+    var taskMaterialSaveOperations: [UUID: Task<TaskMaterialHandle, Error>] = [:]
+    var taskMaterialWriteReservations: [UUID: Int] = [:]
+    var taskMaterialMutationOperations: [UUID: Task<TaskMaterialMutationReport, Never>] = [:]
+    var taskMaterialMaintenanceTask: Task<Void, Never>?
+    var taskMaterialPermissionTask: Task<Void, Never>?
+    @Published var taskMaterialPermissionChanging = false
     var executionReservations: Set<UUID> = []
     var visibleDraftReferences: [UUID: UUID] = [:]
     var visibleTaskReferences: [UUID: UUID] = [:]
@@ -205,6 +220,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
                 sessionLimits: SessionRetentionPolicy = SessionRetentionPolicy(),
                 clipboardCaptureSource: (any ClipboardCaptureSource)? = nil,
                 invocationPersistenceFault: @escaping @Sendable (String, InvocationPersistencePoint) -> Int32? = { _, _ in nil },
+                taskMaterialPersistenceFault: @escaping @Sendable (TaskMaterialWriteRole, TaskMaterialPersistencePoint, String) -> Int32? = { _, _, _ in nil },
+                taskMaterialReadObserver: @escaping @Sendable (TaskMaterialReadKind, Int) -> Void = { _, _ in },
                 languageApplier: @escaping @MainActor (String) -> Void = { KDLocalizer.setLanguage($0) }) throws {
         contributions = try WorkbenchContributionRuntime()
         self.sessionLimits = sessionLimits
@@ -234,6 +251,10 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             desktopWorkspaceStore = workspaces; desktopWorkspaces = workspaces.workspaces; desktopWorkspacesWritable = workspaces.writable
         } catch { desktopWorkspaceStore = nil }
         usageMetadataStore = AIUsageMetadataStore(directory: directory.appendingPathComponent("usage"))
+        let materialFence = TaskMaterialFence(); taskMaterialFence = materialFence
+        taskMaterialGeneration = materialFence.current.generation
+        taskMaterialStore = try TaskMaterialStore(directory: directory.appendingPathComponent("task-materials"), fence: materialFence,
+            fault: taskMaterialPersistenceFault, observeRead: taskMaterialReadObserver)
         let url = directory.appendingPathComponent("configuration.json")
         var statisticsEnabled = false
         if FileManager.default.fileExists(atPath: url.path) {
@@ -293,6 +314,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             guard !isShuttingDown else { return }; rebuildCatalog()
         }
         startSchedules()
+        scheduleTaskMaterialMaintenance()
         startReceiptMaintenance() // 恢复快照过时不能取消每日保留维护。
     }
     public func shutdown() {
@@ -325,6 +347,13 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         for client in clients { await client.invalidate() }
         mcpClients.removeAll(); mcpRunClients.removeAll(); mcpRunScopes.removeAll()
         await usageMetadataStore.stop()
+        let materialReads = Array(taskMaterialReadOperations.values), materialWrites = Array(taskMaterialSaveOperations.values)
+        for operation in materialReads { _ = try? await operation.value }
+        for operation in materialWrites { _ = try? await operation.value }
+        for operation in Array(taskMaterialMutationOperations.values) { _ = await operation.value }
+        await taskMaterialPermissionTask?.value
+        await taskMaterialMaintenanceTask?.value
+        await taskMaterialStore.shutdown()
     }
     public func startApplicationUpdates() { guard !isShuttingDown else { return }; desktop.applicationCatalog.start() }
     public func refreshApplications() { guard !isShuttingDown else { return }; desktop.applicationCatalog.refresh() }

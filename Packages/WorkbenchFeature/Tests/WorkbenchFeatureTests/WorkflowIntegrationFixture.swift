@@ -15,8 +15,10 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
          allowContextCapture: Bool = false,
          clipboardChangeCount: @escaping @MainActor () -> Int = { 0 },
          sessionLimits: SessionRetentionPolicy = .init(),
+         taskMaterialPersistenceFault: @escaping @Sendable (TaskMaterialWriteRole, TaskMaterialPersistencePoint, String) -> Int32? = { _, _, _ in nil },
+         taskMaterialReadObserver: @escaping @Sendable (TaskMaterialReadKind, Int) -> Void = { _, _ in },
          invocationPersistenceFault: @escaping @Sendable (String, InvocationPersistencePoint) -> Int32? = { _, _ in nil }) throws {
-        directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Workflow-Integration-" + UUID().uuidString, isDirectory: true)
+        directory = try PrivateFiles.physicalTemporaryDirectory().appendingPathComponent("KeyDock-Workflow-Integration-" + UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         do {
             var configuration = AppConfiguration()
@@ -31,7 +33,8 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
                 applicationCatalog: ApplicationCatalog(roots: []),
                 applicationLauncher: { _ in throw WorkflowIntegrationFixtureError.unexpectedCapability },
                 sessionLimits: sessionLimits,
-                clipboardCaptureSource: WorkflowIntegrationClipboardSource(), invocationPersistenceFault: invocationPersistenceFault, languageApplier: { _ in })
+                clipboardCaptureSource: WorkflowIntegrationClipboardSource(), invocationPersistenceFault: invocationPersistenceFault,
+                taskMaterialPersistenceFault: taskMaterialPersistenceFault, taskMaterialReadObserver: taskMaterialReadObserver, languageApplier: { _ in })
         } catch { try? FileManager.default.removeItem(at: directory); throw error }
     }
 
@@ -40,6 +43,7 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
         let timer = store.scheduleTimer
         timer?.cancel(); await timer?.value; store.scheduleTimer = nil
         store.receiptMaintenanceTask?.cancel(); store.receiptMaintenanceTask = nil
+        await store.maintainTaskMaterials()
     }
     func cleanup() async {
         await store.shutdownAndWait()

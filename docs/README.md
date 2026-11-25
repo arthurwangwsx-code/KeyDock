@@ -37,6 +37,7 @@
 | [冻结候选与公证恢复](technical/release-candidate-recovery.md) | 独立inode、不可变输入、持久索引、unknown不重投和同请求续查；新协议完整发行仍开放 |
 | [可选任务材料](technical/task-material-retention.md) | 默认关闭、准确输入／成功边界、手动保存／按需读取、出生身份与删除意图和旧reader门禁；任务35实施中 |
 | [任务材料基础层复查](implementation/task-material-core-2026-11-26.md) | 固定FD／CAS／删除恢复、未来输入捕获与签名reader门禁；原生审阅及完整发行仍开放 |
+| [任务内容原生审阅与复用](implementation/task-material-ui-2026-11-26.md) | App维护／预算／独立内容库、逐项保存与新尝试输入票据；中文浅色／英文深色及重启子集，完整矩阵与发行仍开放 |
 | [任务恢复Core复查](implementation/task-recovery-core-2026-11-26.md) | 原子新intent、旧回调围栏、保留预算、固定指纹与MCP流式合同；非App日用验收 |
 | [导入文本上下文](technical/imported-text-context.md) | 单槽来源、AI冻结、联合预算与清除；alpha.10候选 |
 | [导入来源实现复查](implementation/imported-text-context-2026-11-25.md) | 合成提取／MCP／AI隐私、失败接纳与原生观察边界 |

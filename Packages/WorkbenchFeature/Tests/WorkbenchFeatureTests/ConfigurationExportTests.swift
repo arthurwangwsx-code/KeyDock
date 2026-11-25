@@ -45,6 +45,15 @@ enum ConfigurationExportFixture {
 
 struct ConfigurationExportProjectionTests {
     private let all = Set(ConfigurationExportSection.allCases)
+    @Test func contentRetentionPreferenceIsExportedWithoutAnyTaskBody() throws {
+        var configuration = AppConfiguration(); configuration.taskMaterialRetentionEnabled = true
+        let source = try ConfigurationExportFixture.source(configuration)
+        let frozen = try ConfigurationExportProjection.make(source: source, sections: [.preferences])
+        let object = try ConfigurationExportFixture.object(frozen)
+        let preferences = try #require(object["preferences"] as? [String: Any])
+        #expect(preferences["taskContentRetentionEnabled"] as? Bool == true)
+        for field in ["input", "output", "taskMaterialBuffers", "successfulCheckpoint", "taskMaterialHandles"] { #expect(preferences[field] == nil) }
+    }
     @Test func fullDocumentUsesExplicitFieldsAndPreservesUTF8AndOrderedDefinitions() throws {
         let source = try ConfigurationExportFixture.source()
         let frozen = try ConfigurationExportProjection.make(source: source, sections: all)

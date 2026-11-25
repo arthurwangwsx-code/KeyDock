@@ -53,7 +53,8 @@ extension WorkbenchModel {
         let tools = await agentToolStore.maintain(protectingParents:currentParents)
         guard !isShuttingDown, !isClearingHistory else { return }
         let removed = cli.removedIDs.union(ai.removedIDs)
-        if !removed.isEmpty { onAttemptHistoryChanged?(removed) }
+        if !removed.isEmpty { taskMaterialOwnersWereRemoved(); onAttemptHistoryChanged?(removed) }
+        await maintainTaskMaterials()
         if cli.failure != nil || ai.failure != nil || tools.failure != nil || !tools.limitsSatisfied || !cli.limitsSatisfied || !ai.limitsSatisfied {
             workspaceNoticeMessage = noticeKey("Some task records could not be maintained. Running and unconfirmed tasks were kept.")
         }
@@ -78,6 +79,16 @@ extension WorkbenchModel {
         await invocationStore.acknowledgeRecovery(); await aiInvocationStore.acknowledgeRecovery()
         let cliIDs = Set(cliSnapshot.filter { $0.state.isTerminal }.map(\.id)).union(memoryCLI).subtracting(protected)
         let aiIDs = Set(aiSnapshot.filter { $0.state.isTerminal }.map(\.id)).union(memoryAI).subtracting(protected)
+        let materialKeys = Set(cliSnapshot.filter { cliIDs.contains($0.id) }.compactMap { materialKey($0, .cli) } + aiSnapshot.filter { aiIDs.contains($0.id) }.compactMap { materialKey($0, .ai) })
+        let materialClear = await clearTaskMaterialOwners(materialKeys)
+        guard !isShuttingDown, historyGeneration == generation else { return }
+        guard materialClear.isComplete else {
+            settingsNoticeMessage = noticeKey("Task content could not be cleared completely. Its task records were kept; try clearing again.")
+            taskMaterialNotice = settingsNoticeMessage
+            isClearingHistory = false
+            await refreshTaskMaterialIndex()
+            return
+        }
         let cli = await invocationStore.clearFinished(onlyIDs: cliIDs, excluding: protected)
         let ai = await aiInvocationStore.clearFinished(onlyIDs: aiIDs, excluding: protected)
         await agentToolStore.acknowledgeRecovery()
@@ -97,6 +108,7 @@ extension WorkbenchModel {
         } else if editedDrafts > 0 {
             settingsNoticeMessage = noticeKey("Finished history cleared. Drafts edited while clearing were kept.")
         } else { settingsNoticeMessage = noticeKey("Finished tasks and idle AI drafts cleared. Running tasks were kept.") }
+        await refreshTaskMaterialIndex()
     }
 
     @discardableResult func applyConfirmedHistoryClear(taskIDs: Set<UUID>, draftRevisions: [UUID: UUID]) -> Int {

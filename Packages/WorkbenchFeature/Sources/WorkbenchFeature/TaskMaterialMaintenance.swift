@@ -37,13 +37,13 @@ extension TaskMaterialStore {
     func clearOwners(_ keys: Set<TaskMaterialKey>) -> TaskMaterialMutationReport {
         fence.invalidateContent(); issued.removeAll()
         do {
-            guard keys.count <= 200 else { throw TaskMaterialError.capacity }
             guard let files = try files(create: false) else { return .init() }
             let state = try control(files), names = try files.names()
             guard !names.contains(where: TaskMaterialNames.isControlTemporary) else { throw TaskMaterialError.recoveryRequired }
             let present = Set(names.compactMap(TaskMaterialNames.key))
             var selected = keys.intersection(present)
             if let pending = state.value.pendingWrite, keys.contains(pending.key) { selected.insert(pending.key) }
+            guard selected.count <= 200 else { throw TaskMaterialError.capacity }
             guard !selected.isEmpty || state.value.deletion != nil else { return .init() }
             let intent = try merged(state.value.deletion, addingKeys: selected, addingTarget: nil)
             var next = state.value; next.deletion = intent

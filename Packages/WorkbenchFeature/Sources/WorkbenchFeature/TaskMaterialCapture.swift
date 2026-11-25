@@ -87,6 +87,9 @@ final class TaskMaterialCapture: @unchecked Sendable {
     func revoke() {
         lock.withLock { revoked = true; finished = true; input = nil; checkpoint = nil; key = nil }
     }
-    private var valid: Bool { !revoked && permission == fence.current }
+    private var valid: Bool {
+        let current = fence.current
+        return !revoked && current.enabled && permission.permissionEpoch == current.permissionEpoch
+    }
     private var checkpointBytes: Int { checkpoint.map { $0.input.utf8.count + $0.output.utf8.count } ?? 0 }
 }

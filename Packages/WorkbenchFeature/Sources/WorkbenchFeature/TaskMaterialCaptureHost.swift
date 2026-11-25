@@ -4,7 +4,7 @@ import ExecutionCore
 extension WorkbenchModel {
     /// 可选材料预算不足只拒绝捕获，不影响已接纳的实际任务。
     @discardableResult func beginTaskMaterialCapture(_ id: UUID, definition: RunDefinitionReference?, input: String?) -> TaskMaterialCapture? {
-        guard !isShuttingDown, !isClearingHistory, taskMaterialFence.current.enabled,
+        guard !isShuttingDown, !isClearingHistory, !taskMaterialClearing, taskMaterialFence.current.enabled,
               taskMaterialCaptures[id] == nil, let definition,
               tasks.contains(where: { $0.id == id && $0.runAttempt == nil && !$0.restoredFromReceipt }),
               executionReservations.contains(id) else { return nil }
@@ -18,7 +18,7 @@ extension WorkbenchModel {
     func applyTaskMaterialPermission() {
         let desired = configuration.taskMaterialRetentionEnabled && !taskMaterialPauseNeedsPersistence && !isShuttingDown
         guard taskMaterialFence.current.enabled != desired else { return }
-        if desired { taskMaterialFence.setEnabled(true) }
+        if desired { taskMaterialFence.setEnabled(true); taskMaterialGeneration = taskMaterialFence.current.generation }
         else { revokeTaskMaterialCaptures(disabling: true) }
     }
 
@@ -27,6 +27,8 @@ extension WorkbenchModel {
         else { taskMaterialFence.invalidateContent() }
         for capture in taskMaterialCaptures.values { capture.revoke() }
         taskMaterialCaptures.removeAll()
+        invalidateTaskMaterialBuffers(includeLoadedReads: !disabling || isShuttingDown)
+        if disabling, !isShuttingDown { scheduleTaskMaterialPermissionBarrier() }
     }
 
     /// UI接入前保持内部入口；停用落盘失败仍在本会话撤销，其他设置写入不会偷偷恢复许可。

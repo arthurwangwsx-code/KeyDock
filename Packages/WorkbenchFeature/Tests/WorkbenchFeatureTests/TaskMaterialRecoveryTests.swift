@@ -107,4 +107,15 @@ struct TaskMaterialRecoveryTests {
         let malformed = try JSONSerialization.data(withJSONObject: object)
         #expect(throws: TaskMaterialError.malformedControl) { try TaskMaterialControl.decode(malformed) }
     }
+
+    @Test func manyMetadataOwnersDoNotPreventClearingTheSmallMaterialSubset() async throws {
+        let root = try TaskMaterialTestFixtures.directory("ManyOwners"); defer { try? FileManager.default.removeItem(at: root) }
+        let store = try TaskMaterialStore(directory: root, clock: { Date(timeIntervalSince1970: 1_000) })
+        store.fence.setEnabled(true)
+        let key = TaskMaterialTestFixtures.key(); _ = try await save("synthetic", key: key, store: store)
+        var owners = Set((0..<2_000).map { _ in TaskMaterialTestFixtures.key() }); owners.insert(key)
+        let report = await store.clearOwners(owners)
+        #expect(report.isComplete && report.removedNames == [key.fileName])
+        await store.shutdown()
+    }
 }

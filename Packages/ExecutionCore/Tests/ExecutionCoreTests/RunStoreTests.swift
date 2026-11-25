@@ -265,10 +265,12 @@ private struct RunStoreFixture: Sendable {
             try await store.finish(id: id, result: .init(state: .failed, exitCode: 1), expectedRunStamp: stamp)
         }
         #expect(await store.list().first?.state == .succeeded)
+        await #expect(throws: InvocationStoreError.recoveryPersistenceUncertain) { try await store.materialOwners() }
         f.fault.arm(nil)
         #expect(await store.maintain().failure == nil)
         await store.releaseProtection(for: id, expectedRunStamp: stamp)
         #expect(try await store.inspectRecovery(id).receipt.exitCode == 0)
+        #expect(try await store.materialOwners().first?.recordIdentity == begun.receipt.runAttempt?.recordIdentity)
     }
 
     @Test func onlyDirectRecoverySourceIsProtectedAndOldAncestorsExpire() async throws {

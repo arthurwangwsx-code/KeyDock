@@ -47,6 +47,8 @@ struct TaskMaterialCaptureTests {
         #expect(capture.budgetedBytes == 0 && capture.capturedInputBytes == 0)
         let next = try await bound(fence)
         fence.invalidateContent()
+        #expect(next.snapshot() != nil)
+        next.revoke()
         #expect(next.snapshot() == nil)
     }
 

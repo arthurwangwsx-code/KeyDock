@@ -146,7 +146,7 @@ extension WorkbenchModel {
 
 extension WorkspaceSession {
     func prepareToolRemoval(_ target: SavedItemTarget, in store: WorkbenchModel) {
-        guard target.isWorkspaceTool, attemptPreparation == nil, !attemptPreparationDismissing, savedToolRemoval == nil, workflowLaunch == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return }
+        guard target.isWorkspaceTool, !hasPendingOrDismissingModal else { return }
         savedToolRemoval = store.reviewSavedItemRemoval(target).map(SavedItemRemovalPresentation.init)
     }
     func refreshToolRemoval(_ presentationID: UUID, in store: WorkbenchModel) {

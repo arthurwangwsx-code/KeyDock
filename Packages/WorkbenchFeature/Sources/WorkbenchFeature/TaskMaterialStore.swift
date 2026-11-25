@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 /// 正文独立于InvocationStore；此actor从不打开网络、进程、剪贴板或执行恢复入口。
 actor TaskMaterialStore {
@@ -127,6 +128,11 @@ actor TaskMaterialStore {
     func files(create: Bool) throws -> TaskMaterialFiles? {
         guard !closed else { throw TaskMaterialError.closed }
         if let storage { try storage.requireBoundDirectory(); return storage }
+        // 仅当次缺席快探针；不能作为installer安全空库资格，也不影响create的严格祖先检查。
+        if !create {
+            var info = stat()
+            if lstat(directory.path, &info) != 0, errno == ENOENT { return nil }
+        }
         do {
             let opened = try TaskMaterialFiles(directory: directory, create: create, fault: fault, observeRead: observeRead)
             storage = opened; return opened

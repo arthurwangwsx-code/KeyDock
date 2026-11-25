@@ -179,7 +179,7 @@ private struct LauncherCatalogProvider: CommandProviding {
 }
 
 @MainActor public final class WorkspaceSession: ObservableObject {
-    public enum Page: String, CaseIterable { case tasks, ai, clipboard, agent, activity, workflows, tools }
+    public enum Page: String, CaseIterable { case tasks, retainedTaskContent, ai, clipboard, agent, activity, workflows, tools }
     @Published public var page: Page = .tasks { didSet { if page != .tools { files.cancel() } } }
     @Published public var selectedTaskID: UUID? { didSet { updateVisibleReferences() } }
     @Published public var draft: AIDraftDocument? { didSet { updateVisibleReferences() } }
@@ -192,6 +192,8 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published var workflowLaunch: WorkflowLaunchDraft?
     @Published var attemptPreparation: AttemptPreparationPresentation?
     @Published var attemptPreparationDismissing = false
+    @Published var taskMaterialPresentation: TaskMaterialPresentation?
+    @Published var taskMaterialDismissing = false
     var workflowLoaded = false
     @Published public private(set) var toolsInput: TextContextInput = .empty
     public var toolsText: String { toolsInput.text }
@@ -232,6 +234,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         self.store = store; visible = value
         if !value {
             files.cancel(); invalidateSourceRemoval(); invalidateAttemptPreparation()
+            invalidateTaskMaterialPresentation()
             if let launch = workflowLaunch { cancelWorkflowLaunch(launch.id) }
             if let removal = savedToolRemoval { cancelToolRemoval(removal.id) }
         }
@@ -249,12 +252,14 @@ private struct LauncherCatalogProvider: CommandProviding {
         else { store.releaseVisibleReferences(owner: visibilityOwner) }
     }
     public func removeHistory(taskIDs: Set<UUID>, draftIDs: Set<UUID>, in store: WorkbenchModel) {
+        if let current = taskMaterialPresentation, taskIDs.contains(current.key.invocationID) { invalidateTaskMaterialPresentation() }
         if let draft, draftIDs.contains(draft.id) { self.draft = nil }
         if selectedTaskID.map(taskIDs.contains) == true { selectedTaskID = store.tasks.first?.id }
     }
     public func navigate(_ route: WorkspaceRoute, store: WorkbenchModel) {
         switch route {
         case .tasks(let id): page = .tasks; if let id { selectedTaskID = id } else if selectedTaskID == nil { selectedTaskID = store.tasks.first?.id }
+        case .retainedTaskContent: page = .retainedTaskContent
         case .ai(let id): page = .ai; draft = store.drafts[id]
         case .clipboard: page = .clipboard
         case .agent: page = .agent

@@ -12,6 +12,8 @@
 
 “使用保留输入”只填新准备页，不提交。读取票据同时绑定presentationID、reviewID、inputRevision、材料身份／revision、清除generation和requestID；输入任何字节编辑、ABA、刷新、提交、关闭或清除后不再回填。非空输入明确审阅替换，不用可见结果兜底。填入后成为新页独立文本；删除来源不悄悄擦掉新编辑。旧unknown确认、当前定义／工具／费率、重新授权、新UUID和默认只展示合同不变。
 
+工作区“已保存内容”另列全部合格header，不依赖当前200条任务内存视图；隐私设置也有入口。内存逐出任务不删除正文，仍可从内容库只读查看或准备一个重新审阅范围的新尝试。标题最多200条／每条1024字节，固定计入会话预算；列表本身不读取payload。
+
 ## 身份与格式
 
 稳定key为`receiptStore(cli/ai) + invocationID + receiptRecordIdentity`；出生身份取RunAttemptMetadata.recordIdentity，不使用会随新尝试递增的来源revision，也不序列化RunAttemptStamp／actor identity。正文有独立materialIdentity与contentRevision CAS，删除重建换materialIdentity。非Codable一次性保存票据另绑定当前actor、确认nonce、许可epoch和内容generation；不保存任何执行grant。
@@ -54,4 +56,4 @@ AiBox仅借鉴serialized mutation／expectedRevision、persist后发布、projec
 
 ## 当前实现范围
 
-独立文件层、actor、删除控制、固定跨语言样本、未来typed输入捕获、会话配额和成功边界端口已实现；65项Swift定向、137项Python全套、干净源898项Swift整仓及签名Preview安装／回退资格已通过，见[本轮实现记录](../implementation/task-material-core-2026-11-26.md)。原生保存／查看／删除审阅、回填票据、App启动维护与history正文清理接线仍未完成；当前没有开放设置开关或正文保存按钮。alpha.20是开发候选，正式安装及公开Release仍为alpha.19；未把签名能力声明样本视为真实旧版运行验收，完整视觉与真正发行仍开放。
+独立文件层、actor、删除控制、固定跨语言样本、未来typed输入捕获、会话配额和成功边界端口已实现；基础精确源65项Swift定向、137项Python全套、898项Swift整仓及签名Preview安装／回退资格见[基础层记录](../implementation/task-material-core-2026-11-26.md)。随后已接通App启动／历史清理、独立内容库、原生逐项审阅／查看／删除门槛、隐私设置及带身份票据的新尝试输入复用；140项定向与中文浅色／英文深色／重启原生子集见[UI接线记录](../implementation/task-material-ui-2026-11-26.md)，完整精确源资格另记。alpha.20仍为开发候选，正式安装及公开Release为alpha.19；完整视觉、物理、真实API与真正发行继续开放。

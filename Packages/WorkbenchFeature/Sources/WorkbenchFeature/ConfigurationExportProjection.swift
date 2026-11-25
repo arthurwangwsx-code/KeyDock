@@ -52,6 +52,7 @@ enum ConfigurationExportProjection {
         for value in c.clipboardExclusions { try graph.budget.text(value, maximum: 512) }
         for value in c.disabledContributions.sorted() { try graph.budget.text(value, maximum: 512); try graph.resource(owner: "preferences", kind: "toolContribution", reference: value) }
         return .init(language: c.language, appearance: c.appearance, clipboardRecordingEnabled: c.clipboardEnabled, activityRecordingEnabled: c.activityEnabled,
+            taskContentRetentionEnabled: c.taskMaterialRetentionEnabled,
             clipboardExclusions: c.clipboardExclusions, clipboardPrimaryAction: source.primaryAction.rawValue, clipboardSeparator: source.separator.rawValue,
             disabledContributions: c.disabledContributions.sorted())
     }

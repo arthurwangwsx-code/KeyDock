@@ -1,7 +1,7 @@
 import Foundation
 import Darwin
 
-enum TaskMaterialReadKind: Hashable, Sendable { case header, payload, control }
+public enum TaskMaterialReadKind: Hashable, Sendable { case header, payload, control }
 
 /// 只由一个actor持有；固定目录FD和生命周期flock，deinit释放OS资源。
 final class TaskMaterialFiles: @unchecked Sendable {

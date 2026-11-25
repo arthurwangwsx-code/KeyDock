@@ -79,6 +79,7 @@ struct ExportPreferences: Encodable {
     let schemaVersion = 1
     let language: String, appearance: String
     let clipboardRecordingEnabled: Bool, activityRecordingEnabled: Bool
+    let taskContentRetentionEnabled: Bool
     let clipboardExclusions: [String]
     let clipboardPrimaryAction: String, clipboardSeparator: String
     let disabledContributions: [String]

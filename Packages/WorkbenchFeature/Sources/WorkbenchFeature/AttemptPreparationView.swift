@@ -63,6 +63,7 @@ private struct AttemptPreparationView: View {
                             .focused($inputFocused).font(.body).scrollContentBackground(.hidden)
                             .frame(minHeight: 100, maxHeight: 160).padding(10).modifier(KDReadingSurface())
                             .accessibilityLabel(L("New attempt input")).disabled(presentation.isSubmitting)
+                        AttemptMaterialInputView(store: store, presentation: presentation, state: presentation.materialInput)
                         Text(L("Only this new input is used. Results are shown without automatic copying or replacement."))
                             .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     }

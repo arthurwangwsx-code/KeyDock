@@ -12,6 +12,7 @@ public struct WorkspaceView: View {
         NavigationSplitView {
             List(selection: Binding<WorkspaceSession.Page?>(get: { session.page }, set: { if let value = $0 { session.page = value } })) {
                 Label(L("Tasks"), systemImage: "rectangle.stack").tag(WorkspaceSession.Page.tasks)
+                Label(L("Saved content"), systemImage: "tray").tag(WorkspaceSession.Page.retainedTaskContent)
                 Label(L("AI workspace"), systemImage: "sparkles").tag(WorkspaceSession.Page.ai)
                 Label(L("Agent workspace"), systemImage: "person.crop.rectangle.stack").tag(WorkspaceSession.Page.agent)
                 Label(L("Workflows"),systemImage:"point.3.connected.trianglepath.dotted").tag(WorkspaceSession.Page.workflows)
@@ -25,6 +26,7 @@ public struct WorkspaceView: View {
                 Group {
                 switch session.page {
                 case .tasks: taskContent
+                case .retainedTaskContent: TaskMaterialLibraryView(store: store, session: session)
                 case .ai:
                     if let draft = session.draft {
                         ScrollView {
@@ -44,6 +46,7 @@ public struct WorkspaceView: View {
             }
         }.frame(minWidth: 820, minHeight: 560).environment(\.locale, KDLocalizer.locale)
             .background {
+                if let presentation = session.taskMaterialPresentation { TaskMaterialSheetHost(store: store, session: session, presentation: presentation).id(presentation.id) }
                 if let launch = session.workflowLaunch { WorkflowLaunchSheetHost(store: store, session: session, launch: launch).id(launch.id) }
                 if let review = session.savedToolRemoval { SavedToolRemovalSheetHost(store: store, session: session, presentation: review).id(review.id) }
                 if let presentation = session.attemptPreparation { AttemptPreparationSheetHost(store: store, session: session, presentation: presentation).id(presentation.id) }
@@ -74,6 +77,13 @@ public struct WorkspaceView: View {
                         if task.canCancel, store.agentRunDefinitions[task.id] != nil { Button(L("Pause")) { store.pauseAgent(task.id) } }
                         if task.canCancel { Button(L("Stop")) { store.cancelTask(task.id) } }
                         if !task.isRunning, task.runAttempt != nil { Button(L("Prepare new attempt")) { session.prepareAttempt(task.id, in: store) } }
+                        if task.runAttempt != nil {
+                            Menu(L("Task content")) {
+                                Button(L("Review content to save…")) { session.prepareTaskMaterial(task.id, mode: .saveReview, in: store) }.disabled(!store.taskMaterialFence.current.enabled || store.taskMaterialClearing)
+                                Button(L("View retained content…")) { session.prepareTaskMaterial(task.id, mode: .view, in: store) }
+                                    .disabled(store.taskMaterialKey(task).flatMap { store.taskMaterialHandles[$0] } == nil || store.taskMaterialClearing)
+                            }.menuStyle(.borderlessButton).fixedSize()
+                        }
                         Spacer(minLength: 0)
                         if task.desktopWorkspaceResult == nil { KDIconButton("doc.on.doc", label: L("Copy")) { store.copyResult(task.id) }.disabled(task.output.isEmpty) }
                         }
@@ -96,7 +106,7 @@ public struct WorkspaceView: View {
                     if let result = task.desktopWorkspaceResult {
                         DesktopWorkspaceResultView(result: result, labels: task.desktopWorkspaceLabels)
                     } else {
-                    ScrollView { Text(task.output.isEmpty ? (task.restoredFromReceipt ? L("Output is not retained after restarting KeyDock.") : L("No output")) : task.output).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(16) }
+                    ScrollView { Text(task.output.isEmpty ? (task.restoredFromReceipt ? L("Session output is not restored here. Use Task content to view text you saved.") : L("No output")) : task.output).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(16) }
                         .modifier(KDReadingSurface())
                     }
                     HStack {

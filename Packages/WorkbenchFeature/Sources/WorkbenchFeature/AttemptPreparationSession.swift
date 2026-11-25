@@ -3,7 +3,7 @@ import Foundation
 extension WorkspaceSession {
     public var hasPendingOrDismissingModal: Bool {
         attemptPreparation != nil || attemptPreparationDismissing || sourceRemoval != nil || sourceRemovalDismissing ||
-        workflowLaunch != nil || savedToolRemoval != nil
+        workflowLaunch != nil || savedToolRemoval != nil || ownsTaskMaterialReview
     }
     public func prepareAttempt(_ taskID: UUID, in store: WorkbenchModel) {
         guard !store.isShuttingDown, !hasPendingOrDismissingModal,
@@ -11,6 +11,11 @@ extension WorkspaceSession {
         let presentation = AttemptPreparationPresentation(.init(store: task.runAttempt?.definition.kind == .savedCommand ? .cli : .ai, invocationID: taskID))
         attemptPreparation = presentation
         presentation.refresh(in: store)
+    }
+    func prepareAttempt(_ origin: AttemptOrigin, in store: WorkbenchModel) {
+        guard !store.isShuttingDown, !store.isClearingHistory, !hasPendingOrDismissingModal else { return }
+        let presentation = AttemptPreparationPresentation(origin)
+        attemptPreparation = presentation; presentation.refresh(in: store)
     }
     func attemptPreparationDidAppear(_ id: UUID) { if attemptPreparation?.id == id { attemptPreparation?.didAppear() } }
     func attemptPreparationDidDismiss(_ id: UUID) {

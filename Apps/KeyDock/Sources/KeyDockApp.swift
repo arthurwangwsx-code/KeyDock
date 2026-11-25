@@ -65,7 +65,7 @@ import Darwin
             return root.appendingPathComponent("KeyDock-Smoke", isDirectory: true)
         }
         #endif
-        return FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Smoke")
+        return try PrivateFiles.physicalTemporaryDirectory().appendingPathComponent("KeyDock-Smoke")
     }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { coordinator?.reopen(); return false }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -234,6 +234,7 @@ import Darwin
     }
     func reopen() {
         guard !store.isShuttingDown else { return }
+        if focusTaskMaterialReview() { return }
         // Dock/reopen不能把正在审阅或保存的sheet盖在启动台后面；按当前窗口前后顺序选择。
         for window in NSApp.orderedWindows where (window === settings || window === workspace) && window.isVisible {
             guard window.attachedSheet != nil else { continue }
@@ -246,6 +247,7 @@ import Darwin
     }
     func presentLauncher(commandID: String? = nil) {
         guard !store.isShuttingDown else { return }
+        if focusTaskMaterialReview() { return }
         let invocation = commandID.flatMap { store.prepareShortcutInvocation(id:$0) }
         if commandID != nil && invocation == nil { return }
         revokeDesktopInvocations()
@@ -372,6 +374,7 @@ import Darwin
     }
     func presentClipboard() {
         guard !store.isShuttingDown else { return }
+        if focusTaskMaterialReview() { return }
         revokeDesktopInvocations()
         if clipboardPanel?.isKeyWindow == true { dismissClipboard(restore: true); return }
         let ownPID = ProcessInfo.processInfo.processIdentifier
@@ -661,12 +664,21 @@ import Darwin
         else { NSApp.keyWindow?.performClose(nil) }
     }
     @objc private func quitAction() { NSApp.terminate(nil) }
+    private func focusTaskMaterialReview() -> Bool {
+        guard workspaceSession.ownsTaskMaterialReview else { return false }
+        if var target = workspace {
+            while let child = target.attachedSheet, child.isVisible { target = child }
+            NSApp.activate(ignoringOtherApps: true); target.makeKeyAndOrderFront(nil)
+        }
+        return true
+    }
     private func installShortcuts(configuration: AppConfiguration) throws {
         guard !store.isShuttingDown else { throw HotkeyRegistrationError(status: -50) }
         let entries = ShortcutPlan.entries(configuration)
         let definitions = entries.map { entry in
             HotkeyDefinition(id: entry.id, binding: entry.binding) { [weak self] in
                 guard let self else { return }
+                if self.focusTaskMaterialReview() { return }
                 if entry.commandID == "utility.clipboard" { self.presentClipboard() }
                 else if let command = entry.commandID, command.hasPrefix("desktop-workspace.") { self.store.performDesktopWorkspaceShortcut(id: command) }
                 else if let command = entry.commandID, self.store.isDesktopCommand(command) { self.store.desktopShortcut(command) }

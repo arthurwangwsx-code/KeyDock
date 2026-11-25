@@ -140,8 +140,8 @@ enum TaskMaterialError: Error, Equatable, Sendable {
     case io(Int32), durabilityUncertain(Int32)
 }
 
-enum TaskMaterialPersistencePoint: Equatable, Sendable { case beforeFileSync, beforeRename, afterRename, beforeDirectorySync, beforeDelete }
-enum TaskMaterialWriteRole: Equatable, Sendable { case body, control }
+public enum TaskMaterialPersistencePoint: Equatable, Sendable { case beforeFileSync, beforeRename, afterRename, beforeDirectorySync, beforeDelete }
+public enum TaskMaterialWriteRole: Equatable, Sendable { case body, control }
 
 /// 文件身份只在当前进程使用，不序列化到材料中。
 struct TaskMaterialFileIdentity: Equatable, Sendable {
