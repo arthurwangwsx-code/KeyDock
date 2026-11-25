@@ -2,7 +2,7 @@
 
 更新：2026-11-25。用户已授权在保留P0/P1验收义务的同时推进P2–P4。**完整产品仍为PARTIAL**；当前源码、真实系统验收、已发布版本分别记录，不能用代码或CI绿测替代日用验收。
 
-最新干净实现`8c2c600`已通过完整本机native-system（601 Swift／46 Python／660 key，含原生产OCR双轮）及[同源core／优化构建45518861646](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45518861646)；此前OCR失败和首轮长耗时保留，根因与长期可靠性仍未确认。alpha.8进入发行准备，正式安装仍为alpha.7；工作区组合运行／profile快捷键仍待接通。以下旧source的FAIL／NOT_QUALIFIED是对应历史范围，不能替代或覆盖本次结果，详见[准备与回执复查](implementation/desktop-workspace-preparation-2026-11-25.md)。
+当前[alpha.8](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.8)已公开并安装，精确源`009532663eeac2f1e62461975060cce5adc29813`：601 Swift／46 Python／660 key完整本机PASS（含原生产OCR双轮），同源feature／master core及优化构建、App／DMG公证装订、原子替换、公开回下载和发行审计均PASS；实际About显示alpha.8 (8)，旧alpha.7与回退回执保留。见[发行证据](implementation/alpha8-release-2026-11-25.md)。此前OCR FAIL、冷首轮长耗时及未确认根因保留，长期可靠性仍PARTIAL；工作区组合运行／profile热键及真实系统／模型／完整视觉验收仍待完成。
 
 后续修补分支`fix/ui-semantics-and-text-sync`从master `703b9a1`创建，已实现任务13的文本字节同步、编辑器AX名称、计划时区与Launcher副标题，33项定向执行及Agent／计划中英深浅四组合等原生子集通过。前一候选`36812e0`的474 Swift／46 Python／587 key完整检查、Release构建及同源CI通过，但未发布。随后`57f308d`补URL运行／编辑隔离及工作区失败提示，27项定向执行和合成原生操作通过，共590个中英UI key；其core CI通过，完整本机检查却在OCR失败。增加轮次日志后真实提取首轮也失败，三个独立对照均未解决；未改变生产模式或门禁。alpha.8发行保持未放行，正式版本继续为alpha.7。详见[语义复查](implementation/ui-semantics-2026-11-25.md)、[URL编辑复查](implementation/url-action-editing-2026-11-25.md)及[OCR复发记录](implementation/ocr-recurrence-2026-11-25.md)。
 
@@ -26,7 +26,7 @@ Agent／工作流的保存反馈后续已实现：验证或写入失败在发起
 
 执行内核继续接入：同一拓扑下的全部窗口冻结／统一复核、单次消费、Restore独立基线、工作区专用焦点交接和原子child撤销已经实现，43 tests／5 suites定向通过。审查发现并修补零frame写入污染Restore、旧Restore消费新基线及焦点等待／取消竞争，见[内核复查](implementation/desktop-workspace-kernel-2026-11-25.md)。干净`fc25979`的本机完整检查被原2GiB空间门禁拦截（当时1.32GiB）；[同源云端core／优化构建45513759647](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45513759647)为573 Swift／46 Python／660 key PASS，并已回下载核对诊断artifact，系统OCR仍NOT_QUALIFIED。应用后台准备、父子回执和执行组合根／profile快捷键仍未串联，UI仍仅提供定义管理；没有执行真实AX／多屏操作，任务20.3和完整产品保持PARTIAL。
 
-应用准备与回执存储继续实现：全应用inspect／统一复核、冻结缺失策略、单次有界后台请求及取消／迟到候选隔离；父manifest和子阶段context、active typed parent约束与恢复family保护已经接入。77 tests／7 suites定向通过，见[准备与回执复查](implementation/desktop-workspace-preparation-2026-11-25.md)。本轮初始空间约1.14GiB，随后恢复至100GiB以上，未由本轮清理产生；原检查／OCR门禁保持。运行组合根、逐项汇总、总任务槽位和profile快捷键尚未接通，真实AX／多屏／视觉验收未新增PASS。
+应用准备与回执存储继续实现：全应用inspect／统一复核、冻结缺失策略、单次有界后台请求及取消／迟到候选隔离；父manifest和子阶段context、active typed parent约束与恢复family保护已经接入。77 tests／7 suites定向通过，见[准备与回执复查](implementation/desktop-workspace-preparation-2026-11-25.md)。本轮初始空间约1.14GiB，随后恢复至100GiB以上，未由本轮清理产生；原检查／OCR门禁保持。运行组合根、逐项汇总、总任务槽位和profile快捷键尚未接通；发行后About8子集已观察，真实AX／多屏及完整视觉矩阵仍未验收。
 
 本轮已发布并安装alpha.7：有序多选合并、完整预览与可配置主动作，最多20项／1MiB。中文浅色／英文深色、跨查询、重排、空行与Shift-Return、偏好重启保留及实际合并复制均已观察。AI生成成功但复制失败会保留完整结果和成功回执。当前源472项Swift、46项Python、583条文案、同源CI及公证／公开回下载通过；真实自动插入仍依10.1验收。详见[本轮证据](implementation/clipboard-composition-2026-11-25.md)及[合并合同](technical/clipboard-composition.md)。
 
@@ -36,7 +36,7 @@ Agent／工作流的保存反馈后续已实现：验证或写入失败在发起
 
 ## 当前源码
 
-canonical目录唯一；合并分支从master `2fe35b6`创建，验收后的`59d1680be17fb5713cf79834fbceec3df496ed27`已受控fast-forward到master并标记`v0.1.0-alpha.7`。发行证据在从master创建的`chore/alpha7-release-evidence`补齐，不修改已发布字节。主Agent独占写入／集成／提交／设备，子Agent只读研究评审或提供/tmp原创提案。未新建worktree或修改AiBox／Ashot。
+canonical目录唯一；alpha.8精确源`009532663eeac2f1e62461975060cce5adc29813`已受控fast-forward到master并标记`v0.1.0-alpha.8`，发行证据在从该master创建的`chore/alpha8-release-evidence`补齐，不修改已发布字节。alpha.7源`59d1680`及其历史证据继续保留。主Agent独占写入／集成／提交／设备，子Agent只读研究评审或提供/tmp原创提案。未新建worktree或修改AiBox／Ashot。
 
 | 范围 | 状态 | 当前证据与限制 |
 |---|---|---|
@@ -73,11 +73,13 @@ canonical目录唯一；合并分支从master `2fe35b6`创建，验收后的`59d
 
 公开仓库为[arthurwangwsx-code/KeyDock](https://github.com/arthurwangwsx-code/KeyDock)，默认分支master。用户已授权公开此项目源码、Release本地打包上传、流水线及本地安装替换。
 
-- [alpha.7／build7](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.7)已公开并安装至`/Applications/KeyDock.app`，App源为上述`59d1680`。Developer ID／Hardened Runtime、App与DMG公证装订、Gatekeeper、只读DMG内部App一致性、公开后实际回下载均通过。原alpha.6及回退receipt保留；未force kill或改TCC。
+- 当前为[alpha.8／build8](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.8)，源`0095326`，tag固定原始发行源；已安装至`/Applications/KeyDock.app`，实际About为alpha.8 (8)。601 Swift／46 Python／660 key、原生产OCR双轮、本机Developer ID构建、同源CI、公证／装订／Gatekeeper、ZIP／DMG一致性、公开回下载和[发行审计45523490646](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45523490646)通过，完整产品仍PARTIAL。alpha.7是当前保留的旧包，详细回执及剩余范围见[alpha.8证据](implementation/alpha8-release-2026-11-25.md)。
+
+- [alpha.7／build7](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.7)是当前保留的直接回退旧包，源`59d1680`。其当时Developer ID／Hardened Runtime、App与DMG公证装订、Gatekeeper、只读DMG内部App一致性、公开后实际回下载均通过。原alpha.6及回退receipt继续保留；未force kill或改TCC。
 - [GitHub发行资产审计45461512603](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45461512603)已通过，核验精确alpha.7资产；不是云端OCR或真实自动插入验收。
-- 正式App已实际启动，「关于」显示`0.1.0-alpha.7 (7)`。本轮未代授予TCC。Preview中文浅色／英文深色、主动作／分隔符、重启持久化及实际合并复制已观察，语言／外观与默认主动作均已恢复；物理全局热键未计PASS。没有保存MCP来源、运行外部服务或配置真实API。
-- [alpha.6／build6](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.6)为本次可回退旧版，源`d61598a`；当时457 Swift／46 Python／556 key、发行及资产审计通过，见[桌面控制证据](implementation/desktop-controls-2026-11-25.md)。alpha.5及更旧历史发行与备份继续保留。
-- alpha.2／build2的历史源为`ace56efdf67faae0f8dd2df3f0871b8e61a7829f`，历史发行／安装验收见[alpha.2证据](implementation/native-actions-2026-11-24.md)；当前直接回退目标是alpha.6。alpha.3／build3仅保留本地候选；Preview的dirty源码构建不作为正式分发包。
+- alpha.7阶段曾实际启动并观察About7、Preview中文浅色／英文深色、主动作／分隔符、重启持久化及实际合并复制；语言／外观与默认主动作均恢复。该历史子集未代授予TCC，物理全局热键未计PASS；没有保存MCP来源、运行外部服务或配置真实API。
+- [alpha.6／build6](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.6)是历史发行，源`d61598a`；当时457 Swift／46 Python／556 key、发行及资产审计通过，见[桌面控制证据](implementation/desktop-controls-2026-11-25.md)。alpha.5及更旧历史发行与备份继续保留。
+- alpha.2／build2的历史源为`ace56efdf67faae0f8dd2df3f0871b8e61a7829f`，历史发行／安装验收见[alpha.2证据](implementation/native-actions-2026-11-24.md)。当前alpha.8的直接回退目标是alpha.7；alpha.3／build3仅保留本地候选，Preview的dirty源码构建不作为正式分发包。
 - 所有旧版tag和资产字节保持不变。个人配置、bookmark、密钥、截图、剪贴板、正文和本机日志不进入公开资产。
 
 ## 历史证据与边界
