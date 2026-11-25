@@ -126,7 +126,15 @@ enum AIReceiptProbeMode: String, CaseIterable { case text, proposal, agent }
         #expect(restarted.taskHandles.isEmpty && restarted.aiTaskIDs.isEmpty && restarted.drafts.isEmpty)
         #expect(restarted.resultTargets.isEmpty && restarted.latestAutoCopyRunID == nil)
         // interrupted 是终态；模拟迟到的成功也不能复活或重新派发。
-        try await restarted.aiInvocationStore.finish(id: id, result: .init(state: .succeeded, message: "synthetic-late-completion"))
+        if mode == .text {
+            // 保存AI动作现在是typed记录；冷启动无worker出生stamp，迟到写必须明确拒绝。
+            do {
+                try await restarted.aiInvocationStore.finish(id: id, result: .init(state: .succeeded, message: "synthetic-late-completion"))
+                Issue.record("Unstamped completion altered a typed cold receipt")
+            } catch { #expect(error as? InvocationStoreError == .staleRecovery) }
+        } else {
+            try await restarted.aiInvocationStore.finish(id: id, result: .init(state: .succeeded, message: "synthetic-late-completion"))
+        }
         let durable = try readReceipts(directory)
         #expect(durable.first?.state == .interrupted)
         try await release(server)

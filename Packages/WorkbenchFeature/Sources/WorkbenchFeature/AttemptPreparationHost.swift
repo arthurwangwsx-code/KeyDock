@@ -178,17 +178,20 @@ extension WorkbenchModel {
                            runDefinition: RunDefinitionReference? = nil, attempt: AttemptExecutionContext? = nil) async throws -> InvocationWorkerOwnership {
         var owner: InvocationWorkerOwnership?
         do {
-            try Task.checkCancellation(); try attempt?.validate(in: self)
+            // 新尝试在取消／关闭时不得消费旧审阅；普通已接纳任务仍写入取消终态所需的intent。
+            if let attempt { try Task.checkCancellation(); try attempt.validate(in: self) }
             if let attempt { guard attempt.id == id, attempt.review.definition == runDefinition else { throw AttemptPreparationError.changed } }
             let begun = try await store.begin(id: id, name: name, commandID: authorization.commandID,
                 commandVersion: authorization.commandVersion, configurationFingerprint: configurationFingerprint,
                 caller: authorization.caller.rawValue, initialMessage: initialMessage, runDefinition: runDefinition,
                 recovering: attempt?.review.recovery)
             let ownership = InvocationWorkerOwnership(store: store, begun: begun); owner = ownership
-            try Task.checkCancellation(); try attempt?.validate(in: self)
-            guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
             publishAttempt(begun, context: attempt)
-            try attempt?.accept(ownership, in: self)
+            if let attempt {
+                try Task.checkCancellation(); try attempt.validate(in: self)
+                guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
+                try attempt.accept(ownership, in: self)
+            }
             return ownership
         } catch {
             if let owner { await owner.abandon() }

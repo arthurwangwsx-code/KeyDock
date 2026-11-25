@@ -79,7 +79,8 @@ class InvocationDataTests(unittest.TestCase):
     def test_subdirectory_rebind_and_missing_markers_are_rechecked(self):
         for mode in ("rebind", "missing-directory", "missing-file"):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory(dir=self.temporary.name) as scope:
-                root = Path(scope) / "SyntheticData"; root.mkdir(mode=0o700)
+                # OS tempfile在CI可能返回/var别名；只在owned夹具建立时解析，不放宽生产no-follow。
+                root = Path(scope).resolve() / "SyntheticData"; root.mkdir(mode=0o700)
                 second = root / "ai-invocations"; second.mkdir(mode=0o700)
                 (second / "invocations.json").write_text('{"version":1,"receipts":[]}')
                 first = root / "invocations"

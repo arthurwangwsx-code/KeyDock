@@ -25,6 +25,8 @@
 
 签名旧reader是修改能力声明后ad-hoc重签的合成Preview，不是实际alpha.18执行；不兼容补偿仍由单元故障注入覆盖。最初compile-v1的不可访问setter、swift-v2的JSON路径转义及fixture初始化竞态、python-v1的旧夹具缺字段均保留失败回执；修补后才重新验证。当前源完整检查／CI／发行另行留证，不能复用7dc3851的历史全绿。
 
+首轮整仓attempt-full-check-v1发现普通任务尚未开始就取消／shutdown时缺少原有取消终态；现保留普通已接纳任务的intent＋准确owner，由原worker取消检查完成终态，新attempt仍在审阅失效时拒绝接纳。真实SIGKILL的typed冷记录也应拒绝无出生stamp的迟到finish，旧测试已强化为明确断言staleRecovery。24条生命周期／准备页定义通过。首轮CI 45674201862在三个owned目录变换夹具因/var别名失败，生产no-follow保持不变，只在创建自有tempfile夹具时解析真实路径。5019-byte失败artifact已回下载核验，SHA256 756849ef7730b4e6564e6a0570f662053a4d237574e44427e1255e9f933732d2；失败源cd2085c不作为发行资格。
+
 ## 原生观察与修补
 
 macOS27.2本机CUA在owned合成域观察中文浅／深色和英文浅／深色子集，工作流空白输入、Esc取消、当前20步范围及滚动末尾、明确新执行、旧结果并存、默认仅展示、冷启动只读历史与unknown checkbox；Command-Return未绕过sheet。恢复正文未保留，启动时没有排队重跑。
