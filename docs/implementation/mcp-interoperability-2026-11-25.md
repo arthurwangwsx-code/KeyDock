@@ -15,3 +15,5 @@ schema／client／stdio／wire／Broker及新增HTTP生命周期定向回归共4
 全部验证绑定当前apply attempt 9881b6d8-e08e-4176-b6a2-97706ee67811；原始receipt位于change下receipts，成功和失败均不覆盖。版本候选的干净源码、完整本机／CI、签名公证、公开回下载及安装尚待各自通过，不借此关闭24.5或全产品义务。
 
 首次干净候选a7c2921完整本机685 Swift／58 Python／708 key与系统OCR PASS（3bcf883f-08de-4684-9764-2e152a8f83eb），新v4独立Time四格PASS（3c8e760f-837e-4a51-a732-fd48ca7bfe94）。SDK四格的业务取消均PASS，但legacy stdio单格进程观察失败，整组FAIL（492f913c-0438-43b1-bdb1-ce44a3812496）；错误未留具体类型，不能断言根因。进程已回收、无组残留，但该FAIL仍阻止发行。将ps从全局进程表缩为仅查询自有组，保留5秒时限、失败门禁和未回收leader围栏，新增错误类型诊断；后续修补提交必须重做同源资格。
+
+最终修补源d99fee8的新v4环境两组四格、本机685 Swift／58 Python／708 key、同源core／优化构建、独立互通CI、公证／公开回下载及原生About12均通过，已随alpha.12安装。完整回执与边界见[发行证据](alpha12-release-2026-11-25.md)，本文件前文保留各历史时点失败和候选状态。

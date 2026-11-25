@@ -1,16 +1,18 @@
 # 当前状态总账
 
-任务26候选已实现schema语义、HTTP取消／会话清理及可重复互通入口；开发态真实Time／SDK四格通过，环境metadata修补后新v4仅准备完成，尚待干净源重放和发行资格。当前正式安装仍为alpha.11。见[本轮复查](implementation/mcp-interoperability-2026-11-25.md)。
+任务26子集已随alpha.12公开并安装：schema语义、HTTP取消／会话清理、独立Time与owned SDK慢任务两组四格，本机及独立CI均PASS。更多服务／真实资源与长任务仍开放。见[本轮复查](implementation/mcp-interoperability-2026-11-25.md)和[发行证据](implementation/alpha12-release-2026-11-25.md)。
 
 更新：2026-11-25。用户已授权在保留P0/P1验收义务的同时推进P2–P4。**完整产品仍为PARTIAL**；当前源码、真实系统验收、已发布版本分别记录，不能用代码或CI绿测替代日用验收。
 
-当前[alpha.11](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.11)已公开并安装，精确源`9f8d6d5b39579c85f1edeec55cace27fb8fcf62a`：671 Swift／46 Python／708 key完整本机PASS（含原配置系统OCR双轮），同源feature core与优化构建、Developer ID、公证／装订／Gatekeeper、原子替换、公开回下载和[发行审计45551838751](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45551838751)均PASS。实际About为alpha.11 (11)，alpha.10直接回退包及更早证据保留。见[发行证据](implementation/alpha11-release-2026-11-25.md)。
+当前[alpha.12](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.12)已公开并安装，精确源`d99fee8078f807ce3803f2829181c69509468cc2`：685 Swift／58 Python／708 key完整本机PASS（含原配置系统OCR双轮）；同源core与优化构建、独立互通CI、Developer ID、公证／装订／Gatekeeper、原子替换、公开回下载和[发行审计45562087011](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45562087011)均PASS。实际About为alpha.12 (12)，alpha.11直接回退包与更早证据保留。见[发行证据](implementation/alpha12-release-2026-11-25.md)。alpha.11及其历史资格保持原记录。
+
+只读复查仍确认实际工程缺口：Snippet等常用工具的旧编辑稿／删除关联配置闭环、脱敏配置导出和UI首帧采样。它们与真实系统／API验收分别推进，完整产品不能归为“只剩权限或配置”。
 
 桌面工作区组合运行、profile快捷键、设置应用、父子同库与有序阶段结果、取消／drain及恢复不重放已经接通；别名清除和文件补偿已修补。中文浅色／英文深色、窄卡片／宽表格及设置入口已观察并修复实际挤压。任务20.2／20.3完成工程范围，20.4实际AX／多屏、真实模型、完整视觉／辅助功能与长期可靠性仍开放；此前FAIL保留。
 
 alpha.10修补真实代码缺口：[准确输入与提交](implementation/ai-input-commit-2026-11-25.md)修复等价Unicode字节修改未更新revision、旧命令建议误采纳及输入法组字提交门禁。[导入来源](implementation/imported-text-context-2026-11-25.md)接通Tools／文档／OCR／MCP到AI草稿和三类运行的来源快照、联合接纳／预算、清除与迟到围栏；文本／PDF、合成HTTP和stdio MCP两版本回归，以及中英明暗原生子集PASS。最终精确源的完整本机／CI／发行资格见上述发行证据；原始失败没有删除。
 
-任务25已接通受信版本化能力目录、计算／单位、保存CLI、异步文件搜索及独立设置开关；45项定向回归与原生双语、持久化子集PASS，已随alpha.11发行并替换正式App。见[工具目录复查](implementation/trusted-contributions-2026-11-25.md)。完整目标仍有未关闭的工程和真实验收义务。[显式草稿关闭](implementation/ai-draft-closing-2026-11-25.md)已随alpha.10发行，已补工程闭环及中英明暗原生子集，取消／真实worker drain由owned gate与loopback验证；原生在途关闭仍依24.5。独立第三方MCP互通、真实API、AX／多屏、真实IME／VoiceOver、全应用视觉和驻留性能验收亦开放。不能把“只剩用户配置或授权”作为当前全产品结论。本轮实际alpha.11隐私页仍显示需要辅助功能授权，未更改TCC。
+任务25已接通受信版本化能力目录、计算／单位、保存CLI、异步文件搜索及独立设置开关；45项定向回归与原生双语、持久化子集PASS，已随alpha.11发行并替换正式App。见[工具目录复查](implementation/trusted-contributions-2026-11-25.md)。完整目标仍有未关闭的工程和真实验收义务。[显式草稿关闭](implementation/ai-draft-closing-2026-11-25.md)已随alpha.10发行，已补工程闭环及中英明暗原生子集，取消／真实worker drain由owned gate与loopback验证；原生在途关闭仍依24.5。独立Time互通子集已通过；更多第三方服务／资源／长任务、真实API、AX／多屏、真实IME／VoiceOver、全应用视觉和驻留性能验收亦开放。不能把“只剩用户配置或授权”作为当前全产品结论。本轮实际alpha.11隐私页仍显示需要辅助功能授权，未更改TCC。
 
 ## 前序增量记录（历史时点）
 
@@ -62,7 +64,7 @@ canonical目录唯一；alpha.9精确源5f52658已受控fast-forward至master，
 | AI质量 | NOT_RUN | 20条合成质量样本已准备；真实模型质量与人工评阅未执行 |
 | 多步Agent | PARTIAL | 保存命令／MCP工具allowlist、冻结范围、schema／预算、逐次审批、暂停／新attempt与unknown回归；真实外部模型／工具组合未全面验收 |
 | 工作流与App内计划 | PARTIAL | 编辑／输入输出绑定、完整动态argv审批、快照冻结、child drain、durable claim／指纹／revision／DST／睡眠合并／unknown检查；真实长期驻留仍待验收 |
-| MCP与扩展 | PARTIAL | HTTP／stdio、两个显式协议版本、tools／resources／prompts及21项合成协议回归；第三方兼容未全面验收，ACP仅评估、无OS沙箱或扩展市场承诺 |
+| MCP与扩展 | PARTIAL | HTTP／stdio、两个显式协议版本、tools／resources／prompts；alpha.12独立Time与owned SDK四格在本机／CI通过，冻结认证取消／会话清理回归通过；第三方兼容未全面验收，ACP仅评估、无OS沙箱或扩展市场承诺 |
 | OCR与文件文本 | PARTIAL | 真实合成Vision OCR、UTF-8／PDF文本层、预算／取消；区域截图入口已实现，Screen Recording由用户手动授予；未声称多模态原图发送 |
 | 常用工具 | PARTIAL | Snippets、选定目录文件名搜索／Finder显示、算式／单位、URL模板、命令集合；核心回归和部分原生交互已通过，完整入口矩阵待验收 |
 | 使用分析 | PARTIAL | 默认关闭、最小metadata、30天聚合、暂停／清除／导出与明确用户触发AI总结；只有工具内部分覆盖，无整机追踪 |

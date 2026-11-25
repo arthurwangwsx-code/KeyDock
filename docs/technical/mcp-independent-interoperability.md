@@ -1,6 +1,6 @@
 # 独立MCP服务互通
 
-2026-11-25，任务26，尚未完成。基线alpha.11／master 4555dab。正式安装和公开资产仍以状态总账为准。
+2026-11-25，任务26子集完成，已随alpha.12公开并安装；完整产品仍为PARTIAL。基线alpha.11／master 4555dab，最终干净发行源d99fee8，实际资格见[发行证据](../implementation/alpha12-release-2026-11-25.md)。
 
 使用官方mcp-server-time 2026.11.18及SDK mcp 2.3.0，依据[PyPI固定版本](https://pypi.org/project/mcp-server-time/2026.11.18/)和[固定源码](https://github.com/modelcontextprotocol/servers/tree/c799c8552b0f27b7a33a7b9233773da144dddcf5/src/time)。无需API key，显式UTC，所有工作目录、venv、wheel与报告在工程忽略的.local/interop中。完整依赖按解析所得具体wheel SHA256锁定，再验证下载并从本地wheelhouse安装；不读取已有venv、凭据或个人文件。
 
@@ -12,7 +12,7 @@
 
 schema兼容须遵守标准语义：annotations不构成执行授权或自动填参，未知约束拒绝；不能为单个服务偷改schema，亦不能把外部readOnlyHint变为只读授权。现有参数／目录／输出预算、Broker逐次审批、source revision和取消收口持续有效。schema变更须验证缺失／开放／关闭additionalProperties、嵌套、默认值、数值／Unicode长度、超限和未知关键字。
 
-本机已保留原始基线：四格握手均成功，但三个工具全部因schema拒绝，整组FAIL。修补后独立Time四格已有开发态PASS；最终干净源码重放、完整本机检查及发行资格另行记录。此服务只验证时间工具，不能关闭真实resources／prompts、独立第三方长任务取消、外部AI质量或完整24.5验收。
+本机已保留原始基线：四格握手均成功，但三个工具全部因schema拒绝，整组FAIL。修补后独立Time四格已有开发态PASS；最终干净源码d99fee8的新v4环境已重放通过，两组四格的独立CI、完整本机检查及发行资格见上述证据。此服务只验证时间工具，不能关闭真实resources／prompts、独立第三方长任务取消、外部AI质量或完整24.5验收。
 
 ## HTTP生命周期
 
