@@ -14,7 +14,7 @@ public struct WorkspaceToolbarView: View {
                     ForEach(session.availableDrafts(in: store)) { draft in
                         Button { session.navigate(.ai(draft.id), store: store) } label: { AIDraftMenuLabel(draft: draft, selected: session.draft?.id == draft.id) }
                     }
-                } label: { Image(systemName: "clock") }
+                } label: { Label(L("AI drafts"), systemImage: "clock").labelStyle(.iconOnly) }
                     .menuStyle(.borderlessButton).fixedSize()
                     .accessibilityLabel(L("AI drafts")).help(L("Drafts kept for this session"))
                     .disabled(session.availableDrafts(in: store).isEmpty)

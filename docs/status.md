@@ -1,6 +1,6 @@
 # 当前状态总账
 
-任务29正在推进：已增加固定Release查询及独立CI入口、自有App／PID资源采样和准确构建配置；16项Python、36项定向Swift与真实短探针／自有生命周期子集PASS。先导查询p95 51.67ms失败保留，修改规范化字段缓存后同数据／预算复测9.52ms；目录准备单列。干净源完整检查、远端CI、30分钟基线及alpha.15发行待补，不能据此关闭屏幕首帧、8小时驻留或完整产品。见[本轮复查](implementation/performance-sampling-2026-11-25.md)。
+任务29正在推进：查询原始超标保留；规范化缓存修改后，干净候选2b3d5b6的查询p95为9.99ms，719 Swift／74 Python／744 key、本机OCR双轮和同源core CI通过。该ReleasePreview完成1800.014秒／361点三阶段资源基线，UI16个基础组合已观察，并发现／修补外观切换后草稿菜单辅助名称退回Clock的问题，原生返回路径通过。菜单修补后的干净完整资格、独立性能CI及alpha.15发行待补；屏幕首帧、8小时驻留、真实采集能耗、完整视觉和产品目标仍PARTIAL。见[本轮复查](implementation/performance-sampling-2026-11-25.md)。
 
 任务28的设置摘要已随[alpha.14](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.14)公开并安装，精确源`475e31fb468f4f985166938467bcd69c566356f0`：715 Swift／58 Python／744 key完整本机、指定同源CI与优化构建、公证／公开回下载及发行审计PASS，实际About为alpha.14 (14)，alpha.13回退包保留。54项定向回归与中英明暗审阅／保存／取消／文件字节子集PASS；英文说明截断已复验修补。见[发行证据](implementation/alpha14-release-2026-11-25.md)及[实现复查](implementation/settings-summary-export-2026-11-25.md)。一次焦点切回Launcher的唯一原因未确认，确定的reopen路径已修，实际Dock激活未获资格；摘要不关闭完整定义迁移、性能采样或原完整产品义务。
 
