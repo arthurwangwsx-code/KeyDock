@@ -58,7 +58,8 @@ public struct WorkspaceView: View {
     private func newAI() { session.createDraft(in: store) }
     private var taskContent: some View {
         let language = store.configuration.language
-        return HSplitView {
+        return GeometryReader { viewport in
+        HSplitView {
             List(selection: $session.selectedTaskID) {
                 ForEach(store.tasks) { task in
                     TaskHistoryRow(task: task, language: language).tag(task.id)
@@ -123,6 +124,7 @@ public struct WorkspaceView: View {
                     }
                 } else { KDEmptyState(symbol: "rectangle.stack", title: L("Your tasks stay here"), detail: L("Closing the launcher does not stop running tasks.")) }
             }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
+        }.frame(width: viewport.size.width, height: viewport.size.height, alignment: .topLeading)
         }
     }
     private var clipboardContent: some View {

@@ -68,3 +68,7 @@ AI／范围大文本及保存失败／取消／清除的完整原生矩阵，以
 `task-material-large-result-native-v2` lifecycle exit0，receipt SHA256 `4ddb60ddccbb319b5c1d8a4713e1ba4bd821c4e4e0fa4d579c31d742d90dd397`。独立文件证明`task-material-large-result-proof-v1`确认保存的visibleResult恰为1048576字节，B／C各524288个、无其他字符且非partial；只保存结果，不把CLI argv当作原输入；一份成功CLI回执、两份旧AI回执逐字段未变、无工具回执、control idle。报告为`.local/desktop/large-result-native-proof.json`，未输出正文。该原生子集仅覆盖CLI结果区及保存／查看，不声称已完成独立AI流式大输出、范围大预览、全部中英明暗或VoiceOver／IME／多屏。931条文案及最终同源检查另行记录，35.6／35.7仍开放。
 
 进一步使用已有loopback SSE夹具检查AI超限输出。隔离Preview只发送合成输入，无API密钥或外部服务；启动台显示Failed及结果不完整提示，Open in Workspace沿用同一任务，服务统计post_requests=1、authorization_seen=0、agent/tool请求均0，随后正常退出并收口自建server。紧凑面板动作区的视觉可见性仍需改善，AX可触发不代替视觉可达。后续将紧凑正文放入有限视口、结果框固定140pt，标题／错误提示／复制／工作区／关闭草稿固定在滚动区外；保持完整正文与工作区交互，需原生复查。该轮`task-material-large-ai-native-v1`仅记录生命周期与已观察子集，不代表改版后的资格。
+
+干净`4945204`优化Preview复查：紧凑动作区在原生鼠标激活／重绘后实际可见；初始动态截图差异保留，未声称完整首帧或焦点矩阵通过。一次坐标操作返回启动台，但旧草稿仍在AI drafts中，因此没有将其当作已确认关闭。通过明确草稿入口在工作区打开关闭审阅，Cancel后原输入及输入焦点恢复；保留结果审阅明确显示partial，默认全未选，手动只保存结果后正常退出。服务统计仍为一次POST、无Authorization及工具请求。
+
+同轮发现未选择任务（selectedTaskID=nil）时，任务空详情会使侧栏顶部及首个Failed行移出视口；选择一个仍可见旧任务后恢复。后续为整个taskContent的HSplitView绑定实际viewport，保留nil和真正零任务分支，不通过自动选首行掩盖；需重新原生验证。该轮生命周期exit0不覆盖这一布局FAIL，原生证据保留在`KeyDock-Review-db5da902-11d2-4137-a81e-09c73f9b5b8b`。
