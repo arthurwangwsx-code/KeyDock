@@ -132,7 +132,7 @@ public struct SettingsRootView: View {
                         Image(systemName: "sparkles").foregroundStyle(.tint)
                         VStack(alignment: .leading, spacing: 4) { Text(action.displayName).fontWeight(.medium); Text(action.modelOverride.isEmpty ? L("Default model") : action.modelOverride).font(.caption).foregroundStyle(.secondary) }
                         Spacer(); if let key = action.shortcut { KDKeycap(key.display) }
-                        Button(L("Edit")) { session.editAction(action) }
+                        Button(L("Edit")) { session.editAction(action) }.accessibilityLabel(L("Edit") + " " + action.displayName)
                         Button(L("Remove"), role: .destructive) { session.prepareRemoval(.aiAction(action.id), in: store) }.accessibilityLabel(L("Remove") + " " + action.displayName)
                     }.padding(.vertical, 7)
                 }
@@ -149,7 +149,7 @@ public struct SettingsRootView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "terminal").foregroundStyle(.secondary)
                         VStack(alignment: .leading, spacing: 4) { Text(command.name).fontWeight(.medium); Text(command.executable).font(.caption.monospaced()).foregroundStyle(.secondary) }
-                        Spacer(); Button(L("Edit")) { session.editCommand(command) }; Button(L("Run")) { if let current = store.configuration.savedCommands.first(where: { $0.id == command.id }) { store.runCommand(current) } }
+                        Spacer(); Button(L("Edit")) { session.editCommand(command) }.accessibilityLabel(L("Edit") + " " + command.name); Button(L("Run")) { if let current = store.configuration.savedCommands.first(where: { $0.id == command.id }) { store.runCommand(current) } }.accessibilityLabel(L("Run") + " " + command.name)
                         Button(L("Remove"), role: .destructive) { session.prepareRemoval(.command(command.id), in: store) }.accessibilityLabel(L("Remove") + " " + command.name)
                     }.padding(.vertical, 7)
                 }

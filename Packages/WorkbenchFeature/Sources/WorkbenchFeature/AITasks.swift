@@ -28,7 +28,7 @@ extension WorkbenchModel {
         return !tasks.contains { $0.id == draft.latestRunID && $0.isRunning }
     }
     @discardableResult public func runAIFromInput(_ draft: AIDraftDocument?) -> UUID? {
-        guard canRunAIFromInput(draft), let draft,
+        guard canCommitCurrentInput, canRunAIFromInput(draft), let draft,
               let action = configuration.aiActions.first(where: { $0.id == draft.actionID }) else { return nil }
         return runAI(action: action, draft: draft)
     }

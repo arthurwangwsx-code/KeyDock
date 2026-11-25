@@ -162,8 +162,8 @@ public struct RunningTaskItem: Identifiable {
         guard text.utf8.count <= TaskTextLimits.inputBytes else { noticeMessage = noticeKey("Input is too long. Split it into smaller parts; nothing was sent."); return false }
         return true
     }
-    public func editInput(_ text: String) { guard accepts(text), input != text else { return }; input = text; sourceTarget = nil; source = .manual; revision = UUID(); noticeMessage = .none }
-    public func useClipboard(_ text: String) { guard accepts(text), input != text || source != .clipboard else { return }; input = text; sourceTarget = nil; source = .clipboard; revision = UUID(); noticeMessage = .none }
+    public func editInput(_ text: String) { guard accepts(text), !input.utf8.elementsEqual(text.utf8) else { return }; input = text; sourceTarget = nil; source = .manual; revision = UUID(); noticeMessage = .none }
+    public func useClipboard(_ text: String) { guard accepts(text), !input.utf8.elementsEqual(text.utf8) || source != .clipboard else { return }; input = text; sourceTarget = nil; source = .clipboard; revision = UUID(); noticeMessage = .none }
     public func selectAction(_ id: UUID?) { guard !isDiscarded, actionID != id else { return }; actionID = id; latestRunID = nil; revision = UUID(); noticeMessage = .none }
     func discard() { isDiscarded = true; input = ""; sourceTarget = nil; latestRunID = nil; source = .manual; revision = UUID() }
 }

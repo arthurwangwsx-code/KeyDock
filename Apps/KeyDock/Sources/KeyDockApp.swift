@@ -460,11 +460,11 @@ import KeyDockUI
         }
         if menuItem.action == #selector(runCurrentAction) {
             // 模态输入拥有键盘；不能让主窗口的快捷键运行被遮住的编辑稿。
-            if workspaceSheetOwnsKeyboard { return false }
+            if workspaceSheetOwnsKeyboard || !store.canCommitCurrentInput { return false }
             if NSApp.keyWindow === clipboardPanel {
                 let alternate = clipboardSession.preferences.primaryAction.alternate
                 menuItem.title = alternate == .copy ? AppL("Copy clipboard selection") : AppL("Insert clipboard selection")
-                return !store.isShuttingDown && clipboardSession.canCommit && !clipboardHasMarkedText && (alternate == .copy || clipboardSession.canInsert)
+                return !store.isShuttingDown && clipboardSession.canCommit && (alternate == .copy || clipboardSession.canInsert)
             }
             // Return只有一个菜单owner；同一keyEquivalent的禁用项仍可能挡住后续项。
             if NSApp.keyWindow === workspace, workspaceSession.page == .agent {
@@ -574,19 +574,19 @@ import KeyDockUI
     @objc private func newCommandAction() { settingsSession.beginNewCommand() }
     @objc private func newAIAction() { settingsSession.beginNewAction() }
     @objc private func runCurrentAction() {
-        guard !store.isShuttingDown, !workspaceSheetOwnsKeyboard else { return }
-        if NSApp.keyWindow === clipboardPanel { if !clipboardHasMarkedText { clipboardSession.commitAlternate() } }
+        guard store.canCommitCurrentInput, !workspaceSheetOwnsKeyboard else { return }
+        if NSApp.keyWindow === clipboardPanel { clipboardSession.commitAlternate() }
         else if NSApp.keyWindow === workspace, workspaceSession.page == .agent { runAgentAction() }
         else if NSApp.keyWindow === workspace, workspaceSession.page == .workflows { runWorkflowAction() }
         else { runAIAction() }
     }
     @objc private func runAIAction() { store.runAIFromInput(keyboardDraft) }
     @objc private func runAgentAction() {
-        guard NSApp.keyWindow === workspace, workspaceSession.page == .agent else { return }
+        guard store.canCommitCurrentInput, NSApp.keyWindow === workspace, workspaceSession.page == .agent else { return }
         store.runAgent(workspaceSession.agentProfile, input: workspaceSession.agentInput)
     }
     @objc private func runWorkflowAction() {
-        guard NSApp.keyWindow === workspace, workspaceSession.page == .workflows else { return }
+        guard store.canCommitCurrentInput, NSApp.keyWindow === workspace, workspaceSession.page == .workflows else { return }
         store.runWorkflow(workspaceSession.workflowDraft,input:workspaceSession.workflowInput)
     }
     @objc private func stopCurrentTaskAction() { if let id = keyboardCancellationID { store.cancelTask(id) } }
@@ -597,7 +597,6 @@ import KeyDockUI
         else { NSApp.keyWindow?.performClose(nil) }
     }
     @objc private func quitAction() { NSApp.terminate(nil) }
-    private var clipboardHasMarkedText: Bool { (clipboardPanel?.firstResponder as? NSTextView)?.hasMarkedText() == true }
     private func installShortcuts(configuration: AppConfiguration) throws {
         guard !store.isShuttingDown else { throw HotkeyRegistrationError(status: -50) }
         let entries = ShortcutPlan.entries(configuration)

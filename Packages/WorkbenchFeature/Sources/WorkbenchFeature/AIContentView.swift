@@ -46,8 +46,8 @@ struct AIContentView: View {
                 if !compact {
                     HStack {
                         Button(L("Use clipboard")) { store.useClipboardInput(draft) }
-                        Button(L("Suggest CLI")) { store.generateCommandProposal(draft: draft) }.disabled(!auxiliaryActionsConfigured)
-                        Button(L("Read-only agent")) { store.runReadOnlyAgent(draft: draft) }.disabled(!auxiliaryActionsConfigured)
+                        Button(L("Suggest CLI")) { store.performUserInputAction { store.generateCommandProposal(draft: draft) } }.disabled(!auxiliaryActionsConfigured)
+                        Button(L("Read-only agent")) { store.performUserInputAction { store.runReadOnlyAgent(draft: draft) } }.disabled(!auxiliaryActionsConfigured)
                         Spacer()
                     }.controlSize(.small)
                 }

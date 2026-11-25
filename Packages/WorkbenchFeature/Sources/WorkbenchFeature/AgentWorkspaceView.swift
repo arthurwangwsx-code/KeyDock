@@ -59,7 +59,7 @@ struct AgentWorkspaceView: View {
             }
             Section(L("Your task")) {
                 TextEditor(text:$session.agentInput).font(.body).frame(minHeight:140).modifier(KDReadingSurface()).accessibilityLabel(L("Agent task input"))
-                Button(L("Run agent")) { store.runAgent(session.agentProfile,input:session.agentInput) }.buttonStyle(.borderedProminent).disabled(session.agentInput.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty)
+                Button(L("Run agent")) { store.performUserInputAction { store.runAgent(session.agentProfile,input:session.agentInput) } }.buttonStyle(.borderedProminent).disabled(session.agentInput.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty)
             }
         }.formStyle(.grouped).confirmationDialog(L("Remove this Agent profile? Running tasks keep their original snapshot."),isPresented:$confirmRemoval) { Button(L("Remove"),role:.destructive) { if store.removeAgent(session.agentProfile.id) { session.agentProfile = store.configuration.agents.first ?? AgentDefinition() } } }.onAppear {
             if !session.agentProfileLoaded { session.agentProfile = store.configuration.agents.first ?? AgentDefinition(); session.agentProfileLoaded = true }

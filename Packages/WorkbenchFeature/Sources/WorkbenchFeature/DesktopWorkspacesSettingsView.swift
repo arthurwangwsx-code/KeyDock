@@ -87,7 +87,7 @@ struct DesktopWorkspaceEditorView: View {
             HStack {
                 Button(L("Cancel")) { session.cancelDesktopWorkspaceEdit(draft.id) }.keyboardShortcut(.cancelAction)
                 Spacer()
-                Button(L("Save definition")) { session.saveDesktopWorkspaceEdit(draft.id, in: store) }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                Button(L("Save definition")) { store.performUserInputAction { session.saveDesktopWorkspaceEdit(draft.id, in: store) } }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
                     .disabled(!store.desktopWorkspacesWritable || draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || draft.rows.isEmpty || draft.rows.contains(where: { $0.applicationID.isEmpty }))
             }
         }.padding(24).frame(width: 620, height: 590)

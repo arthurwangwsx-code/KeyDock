@@ -31,7 +31,7 @@ struct WorkflowLaunchView: View {
                 Button(L("Cancel")) { session.cancelWorkflowLaunch(launch.id) }.keyboardShortcut(.cancelAction)
                 if launch.needsReview { Button(L("Reload saved workflow")) { session.reloadWorkflowLaunch(launch.id, in: store) } }
                 Spacer()
-                Button(L("Run workflow")) { session.runWorkflowLaunch(launch.id, in: store) }.buttonStyle(.borderedProminent)
+                Button(L("Run workflow")) { store.performUserInputAction { session.runWorkflowLaunch(launch.id, in: store) } }.buttonStyle(.borderedProminent)
                     .disabled(!session.canRunWorkflowLaunch(launch.id, in: store))
             }
         }.padding(24).frame(minWidth: 560, idealWidth: 640, maxWidth: 720, minHeight: 440)

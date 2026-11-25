@@ -38,7 +38,7 @@ struct WorkflowWorkspaceView: View {
             Section {
                 Button(L("Add step")) { if session.workflowDraft.steps.count < 20 { session.workflowDraft.steps.append(.init(operation:.transform(.trim),input:.previousOutput)) } }.disabled(session.workflowDraft.steps.count >= 20)
                 TextEditor(text:$session.workflowInput).font(.body).frame(minHeight:100).modifier(KDReadingSurface()).accessibilityLabel(L("Workflow input"))
-                Button(L("Run workflow")) { store.runWorkflow(session.workflowDraft,input:session.workflowInput) }.buttonStyle(.borderedProminent)
+                Button(L("Run workflow")) { store.performUserInputAction { store.runWorkflow(session.workflowDraft,input:session.workflowInput) } }.buttonStyle(.borderedProminent)
             }
             SchedulePanel(store:store)
         }.formStyle(.grouped).confirmationDialog(L("Remove this workflow? Its schedules will pause and running tasks keep their snapshot."),isPresented:$confirmRemoval) { Button(L("Remove"),role:.destructive) { if store.removeWorkflow(session.workflowDraft.id) { session.workflowDraft = WorkflowDefinition(name:"",steps:[.init(operation:.transform(.trim))]) } } }.onAppear {

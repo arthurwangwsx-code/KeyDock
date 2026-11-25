@@ -31,7 +31,7 @@ public struct KDSearchField: NSViewRepresentable {
         }
         context.coordinator.parent = self
         field.placeholderString = placeholder; field.setAccessibilityLabel(placeholder)
-        if field.stringValue != text, (field.currentEditor() as? NSTextView)?.hasMarkedText() != true { field.stringValue = text }
+        if !field.stringValue.utf8.elementsEqual(text.utf8), (field.currentEditor() as? NSTextView)?.hasMarkedText() != true { field.stringValue = text }
     }
     @MainActor public final class Coordinator: NSObject, NSTextFieldDelegate {
         var parent: KDSearchField

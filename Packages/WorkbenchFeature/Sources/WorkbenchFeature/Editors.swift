@@ -37,6 +37,7 @@ struct CommandEditor: View {
         }
     }
     private func save() {
+        guard KDTextInputState.permitsCurrentAction else { return }
         do {
             command.arguments = try JSONDecoder().decode([String].self, from: Data(arguments.utf8))
             command.environment = try JSONDecoder().decode([String: String].self, from: Data(environment.utf8))
@@ -74,6 +75,7 @@ struct AIActionEditor: View {
             Text(L("This shortcut sends only the configured input to your selected API. Replacement is a separate action.")).font(.caption).foregroundStyle(.secondary)
             if !saveError.rendered().isEmpty { KDInlineNotice(saveError.rendered()) }
             HStack { Button(L("Cancel")) { dismiss() }.keyboardShortcut(.cancelAction); Spacer(); Button(L("Save action")) {
+                guard KDTextInputState.permitsCurrentAction else { return }
                 if onSave(action) { dismiss() } else { saveError = failureMessage() }
             }.keyboardShortcut(.return, modifiers: .command).buttonStyle(.borderedProminent).disabled(action.name.isEmpty || action.prompt.isEmpty) }
         }.padding(24).frame(width: 560)

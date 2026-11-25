@@ -143,6 +143,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public internal(set) var pendingApprovals: [AgentToolApproval] = []
     var approvalContinuations: [UUID: CheckedContinuation<Bool, Never>] = [:]
     let directory: URL
+    var inputCommitAllowed: @MainActor () -> Bool = { KDTextInputState.permitsCurrentAction }
     var taskHandles: [UUID: Task<Void, Never>] = [:]
     var aiTaskIDs: Set<UUID> = []
     var cancelledTaskIDs: Set<UUID> = []
