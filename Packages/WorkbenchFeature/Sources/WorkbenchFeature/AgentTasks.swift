@@ -16,6 +16,12 @@ extension WorkbenchModel {
             guard agent.allowedCommandIDs.isSubset(of: Set(configuration.savedCommands.map(\.id))) else {
                 workspaceNoticeMessage = noticeKey("Some allowed commands are unavailable. Remove them in Tools and budgets before saving."); return false
             }
+            let sources = Set(configuration.mcpServers.map(\.id))
+            guard agent.allowedMCPServerIDs.isSubset(of: sources), agent.allowedMCPToolNames.allSatisfy({ name in
+                MCPToolReference.validName(name) && agent.allowedMCPServerIDs.filter { MCPToolReference.references(name, sourceID: $0) }.count == 1
+            }) else {
+                workspaceNoticeMessage = noticeKey("Some MCP sources or saved tools are unavailable. Remove their references in Tools and budgets before saving."); return false
+            }
             agent.version = (next.agents.first { $0.id == agent.id }?.version ?? 0) + 1
             if let index = next.agents.firstIndex(where:{ $0.id == agent.id }) { next.agents[index] = agent }
             else { guard next.agents.count < 32 else { throw AgentToolError.invalidDefinition }; next.agents.append(agent) }

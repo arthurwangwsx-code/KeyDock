@@ -11,7 +11,7 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
     let directory: URL
     let store: WorkbenchModel
 
-    init() throws {
+    init(configurationWriter: (@MainActor (Data, URL) throws -> Void)? = nil) throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Workflow-Integration-" + UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         do {
@@ -23,6 +23,7 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
                 clipboardChangeCount: { 0 }, clipboardReader: { Issue.record("Unexpected clipboard input"); return nil },
                 credentialReader: { _ in Issue.record("Unexpected credential read"); throw WorkflowIntegrationFixtureError.unexpectedCapability },
                 credentialWriter: { _,_ in Issue.record("Unexpected credential write"); throw WorkflowIntegrationFixtureError.unexpectedCapability },
+                configurationWriter: configurationWriter ?? { try PrivateFiles.write($0, to: $1) },
                 applicationCatalog: ApplicationCatalog(roots: []),
                 applicationLauncher: { _ in throw WorkflowIntegrationFixtureError.unexpectedCapability },
                 clipboardCaptureSource: WorkflowIntegrationClipboardSource(), languageApplier: { _ in })

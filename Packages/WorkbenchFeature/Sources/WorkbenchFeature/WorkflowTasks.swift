@@ -42,7 +42,8 @@ extension WorkbenchModel {
     }
 
     @discardableResult public func removeWorkflow(_ id:UUID) -> Bool {
-        var next = configuration; next.workflows.removeAll{$0.id == id}; return commitWorkspaceConfiguration(next)
+        workspaceNoticeMessage = noticeKey("Review this workflow in Workflows before removing it.")
+        return false
     }
 
     @discardableResult public func saveWorkflow(_ definition: WorkflowDefinition) -> Bool {

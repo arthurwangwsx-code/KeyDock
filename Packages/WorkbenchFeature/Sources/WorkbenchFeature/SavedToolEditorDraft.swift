@@ -20,12 +20,12 @@ struct SnippetEditorDraft: Equatable {
 
 extension WorkspaceSession {
     func editSnippet(_ value: SnippetDefinition) {
-        guard savedToolRemoval == nil else { return }
+        guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return }
         snippetDraft = SnippetEditorDraft(editingID: value.id, expectedFingerprint: SavedItemIdentity.fingerprint(value), name: value.name, text: value.text)
     }
-    func newSnippet() { guard savedToolRemoval == nil else { return }; snippetDraft = SnippetEditorDraft() }
+    func newSnippet() { guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return }; snippetDraft = SnippetEditorDraft() }
     @discardableResult func saveSnippet(in store: WorkbenchModel) -> Bool {
-        guard savedToolRemoval == nil else { return false }
+        guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return false }
         let value = snippetDraft
         if let id = value.editingID, !store.validateSavedToolEdit(.snippet(id), expected: value.expectedFingerprint) { return false }
         guard store.saveSnippet(id: value.editingID, name: value.name, text: value.text) else { return false }

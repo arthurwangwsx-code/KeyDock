@@ -28,7 +28,7 @@ import AutomationCore
 extension WorkspaceSession {
     @discardableResult func prepareWorkflowLaunch(_ id: UUID, in store: WorkbenchModel) -> Bool {
         guard !store.isShuttingDown else { return false }
-        guard savedToolRemoval == nil else {
+        guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else {
             store.workspaceNoticeMessage = noticeKey("Finish or cancel the saved item review before opening another action.")
             return false
         }

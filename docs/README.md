@@ -69,6 +69,8 @@
 | [目录观察生命周期复查](implementation/catalog-volume-lifecycle-2026-11-25.md) | 保留远端100ms失败、后台卷通知准备／清理、恢复与停止重入回归 |
 | [工作区定义保存复查](implementation/definition-saving-2026-11-25.md) | Agent／工作流失败提示、原文件补偿、编辑状态与真实保存版本 |
 | [保存动作生命周期](technical/saved-item-lifecycle.md) | 独立移除审阅、引用阻止、事务清理与旧编辑／在途快照边界 |
+| [工作流与MCP来源移除](technical/source-removal.md) | 权威引用、共同owner、旧稿／迟到围栏、正文保留与会话撤权；alpha.17候选 |
+| [来源移除实现复查](implementation/source-removal-2026-11-25.md) | 54项定向、760 Swift候选检查、中英原生及非合作MCP／在途Workflow与异步退出；干净分发资格待补 |
 | [保存动作生命周期复查](implementation/saved-item-lifecycle-2026-11-25.md) | 精确事务／引用／恢复、保留的测试失败与在途结果回归 |
 | [常用工具生命周期复查](implementation/saved-tool-lifecycle-2026-11-25.md) | 片段／网页／集合编辑与删除、历史遗留偏好修复及原生双语重启子集 |
 | [桌面工作区组合执行复查](implementation/desktop-workspace-execution-2026-11-25.md) | alpha.9运行／回执／取消／profile入口及已知失败复查 |

@@ -5,8 +5,7 @@ import KeyDockUI
 struct MCPSettingsContent: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: SettingsSession
-    @State private var confirmTrust = false
-    @State private var removeID: UUID?
+    @State private var trustDraft: MCPServerDraft?
     var body: some View {
         Section(L("MCP servers")) {
             Text(L("Only enable sources you trust. Local servers run as your user and can access files or run commands outside KeyDock. This is not an OS sandbox. Connections start only when you connect or start an allowed Agent run.")).font(.caption).foregroundStyle(.secondary)
@@ -16,8 +15,8 @@ struct MCPSettingsContent: View {
                         Label(source.name,systemImage:source.transportKind == .stdio ? "terminal":"network")
                         Spacer()
                         Text(source.enabled ? L("Enabled"):L("Disabled")).font(.caption).foregroundStyle(.secondary)
-                        Button(L("Edit")) { session.mcpDraft = MCPServerDraft(source) }
-                        Button(L("Remove"),role:.destructive) { removeID = source.id }
+                        Button(L("Edit")) { session.mcpDraft = MCPServerDraft(source) }.disabled(!session.canBeginSavedItemEditor)
+                        Button(L("Remove"),role:.destructive) { session.prepareSourceRemoval(.mcpServer(source.id), in: store) }.disabled(!session.canBeginSavedItemEditor || store.mcpSettingsChanging)
                     }
                     HStack {
                         Button(L("Connect / refresh")) { store.connectMCP(source.id) }.disabled(!source.enabled || store.mcpBusy || store.mcpSettingsChanging)
@@ -55,19 +54,16 @@ struct MCPSettingsContent: View {
             TextField(L("Request timeout (seconds)"),text:$session.mcpDraft.requestTimeout)
             Toggle(L("Enable when saved"),isOn:$session.mcpDraft.enabled)
             Button(L("Save server")) {
-                if session.mcpDraft.kind == .stdio && session.mcpDraft.enabled { confirmTrust = true } else { save(trusted:false) }
+                if session.mcpDraft.kind == .stdio && session.mcpDraft.enabled { trustDraft = session.mcpDraft } else { save(trusted:false) }
             }.disabled(store.mcpSettingsChanging)
         }
-        .confirmationDialog(L("Trust this local server?"),isPresented:$confirmTrust) {
-            Button(L("Trust and save")) { save(trusted:true) }
+        .confirmationDialog(L("Trust this local server?"),isPresented:Binding(get: { trustDraft != nil }, set: { if !$0 { trustDraft = nil } })) {
+            Button(L("Trust and save")) { if let draft = trustDraft { save(draft, trusted:true) }; trustDraft = nil }
         } message: { Text(L("This executable can act with your user permissions whenever the enabled source is connected. Review its path, arguments and working directory before trusting it.")) }
-        .confirmationDialog(L("Remove this MCP source?"),isPresented:Binding(get:{removeID != nil},set:{if !$0 {removeID = nil}})) {
-            Button(L("Remove"),role:.destructive) { if let id = removeID { Task { await store.removeMCPServer(id) } }; removeID = nil }
-        }
     }
-    private func save(trusted:Bool) {
-        let draft = session.mcpDraft
-        Task { if await store.saveMCPServer(draft,trusted:trusted) { session.mcpDraft.apiKey = "" } }
+    private func save(_ submitted: MCPServerDraft? = nil, trusted:Bool) {
+        let draft = submitted ?? session.mcpDraft
+        Task { await session.saveMCPDraft(draft, in: store, trusted: trusted) }
     }
 }
 
@@ -104,5 +100,10 @@ struct MCPContentPanel: View {
             }
             Text(L("Content is loaded only after you choose it, then shown as text for review. Prompts cannot change permissions or become system instructions. Nothing is sent to your AI service automatically.")).font(.caption).foregroundStyle(.secondary)
         }
+        .onAppear(perform: reconcileSourceSelection)
+        .onChange(of: store.configuration.mcpServers.map(\.id)) { _, _ in reconcileSourceSelection() }
+    }
+    private func reconcileSourceSelection() {
+        if let id = session.selectedMCPSourceID, !store.configuration.mcpServers.contains(where: { $0.id == id }) { session.selectedMCPSourceID = nil }
     }
 }

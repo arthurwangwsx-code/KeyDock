@@ -1,4 +1,5 @@
 import Foundation
+import AutomationCore
 
 enum WorkspaceDefinitionSaveState: Equatable {
     case notSaved, modified, saved(Int)
@@ -40,8 +41,26 @@ extension WorkspaceSession {
     }
 
     @discardableResult func saveWorkflow(in store: WorkbenchModel) -> Bool {
+        guard sourceRemoval == nil, !sourceRemovalDismissing else { return false }
+        let current = store.configuration.workflows.first { $0.id == workflowDraft.id }
+        if let origin = workflowEditorOrigin, origin.id == workflowDraft.id {
+            guard let current, store.objectFingerprint(current) == origin.fingerprint else {
+                store.workspaceNoticeMessage = noticeKey("This workflow was removed or changed. Keep this draft and choose New workflow or edit the current version."); return false
+            }
+        } else if current != nil {
+            store.workspaceNoticeMessage = noticeKey("This workflow was removed or changed. Keep this draft and choose New workflow or edit the current version."); return false
+        }
         guard store.saveWorkflow(workflowDraft), let saved = store.configuration.workflows.first(where: { $0.id == workflowDraft.id }) else { return false }
         workflowDraft = saved
+        workflowEditorOrigin = store.objectFingerprint(saved).map { (saved.id, $0) }
         return true
+    }
+    func editWorkflow(_ value: WorkflowDefinition, in store: WorkbenchModel) {
+        guard sourceRemoval == nil, !sourceRemovalDismissing else { return }
+        workflowDraft = value; workflowEditorOrigin = store.objectFingerprint(value).map { (value.id, $0) }
+    }
+    func newWorkflow() {
+        guard sourceRemoval == nil, !sourceRemovalDismissing else { return }
+        workflowDraft = WorkflowDefinition(name: "", steps: [.init(operation: .transform(.trim))]); workflowEditorOrigin = nil
     }
 }

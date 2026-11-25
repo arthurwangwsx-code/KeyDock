@@ -18,8 +18,8 @@ enum SavedItemTarget: Equatable {
     var isWorkspaceTool: Bool { switch self { case .snippet, .webAction, .collection: true; default: false } }
 }
 
-struct SavedItemDependency: Identifiable, Equatable {
-    enum Kind: String { case workflow, agent, collection, schedule }
+struct SavedItemDependency: Identifiable, Equatable, Encodable {
+    enum Kind: String, Encodable { case workflow, agent, collection, schedule }
     let kind: Kind
     let objectID: UUID
     let name: String
@@ -144,7 +144,7 @@ extension WorkbenchModel {
 
 extension WorkspaceSession {
     func prepareToolRemoval(_ target: SavedItemTarget, in store: WorkbenchModel) {
-        guard target.isWorkspaceTool, savedToolRemoval == nil, workflowLaunch == nil else { return }
+        guard target.isWorkspaceTool, savedToolRemoval == nil, workflowLaunch == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return }
         savedToolRemoval = store.reviewSavedItemRemoval(target).map(SavedItemRemovalPresentation.init)
     }
     func refreshToolRemoval(_ presentationID: UUID, in store: WorkbenchModel) {

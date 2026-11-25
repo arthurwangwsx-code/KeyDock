@@ -5,19 +5,18 @@ import KeyDockUI
 struct WorkflowWorkspaceView: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: WorkspaceSession
-    @State private var confirmRemoval = false
     var body: some View {
         Form {
             Section(L("Workflows")) {
-                Picker(L("Workflow"),selection:Binding(get:{session.workflowDraft.id},set:{ id in if let value = store.configuration.workflows.first(where:{$0.id == id}) { session.workflowDraft = value } })) {
+                Picker(L("Workflow"),selection:Binding(get:{session.workflowDraft.id},set:{ id in if let value = store.configuration.workflows.first(where:{$0.id == id}) { session.editWorkflow(value, in: store) } })) {
                     if !store.configuration.workflows.contains(where:{$0.id == session.workflowDraft.id}) { Text(L("Unsaved workflow")).tag(session.workflowDraft.id) }
                     ForEach(store.configuration.workflows) { item in Text(item.name).tag(item.id) }
                 }
                 HStack {
                     TextField(L("Name"),text:$session.workflowDraft.name)
-                    Button(L("New workflow")) { session.workflowDraft = WorkflowDefinition(name:"",steps:[.init(operation:.transform(.trim))]) }
+                    Button(L("New workflow")) { session.newWorkflow() }
                     Button(L("Save workflow")) { session.saveWorkflow(in: store) }
-                    if store.configuration.workflows.contains(where:{$0.id == session.workflowDraft.id}) { Button(L("Remove"),role:.destructive) { confirmRemoval = true } }
+                    if store.configuration.workflows.contains(where:{$0.id == session.workflowDraft.id}) { Button(L("Remove"),role:.destructive) { session.prepareSourceRemoval(.workflow(session.workflowDraft.id), in: store) }.disabled(!session.canPresentSourceRemoval) }
                 }
                 let saveState = session.workflowSaveState(in: store)
                 Label(saveState.title, systemImage: saveState.symbol).font(.caption).foregroundStyle(.secondary)
@@ -41,8 +40,8 @@ struct WorkflowWorkspaceView: View {
                 Button(L("Run workflow")) { store.performUserInputAction { store.runWorkflow(session.workflowDraft,input:session.workflowInput) } }.buttonStyle(.borderedProminent)
             }
             SchedulePanel(store:store)
-        }.formStyle(.grouped).confirmationDialog(L("Remove this workflow? Its schedules will pause and running tasks keep their snapshot."),isPresented:$confirmRemoval) { Button(L("Remove"),role:.destructive) { if store.removeWorkflow(session.workflowDraft.id) { session.workflowDraft = WorkflowDefinition(name:"",steps:[.init(operation:.transform(.trim))]) } } }.onAppear {
-            if !session.workflowLoaded { if let value = store.configuration.workflows.first { session.workflowDraft = value }; session.workflowLoaded = true }
+        }.formStyle(.grouped).onAppear {
+            if !session.workflowLoaded { if let value = store.configuration.workflows.first { session.editWorkflow(value, in: store) }; session.workflowLoaded = true }
         }
     }
     private func move(_ id: UUID,by offset:Int) {

@@ -5,6 +5,8 @@ import AICore
 import ExecutionCore
 
 public struct MCPServerDraft {
+    let presentationID = UUID()
+    var editingRevision: UUID?
     public var id = UUID()
     public var name = ""
     public var kind: MCPTransportKind = .http
@@ -20,7 +22,7 @@ public struct MCPServerDraft {
     public var apiKey = ""
     public init() {}
     public init(_ source: MCPServerConfiguration) {
-        id = source.id; name = source.name; kind = source.transportKind; endpoint = source.endpoint.absoluteString
+        id = source.id; editingRevision = source.revision; name = source.name; kind = source.transportKind; endpoint = source.endpoint.absoluteString
         enabled = source.enabled; allowsLocalHTTP = source.allowsLocalHTTP; version = source.protocolVersion
         requestTimeout = String(source.timeoutSeconds)
         if let launch = source.stdioLaunch {
@@ -28,6 +30,12 @@ public struct MCPServerDraft {
             startupTimeout = String(launch.startupTimeoutSeconds)
             arguments = (try? String(data:JSONEncoder().encode(launch.arguments),encoding:.utf8)) ?? "[]"
         }
+    }
+    func matchesSubmission(_ other: Self) -> Bool {
+        presentationID == other.presentationID && id == other.id && editingRevision == other.editingRevision
+            && kind == other.kind && enabled == other.enabled && allowsLocalHTTP == other.allowsLocalHTTP && version == other.version
+            && zip([name, endpoint, executable, arguments, directory, startupTimeout, requestTimeout, apiKey],
+                   [other.name, other.endpoint, other.executable, other.arguments, other.directory, other.startupTimeout, other.requestTimeout, other.apiKey]).allSatisfy { pair in pair.0.utf8.elementsEqual(pair.1.utf8) }
     }
 }
 
@@ -40,9 +48,31 @@ enum MCPSetupError: Error { case outcomeUnknown }
 extension WorkbenchModel {
     func mcpKeyReference(id:UUID,endpoint:URL) -> String { "mcp."+id.uuidString+"."+fingerprint(endpoint.absoluteString) }
     @discardableResult public func saveMCPServer(_ draft: MCPServerDraft, trusted: Bool = false) async -> Bool {
-        guard !isShuttingDown, !mcpSettingsChanging else { return false }
-        mcpSettingsChanging = true; defer { mcpSettingsChanging = false }
+        await saveMCPServerResult(draft, trusted: trusted) != nil
+    }
+    func saveMCPServerResult(_ draft: MCPServerDraft, trusted: Bool = false) async -> MCPServerConfiguration? {
+        guard !isShuttingDown, !Task.isCancelled else { return nil }
+        let id = UUID()
+        let worker = Task { @MainActor in
+            defer { configurationOperations[id] = nil }
+            return await saveMCPServerImpl(draft, trusted: trusted)
+        }
+        trackConfigurationOperation(worker, id: id)
+        return await withTaskCancellationHandler(operation: { await worker.value }, onCancel: { worker.cancel() })
+    }
+    private func saveMCPServerImpl(_ draft: MCPServerDraft, trusted: Bool) async -> MCPServerConfiguration? {
+        guard !isShuttingDown, !Task.isCancelled else { return nil }
+        guard configuration.mcpServers.filter({ $0.id == draft.id }).count <= 1 else { return nil }
+        let original = configuration.mcpServers.first { $0.id == draft.id }
+        guard draft.editingRevision.map({ original?.revision == $0 }) ?? (original == nil) else {
+            settingsNoticeMessage = noticeKey("This MCP source was removed or changed. Keep this draft and choose New server or edit the current source."); return nil
+        }
+        guard let owner = beginMCPSettingsMutation() else { return nil }
+        defer { finishMCPSettingsMutation(owner) }
         if !draft.enabled { mcpSessionDisabled.insert(draft.id); await invalidateMCPSource(draft.id) }
+        guard !isShuttingDown, !Task.isCancelled, configuration.mcpServers.first(where: { $0.id == draft.id }) == original else {
+            settingsNoticeMessage = noticeKey("This MCP source was removed or changed. Keep this draft and choose New server or edit the current source."); return nil
+        }
         var account: String?, oldKey: String?, keyChanged = false
         do {
             let old = configuration.mcpServers.first{$0.id == draft.id}
@@ -69,19 +99,21 @@ extension WorkbenchModel {
             var next = configuration
             if let index = next.mcpServers.firstIndex(where:{$0.id == source.id}) { next.mcpServers[index] = source }
             else { guard next.mcpServers.count < 8 else { throw MCPClientError.limitExceeded }; next.mcpServers.append(source) }
+            guard !isShuttingDown, !Task.isCancelled, configuration.mcpServers.first(where: { $0.id == draft.id }) == original else { throw MCPClientError.invalidated }
             guard commitSettingsConfiguration(next) else { throw MCPClientError.invalidConfiguration }
+            if source.enabled { mcpSessionDisabled.remove(source.id) }
             await invalidateMCPSource(source.id)
-            if source.enabled { mcpSessionDisabled.remove(source.id) }; return true
+            return source
         } catch {
             if keyChanged,let account {
                 do { try credentialWriter(oldKey ?? "",account) }
-                catch { settingsNoticeMessage = noticeKey("MCP settings were not saved and the previous credential could not be restored. Check the stored key."); return false }
+                catch { settingsNoticeMessage = noticeKey("MCP settings were not saved and the previous credential could not be restored. Check the stored key."); return nil }
             }
-            settingsNoticeMessage = noticeKey("MCP server could not be saved. Check configuration and trust settings."); return false
+            settingsNoticeMessage = noticeKey("MCP server could not be saved. Check configuration and trust settings."); return nil
         }
     }
     func makeMCPClient(_ source: MCPServerConfiguration) throws -> MCPHTTPClient {
-        guard !isShuttingDown, source.enabled, !mcpSessionDisabled.contains(source.id) else { throw MCPClientError.disabled }
+        guard !isShuttingDown, mcpSettingsOwner == nil, !mcpSettingsChanging, source.enabled, !mcpSessionDisabled.contains(source.id) else { throw MCPClientError.disabled }
         let secret = MCPKeychainAccess { [weak self] id,reference in
             guard let self, self.allowContextCapture, id == source.id,
                   !self.isShuttingDown,!self.mcpSessionDisabled.contains(id),self.configuration.mcpServers.contains(source),
@@ -106,7 +138,7 @@ extension WorkbenchModel {
         await agentToolStore.releaseProtection(for:id); return catalog
     }
     public func connectMCP(_ id: UUID) {
-        guard !isShuttingDown, !mcpBusy, !mcpSettingsChanging, let source = configuration.mcpServers.first(where:{$0.id == id && $0.enabled}) else { return }
+        guard !isShuttingDown, !mcpBusy, mcpSettingsOwner == nil, !mcpSettingsChanging, let source = configuration.mcpServers.first(where:{$0.id == id && $0.enabled}) else { return }
         mcpSessionDisabled.remove(id)
         mcpBusy = true; let token = mcpGeneration
         mcpConnectionTask = Task { [weak self] in
@@ -125,18 +157,25 @@ extension WorkbenchModel {
             } catch { if let client { await client.invalidate() }; if !isShuttingDown { settingsNoticeMessage = noticeKey("MCP connection failed. Check source, protocol and schema support.") } }
         }
     }
-    public func disconnectMCP(_ id: UUID) async { mcpSessionDisabled.insert(id); await invalidateMCPSource(id) }
+    public func disconnectMCP(_ id: UUID) async {
+        guard !isShuttingDown else { return }
+        let operation = UUID()
+        let worker = Task { @MainActor in
+            defer { configurationOperations[operation] = nil }
+            mcpSessionDisabled.insert(id); await invalidateMCPSource(id)
+        }
+        trackConfigurationOperation(worker, id: operation)
+        await withTaskCancellationHandler(operation: { await worker.value }, onCancel: { worker.cancel() })
+    }
     func invalidateMCPSource(_ id: UUID) async {
         mcpGeneration = UUID(); mcpConnectionTask?.cancel()
         for (run,sources) in mcpRunScopes where sources.contains(id) { cancelTask(run) }
-        if let client = mcpClients.removeValue(forKey:id) { await client.invalidate() }
+        let client = mcpClients.removeValue(forKey:id)
         mcpCatalogs[id] = nil; mcpResources[id] = nil; mcpPrompts[id] = nil; mcpCapabilities[id] = nil
+        if let client { await client.invalidate() }
     }
     public func removeMCPServer(_ id: UUID) async {
-        mcpSessionDisabled.insert(id)
-        var next = configuration; next.mcpServers.removeAll{$0.id == id}
-        guard commitSettingsConfiguration(next) else { await invalidateMCPSource(id); return }
-        await invalidateMCPSource(id)
+        settingsNoticeMessage = noticeKey("Review this MCP source in Settings before removing it.")
     }
     func prepareMCPTools(_ definition: AgentDefinition, sources:[MCPServerConfiguration], runID: UUID) async throws -> [ScopedAITool] {
         var tools: [ScopedAITool] = [], resolved: Set<String> = []

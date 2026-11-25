@@ -116,7 +116,7 @@ import MacAdapters
     }
 
     @Test(arguments: [InterfaceWriteRelay.Failure.before, .after])
-    func failedRemovalIsVisibleAndPreservesBothDefinitions(failure: InterfaceWriteRelay.Failure) throws {
+    func failedAgentAndLegacyWorkflowRemovalPreserveBothDefinitions(failure: InterfaceWriteRelay.Failure) throws {
         try withStore { store, relay, file in
             let session = WorkspaceSession(); session.workflowDraft.name = "Synthetic workflow"
             #expect(session.saveAgentProfile(in: store) && session.saveWorkflow(in: store))
@@ -126,7 +126,7 @@ import MacAdapters
             #expect(store.workspaceNoticeMessage == store.settingsNoticeMessage && !store.workspaceNotice.isEmpty)
             relay.failure = failure
             #expect(!store.removeWorkflow(session.workflowDraft.id))
-            #expect(store.workspaceNoticeMessage == store.settingsNoticeMessage && !store.workspaceNotice.isEmpty)
+            #expect(store.workspaceNoticeMessage == noticeKey("Review this workflow in Workflows before removing it."))
             #expect(session.agentProfileSaveState(in: store) == .saved(1))
             #expect(session.workflowSaveState(in: store) == .saved(1))
             #expect(try Data(contentsOf: file) == bytes)

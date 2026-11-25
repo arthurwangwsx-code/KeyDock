@@ -9,7 +9,7 @@ struct DeletedToolPreferencesView: View {
         let review = presentation.review
         VStack(alignment: .leading, spacing: 16) {
             Text(L("Clear preferences for deleted tools?")).font(.title2.bold())
-            Text(L("Only shortcut, favorite, alias and recent preferences for missing snippets, URL actions and collections are cleared. Saved definitions, collection contents, tasks and history are kept.")).font(.callout).foregroundStyle(.secondary)
+            Text(L("Only shortcut, favorite, alias and recent preferences for missing snippets, URL actions, collections and workflows are cleared. Saved definitions, collection contents, tasks and history are kept.")).font(.callout).foregroundStyle(.secondary)
             if review.entries.isEmpty { Text(L("There are no deleted tool preferences to clear.")) }
             else {
                 Text(L("Deleted tool preferences") + ": " + review.entries.count.formatted()).font(.headline)

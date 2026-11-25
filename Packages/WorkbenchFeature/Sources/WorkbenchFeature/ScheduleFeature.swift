@@ -49,7 +49,7 @@ extension WorkbenchModel {
         }
     }
     func tickSchedules() async {
-        guard !isShuttingDown, !scheduleBusy else { return }; scheduleBusy = true; defer { scheduleBusy = false }
+        guard let owner = beginScheduleMutation() else { return }; defer { finishScheduleMutation(owner) }
         do {
             let snapshot = await scheduleLedger.snapshots()
             var allowed: Set<UUID> = [], allowedSchedules: Set<UUID> = []
@@ -89,8 +89,8 @@ extension WorkbenchModel {
         catch { workspaceNoticeMessage = noticeKey("Schedule completion could not be saved. Check the run before enabling it again.") }
     }
     func editSchedule(_ value:ScheduleSnapshot,name:String,workflowID:UUID,trigger:ScheduleTrigger) async {
-        guard !isShuttingDown,!scheduleBusy,configuration.workflows.contains(where:{$0.id == workflowID}) else { return }
-        scheduleBusy = true; scheduleSuspended.insert(value.id); defer { scheduleBusy = false }
+        guard configuration.workflows.contains(where:{$0.id == workflowID}), let owner = beginScheduleMutation() else { return }
+        scheduleSuspended.insert(value.id); defer { finishScheduleMutation(owner) }
         do {
             let changed = try await scheduleLedger.upsert(.init(id:value.id,name:name,workflowID:workflowID,enabled:false,trigger:trigger,revision:value.definition.revision+1),now:Date())
             if let run = changed.invalidatedAttemptID { cancelTask(run) }
@@ -98,14 +98,14 @@ extension WorkbenchModel {
         } catch { workspaceNoticeMessage = noticeKey("Schedule could not be changed. It remains paused for this session; check saved settings before restarting.") }
     }
     func addSchedule(name:String,workflowID:UUID,trigger:ScheduleTrigger) async {
-        guard !isShuttingDown, !scheduleBusy, configuration.workflows.contains(where:{$0.id == workflowID}) else { return }
-        scheduleBusy = true; defer { scheduleBusy = false }
+        guard configuration.workflows.contains(where:{$0.id == workflowID}), let owner = beginScheduleMutation() else { return }
+        defer { finishScheduleMutation(owner) }
         do { _ = try await scheduleLedger.upsert(.init(name:name,workflowID:workflowID,trigger:trigger),now:Date()); schedules = await scheduleLedger.snapshots() }
         catch { workspaceNoticeMessage = noticeKey("Schedule could not be saved. Check its name, time zone and interval.") }
     }
     func setSchedule(_ value:ScheduleSnapshot,enabled:Bool,approvedFingerprint:String? = nil) async {
-        guard !isShuttingDown, !scheduleBusy else { return }
-        scheduleBusy = true; defer { scheduleBusy = false }
+        guard let owner = beginScheduleMutation() else { return }
+        defer { finishScheduleMutation(owner) }
         if !enabled { scheduleSuspended.insert(value.id); if let id = value.activeAttempt?.id { cancelTask(id) } }
         do {
             let old = value.definition
@@ -118,12 +118,12 @@ extension WorkbenchModel {
         } catch { workspaceNoticeMessage = noticeKey("Schedule could not be changed. It remains paused for this session; check saved settings before restarting.") }
     }
     func acknowledgeSchedule(_ value:ScheduleSnapshot) async {
-        guard !isShuttingDown, !scheduleBusy else { return }; scheduleBusy = true; defer { scheduleBusy = false }
+        guard let owner = beginScheduleMutation() else { return }; defer { finishScheduleMutation(owner) }
         do { _ = try await scheduleLedger.acknowledgeUnknown(id:value.id,expectedRevision:value.definition.revision,now:Date()); schedules = await scheduleLedger.snapshots() }
         catch { workspaceNoticeMessage = noticeKey("Schedule could not be changed. Check its current revision.") }
     }
     func removeSchedule(_ value:ScheduleSnapshot) async {
-        guard !isShuttingDown, !scheduleBusy else { return }; scheduleBusy = true; defer { scheduleBusy = false }
+        guard let owner = beginScheduleMutation() else { return }; defer { finishScheduleMutation(owner) }
         scheduleSuspended.insert(value.id); if let id = value.activeAttempt?.id { cancelTask(id) }
         do { if let id = try await scheduleLedger.remove(id:value.id,expectedRevision:value.definition.revision) { cancelTask(id) }; schedules = await scheduleLedger.snapshots() }
         catch { workspaceNoticeMessage = noticeKey("Schedule could not be changed. It remains paused for this session; check saved settings before restarting.") }

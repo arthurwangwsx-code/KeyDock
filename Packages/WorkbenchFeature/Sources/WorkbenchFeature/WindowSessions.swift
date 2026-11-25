@@ -94,6 +94,7 @@ private struct LauncherCatalogProvider: CommandProviding {
 
 @MainActor public final class SettingsSession: ObservableObject {
     @Published public var mcpDraft = MCPServerDraft()
+    var mcpDraftEpoch = UUID()
     @Published public var pane: SettingsPane = .general { didSet { UserDefaults.standard.set(pane.rawValue, forKey: panePreferenceKey); onPaneChanged?() } }
     private var panePreferenceKey = "KeyDock.SettingsPane"
     public var onPaneChanged: (() -> Void)?
@@ -113,9 +114,11 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published var settingsSummaryDismissing = false
     @Published var configurationExport: ConfigurationExportPresentation?
     @Published var configurationExportDismissing = false
+    @Published var sourceRemoval: SourceRemovalPresentation?
+    @Published var sourceRemovalDismissing = false
     @Published var desktopWorkspaceEditor: DesktopWorkspaceEditorDraft?
     var canBeginSavedItemEditor: Bool {
-        store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil && settingsSummaryExport == nil && !settingsSummaryDismissing && configurationExport == nil && !configurationExportDismissing
+        store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil && settingsSummaryExport == nil && !settingsSummaryDismissing && configurationExport == nil && !configurationExportDismissing && sourceRemoval == nil && !sourceRemovalDismissing
     }
     @Published public var apiKey = ""
     @Published public var keyStored = false
@@ -162,7 +165,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         editedCommandExistingID = nil; editedCommandSourceRunID = review.id; editedCommand = review.command
         return true
     }
-    public func setVisible(_ value: Bool) { visible = value; if !value { invalidateSettingsSummaryExport(); invalidateConfigurationExport() }; updateVisibleReferences() }
+    public func setVisible(_ value: Bool) { visible = value; if !value { invalidateSettingsSummaryExport(); invalidateConfigurationExport(); invalidateSourceRemoval(); mcpDraftEpoch = UUID(); mcpDraft.apiKey = "" }; updateVisibleReferences() }
     private func updateVisibleReferences() {
         guard let store else { return }
         if visible { store.setVisibleReferences(owner: visibilityOwner, draftID: nil, taskID: editedCommandSourceRunID) }
@@ -182,6 +185,7 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var agentProfile = AgentDefinition()
     var agentProfileLoaded = false
     @Published public var workflowDraft = WorkflowDefinition(name:"",steps:[.init(operation:.transform(.trim))])
+    var workflowEditorOrigin: (id: UUID, fingerprint: String)?
     @Published public var workflowInput = ""
     @Published var workflowLaunch: WorkflowLaunchDraft?
     var workflowLoaded = false
@@ -202,6 +206,8 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var calculatorResult = ""
     @Published var snippetDraft = SnippetEditorDraft()
     @Published var savedToolRemoval: SavedItemRemovalPresentation?
+    @Published var sourceRemoval: SourceRemovalPresentation?
+    @Published var sourceRemovalDismissing = false
     @Published public var selectedMCPSourceID: UUID?
     @Published public var mcpPromptArguments = "{}"
     var contextGeneration = UUID()
@@ -218,7 +224,7 @@ private struct LauncherCatalogProvider: CommandProviding {
     public init() {
         clipboardChanges = clipboard.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
     }
-    public func setVisible(_ value: Bool, in store: WorkbenchModel) { self.store = store; visible = value; if !value { files.cancel() }; updateVisibleReferences() }
+    public func setVisible(_ value: Bool, in store: WorkbenchModel) { self.store = store; visible = value; if !value { files.cancel(); invalidateSourceRemoval() }; updateVisibleReferences() }
     public func present(_ route: WorkspaceRoute? = nil, in store: WorkbenchModel) {
         setVisible(true, in: store)
         if let route { navigate(route, store: store) }

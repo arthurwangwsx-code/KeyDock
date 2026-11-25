@@ -46,6 +46,11 @@ public struct WorkspaceView: View {
         }.frame(minWidth: 820, minHeight: 560).environment(\.locale, KDLocalizer.locale)
             .sheet(item: $session.workflowLaunch) { launch in WorkflowLaunchView(store: store, session: session, launch: launch) }
             .sheet(item: $session.savedToolRemoval) { review in SavedToolRemovalView(store: store, session: session, presentation: review) }
+            .background {
+                if let presentation = session.sourceRemoval {
+                    SourceRemovalSheetHost(store: store, presentation: presentation, cancel: session.cancelSourceRemoval, didAppear: session.sourceRemovalDidAppear, didDismiss: session.sourceRemovalDidDismiss).id(presentation.id)
+                }
+            }
             .confirmationDialog(L("Start a new attempt?"),isPresented:Binding(get:{restartID != nil},set:{if !$0 {restartID = nil}})) {
                 Button(L("Start new attempt")) { if let id = restartID { store.restartAgent(id) }; restartID = nil }
             } message: { Text(L("A new attempt rechecks current scope and may repeat completed work. Unknown effects must be checked first.")) }
@@ -76,6 +81,7 @@ public struct WorkspaceView: View {
                     if !task.notice.isEmpty { KDInlineNotice(task.notice) }
                     if task.source != nil || task.receiptIsAI {
                         Text(L("Run input") + " · " + task.inputSourceTitle).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                        if store.isRemovedMCPSource(task.inputProvenance) { Text(L("This MCP source was removed. The imported text is kept as a snapshot.")).font(.caption).foregroundStyle(.secondary) }
                     }
                     AgentApprovalView(store:store,runID:task.id)
                     if let checkpoint = store.workflowCheckpoints[task.id] { Text(L("Step")+" \(checkpoint.stepIndex+1) · "+workflowPhaseTitle(checkpoint.phase)).font(.caption).foregroundStyle(.secondary) }

@@ -80,3 +80,9 @@ Agent／工作流的工作区提交复用既有配置写入与补偿事务，失
 ## 2026-11-25 完整配置定义导出
 
 任务28.4采用独立字段白名单DTO、纯预算／引用图检查和已加载owner快照。主线程在await调度前捕获配置／独立定义／面板偏好的值与发布代次，返回后核验代次，ABA也拒绝；ScheduleLedger只返回无授权／运行字段的定义投影及定义generation。编码离开主线程，完成后按呈现／捕获身份接纳；数据冻结后不随当前配置改变。六类可选范围默认全选，未选定义／全局服务依赖与真正外部资源分别声明，断裂或临时引用失败。系统保存复用稳定sheet／attempt语义，预览采用完整可选择的只读文本控件，避免把8MiB JSON拼到辅助名称中。见docs/technical/configuration-export.md；不实现import或跨库写事务。
+
+## 2026-11-25 工作流／MCP移除闭环
+
+新增独立SourceRemoval审阅，MCP不是可路由命令，不制造假commandID。工作流引用从ScheduleLedger窄定义快照与主配置集合计算，确认共用Schedule mutation owner／busy门禁；owner先于Published状态更新，避免同步回调重入。读取后核验主配置代次、目标完整指纹、ledger定义代次与呈现／审阅ID，再无await提交主配置／绑定补偿事务。MCP使用独立settings owner覆盖保存／删除／连接入口；被引用与旧确认不撤权，真正提交后按既有fail-closed语义暂停、取消及清理，失败保留原定义但明确重启风险。旧缓存于await前移除，不能让迟到清理按ID清掉后来目录。
+
+Workspace工作流编辑保存原指纹，MCPServerDraft保存原revision与独立稿身份；新建与编辑分离，异步成功仅更新仍属于该提交稿的状态／key。来源移除不擦除已有正文，只在当前渲染中标记来源失效；失效Agent来源及未呈现的保存工具可显式移除。Workflow孤儿偏好纳入既有显式修复。所有UI中英，原生合成验收与真实API／权限／全视觉范围分别记录。

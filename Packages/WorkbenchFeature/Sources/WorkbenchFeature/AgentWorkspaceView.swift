@@ -51,6 +51,24 @@ struct AgentWorkspaceView: View {
                         }
                     }
                 }
+                ForEach(session.agentProfile.allowedMCPServerIDs.filter { id in !store.configuration.mcpServers.contains(where: { $0.id == id }) }.sorted(by: { $0.uuidString < $1.uuidString }), id: \.self) { id in
+                    HStack {
+                        Text(L("Unavailable MCP source") + ": " + id.uuidString).font(.caption)
+                        Spacer()
+                        Button(L("Remove unavailable source")) {
+                            session.agentProfile.allowedMCPServerIDs.remove(id)
+                            session.agentProfile.allowedMCPToolNames = session.agentProfile.allowedMCPToolNames.filter { !MCPToolReference.references($0, sourceID: id) }
+                        }
+                    }
+                }
+                let visibleTools = Set(store.mcpCatalogs.filter { session.agentProfile.allowedMCPServerIDs.contains($0.key) }.values.flatMap { $0.tools.map(\.definition.name) })
+                ForEach(session.agentProfile.allowedMCPToolNames.subtracting(visibleTools).sorted(), id: \.self) { name in
+                    HStack {
+                        Text(L("Saved MCP tool") + ": " + name).font(.caption).textSelection(.enabled)
+                        Spacer()
+                        Button(L("Remove saved tool")) { session.agentProfile.allowedMCPToolNames.remove(name) }
+                    }
+                }
                 Button(L("Manage MCP servers")) { store.onOpenSettings?(.mcp) }
                 Stepper(L("Tool calls")+": \(session.agentProfile.maxToolCalls)",value:$session.agentProfile.maxToolCalls,in:0...20)
                 Stepper(L("Model turns")+": \(session.agentProfile.maxTurns)",value:$session.agentProfile.maxTurns,in:1...16)

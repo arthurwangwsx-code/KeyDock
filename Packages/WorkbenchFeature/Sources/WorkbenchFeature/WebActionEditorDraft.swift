@@ -11,12 +11,12 @@ struct WebActionEditorDraft: Equatable {
 
 extension WorkspaceSession {
     func editWebAction(_ action: WebActionDefinition) {
-        guard savedToolRemoval == nil else { return }
+        guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return }
         webActionDraft = WebActionEditorDraft(editingID: action.id, expectedFingerprint: SavedItemIdentity.fingerprint(action), name: action.name, urlTemplate: action.urlTemplate)
     }
-    func newWebAction() { guard savedToolRemoval == nil else { return }; webActionDraft = WebActionEditorDraft() }
+    func newWebAction() { guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return }; webActionDraft = WebActionEditorDraft() }
     @discardableResult func saveWebAction(in store: WorkbenchModel) -> Bool {
-        guard savedToolRemoval == nil else { return false }
+        guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return false }
         let draft = webActionDraft
         if let id = draft.editingID, !store.validateSavedToolEdit(.webAction(id), expected: draft.expectedFingerprint) { return false }
         guard store.saveWebAction(id: draft.editingID, name: draft.name, template: draft.urlTemplate) else { return false }

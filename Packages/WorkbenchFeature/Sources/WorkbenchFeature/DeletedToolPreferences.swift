@@ -2,16 +2,18 @@ import Foundation
 import Combine
 import MacAdapters
 
+enum DeletedPreferenceTarget: Equatable { case snippet(UUID), webAction(UUID), collection(UUID), workflow(UUID) }
+
 struct DeletedToolPreference: Identifiable, Equatable {
     let id: String
-    let target: SavedItemTarget
+    let target: DeletedPreferenceTarget
     let shortcut: HotkeyBinding?
     let favorite: Bool
     let alias: Bool
     let recent: Bool
     let fingerprint: String
     var title: String {
-        switch target { case .snippet: L("Snippet"); case .webAction: L("URL action"); case .collection: L("Collection"); default: L("Unavailable action") }
+        switch target { case .snippet: L("Snippet"); case .webAction: L("URL action"); case .collection: L("Collection"); case .workflow: L("Workflow") }
     }
 }
 
@@ -35,9 +37,10 @@ private struct DeletedToolPreferenceValues: Encodable {
 }
 
 extension WorkbenchModel {
-    /// 只识别三种完整UUID命名空间；禁用贡献、未知ID和集合中的引用均不在清理范围。
-    private func deletedToolPreferenceTargets() -> [(String, SavedItemTarget)] {
+    /// 仅清理已知定义命名空间；禁用贡献、未知ID和集合中的引用均保留。
+    private func deletedToolPreferenceTargets() -> [(String, DeletedPreferenceTarget)] {
         let snippets = Set(configuration.snippets.map(\.id)), web = Set(configuration.webActions.map(\.id)), collections = Set(configuration.collections.map(\.id))
+        let workflows = Set(configuration.workflows.map(\.id))
         let ids = Set(configuration.commandShortcuts.keys).union(configuration.preferences.favorites)
             .union(configuration.preferences.aliases.keys).union(configuration.preferences.recent.keys)
         return ids.sorted().compactMap { id in
@@ -47,6 +50,7 @@ extension WorkbenchModel {
             case "snippet" where !snippets.contains(uuid): return (id, .snippet(uuid))
             case "web" where !web.contains(uuid): return (id, .webAction(uuid))
             case "collection" where !collections.contains(uuid): return (id, .collection(uuid))
+            case "workflow" where !workflows.contains(uuid): return (id, .workflow(uuid))
             default: return nil
             }
         }

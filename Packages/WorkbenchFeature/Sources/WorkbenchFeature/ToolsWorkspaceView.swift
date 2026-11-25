@@ -33,6 +33,7 @@ struct ToolsWorkspaceView: View {
                 Text(L("OCR runs locally. Files are limited to 16 MiB, images to 20 million pixels and PDFs to 30 pages. Text is limited to 128 KiB. Nothing is sent to AI until you choose an action.")).font(.caption).foregroundStyle(.secondary)
                 Text(L("One text input is kept in this session. A new import replaces it. Clear input removes its text and source; existing AI drafts and task results are kept in history.")).font(.caption).foregroundStyle(.secondary)
                 if !session.toolsSourceName.isEmpty { Text(session.toolsSourceName).font(.caption).foregroundStyle(.secondary) }
+                if store.isRemovedMCPSource(session.toolsInput.provenance) { Text(L("This MCP source was removed. The imported text is kept as a snapshot.")).font(.caption).foregroundStyle(.secondary) }
                 TextEditor(text:Binding(get:{session.toolsText},set:{store.editToolsInput($0,session:session)})).font(.body).frame(minHeight:140).modifier(KDReadingSurface()).accessibilityLabel(L("Imported text")).disabled(store.isClearingHistory)
                 HStack {
                     ForEach(store.configuration.aiActions.prefix(3)) { action in

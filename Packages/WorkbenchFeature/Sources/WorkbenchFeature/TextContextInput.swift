@@ -44,6 +44,13 @@ public struct TextContextInput: Sendable {
     static var empty: Self { .init(text: "", provenance: nil, revision: UUID()) }
 }
 
+extension WorkbenchModel {
+    func isRemovedMCPSource(_ provenance: TextContextProvenance?) -> Bool {
+        guard let id = provenance?.mcpSourceID else { return false }
+        return !configuration.mcpServers.contains { $0.id == id }
+    }
+}
+
 @MainActor struct AIInputOrigin {
     let source: AIDraftSource
     let application: String?

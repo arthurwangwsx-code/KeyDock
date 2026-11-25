@@ -29,10 +29,10 @@ struct CollectionEditorDraft: Equatable {
 
 extension WorkspaceSession {
     func editCollection(_ collection: CommandCollection) {
-        guard savedToolRemoval == nil else { return }
+        guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return }
         collectionDraft = CollectionEditorDraft(editingID: collection.id, expectedFingerprint: SavedItemIdentity.fingerprint(collection), name: collection.name, commandIDs: collection.commandIDs)
     }
-    func newCollection() { guard savedToolRemoval == nil else { return }; collectionDraft = CollectionEditorDraft() }
+    func newCollection() { guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return }; collectionDraft = CollectionEditorDraft() }
     func reconcileCollectionSelection(in store: WorkbenchModel) {
         if let id = selectedCollectionID, !store.configuration.collections.contains(where: { $0.id == id }) { selectedCollectionID = nil }
     }
@@ -43,7 +43,7 @@ extension WorkspaceSession {
         }
     }
     @discardableResult func saveCollection(in store: WorkbenchModel) -> Bool {
-        guard savedToolRemoval == nil else { return false }
+        guard savedToolRemoval == nil, sourceRemoval == nil, !sourceRemovalDismissing else { return false }
         let draft = collectionDraft
         if let id = draft.editingID, !store.validateSavedToolEdit(.collection(id), expected: draft.expectedFingerprint) { return false }
         guard store.saveCollection(id: draft.editingID, name: draft.name, commandIDs: draft.commandIDs) else { return false }

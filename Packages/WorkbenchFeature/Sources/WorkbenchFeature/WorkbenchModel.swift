@@ -117,6 +117,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     let scheduleLedger: ScheduleLedger
     @Published public internal(set) var schedules: [ScheduleSnapshot] = []
     @Published public internal(set) var scheduleBusy = false
+    var scheduleMutationOwner: UUID?
     var scheduleTimer: Task<Void,Never>?
     var scheduleSuspended: Set<UUID> = []
     var scheduledRuns: [UUID:UUID] = [:]
@@ -134,6 +135,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public internal(set) var mcpPrompts: [UUID: MCPPromptCatalog] = [:]
     @Published public internal(set) var mcpBusy = false
     @Published public internal(set) var mcpSettingsChanging = false
+    var mcpSettingsOwner: UUID?
+    var configurationOperations: [UUID: ConfigurationOperation] = [:]
     @Published public internal(set) var mcpCapabilities: [UUID: Set<String>] = [:]
     var mcpSessionDisabled: Set<UUID> = []
     var mcpClients: [UUID: MCPHTTPClient] = [:]
@@ -285,6 +288,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         for lease in desktopLeases.values { lease.revoke() }
         scheduleTimer?.cancel()
         mcpConnectionTask?.cancel()
+        for operation in configurationOperations.values { operation.cancel() }
         receiptMaintenanceTask?.cancel(); receiptMaintenanceTask = nil
         let usage = usageMetadataStore; Task { await usage.stop() }
         // 退出围栏与现有工作的取消同步生效，不能等异步终止回调开始后才取消网络。
@@ -293,11 +297,13 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     }
     public func shutdownAndWait() async {
         shutdown(); let handles = taskHandles
+        let configurationHandles = Array(configurationOperations.values)
         for handle in handles.values { await handle.value }
         let contributionHandles = Array(contributionActionTasks.values)
         for handle in contributionHandles { await handle.value }
         await scheduleTimer?.value
         await mcpConnectionTask?.value
+        for operation in configurationHandles { await operation.wait() }
         let clients = Array(mcpClients.values) + mcpRunClients.values.flatMap{$0}
         for client in clients { await client.invalidate() }
         mcpClients.removeAll(); mcpRunClients.removeAll(); mcpRunScopes.removeAll()
@@ -347,7 +353,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     func rebuildCatalog() { catalog = catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
     public func execute(_ item: CommandItem, caller: ExecutionCaller = .user) {
         guard !isShuttingDown else { launcherNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return }
-        if isSavedToolShortcut(item.id), !isCurrentCommandItem(item) {
+        if isSavedToolShortcut(item.id) || item.id.hasPrefix("workflow."), !isCurrentCommandItem(item) {
             workspaceNoticeMessage = noticeKey("This saved tool changed or is no longer available. Choose it again.")
             launcherNoticeMessage = workspaceNoticeMessage
             return

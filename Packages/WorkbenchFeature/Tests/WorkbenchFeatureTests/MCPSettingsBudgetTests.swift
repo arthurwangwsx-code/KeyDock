@@ -17,6 +17,7 @@ import MCPAdapters
             #expect(await fixture.store.saveMCPServer(edited))
             let saved = try #require(fixture.store.configuration.mcpServers.first)
             #expect(saved.timeoutSeconds == 1 && saved.stdioLaunch?.startupTimeoutSeconds == 19)
+            edited = MCPServerDraft(saved)
             edited.startupTimeout = "0"
             #expect(await fixture.store.saveMCPServer(edited) == false)
             #expect(fixture.store.configuration.mcpServers == [saved])

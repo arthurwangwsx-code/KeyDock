@@ -881,6 +881,22 @@
         }
       }
     },
+    "Agent source and tool references must be removed first. Confirming removal pauses this source and cancels its active calls. Completed effects cannot be undone. Stored keys and imported text are kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent source and tool references must be removed first. Confirming removal pauses this source and cancels its active calls. Completed effects cannot be undone. Stored keys and imported text are kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先解除 Agent 对此来源和工具的引用。确认移除后会暂停来源并取消其在途调用；已完成的效果无法撤回。已存密钥和导入文本保留。"
+          }
+        }
+      }
+    },
     "Agent task input": {
       "localizations": {
         "en": {
@@ -989,6 +1005,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "已在运行"
+          }
+        }
+      }
+    },
+    "Another settings change is finishing. Wait, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another settings change is finishing. Wait, then try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "另一项设置更改正在收口，请稍后重试。"
           }
         }
       }
@@ -1693,6 +1725,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "请检查名称、绝对路径、参数、环境变量和超时时间"
+          }
+        }
+      }
+    },
+    "Checking references…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking references…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在检查引用…"
           }
         }
       }
@@ -6065,18 +6113,18 @@
         }
       }
     },
-    "Only shortcut, favorite, alias and recent preferences for missing snippets, URL actions and collections are cleared. Saved definitions, collection contents, tasks and history are kept.": {
+    "Only shortcut, favorite, alias and recent preferences for missing snippets, URL actions, collections and workflows are cleared. Saved definitions, collection contents, tasks and history are kept.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only shortcut, favorite, alias and recent preferences for missing snippets, URL actions and collections are cleared. Saved definitions, collection contents, tasks and history are kept."
+            "value": "Only shortcut, favorite, alias and recent preferences for missing snippets, URL actions, collections and workflows are cleared. Saved definitions, collection contents, tasks and history are kept."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "仅清理已不存在的片段、URL 动作和集合所遗留的快捷键、收藏、别名和最近项。保留现有定义、集合内容、任务和历史记录。"
+            "value": "仅清理已不存在的片段、网页动作、集合及工作流的快捷键、收藏、别名和最近项。已保存定义、集合内容、任务和历史均保留。"
           }
         }
       }
@@ -6945,6 +6993,22 @@
         }
       }
     },
+    "Remove MCP source?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove MCP source?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除 MCP 来源？"
+          }
+        }
+      }
+    },
     "Remove URL action": {
       "localizations": {
         "en": {
@@ -7041,6 +7105,22 @@
         }
       }
     },
+    "Remove saved tool": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved tool"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除已存工具"
+          }
+        }
+      }
+    },
     "Remove shortcut": {
       "localizations": {
         "en": {
@@ -7089,22 +7169,6 @@
         }
       }
     },
-    "Remove this MCP source?": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移除此 MCP 来源？"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remove this MCP source?"
-          }
-        }
-      }
-    },
     "Remove this schedule?": {
       "localizations": {
         "zh-Hans": {
@@ -7117,22 +7181,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove this schedule?"
-          }
-        }
-      }
-    },
-    "Remove this workflow? Its schedules will pause and running tasks keep their snapshot.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移除这个工作流？相关计划将暂停，正在运行的任务保留原始快照。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remove this workflow? Its schedules will pause and running tasks keep their snapshot."
           }
         }
       }
@@ -7169,6 +7217,22 @@
         }
       }
     },
+    "Remove unavailable source": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove unavailable source"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除失效来源"
+          }
+        }
+      }
+    },
     "Remove unavailable tool": {
       "localizations": {
         "en": {
@@ -7181,6 +7245,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "移除不可用工具"
+          }
+        }
+      }
+    },
+    "Remove workflow?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove workflow?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除工作流？"
+          }
+        }
+      }
+    },
+    "Removing source…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removing source…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在移除来源…"
           }
         }
       }
@@ -7485,6 +7581,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "保存 JSON 前请审阅配置定义与偏好。提示词、片段、命令参数、别名、URL 及本机资源描述可能含私人信息，此导出并非匿名文件。"
+          }
+        }
+      }
+    },
+    "Review this MCP source in Settings before removing it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this MCP source in Settings before removing it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先在设置中审阅此 MCP 来源，再确认移除。"
+          }
+        }
+      }
+    },
+    "Review this workflow in Workflows before removing it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this workflow in Workflows before removing it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先在工作流页面审阅此工作流，再确认移除。"
           }
         }
       }
@@ -7873,6 +8001,22 @@
         }
       }
     },
+    "Saved MCP tool": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved MCP tool"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已存 MCP 工具"
+          }
+        }
+      }
+    },
     "Saved command": {
       "localizations": {
         "en": {
@@ -8077,6 +8221,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schedules"
+          }
+        }
+      }
+    },
+    "Schedules, including disabled ones, and collections must stop referencing this workflow first. Its shortcut, favorite and alias are removed together. Running workflows keep their snapshot.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedules, including disabled ones, and collections must stop referencing this workflow first. Its shortcut, favorite and alias are removed together. Running workflows keep their snapshot."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先解除所有调度（包括已禁用计划）和集合对此工作流的引用。移除时会一并清理其快捷键、收藏和别名；在途工作流保留原快照。"
           }
         }
       }
@@ -8849,6 +9009,22 @@
         }
       }
     },
+    "Some MCP sources or saved tools are unavailable. Remove their references in Tools and budgets before saving.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some MCP sources or saved tools are unavailable. Remove their references in Tools and budgets before saving."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分 MCP 来源或已存工具已失效，请在“工具与预算”中解除引用后再保存。"
+          }
+        }
+      }
+    },
     "Some allowed commands are unavailable. Remove them in Tools and budgets before saving.": {
       "localizations": {
         "en": {
@@ -9377,6 +9553,22 @@
         }
       }
     },
+    "The MCP source could not be removed. Its definition is kept and connections are paused for this session. Saved enablement may return after restarting.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The MCP source could not be removed. Its definition is kept and connections are paused for this session. Saved enablement may return after restarting."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法移除 MCP 来源，已保留定义并暂停本会话的连接；重启后可能恢复原来保存的启用状态。"
+          }
+        }
+      }
+    },
     "The application list may be out of date. Refresh it and try again.": {
       "localizations": {
         "en": {
@@ -9633,6 +9825,22 @@
         }
       }
     },
+    "The server draft changed. Review the current configuration before saving.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server draft changed. Review the current configuration before saving."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器草稿已更改，请重新审阅当前配置后再保存。"
+          }
+        }
+      }
+    },
     "The settings summary could not be prepared. Your settings were not changed.": {
       "localizations": {
         "en": {
@@ -9681,6 +9889,38 @@
         }
       }
     },
+    "The source could not be removed. The review is kept; check the save error before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source could not be removed. The review is kept; check the save error before retrying."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法移除来源，已保留审阅；请检查保存错误后重试。"
+          }
+        }
+      }
+    },
+    "The source review could not be prepared. No source was removed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source review could not be prepared. No source was removed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法准备来源审阅，未移除任何来源。"
+          }
+        }
+      }
+    },
     "There are no deleted tool preferences to clear.": {
       "localizations": {
         "en": {
@@ -9725,6 +9965,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "此 AI 动作已移除或更改。请保留草稿，并新建动作后保存。"
+          }
+        }
+      }
+    },
+    "This MCP source was removed or changed. Keep this draft and choose New server or edit the current source.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This MCP source was removed or changed. Keep this draft and choose New server or edit the current source."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 MCP 来源已被移除或更改。已保留草稿，请选择“新建服务器”或编辑当前来源。"
+          }
+        }
+      }
+    },
+    "This MCP source was removed. The imported text is kept as a snapshot.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This MCP source was removed. The imported text is kept as a snapshot."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 MCP 来源已移除，导入文本仍作为快照保留。"
           }
         }
       }
@@ -9937,6 +10209,22 @@
         }
       }
     },
+    "This saved source is no longer available. Keep any editor draft and choose a current source.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved source is no longer available. Keep any editor draft and choose a current source."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此已存来源已失效，请保留编辑稿并选择当前来源。"
+          }
+        }
+      }
+    },
     "This saved tool changed or is no longer available. Choose it again.": {
       "localizations": {
         "en": {
@@ -10017,6 +10305,22 @@
         }
       }
     },
+    "This source or its references changed. Review again before removing it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This source or its references changed. Review again before removing it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此来源或其引用已更改，请重新审阅后再移除。"
+          }
+        }
+      }
+    },
     "This text action cannot execute tools": {
       "localizations": {
         "en": {
@@ -10093,6 +10397,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "This workflow is unavailable for unattended execution. Check its steps and AI configuration."
+          }
+        }
+      }
+    },
+    "This workflow was removed or changed. Keep this draft and choose New workflow or edit the current version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workflow was removed or changed. Keep this draft and choose New workflow or edit the current version."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工作流已被移除或更改。已保留草稿，请选择“新建工作流”或编辑当前版本。"
           }
         }
       }
@@ -10541,6 +10861,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "URL or template"
+          }
+        }
+      }
+    },
+    "Unavailable MCP source": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable MCP source"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失效的 MCP 来源"
           }
         }
       }
