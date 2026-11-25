@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-25。当前已有签名公证的公开alpha.9，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-25。当前已有签名公证的公开alpha.10，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -33,6 +33,8 @@
 | [alpha.6发行说明](releases/v0.1.0-alpha.6.md) | 稳定窗口动作、命名应用控制与最小回执；实际发行状态见状态总账 |
 | [alpha.7发行说明](releases/v0.1.0-alpha.7.md) | 有序剪贴板合并、可配置主动作和AI复制兼容；实际发行状态见状态总账 |
 | [alpha.9发行说明](releases/v0.1.0-alpha.9.md) | 多应用工作区组合执行、profile快捷键与逐项结果 |
+| [alpha.10发行说明](releases/v0.1.0-alpha.10.md) | 准确输入提交、导入来源、联合预算与AI草稿显式关闭 |
+| [alpha.10发行与安装证据](implementation/alpha10-release-2026-11-25.md) | 650 Swift／同源CI／公证／公开回下载／实际About10及alpha.9回退 |
 | [alpha.9发行与安装证据](implementation/alpha9-release-2026-11-25.md) | 627 Swift／同源CI／公证／公开回下载／实际About9及alpha.8回退 |
 | [alpha.8发行说明](releases/v0.1.0-alpha.8.md) | 界面／编辑／工作流／保存反馈及工作区定义管理；组合执行尚未开放 |
 | [alpha.8发行与安装证据](implementation/alpha8-release-2026-11-25.md) | 同源本机／CI、公证、原子替换、公开回下载及真实About版本 |
