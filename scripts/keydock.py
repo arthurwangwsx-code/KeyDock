@@ -65,7 +65,7 @@ def stage(name, command, timeout=None):
                     process.wait()
             try:
                 cancellation["interruptible"] = True
-                if cancellation["signal"] is not None: raise InterruptedError("Stage cancelled during child creation")
+                if cancellation["signal"] is not None: raise delivery.OperatorCancelled("Stage cancelled during child creation")
                 exit_code = process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
                 stop()

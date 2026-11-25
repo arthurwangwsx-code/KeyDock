@@ -42,3 +42,5 @@ python3 scripts/keydock.py notary-status \
 定向回归覆盖准确复制、漂移／链接／预算／未来schema、unknown与ID落盘故障、等待超时、并发、信号创建窗口与自有真实子进程收口、索引缺失恢复和Accepted后装订失败。历史alpha.19 Accepted输入另经新模块完成真实新inode复制、hdiutil／签名验证、Apple info／log查询与缓存零网络探针；没有新submit。该探针不等于新协议完整App／DMG发行资格，任务34.4保持开放。alpha.19已公开并安装的历史事实见[发行证据](../implementation/alpha19-release-2026-11-26.md)。
 
 本轮28项定向通过，最终完整Python为122项通过。首次完整121项中1项旧timeout Mock未提供poll状态而失败，显式补齐该fixture的running状态后通过；另补部分image目录的完成回执与恢复，原timeout=124与SIGTERM断言保留。真实子进程取消和输出恢复单独覆盖，未把模拟进程替身当作真实公证提交。各次失败和成功测量均保留。
+
+首个分支CI `45691090355`（源f67d646）失败日志artifact `15059196291`已回下载，SHA256 `bf20065b33ef321313f108584290c024eb252ba5b67c9bb0d39de6b20ec1ed2f`。它暴露旧timeout fixture的`/var`别名，以及云端Python 3.15中原InterruptedError取消表现为等待超时的差异；夹具显式resolve并用owned别名全套复查，取消改用独立应用异常避免OS重试语义，保留真实子进程和超时断言。本机Python 3.9／3.14各122项别名路径检查通过；3.15复核由新源CI记录，不固定到旧Python规避问题。该失败不能当作后来修补源的CI资格。

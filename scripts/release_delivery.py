@@ -179,12 +179,17 @@ def cancellation_signals():
         state["signal"] = value
         # Popen赋值前只记意图；拥有具体process后才能抛出并准确收口。
         if state["interruptible"]:
-            raise InterruptedError("Notary operator interrupted by signal " + str(value))
+            # 不使用InterruptedError：系统等待实现可以把它视为EINTR而重试。
+            raise OperatorCancelled("Notary operator interrupted by signal " + str(value))
     try:
         for value in saved: signal.signal(value, interrupted)
         yield state
     finally:
         for value, handler in saved.items(): signal.signal(value, handler)
+
+
+class OperatorCancelled(Exception):
+    pass
 
 
 def invoke_notary(arguments, directory, label, timeout):
@@ -225,7 +230,7 @@ def _invoke_notary(arguments, directory, label, timeout, cancellation):
                 except subprocess.TimeoutExpired: process.kill(); process.wait()
         try:
             cancellation["interruptible"] = True
-            if cancellation["signal"] is not None: raise InterruptedError("Notary operator interrupted during child creation")
+            if cancellation["signal"] is not None: raise OperatorCancelled("Notary operator interrupted during child creation")
             code = process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
             stop()
