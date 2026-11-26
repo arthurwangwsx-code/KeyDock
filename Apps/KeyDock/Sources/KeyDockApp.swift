@@ -668,6 +668,10 @@ import Combine
             let demo = NSMenuItem(title: AppL("Sample clipboard history"), action: #selector(openClipboardDemoAction), keyEquivalent: "")
             demo.target = self; previewMenu.addItem(demo)
             if visualReview.allowsChanges {
+                for (tag, title) in [(0, AppL("Minimum workspace size")), (1, AppL("Standard workspace size"))] {
+                    let entry = NSMenuItem(title: title, action: #selector(resizeReviewWorkspace(_:)), keyEquivalent: "")
+                    entry.target = self; entry.tag = tag; previewMenu.addItem(entry)
+                }
                 let attempts = NSMenuItem(title: AppL("Sample task attempts"), action: #selector(openAttemptDemoAction), keyEquivalent: "")
                 attempts.target = self; previewMenu.addItem(attempts)
                 let workspaceSample = NSMenuItem(title: AppL("Sample workspace results"), action: #selector(openWorkspaceResultsDemoAction), keyEquivalent: "")
@@ -683,6 +687,17 @@ import Combine
             let previewItem = NSMenuItem(); previewItem.submenu = previewMenu; main.addItem(previewItem)
         }
         NSApp.mainMenu = main
+    }
+    @objc private func resizeReviewWorkspace(_ sender: NSMenuItem) {
+        guard safeSmoke, visualReview.allowsChanges, let window = workspace, window.isVisible, sender.tag == 0 || sender.tag == 1 else { return }
+        window.setContentSize(sender.tag == 0 ? window.contentMinSize : NSSize(width: 1000, height: 680))
+        // 仅自有Preview壳的无正文几何收据；不控制其他应用或改变系统设置。
+        if ProcessInfo.processInfo.arguments.contains("--review-fixture-root") {
+            let size = window.contentRect(forFrameRect: window.frame).size
+            if let data = try? JSONSerialization.data(withJSONObject: ["width": size.width, "height": size.height], options: [.sortedKeys]), let line = String(data: data, encoding: .utf8) {
+                print("KEYDOCK_WORKSPACE_LAYOUT " + line)
+            }
+        }
     }
     @objc private func openWorkspaceResultsDemoAction() {
         #if KEYDOCK_PREVIEW

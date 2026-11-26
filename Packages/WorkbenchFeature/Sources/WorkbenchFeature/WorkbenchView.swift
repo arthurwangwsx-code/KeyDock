@@ -67,6 +67,8 @@ public struct WorkspaceView: View {
             }.listStyle(.inset).environment(\.defaultMinListRowHeight, 56)
                 .transaction { $0.animation = nil }
                 .frame(minWidth: 220, idealWidth: 245, maxWidth: 300)
+            ScrollViewReader { detailScroll in
+            ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 if let task = store.tasks.first(where: { $0.id == session.selectedTaskID }) {
                     VStack(alignment: .leading, spacing: 12) {
@@ -111,10 +113,11 @@ public struct WorkspaceView: View {
                     if let code = task.exitCode { Text(L("Exit code") + ": \(code)").font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary) }
                     if let result = task.desktopWorkspaceResult {
                         DesktopWorkspaceResultView(result: result, language: store.configuration.language, labels: task.desktopWorkspaceLabels)
+                            .frame(height: max(160, min(500, viewport.size.height * 0.45)))
                     } else {
                     ReadOnlyTextPreview(text: task.output.isEmpty ? (task.restoredFromReceipt ? L("Session output is not restored here. Use Task content to view text you saved.") : L("No output")) : task.output,
                         accessibilityLabel: L("Task output"), monospaced: true)
-                        .frame(maxWidth: .infinity, minHeight: 160, maxHeight: .infinity)
+                        .frame(maxWidth: .infinity).frame(height: max(160, min(500, viewport.size.height * 0.45)))
                         .modifier(KDReadingSurface())
                     }
                     HStack {
@@ -128,7 +131,9 @@ public struct WorkspaceView: View {
                         Text(task.startedAt, style: .time).font(.caption).foregroundStyle(.tertiary)
                     }
                 } else { KDEmptyState(symbol: "rectangle.stack", title: L("Your tasks stay here"), detail: L("Closing the launcher does not stop running tasks.")) }
-            }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
+            }.padding(24).frame(maxWidth: .infinity, minHeight: max(0, viewport.size.height), alignment: .topLeading).id("task-detail-top")
+            }.onChange(of: session.selectedTaskID) { _, _ in detailScroll.scrollTo("task-detail-top", anchor: .top) }
+            }
         }.frame(width: viewport.size.width, height: viewport.size.height, alignment: .topLeading)
         }
     }

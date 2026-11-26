@@ -672,6 +672,38 @@
           }
         }
       }
+    },
+    "Minimum workspace size": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimum workspace size"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最小工作区尺寸"
+          }
+        }
+      }
+    },
+    "Standard workspace size": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard workspace size"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标准工作区尺寸"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
