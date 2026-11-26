@@ -148,8 +148,10 @@ public struct WorkspaceView: View {
             }.padding(20)
             if !store.clipboardCaptureNotice.isEmpty { KDInlineNotice(store.clipboardCaptureNotice) }
             if !session.clipboard.notice.isEmpty { KDInlineNotice(session.clipboard.notice) }
-            if session.clipboard.results.isEmpty && !session.clipboard.isSearching {
-                KDEmptyState(symbol: "clipboard", title: L("No clipboard items"), detail: L("Recording is optional. Sensitive marked content is skipped."))
+            if session.clipboard.queryOutcome == .failed {
+                Button(L("Refresh")) { session.clipboard.refresh() }
+            } else if let outcome = session.clipboard.queryOutcome, outcome.isEmpty {
+                ClipboardEmptyQueryView(outcome: outcome)
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {

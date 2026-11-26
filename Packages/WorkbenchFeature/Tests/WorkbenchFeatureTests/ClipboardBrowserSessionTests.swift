@@ -123,7 +123,27 @@ struct ClipboardBrowserSessionTests {
         await source.failSearch(failure); await firstTask.value
         await source.completeSearch(success, with: [preview("success")]); await secondTask.value
         #expect(!first.notice.isEmpty && first.results.isEmpty && !first.isSearching)
+        #expect(first.queryOutcome == .failed && first.queryOutcome?.isEmpty == false)
         #expect(second.notice.isEmpty && second.results.map(\.id) == ["success"])
+        #expect(second.queryOutcome == .items)
+        first.refresh()
+        let retryTask = try #require(first.searchTask)
+        #expect(first.isSearching && first.queryOutcome == nil)
+        let retry = try await source.waitForSearch("failure")
+        await source.completeSearch(retry, with: []); await retryTask.value
+        #expect(first.queryOutcome == .noMatches && first.notice.isEmpty)
+        first.query = ""
+        let emptyTask = try #require(first.searchTask)
+        let empty = try await source.waitForSearch("")
+        await source.failSearch(empty); await emptyTask.value
+        #expect(first.queryOutcome == .failed && first.queryOutcome?.isEmpty == false)
+        first.refresh()
+        let finalTask = try #require(first.searchTask)
+        let recovered = try await source.waitForSearch("")
+        await source.completeSearch(recovered, with: []); await finalTask.value
+        #expect(first.queryOutcome == .emptyHistory)
+        first.disconnect()
+        #expect(first.queryOutcome == nil && !first.isSearching)
     }
 
     private func temporaryDirectory() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-ClipboardQuery-" + UUID().uuidString) }

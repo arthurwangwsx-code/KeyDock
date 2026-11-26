@@ -9,6 +9,17 @@ import AppKit
     }
 }
 
+@MainActor final class FixtureEditor: NSTextView {
+    private(set) var pasteRequests = 0
+    var didPaste: ((Int) -> Void)?
+
+    override func paste(_ sender: Any?) {
+        pasteRequests += 1
+        super.paste(sender)
+        didPaste?(pasteRequests)
+    }
+}
+
 @MainActor final class FixtureDelegate: NSObject, NSApplicationDelegate {
     private var windows: [NSWindow] = []
     #if KEYDOCK_DESKTOP_REVIEW_FIXTURE
@@ -35,7 +46,7 @@ import AppKit
             window.isReleasedWhenClosed = false
             let title = NSTextField(labelWithString: "Synthetic window " + name)
             title.font = .systemFont(ofSize: 24, weight: .semibold)
-            let editor = NSTextView(frame: NSRect(x: 0, y: 0, width: 430, height: 100))
+            let editor = FixtureEditor(frame: NSRect(x: 0, y: 0, width: 430, height: 100))
             editor.string = "Synthetic KeyDock acceptance text. No personal content.\nWindow " + name + " — clipboard insertion target."
             editor.font = .monospacedSystemFont(ofSize: 14, weight: .regular)
             editor.isRichText = false
@@ -44,7 +55,12 @@ import AppKit
             let quitToggle = NSButton(checkboxWithTitle: "Hold normal quit requests for review", target: self, action: #selector(toggleQuit(_:)))
             quitToggle.state = refuseQuit ? .on : .off
             let status = NSTextField(labelWithString: "Normal quit requests: 0"); labels.append(status)
-            let stack = NSStackView(views: [title, scroll, quitToggle, status])
+            let pasteStatus = NSTextField(labelWithString: "Window " + name + " paste requests: 0")
+            pasteStatus.setAccessibilityIdentifier("fixture-paste-count-" + name)
+            editor.didPaste = { count in
+                pasteStatus.stringValue = "Window " + name + " paste requests: " + String(count)
+            }
+            let stack = NSStackView(views: [title, scroll, pasteStatus, quitToggle, status])
             stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 16
             stack.translatesAutoresizingMaskIntoConstraints = false
             window.contentView?.addSubview(stack)

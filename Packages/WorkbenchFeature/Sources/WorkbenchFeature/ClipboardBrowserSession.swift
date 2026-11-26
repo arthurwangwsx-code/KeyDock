@@ -19,14 +19,23 @@ public protocol ClipboardCompositionAccess: ClipboardAccess {
 }
 extension ClipboardStore: ClipboardCompositionAccess {}
 
+enum ClipboardQueryOutcome: Equatable {
+    case items, emptyHistory, noMatches, failed
+
+    var isEmpty: Bool { self == .emptyHistory || self == .noMatches }
+}
+
 @MainActor public final class ClipboardBrowserSession: ObservableObject {
     @Published public var query = "" {
         didSet { if query != oldValue { closePreview(); refresh() } }
     }
     @Published public private(set) var results: [ClipboardPreview] = []
     @Published public private(set) var isSearching = false
+    @Published private(set) var queryOutcome: ClipboardQueryOutcome?
     @Published public private(set) var noticeMessage: LocalizedNotice = .none
-    public var notice: String { noticeMessage.rendered() }
+    public var notice: String {
+        (queryOutcome == .failed ? noticeKey("Clipboard storage failed") : noticeMessage).rendered()
+    }
     @Published public private(set) var previewedID: String?
     @Published public private(set) var previewText: String?
     @Published public private(set) var isPreviewLoading = false
@@ -46,13 +55,13 @@ extension ClipboardStore: ClipboardCompositionAccess {}
 
     public func disconnect() {
         generation = UUID(); searchTask?.cancel(); searchTask = nil
-        results = []; isSearching = false
+        queryOutcome = nil; results = []; isSearching = false; noticeMessage = .none
         closePreview(); access = nil; didMutate = {}
     }
 
     public func refresh() {
         generation = UUID(); let requestID = generation, requestQuery = query
-        searchTask?.cancel(); results = []; noticeMessage = .none
+        searchTask?.cancel(); queryOutcome = nil; results = []; noticeMessage = .none
         guard let access else { isSearching = false; return }
         isSearching = true
         searchTask = Task { [weak self] in
@@ -60,10 +69,13 @@ extension ClipboardStore: ClipboardCompositionAccess {}
             do {
                 let values = try await access.searchPreviews(query: requestQuery)
                 guard let self, !Task.isCancelled, self.generation == requestID, self.query == requestQuery else { return }
-                self.results = values; self.isSearching = false
+                self.results = values
+                self.queryOutcome = values.isEmpty ? (requestQuery.isEmpty ? .emptyHistory : .noMatches) : .items
+                self.isSearching = false
             } catch {
                 guard let self, !Task.isCancelled, self.generation == requestID else { return }
-                self.isSearching = false; self.noticeMessage = noticeKey("Clipboard storage failed")
+                self.queryOutcome = .failed; self.isSearching = false
+                self.noticeMessage = noticeKey("Clipboard storage failed")
             }
         }
         // 已打开详情按 ID 重新校验；删除或过期后不能继续显示旧正文。

@@ -4,6 +4,15 @@ import KeyDockUI
 import MacAdapters
 import CommandCore
 
+struct ClipboardEmptyQueryView: View {
+    let outcome: ClipboardQueryOutcome
+    var body: some View {
+        KDEmptyState(symbol: "clipboard",
+            title: outcome == .emptyHistory ? L("No clipboard items") : L("No matching clipboard items"),
+            detail: outcome == .emptyHistory ? L("Recording is optional. Sensitive marked content is skipped.") : L("Try another word or clear the search."))
+    }
+}
+
 public struct ClipboardPanelView: View {
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -59,10 +68,12 @@ public struct ClipboardPanelView: View {
     private var history: some View {
         VStack(spacing: 0) {
             KDResultSectionHeader(L("Clipboard history"), count: browser.results.count)
-            if browser.results.isEmpty && !browser.isSearching {
+            if browser.queryOutcome == .failed {
+                Button(L("Refresh")) { session.refresh() }.frame(maxHeight: .infinity)
+            } else if let outcome = browser.queryOutcome, outcome.isEmpty {
                 VStack(spacing: 12) {
-                    KDEmptyState(symbol: "clipboard", title: browser.query.isEmpty ? L("No clipboard items") : L("No matching clipboard items"), detail: browser.query.isEmpty ? L("Recording is optional. Sensitive marked content is skipped.") : L("Try another word or clear the search."))
-                    if browser.query.isEmpty && !store.configuration.clipboardEnabled {
+                    ClipboardEmptyQueryView(outcome: outcome)
+                    if outcome == .emptyHistory && !store.configuration.clipboardEnabled {
                         Button(L("Enable clipboard history")) { store.setClipboardRecording(true) }.disabled(!store.allowContextCapture)
                     }
                 }.frame(maxHeight: .infinity)
