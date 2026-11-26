@@ -3,6 +3,7 @@ import SwiftUI
 import WorkbenchFeature
 import MacAdapters
 import KeyDockUI
+import ExecutionCore
 
 @MainActor protocol KeyDockWindowCoordinating: AnyObject {
     func start()
@@ -32,7 +33,7 @@ import KeyDockUI
     private var fence: ClipboardPasteActivationFence?
     private var preparingTarget = false
     private var stopping = false
-    private var draining: [Task<Void, Never>] = []
+    private let taskLifetime = OwnedTaskLifetime()
     private var activationObserver: NSObjectProtocol?
     init(store: WorkbenchModel, scope: DesktopReviewScope) {
         self.store = store; self.scope = scope
@@ -70,7 +71,7 @@ import KeyDockUI
     func start() {
         applyAppearance(); installMenus()
         do { try installShortcuts(store.configuration) } catch { store.reportShortcutRegistrationFailure() }
-        monitor = Task { [weak self] in
+        monitor = taskLifetime.start { [weak self] in
             while !Task.isCancelled {
                 do { try await Task.sleep(for: .milliseconds(500)) } catch { return }
                 guard let self else { return }
@@ -87,10 +88,10 @@ import KeyDockUI
     }
     func beginShutdown() {
         guard !stopping else { return }; stopping = true
-        draining = [capture, paste, monitor].compactMap { $0 }
+        taskLifetime.close()
         monitor?.cancel(); capture?.cancel(); dismiss(restore: false); hotkeys.shutdown(); store.shutdown()
     }
-    func prepareForQuit() async { for task in draining { await task.value }; draining = []; await store.shutdownAndWait() }
+    func prepareForQuit() async { await taskLifetime.shutdownAndWait(); await store.shutdownAndWait() }
     func shutdown() {
         beginShutdown()
         if let activationObserver { NSWorkspace.shared.notificationCenter.removeObserver(activationObserver) }
@@ -170,7 +171,7 @@ import KeyDockUI
         dismiss(restore: false)
         let request = generation
         preparingTarget = activateTarget
-        capture = Task { [weak self] in
+        capture = taskLifetime.start { [weak self] in
             guard let self else { return }
             defer { if generation == request { preparingTarget = false } }
             if activateTarget {
@@ -211,7 +212,7 @@ import KeyDockUI
         let request = generation
         let fence = ClipboardPasteActivationFence(ownPID: ProcessInfo.processInfo.processIdentifier, targetPID: target.identity.pid)
         self.fence = fence; panel?.orderOut(nil)
-        paste = Task { [weak self] in
+        paste = taskLifetime.start { [weak self] in
             guard let self else { return }
             do {
                 try await store.insertClipboardText(text, target: target, isCurrent: { [weak self] in
