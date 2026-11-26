@@ -15280,6 +15280,86 @@
           }
         }
       }
+    },
+    "Model-list authentication was rejected. Check the key for this endpoint. The last list and selections are preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model-list authentication was rejected. Check the key for this endpoint. The last list and selections are preserved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模型清单鉴权被拒绝，请检查此端点的密钥。原清单和选择已保留。"
+          }
+        }
+      }
+    },
+    "The service rate-limited the model list. Try again later. The last list and selections are preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service rate-limited the model list. Try again later. The last list and selections are preserved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务限制了模型清单请求，请稍后再试。原清单和选择已保留。"
+          }
+        }
+      }
+    },
+    "The model-list response exceeded its limits. The last list and selections are preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The model-list response exceeded its limits. The last list and selections are preserved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模型清单响应超出限制。原清单和选择已保留。"
+          }
+        }
+      }
+    },
+    "The service did not return a supported model list. Keep using exact model IDs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service did not return a supported model list. Keep using exact model IDs."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务未返回支持的模型清单，请继续使用准确模型 ID。"
+          }
+        }
+      }
+    },
+    "The model-list request timed out. The last list and selections are preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The model-list request timed out. The last list and selections are preserved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模型清单请求已超时。原清单和选择已保留。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

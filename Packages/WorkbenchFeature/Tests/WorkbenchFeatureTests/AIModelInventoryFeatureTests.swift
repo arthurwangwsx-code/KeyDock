@@ -115,4 +115,11 @@ private actor ControlledInventoryTransport: AIHTTPTransport {
         #expect(await transport.state().0 == 0)
         #expect(f.store.modelInventoryWorkingBytes == 0 && f.store.tasks.isEmpty)
     }
+    @Test func errorsExposeOnlyApprovedCategoriesWithoutPrivateDescriptions() {
+        let first = modelInventoryFailureNotice(AIProviderError.httpStatus(401)).rendered()
+        let second = modelInventoryFailureNotice(AIProviderError.outputLimit).rendered()
+        #expect(!first.isEmpty && first != second)
+        let unknown = NSError(domain:"synthetic-private-error-body",code:123,userInfo:[NSLocalizedDescriptionKey:"synthetic-private-token-and-url"])
+        #expect(!modelInventoryFailureNotice(unknown).rendered().contains("synthetic-private"))
+    }
 }

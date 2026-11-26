@@ -1,12 +1,12 @@
 # 当前状态总账
 
-当前正式安装与公开发行均为[alpha.21](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.21)，精确源`5712546d072414772f8eb65846eed8ea4e1d968f`。985 Swift／142 Python／981 key、生产合成OCR双轮、同源CI、App／DMG公证装订／Gatekeeper、公开回下载与独立发行审计均通过；About实际确认alpha.21(21)。见[发行与真实模型证据](implementation/alpha21-release-2026-11-26.md)。
+公开发行仍为[alpha.21](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.21)，固定源5712546；本机现为已公证但未公开的alpha.22候选，源afa4192。alpha.22已通过1000 Swift／142 Python／989 key、生产OCR、同源CI和安装；原生真实清单两次返回103，随后两次失败，因而未晋升master、未建tag／公开。alpha.23正在修补JSON短行交付并完善错误分类，最终同源及原生验收另记。见[原生失败与更正](implementation/model-inventory-native-2026-11-26.md)。
 
-本版全局／九场景／定义模型覆盖、思考与预算、Responses多轮和配置schema2接入实际执行。正式App已使用Sol low及翻译Luna none完成12次真实OpenAI合成请求：翻译、中文总结、CLI精确审阅取消、两类Agent时间工具、两步Workflow及中英活动总结通过；2387／1009 token，新模型费用保持未知。原alpha.20活动俄语FAIL保留，中英文复验通过，运行中切语言仍开放；未把局部模型调用当全部质量证明。
+全局／九场景／定义模型覆盖、思考、预算及Responses已接实际执行。alpha.21完成12次真实OpenAI合成调用，2387／909 token（原1009为加总错误，逐行值未变）；翻译、总结、CLI审阅取消、两类Agent时间工具、Workflow及中英活动结果已观察。旧none判断只依据会话画面，后续重启实际仍继承low，不当作该参数wire证明。alpha.22重新明确保存、正常重启确认none，并完成55／26 token真实Luna翻译。原FAIL与receipt保留附更正；新模型费率未知，不虚构账单。
 
-当前`feature/model-inventory`增加[当前服务模型清单](technical/ai-model-inventory.md)，候选alpha.22。显式GET、有界网络与解码、共享选择器、草稿key端点绑定、凭据epoch和实际drain已接通；24项定向通过，最终接线后的完整本机／CI／原生真实刷新及新发行仍待完成。刷新不自动换模型，不从清单推断能力，不更新版本化推荐。
+当前feature/model-inventory的alpha.23源码让清单JSON按4096B合并、256槽有界交付；SSE仍64槽逐行／尾块拒丢弃，客户端仍15秒／1MiB／512ID与4MiB会话工作预算。清单仅点击后获取，不替换模型、不推断能力；错误固定分类，无服务正文或凭据。最终真实修复效果、同源CI、公证／公开与替换分别验收，不能把alpha.22部分成功当完成。
 
-完整P0–P4仍PARTIAL：独立桌面验收App／合成宿主接入、真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放。[剩余工程](technical/remaining-engineering-2026-11-26.md)的自定义一致性、Agent总预算、持久步骤、原图附件及稳定增量用量继续推进。alpha.20副本保留；schema2写入后旧配置reader不能安全覆盖，不宣传无条件回退。
+完整P0–P4仍PARTIAL：独立桌面验收App／宿主、真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放。[剩余工程](technical/remaining-engineering-2026-11-26.md)继续推进。正式App安装／回退检查配置schema2 reader；历史副本保留不代表无条件回退。
 
 ## 历史推进与当时资格
 

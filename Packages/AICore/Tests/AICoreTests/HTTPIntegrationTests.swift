@@ -7,8 +7,11 @@ private enum FixtureError: Error { case missingScript, startupFailed, timedOut }
 
 @Suite struct ModelInventoryLoopbackTests {
     private struct HeldConsumerTransport: AIHTTPTransport {
+        var forceStreaming = true
         func open(_ request: URLRequest) async throws -> AIHTTPResponse {
-            let response = try await URLSessionAITransport().open(request)
+            var streaming = request
+            if forceStreaming { streaming.setValue("text/event-stream", forHTTPHeaderField:"Accept") }
+            let response = try await URLSessionAITransport().open(streaming)
             // 暂停消费者，让真实HTTP producer先交付64个换行块和不足4096B尾块。
             do { try await Task.sleep(for:.milliseconds(500)); return response }
             catch { response.cancel(); await response.waitForCompletion(); throw error }
@@ -34,6 +37,11 @@ private enum FixtureError: Error { case missingScript, startupFailed, timedOut }
         let (bytes, _) = try await URLSession.shared.data(from:server.baseURL.appendingPathComponent("stats"))
         let stats = try JSONDecoder().decode([String:Int].self,from:bytes)
         #expect(stats["model_list_requests"] == 2 && stats["model_redirect_hits"] == 0 && stats["post_requests"] == 0)
+    }
+    @Test func prettyJSONWithManyShortLinesUsesBoundedChunksRatherThanSSELineSlots() async throws {
+        let server = try SSEFixture(); defer { server.stop() }
+        let result = try await AIModelInventoryClient(transport:HeldConsumerTransport(forceStreaming:false)).list(endpoint:server.baseURL.appendingPathComponent("model-pretty/responses"),allowsLocalHTTP:true,apiKey:"")
+        #expect(result.models.count == 512 && !result.isPartial)
     }
 }
 

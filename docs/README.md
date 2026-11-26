@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-26。当前已有签名公证的公开alpha.21，并已替换本地常规App，实际About21已确认；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-26。当前公开alpha.21；本机为已公证未公开alpha.22，因真实刷新失败正在推进alpha.23，实际About22已确认；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -40,6 +40,7 @@
 | [桌面验收模型接线复查](implementation/desktop-review-model-2026-11-26.md) | 窄配置、存储生命周期、网络／任务旁路和108项定向；独立App接入仍开放 |
 | [真实OpenAI合成基线](implementation/openai-live-baseline-2026-11-26.md) | 10次实际调用、用量／估算、工具及Workflow和语言FAIL；无凭据进入工程 |
 | [alpha.21发行与真实模型证据](implementation/alpha21-release-2026-11-26.md) | 985 Swift、12次真实最新模型请求、中英活动修补、同源CI、公证／公开回下载及About21 |
+| [模型清单原生失败与更正](implementation/model-inventory-native-2026-11-26.md) | alpha.22本机资格、103清单与连续失败、none重启证明和历史加总纠正 |
 | [当前服务模型清单](technical/ai-model-inventory.md) | 显式刷新、易失清单、推荐分离、准确ID与凭据／取消／工作预算合同 |
 | [模型目录与场景设置](technical/ai-model-settings.md) | 最新模型／协议能力、全局及场景覆盖、思考、冻结与配置兼容合同；alpha.21已发行 |
 | [模型设置及Responses复查](implementation/ai-model-settings-2026-11-26.md) | 共用原生控件、逐入口冻结、三轮opaque续接、schema2／签名reader门禁；历史分源复查与alpha.21资格链接 |

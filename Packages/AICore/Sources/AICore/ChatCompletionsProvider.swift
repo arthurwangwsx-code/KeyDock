@@ -43,7 +43,9 @@ public struct URLSessionAITransport: AIHTTPTransport {
                 session.invalidateAndCancel()
                 throw AIProviderError.malformedEvent
             }
-            let (body, continuation) = AsyncThrowingStream<Data, any Error>.makeStream(bufferingPolicy: .bufferingOldest(64))
+            // JSON清单按块交付；逐换行交付会让很小的pretty JSON耗尽SSE队列。
+            let coalesceJSON = request.value(forHTTPHeaderField: "Accept")?.lowercased() == "application/json"
+            let (body, continuation) = AsyncThrowingStream<Data, any Error>.makeStream(bufferingPolicy: .bufferingOldest(coalesceJSON ? 256 : 64))
             let task = Task {
                     defer { session.invalidateAndCancel() }
                     do {
@@ -55,7 +57,7 @@ public struct URLSessionAITransport: AIHTTPTransport {
                             guard total <= 33_554_432 else { throw AIProviderError.outputLimit }
                             buffer.append(byte)
                             // 每个事件的空行处交付，避免等待较大缓冲影响首 token。
-                            if byte == 10 || buffer.count >= 4096 {
+                            if (!coalesceJSON && byte == 10) || buffer.count >= 4096 {
                                 switch continuation.yield(buffer) {
                                 case .enqueued: break
                                 case .dropped: throw AIProviderError.outputLimit

@@ -69,8 +69,30 @@ extension SettingsSession {
                 modelInventoryNotice = noticeKey(value.isPartial ? "Partial model list received. Existing selections are preserved." : "Model list refreshed. Existing selections are preserved.")
             } catch {
                 guard !Task.isCancelled, modelInventoryRequestID == requestID, store.modelInventoryEpoch == epoch, !store.isShuttingDown else { return }
-                modelInventoryNotice = noticeKey("Model list could not be refreshed. Check the endpoint, credentials or connection. Existing selections and the last successful list are preserved.")
+                modelInventoryNotice = modelInventoryFailureNotice(error)
             }
         }
     }
+}
+
+/// 仅展示白名单错误类别，不拼接服务端正文、URL、密钥或任意Error.description。
+func modelInventoryFailureNotice(_ error: Error) -> LocalizedNotice {
+    if let value = error as? AIProviderError {
+        switch value {
+        case .httpStatus(401), .httpStatus(403): return noticeKey("Model-list authentication was rejected. Check the key for this endpoint. The last list and selections are preserved.")
+        case .httpStatus(429): return noticeKey("The service rate-limited the model list. Try again later. The last list and selections are preserved.")
+        case .outputLimit: return noticeKey("The model-list response exceeded its limits. The last list and selections are preserved.")
+        case .invalidContentType: return noticeKey("The service did not return a supported model list. Keep using exact model IDs.")
+        default: break
+        }
+    }
+    if let value = error as? AIModelInventoryError {
+        switch value {
+        case .limitExceeded: return noticeKey("The model-list response exceeded its limits. The last list and selections are preserved.")
+        case .invalidResponse: return noticeKey("The service did not return a supported model list. Keep using exact model IDs.")
+        case .unsupportedEndpoint: return noticeKey("This endpoint has no unambiguous models URL. Keep using exact model IDs.")
+        }
+    }
+    if (error as? URLError)?.code == .timedOut { return noticeKey("The model-list request timed out. The last list and selections are preserved.") }
+    return noticeKey("Model list could not be refreshed. Check the endpoint, credentials or connection. Existing selections and the last successful list are preserved.")
 }

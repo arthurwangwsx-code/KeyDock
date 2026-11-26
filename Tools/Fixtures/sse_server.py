@@ -94,6 +94,14 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(payload)
             self.wfile.flush()
+        elif path == "/model-pretty/models":
+            payload = json.dumps({"object":"list", "data":[{"id":f"synthetic-{i:03d}-"+"x"*192} for i in range(512)]}, indent=2).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            self.wfile.flush()
         else:
             self.send_json(404, {"error": "synthetic fixture route"})
 
