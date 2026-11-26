@@ -37,6 +37,7 @@
 | [alpha.20发行与安装证据](implementation/alpha20-release-2026-11-26.md) | 920 Swift／137 Python／931 key、同源CI、新候选协议真实App／DMG公证、公开审计、原子替换与About20 |
 | [剩余工程与系统验收](technical/remaining-engineering-2026-11-26.md) | 原目标的快捷操作验收入口、自定义一致性、Agent预算、持久步骤、原图与增量用量；实现与证明分开 |
 | [独立桌面验收入口](technical/desktop-review.md) | 合成宿主、身份scope、受限Workbench／UI及启动流水线的完整合同 |
+| [桌面验收App接线与原生复查](implementation/desktop-review-app-2026-11-26.md) | 独立签名配对、owned启动／退出／重启、双语UI及拒绝态；失效与真实权限边界分别留证 |
 | [桌面验收模型接线复查](implementation/desktop-review-model-2026-11-26.md) | 窄配置、存储生命周期、网络／任务旁路和108项定向；独立App接入仍开放 |
 | [真实OpenAI合成基线](implementation/openai-live-baseline-2026-11-26.md) | 10次实际调用、用量／估算、工具及Workflow和语言FAIL；无凭据进入工程 |
 | [alpha.21发行与真实模型证据](implementation/alpha21-release-2026-11-26.md) | 985 Swift、12次真实最新模型请求、中英活动修补、同源CI、公证／公开回下载及About21 |

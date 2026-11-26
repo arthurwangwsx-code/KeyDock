@@ -293,9 +293,9 @@
 
 - [x] 36.1 实现固定BuildInfo绑定合同、owned根／marker／文件FD身份、实例出生与永久撤销scope；12项定向测试（含参数用例）与只读评审通过。保留Foundation误拒/private/var的首轮FAIL及修复探针；实际BuildInfo生产、companion／签名／UI接入仍依36.2–36.5，见基础层复查。
 - [x] 36.2 Review运行策略保留allowContextCapture=false，独立canonical配置与偏好域、新空辅助session、空调度／活动、禁止历史恢复和一般执行；窄复制／插入贯穿原Host策略。15项策略＋20项scope测试及相关108项定向、三方只读复查通过；DB身份／POSIX锁与配置CAS、旧client／恢复／材料旁路分别留证。尚无Review App／真实插入资格，见模型层复查。
-- [ ] 36.3 独立编译配置／bundle／profile、复用ClipboardPanel及窄设置／快捷键、标准paste／拖入拒绝；生产安装／package／publish拒绝，普通Preview限制不变。
-- [ ] 36.4 固定companion及owned启动器、源／签名／实例收据、精确正常退出、配置持久化和故障拒绝的流水线／回归。
-- [ ] 36.5 原生检查面板、拒绝态及真实目标恰好接收一次／目标变化／取消／重启；权限、实体键盘和完整系统矩阵继续分别留证，不以Review关闭10.1–10.2。
+- [x] 36.3 独立编译配置／bundle／profile、原ClipboardPanel及窄设置／快捷键、native editor paste／拖入拒绝已接线；普通安装／package／publish拒绝，Preview限制不变。afb97cb完整1012 Swift／151 Python／1003 key、签名配对及同源CI通过；原生子集与保留失败见App接线复查，不替代36.5。
+- [ ] 36.4 固定companion／owned启动器、签名绑定、源／实例回执、精确正常退出／补偿及流水线回归已实现；明确重启恢复设置／3条历史与失效停用有观察。仍保留cf21未分类失效及afb目标身份不确定，长期稳定及完整故障矩阵开放，不能据局部恢复关闭。
+- [ ] 36.5 原生面板／双语设置／搜索／合并／复制／拒绝态及明确重启有观察；真实目标恰好接收一次／目标变化／取消仍待用户AX授权。CUA模拟未唤起不作实体按键证明；权限与完整系统矩阵分别留证，不以Review关闭10.1–10.2。
 
 ## 37. 可选模型、场景默认与思考设置（2026-11-26追加）
 

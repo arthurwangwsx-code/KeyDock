@@ -25,7 +25,7 @@ Review模式强制inert ClipboardCaptureSource、nil一般剪贴板reader、拒�
 
 ## 实施进度
 
-2026-11-26，scope基础层、Workbench策略及App组合根已接入。独立Coordinator只组合原ClipboardPanel、窄设置和HotkeyCenter，不构造通用Launcher／Workspace。原生field editor拒绝paste／readSelection／drop，保留键入与组合输入；关闭时等待本次捕获／插入任务收口。源、签名配对与原生结果分别记录在[App复查](../implementation/desktop-review-app-2026-11-26.md)，不据编译通过声称真实插入已验收。正式发行与安装为alpha.23。
+2026-11-26，scope基础层、Workbench策略及App组合根已接入。独立Coordinator只组合原ClipboardPanel、窄设置和HotkeyCenter，不构造通用Launcher／Workspace。原生field editor拒绝paste／readSelection／drop，保留键入与组合输入；OwnedTaskLifetime在槽位移除后仍持有旧worker直到真实返回，关闭时封住新任务并等待收口。失效后发布notice重算禁用状态，日志仅记录固定类别，不含正文／路径；不据稍后身份重查相同自动恢复旧scope。源、签名配对与原生结果分别记录在[App复查](../implementation/desktop-review-app-2026-11-26.md)，不据编译通过声称真实插入已验收。正式发行与安装为alpha.23。
 
 ## 可重复调试入口
 

@@ -1,19 +1,46 @@
-# 独立桌面验收App接线
+# 独立桌面验收App接线与原生复查
 
-目标承接任务36.3–36.5，不改变完整P0–P4验收范围。正式公开及本机安装仍为alpha.23；本增量为本地专用Review配对。
+本增量承接任务36.3–36.5；完整P0–P4仍为PARTIAL。正式公开与本机安装仍为alpha.23、源`3b0dfe2`；本轮配对是本地开发工具，不进入安装／package／publish白名单。
 
-## 当前已验证
+## 工程资格
 
-- PASS：独立ReleaseDesktopReview原生App构建，测量`receipts/desktop-review-native-compile.json`，约107秒。
-- PASS：39项定向Swift测试，测量`receipts/desktop-review-app-tests-v4.json`；配置／Scope、跨profile参数拒绝、原生paste入口及键入／IME组合。
-- PASS：150项Python回归，测量`receipts/desktop-review-all-python-v2.json`；包括8项新流水线测试及真实owned Python TERM/HUP，无真实App或TCC操作。其后新增cache symlink回归，待同源完整检查。
-- 已保留初次field editor构造参数编译失败、无text network导致空查询／IME失败、CGFloat歧义及测试signal枚举字符串失败；修复后对应回归通过。全Python首次增加package raw Info读取破坏了5个既有注入测试，已改为复用统一inspect_app预检，原断言及发行边界保留。
-- 只读评审发现的预期失焦取消、跨文件AppL可见性、预览正文焦点下Command-Return、helper先覆盖、输出／cache symlink和启动中断收口已修正。App随后新增的退出drain及完整签名配对仍需最终构建。
+最终代码源`afb97cbe7a73ab42536cf61a6588ce752c5f07a6`：
 
-## 接线与限制
+- PASS：完整本机检查，1012 Swift执行／151 Python／1003中英文key，991 inventory ID（981 core＋9 Terminal＋1 OCR），生产合成OCR双轮通过。`.local/pipeline/20261126T064229838616Z/check-summary.json`，SHA-256 `824a55b1cbf6a0136fa9f48f7695a8da3169c6f3368fcdb6a93feea97a7b5157`；测量`receipts/desktop-review-full-check-v2.json`。
+- PASS：[同源CI 45768775028](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45768775028)，包括核心检查与Release优化普通Preview；云端OCR仍不授予生产资格。规划检查45768775078通过。
+- PASS：最终Developer ID签名配对，测量`receipts/desktop-review-signed-pair-v5.json`；本地manifest为`build/pipeline/desktop-review/pair/pair.json`。先签名companion，再绑定最终binary／Info摘要并签名Review。Review binary SHA-256为`f875622a0616c9c463b710f8ae59ac23fdec384d659053775fce780fedfb6554`，fixture binary为`b99feb402155d3581d32d1f07f876d577c22981f926d160e2c8992de167a7046`。
+- PASS：正式App配置另在前序代码`cf21df7`完成原生Release编译，`receipts/desktop-review-production-compile.json`；它不能代替最终源的正式签名发行。该源的1009 Swift／151 Python／1002 key及同源CI45766690542亦通过。
+- PASS：最终45项定向覆盖配置／Scope、跨profile参数拒绝、native editor、取消后丢弃槽位仍等待真实worker、首个失效类别保留。测量`receipts/desktop-review-diagnostic-tests-v2.json`。流水线9项新增回归含真实owned Python TERM/HUP，未调用真实App或系统权限。
 
-普通App和Preview拒绝Review参数；Review只接受固定编译身份／safe-smoke／签名BuildInfo及一个root参数，验证后异步建立Scope，再构造Workbench。无真实用户目录fallback。窄设置提供语言／外观、剪贴板快捷键与主动作／分隔符，以及明确加载合成历史和打开固定目标。菜单栏提供设置入口。
+## 原生观察与未关闭项
 
-输入限制位于窗口返回的独立NSTextView field editor；菜单不是唯一门禁。面板复用生产ClipboardPanelSession、Host授权、paste事务、generation和activation fence。每次捕获前后都检查固定PID/birth与Scope；第三应用激活撤销准备，Scope失效停用快捷键。
+| 项目 | 结论 | 范围 |
+|---|---|---|
+| 独立设置与原ClipboardPanel | PASS子集 | 实际签名启动；固定合成宿主，设置、面板和菜单入口分离 |
+| 查询／有序合并／复制 | PASS子集 | 合成3条记录、筛选、Shift-Return多选、按顺序合并、预览焦点下Command-Return复制已观察；普通键入正常 |
+| 输入拒绝 | PASS子集 | Review查询Command-V未改变查询；原生editor的paste／readSelection拒绝与键入／IME组合测试通过。真实拖入与完整IME矩阵仍开放 |
+| 双语与外观 | PASS子集 | 中文浅色、完整英文深色设置、窗口标题、F18标准键名及英文面板已观察；完整视觉／对比度／VoiceOver矩阵未关闭 |
+| 明确重启 | PASS子集 | 同一PID/birth的companion保留；新Review实例恢复English、Dark、F18及3条历史，新auxiliary session，不重放旧任务 |
+| 失效保护 | PASS子集 | `afb97cb`记录`targetIdentityChanged`后，所有Review设置／操作禁用、提示重启、快捷键停用；原因只记录固定类别 |
+| 实际插入消费 | 待权限 | Insert仍因缺Accessibility／事件权限而禁用；未发送或宣称目标恰好消费一次 |
+| 全局热键／实体键盘 | PARTIAL | 录制及持久化已观察；CUA两次模拟未唤起面板，原因未确定，不能代替物理按键验收 |
+| 长期稳定性 | PARTIAL | 有保留的身份失效及工具故障；不能据重启成功关闭 |
 
-签名配对、实际原生显示／插入消费、拒绝／重启、物理热键尚待后续证据。Review资格不会关闭正式身份、多屏、IME实操、VoiceOver、最低系统或长期驻留。操作方式见[独立桌面验收入口](../technical/desktop-review.md)。
+最后两组实例均由流水线精确正常退出，最终回执`receipts/desktop-review-final-stop-v2.json`；生产App未退出或替换。原生观察来自当前chat的CUA AX与单窗口截图，没有导出或上传个人屏幕内容。
+
+## 保留的失败与解释边界
+
+1. 首次签名源`5184426`的设置窗口被hosting controller初始尺寸压缩；已设contentMinSize并显式恢复600×720内容尺寸。`42008f5`另观察语言切换后共享行为View／窗口标题残留中文；以局部语言identity及标题回调修复，`35a113f`和最终源复验通过。
+2. field editor初次指定空container没有文本网络，查询／IME测试失败；现显式持有网络。还保留初始化参数、CGFloat歧义及测试signal枚举字符串编译／测试失败。初次package raw Info预检破坏5个既有注入测试，已复用统一inspect_app端口，原断言保留并通过。
+3. 首轮正常退出15秒未确认；随后CUA Escape后App退出，下一次只收口剩余companion成功。菜单跟踪与失焦均有可能，不能倒推唯一原因；后续无菜单情况下多轮正常退出通过，未强杀。
+4. `cf21df7`原生设置期间曾显示会话失效，未分类原因保留。后来同宿主明确重启恢复；这不抵消原FAIL。旧次不能由新日志补写原因。
+5. `afb97cb`的CUA批量尝试发生`input_required` MRTR限制，随后约295秒传输故障与kernel重置，完成载入次数未知。期间App日志记录`targetIdentityChanged`；它只表示当次probe缺失或某身份字段不匹配，不能确定哪一项或归因工具。稍后helper查询与原PID／birth／路径相同，仍不据此恢复旧scope。私有记录`.local/desktop/review-target-expiry-afb97cb.json`。明确重启后状态与3条记录恢复已观察。
+6. 本轮未读取、重输或使用用户API key；Review凭据／网络／普通执行端口保持拒绝。已有alpha.23真实AI证据独立保留，未以本轮mock或原生拒绝态替代。
+
+所有被替换的本地配对先压缩并还原逐资源校验；manifest、旧helper及retention receipt在`.local/desktop-review/pair-history/`。该保留不是异地备份或产品验收。
+
+## 接线与后续
+
+Review仅接收固定编译身份、safe-smoke、签名BuildInfo与一个root参数，验证后建立Scope再构造Workbench，无真实用户目录fallback。独立Coordinator只组合生产ClipboardPanelSession、HotkeyRecorder、HotkeyCenter、主动作偏好及Host／paste事务，不构造通用Launcher／Workspace或任务恢复入口。OwnedTaskLifetime持有被取消、已移出槽位的任务直到实际返回，封住退出后的新任务。
+
+继续区分：身份失效的具体字段／时序诊断、实际目标恰好消费一次、目标变化／取消／重启、实体热键、正式App身份及完整系统／视觉矩阵。用户需在系统设置正常授予独立Review App的Accessibility；本工具不改TCC。操作方式见[独立桌面验收入口](../technical/desktop-review.md)。

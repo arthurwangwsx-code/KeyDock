@@ -6,7 +6,9 @@
 
 真实OpenAI合成输入已覆盖翻译、总结、CLI精确审阅取消、两类Agent时间工具、Workflow及中英活动总结。分源合计23次、3856／1737 token，新模型费率未知，不虚构账单。alpha.21输出合计已由1009纠正为909；旧none界面判断不作wire证明，alpha.22明确保存／重启及55／26翻译后，alpha.23跨升级保留none。原俄语FAIL、CI取消测试竞态、alpha.22清单失败及所有更正见原始记录，不倒推唯一失败原因。
 
-完整P0–P4仍PARTIAL：独立桌面验收App／宿主、真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放；20条质量样本、在途切语言及所有服务／参数／故障组合未关闭。[剩余工程](technical/remaining-engineering-2026-11-26.md)继续推进。安装／回退检查配置schema2 reader；副本保留不代表无条件回退。
+独立桌面验收App／固定宿主已实际Developer ID签名运行。代码`afb97cb`的1012 Swift／151 Python／1003 key、生产合成OCR双轮及同源CI45768775028通过；双语设置、剪贴板查询／合并／复制、明确重启及拒绝态有原生观察，见[App接线复查](implementation/desktop-review-app-2026-11-26.md)。保留旧失效、新targetIdentityChanged及CUA传输故障，未把恢复成功视为全部通过。配对仅本地使用，正式发行仍为alpha.23。
+
+完整P0–P4仍PARTIAL：真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放；20条质量样本、在途切语言及所有服务／参数／故障组合未关闭。[剩余工程](technical/remaining-engineering-2026-11-26.md)继续推进。安装／回退检查配置schema2 reader；副本保留不代表无条件回退。
 
 ## 历史推进与当时资格
 
