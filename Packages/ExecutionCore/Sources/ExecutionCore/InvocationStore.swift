@@ -17,8 +17,9 @@ public struct InvocationReceipt: Identifiable, Codable, Sendable, Equatable {
     public var desktopWorkspaceRun: DesktopWorkspaceRunContext?
     public var desktopWorkspaceResult: DesktopWorkspaceRunResult?
     public var runAttempt: RunAttemptMetadata?
+    public var runTokenBudget: RunTokenBudgetSnapshot?
 
-    public init(id: UUID, name: String, state: ExecutionState, startedAt: Date = Date(), finishedAt: Date? = nil, exitCode: Int32? = nil, message: String = "", commandID: String? = nil, commandVersion: Int? = nil, configurationFingerprint: String? = nil, caller: String? = nil, desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil, runAttempt: RunAttemptMetadata? = nil) {
+    public init(id: UUID, name: String, state: ExecutionState, startedAt: Date = Date(), finishedAt: Date? = nil, exitCode: Int32? = nil, message: String = "", commandID: String? = nil, commandVersion: Int? = nil, configurationFingerprint: String? = nil, caller: String? = nil, desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil, runAttempt: RunAttemptMetadata? = nil, runTokenBudget: RunTokenBudgetSnapshot? = nil) {
         self.id = id
         self.name = name
         self.state = state
@@ -32,6 +33,7 @@ public struct InvocationReceipt: Identifiable, Codable, Sendable, Equatable {
         self.desktopWorkspaceRun = desktopWorkspaceRun
         self.desktopWorkspaceResult = desktopWorkspaceResult
         self.runAttempt = runAttempt
+        self.runTokenBudget = runTokenBudget
     }
 }
 
@@ -44,7 +46,27 @@ public enum InvocationStoreError: Error, Equatable, Sendable {
 
 /// 只记录最小元数据；不保存正文、不重放任务。维护与显式清除只处理未保护的终态。
 public actor InvocationStore {
-    private struct Envelope: Codable { let version: Int; let receipts: [InvocationReceipt] }
+    private struct Envelope: Codable {
+        let version: Int
+        let receipts: [InvocationReceipt]
+        enum CodingKeys: String, CodingKey { case version, receipts }
+        enum BudgetKey: String, CodingKey { case runTokenBudget }
+        init(version: Int, receipts: [InvocationReceipt]) { self.version = version; self.receipts = receipts }
+        init(from decoder: any Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            version = try c.decode(Int.self, forKey: .version)
+            guard (1...3).contains(version) else { throw InvocationStoreError.unsupportedVersion }
+            var rows = try c.nestedUnkeyedContainer(forKey: .receipts), values: [InvocationReceipt] = []
+            while !rows.isAtEnd {
+                let row = try rows.superDecoder(), keys = try row.container(keyedBy: BudgetKey.self)
+                if keys.contains(.runTokenBudget) {
+                    guard version == 3, try !keys.decodeNil(forKey: .runTokenBudget) else { throw InvocationStoreError.invalidMetadata }
+                }
+                values.append(try InvocationReceipt(from: row))
+            }
+            receipts = values
+        }
+    }
     private struct WriteFailure: Error { let code: Int32; let renamed: Bool }
     // 固定目录对象；后续路径被rename或换成符号链接也不能改变读写目标。
     private let directoryFD: Int32
@@ -89,10 +111,9 @@ public actor InvocationStore {
         var values: [UUID: InvocationReceipt] = [:], recovered: Set<UUID> = []
         if let data = try Self.readBounded(directoryFD: pinnedDirectory, maximum: retention.maxLoadBytes) {
             let envelope = try JSONDecoder().decode(Envelope.self, from: data)
-            guard envelope.version == 1 || envelope.version == 2 else { throw InvocationStoreError.unsupportedVersion }
             for var receipt in envelope.receipts {
                 guard values[receipt.id] == nil else { throw InvocationStoreError.duplicateInvocation }
-                guard envelope.version == 2 || receipt.runAttempt == nil else { throw InvocationStoreError.invalidMetadata }
+                guard envelope.version >= 2 || receipt.runAttempt == nil else { throw InvocationStoreError.invalidMetadata }
                 guard receipt.startedAt.timeIntervalSinceReferenceDate.isFinite,
                       receipt.finishedAt?.timeIntervalSinceReferenceDate.isFinite != false else { throw InvocationStoreError.invalidMetadata }
                 try Self.validateWorkspaceContext(receipt.desktopWorkspace, commandID: receipt.commandID, id: receipt.id)
@@ -103,6 +124,9 @@ public actor InvocationStore {
                     recovered.insert(receipt.id)
                     receipt.state = .interrupted; receipt.finishedAt = now; receipt.exitCode = nil
                     receipt.message = receipt.message == "terminal.handoffIntent" ? "terminal.handoffUnknown" : "process.interrupted.unknown"
+                    if let budget = receipt.runTokenBudget {
+                        receipt.runTokenBudget = .init(maximumTokens: budget.maximumTokens, knownTokens: budget.knownTokens, completedTurns: budget.completedTurns, status: .usageUnavailable)
+                    }
                 }
                 values[receipt.id] = receipt
             }
@@ -136,9 +160,12 @@ public actor InvocationStore {
     @discardableResult public func begin(id: UUID, name: String, commandID: String? = nil, commandVersion: Int? = nil,
                       configurationFingerprint: String? = nil, caller: String? = nil, initialMessage: String = "",
                       desktopWorkspace: DesktopWorkspaceReceiptContext? = nil, desktopWorkspaceRun: DesktopWorkspaceRunContext? = nil,
-                      runDefinition: RunDefinitionReference? = nil,
+                      runDefinition: RunDefinitionReference? = nil, runTokenBudget: RunTokenBudgetSnapshot? = nil,
                       recovering check: RunRecoveryCheck? = nil) throws -> InvocationBeginReceipt {
         guard receipts[id] == nil else { throw InvocationStoreError.duplicateInvocation }
+        if let budget = runTokenBudget {
+            guard budget.isValid, budget.status == .awaitingUsage, budget.knownTokens == 0, budget.completedTurns == 0 else { throw InvocationStoreError.invalidMetadata }
+        }
         // 缺失但仍被引用的历史ID不能重用，否则会重绑旧祖先，甚至把合法历史写成坏图。
         guard !receipts.values.contains(where: { $0.runAttempt?.logicalRunID == id || $0.runAttempt?.recoveryOf == id }) else { throw InvocationStoreError.duplicateInvocation }
         guard (commandID?.utf8.count ?? 0) <= 512, (configurationFingerprint?.utf8.count ?? 0) <= 256,
@@ -169,7 +196,7 @@ public actor InvocationStore {
         }
         next[id] = .init(id: id, name: String(Self.boundedName(name).prefix(256)), state: .running,
             startedAt: now, message: initialMessage, commandID: commandID, commandVersion: commandVersion,
-            configurationFingerprint: configurationFingerprint, caller: caller, desktopWorkspace: desktopWorkspace, desktopWorkspaceRun: desktopWorkspaceRun, runAttempt: runAttempt)
+            configurationFingerprint: configurationFingerprint, caller: caller, desktopWorkspace: desktopWorkspace, desktopWorkspaceRun: desktopWorkspaceRun, runAttempt: runAttempt, runTokenBudget: runTokenBudget)
         if runAttempt != nil { try RunAttemptValidation.validate(next) }
         do {
             try commit(next); liveProtectedIDs.insert(id); if let parent { liveParentIDs.insert(parent) }
@@ -189,7 +216,7 @@ public actor InvocationStore {
         }
     }
 
-    public func finish(id: UUID, result: ProcessResult, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil, expectedRunStamp: RunAttemptStamp? = nil) throws {
+    public func finish(id: UUID, result: ProcessResult, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil, runTokenBudget: RunTokenBudgetSnapshot? = nil, expectedRunStamp: RunAttemptStamp? = nil) throws {
         guard let receipt = receipts[id] else { throw InvocationStoreError.missingInvocation }
         guard receipt.runAttempt == nil || expectedRunStamp != nil else { throw InvocationStoreError.staleRecovery }
         if let expectedRunStamp {
@@ -198,15 +225,23 @@ public actor InvocationStore {
             guard expectedRunStamp.invocationID == id, receipt.runAttempt?.revision == expectedRunStamp.revision,
                   receipt.runAttempt?.recordIdentity == expectedRunStamp.recordIdentity else { throw InvocationStoreError.staleRecovery }
         }
-        try finishResult(id: id, result: result, desktopWorkspaceResult: desktopWorkspaceResult)
+        try finishResult(id: id, result: result, desktopWorkspaceResult: desktopWorkspaceResult, runTokenBudget: runTokenBudget)
     }
 
-    private func finishResult(id: UUID, result: ProcessResult, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil) throws {
+    private func finishResult(id: UUID, result: ProcessResult, desktopWorkspaceResult: DesktopWorkspaceRunResult? = nil, runTokenBudget: RunTokenBudgetSnapshot? = nil) throws {
         guard var receipt = receipts[id] else { throw InvocationStoreError.missingInvocation }
         guard result.state.isTerminal else { throw InvocationStoreError.nonterminalResult }
         // 不覆盖取消/恢复后的终态；不确定的持久状态由显式维护重试确认。
         guard !receipt.state.isTerminal else { return }
         guard result.message.utf8.count <= 512 else { throw InvocationStoreError.invalidMetadata }
+        if let budget = runTokenBudget {
+            guard budget.isValid, let original = receipt.runTokenBudget, original.maximumTokens == budget.maximumTokens,
+                  original.policyVersion == budget.policyVersion else { throw InvocationStoreError.invalidMetadata }
+            receipt.runTokenBudget = budget
+        }
+        if let budget = receipt.runTokenBudget, budget.status == .awaitingUsage {
+            receipt.runTokenBudget = .init(maximumTokens: budget.maximumTokens, knownTokens: budget.knownTokens, completedTurns: budget.completedTurns, status: .usageUnavailable)
+        }
         try desktopWorkspaceResult?.validate(manifest: receipt.desktopWorkspaceRun)
         if let workspace = desktopWorkspaceResult { guard workspace.state == result.state else { throw InvocationStoreError.invalidMetadata } }
         receipt.desktopWorkspaceResult = desktopWorkspaceResult
@@ -313,6 +348,20 @@ public actor InvocationStore {
         var next = receipts
         for id in removed { next[id] = nil }
         return applyCleanup(next, protected: protected)
+    }
+
+    /// 清除已收口预算中的用量副本，保留冻结阈值；不修改在途meter或授予重新执行权限。
+    public func clearRecordedRunTokenUsage() throws -> Set<UUID> {
+        guard !pendingPersistence else { throw InvocationStoreError.recoveryPersistenceUncertain }
+        let protected = liveProtectedIDs
+        var next = receipts, cleared: Set<UUID> = []
+        for (id, receipt) in receipts where receipt.state.isTerminal && !protected.contains(id) {
+            guard let budget = receipt.runTokenBudget else { continue }
+            next[id]?.runTokenBudget = .init(maximumTokens: budget.maximumTokens, knownTokens: nil, completedTurns: 0, status: .usageUnavailable)
+            cleared.insert(id)
+        }
+        if !cleared.isEmpty { try commit(next) }
+        return cleared
     }
 
     /// 与清理共享actor事务，避免宿主快照之后新完成的子回执失去父运行保护。
@@ -428,8 +477,8 @@ public actor InvocationStore {
         return String(decoding: bytes[..<end], as: UTF8.self)
     }
     private static func encoded(_ values: [UUID: InvocationReceipt]) throws -> Data {
-        // 新恢复元数据使用v2：旧App明确拒读，避免忽略字段后重写并丢失恢复关联。
-        try JSONEncoder().encode(Envelope(version: values.values.contains { $0.runAttempt != nil } ? 2 : 1,
+        // v3保护预算事实，即使内建只读Agent没有typed runAttempt也不允许旧App忽略后重写。
+        try JSONEncoder().encode(Envelope(version: values.values.contains { $0.runTokenBudget != nil } ? 3 : (values.values.contains { $0.runAttempt != nil } ? 2 : 1),
             receipts: values.values.sorted { $0.id.uuidString < $1.id.uuidString }))
     }
     private static func readBounded(directoryFD: Int32, maximum: Int) throws -> Data? {

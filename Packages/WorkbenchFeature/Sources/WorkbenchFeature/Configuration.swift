@@ -29,7 +29,7 @@ public struct AIActionPreset: Identifiable, Codable, Sendable {
     public init(name: String, prompt: String, builtinKey: String? = nil, scene: AIScene = .text) { self.name = name; self.prompt = prompt; self.builtinKey = builtinKey; self.scene = scene }
 }
 public struct AppConfiguration: Codable, Sendable {
-    public var schemaVersion = 3
+    public var schemaVersion = 4
     public var preferences = CommandPreferences()
     public var launcherShortcut: HotkeyBinding? = HotkeyBinding()
     public var commandShortcuts: [String: HotkeyBinding] = [:]
@@ -78,16 +78,16 @@ public struct AppConfiguration: Codable, Sendable {
         self.init()
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let version = try c.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
-        guard (1...3).contains(version) else { throw CocoaError(.coderReadCorrupt) }
+        guard (1...4).contains(version) else { throw CocoaError(.coderReadCorrupt) }
         if version == 1, c.contains(.aiModelSettings) || c.contains(.aiSettingsRevision) { throw CocoaError(.coderReadCorrupt) }
         if version >= 2, !c.contains(.aiModelSettings) || !c.contains(.aiSettingsRevision) { throw CocoaError(.coderReadCorrupt) }
         if version < 3, c.contains(.savedApplicationActions) { throw CocoaError(.coderReadCorrupt) }
-        if version == 3, !c.contains(.savedApplicationActions) { throw CocoaError(.coderReadCorrupt) }
+        if version >= 3, !c.contains(.savedApplicationActions) { throw CocoaError(.coderReadCorrupt) }
         savedApplicationActions = version < 3 ? nil : try c.decodeIfPresent([SavedApplicationAction].self, forKey: .savedApplicationActions)
         if let actions = savedApplicationActions { _ = try ApplicationActionArchive(actions: actions).encoded() }
         aiModelSettings = version == 1 ? .legacy : try c.decode(AIModelSettings.self, forKey: .aiModelSettings)
         try aiModelSettings.validate()
-        // 旧配置迁移使用固定起点，重复只读迁移得到同一份值，首次保存再写v3。
+        // 旧配置迁移使用固定起点，重复只读迁移得到同一份值，首次保存再写当前schema。
         aiSettingsRevision = version == 1 ? UUID(uuidString: "00000000-0000-0000-0000-000000000001")! : try c.decode(UUID.self, forKey: .aiSettingsRevision)
         preferences = try c.decodeIfPresent(CommandPreferences.self, forKey: .preferences) ?? .init()
         if c.contains(.launcherShortcut) { launcherShortcut = try c.decodeIfPresent(HotkeyBinding.self, forKey: .launcherShortcut) }
@@ -96,7 +96,19 @@ public struct AppConfiguration: Codable, Sendable {
         disabledContributions = try c.decodeIfPresent(Set<String>.self,forKey:.disabledContributions) ?? []
         guard disabledContributions.count <= 64, disabledContributions.allSatisfy({$0.utf8.count <= 512}) else { throw CocoaError(.coderReadCorrupt) }
         aiActions = try c.decodeIfPresent([AIActionPreset].self, forKey: .aiActions) ?? []
-        agents = try c.decodeIfPresent([AgentDefinition].self, forKey: .agents) ?? agents
+        if c.contains(.agents), !(try c.decodeNil(forKey: .agents)) {
+            var rows = try c.nestedUnkeyedContainer(forKey: .agents)
+            var decoded: [AgentDefinition] = []
+            enum BudgetKey: String, CodingKey { case maxRunTokens }
+            while !rows.isAtEnd {
+                let row = try rows.superDecoder(), keys = try row.container(keyedBy: BudgetKey.self)
+                guard version >= 4 ? keys.contains(.maxRunTokens) : !keys.contains(.maxRunTokens) else { throw CocoaError(.coderReadCorrupt) }
+                let value = try AgentDefinition(from: row)
+                guard value.maxRunTokens.map({ (1...RunTokenBudgetSnapshot.maximumThreshold).contains($0) }) ?? true else { throw CocoaError(.coderReadCorrupt) }
+                decoded.append(value)
+            }
+            agents = decoded
+        } else if version >= 4 { throw CocoaError(.coderReadCorrupt) }
         activityEnabled = try c.decodeIfPresent(Bool.self, forKey: .activityEnabled) ?? false
         taskMaterialRetentionEnabled = try c.decodeIfPresent(Bool.self, forKey: .taskMaterialRetentionEnabled) ?? false
         workflows = try c.decodeIfPresent([WorkflowDefinition].self, forKey: .workflows) ?? []
@@ -122,7 +134,7 @@ public struct AppConfiguration: Codable, Sendable {
         migrateLegacyBuiltins()
     }
     public func encode(to encoder: any Encoder) throws {
-        guard schemaVersion == 3 else { throw CocoaError(.coderInvalidValue) }
+        guard schemaVersion == 4 else { throw CocoaError(.coderInvalidValue) }
         if let actions = savedApplicationActions { _ = try ApplicationActionArchive(actions: actions).encoded() }
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(schemaVersion, forKey: .schemaVersion)
@@ -170,6 +182,9 @@ public struct RunningTaskItem: Identifiable {
     public var output = ""
     public var outputIsIncomplete = false
     public var aiUsageSummary: AIUsageSummary?
+    public var runTokenBudget: RunTokenBudgetSnapshot?
+    public var agentRunContractFingerprint: String?
+    public var runTokenPauseReason: AgentRunTokenError?
     var receiptIsAI = false
     var runAttempt: RunAttemptMetadata?
     public var exitCode: Int32?

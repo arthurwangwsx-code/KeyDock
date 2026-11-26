@@ -45,8 +45,9 @@ extension WorkbenchModel {
             let commandContract: FrozenCommandContribution?
             if selected.isEmpty { commandContract = nil } else { commandContract = try FrozenCommandContribution(requireCommandContribution()) }
             let settings = try resolveAISettings(scene: .agent, override: definition.modelOptions ?? .init(), legacyModelOverride: definition.modelOptions == nil ? definition.modelOverride : "", requiresTools: true)
+            let contract = try freezeAgentRunContract(definition, settings: settings)
             let service = try provider(settings: settings)
-            let authorization = try authorizeHostAction(id:"agent."+definition.id.uuidString,operation:.runAgent,resource:settings.fingerprint+"|"+input,availableContext:[.explicitInput],modelOverride:definition.modelOverride,invocation:id,aiSettings:settings)
+            let authorization = try authorizeHostAction(id:"agent."+definition.id.uuidString,operation:.runAgent,resource:contract.fingerprint+"|"+input,availableContext:[.explicitInput],modelOverride:definition.modelOverride,invocation:id,aiSettings:settings)
             let sources = configuration.mcpServers.filter { definition.allowedMCPServerIDs.contains($0.id) && $0.enabled && !mcpSessionDisabled.contains($0.id) }
             guard Set(selected.map(\.id)) == definition.allowedCommandIDs, Set(sources.map(\.id)) == definition.allowedMCPServerIDs else { throw AgentToolError.invalidDefinition }
             let time = CurrentTimeTool()
@@ -61,6 +62,7 @@ extension WorkbenchModel {
             tasks.insert(RunningTaskItem(id:id,title:definition.name,state:.running,draftID:draft.id,modelName:service.configuration.model),at:0)
             AIInputOrigin(draft).apply(to: &tasks[0])
             tasks[0].aiUsageSummary = .pending; tasks[0].receiptIsAI = true; aiTaskIDs.insert(id)
+            tasks[0].runTokenBudget = contract.initialBudget; tasks[0].agentRunContractFingerprint = contract.fingerprint
             let materialCapture = beginTaskMaterialCapture(id, definition: runDefinition, input: input)
             registerActivity(id,commandID:"agent."+definition.id.uuidString,category:.agent)
             taskHandles[id] = Task { [weak self] in
@@ -75,7 +77,7 @@ extension WorkbenchModel {
                 var owner: InvocationWorkerOwnership?
                 var broker: ScopedToolBroker?
                 do {
-                    owner = try await beginAIReceipt(id:id,kind:.agent,authorization:authorization,runDefinition:runDefinition,attempt:attempt,materialCapture:materialCapture,configurationFingerprint:settings.fingerprint); started = true
+                    owner = try await beginAIReceipt(id:id,kind:.agent,authorization:authorization,runDefinition:runDefinition,attempt:attempt,materialCapture:materialCapture,configurationFingerprint:contract.fingerprint,runTokenBudget:contract.initialBudget); started = true
                     try Task.checkCancellation()
                     guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
                     let mcpTools = try await prepareMCPTools(definition,sources:sources,runID:id,attempt:attempt)
@@ -83,9 +85,9 @@ extension WorkbenchModel {
                     guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
                     try attempt?.willDispatch(in: self)
                     let tools = frozenTools+mcpTools
-                    let routing = try ScopedToolBroker(runID:id,tools:tools,journal:agentToolStore) { [weak self] proposal in guard let self else { return false }; return try await self.requestApproval(proposal) }
+                    let routing = try ScopedToolBroker(runID:id,tools:tools,journal:agentToolStore,runContractFingerprint:contract.fingerprint,maxRunTokens:contract.maxRunTokens) { [weak self] proposal in guard let self else { return false }; return try await self.requestApproval(proposal) }
                     broker = routing
-                    let runner = BoundedAgentRunner(provider:service,broker:routing,maxToolCalls:definition.maxToolCalls,maxTurns:definition.maxTurns,wallTimeout:.seconds(definition.timeoutSeconds),maxOutputBytes:TaskTextLimits.outputBytes)
+                    let runner = BoundedAgentRunner(provider:service,broker:routing,maxToolCalls:definition.maxToolCalls,maxTurns:definition.maxTurns,wallTimeout:.seconds(definition.timeoutSeconds),maxOutputBytes:TaskTextLimits.outputBytes,maxRunTokens:contract.maxRunTokens,perRequestOutputLimit:contract.perRequestOutputLimit)
                     for try await event in runner.run(messages:[.init(role:"system",content:definition.instructions + " " + AIResponseLanguage(preference:settings.outputLanguage).finalResponseInstruction),.init(role:"user",content:input)],allowedTools:Set(tools.map{$0.definition.name})) {
                         try Task.checkCancellation()
                         switch event {
@@ -94,6 +96,7 @@ extension WorkbenchModel {
                         case .toolFinished(_,let result): try appendAIOutput(id,text:result+"\n")
                         case .usage(let value): mergeUsage(value,into:&usage,id:id)
                         case .usageUnknown(let attempt): usage.markUnknown(attemptID:attempt)
+                        case .tokenBudget(let snapshot): if let index = tasks.firstIndex(where: { $0.id == id }) { tasks[index].runTokenBudget = snapshot }
                         case .completed: break
                         }
                     }
@@ -107,18 +110,23 @@ extension WorkbenchModel {
                     markIncompleteAIError(error,id:id)
                     let uncertain = (await broker?.unknownInvocationCount() ?? 0) > 0 || error is MCPSetupError || (error as? AgentToolError) == .receiptUnavailable
                     let cancelled = Task.isCancelled || error is CancellationError
-                    let budget = (error as? AIProviderError) == .toolBudgetExceeded
-                    let state: TaskStatus = uncertain ? .interrupted : (pausedAgentIDs.contains(id) || budget ? .paused : (timedOutTaskIDs.contains(id) ? .timedOut : (cancelled ? .cancelled:.failed)))
+                    let tokenError = error as? AgentRunTokenError
+                    let budget = (error as? AIProviderError) == .toolBudgetExceeded || tokenError == .thresholdReached || tokenError == .usageUnavailable
+                    let state: TaskStatus = uncertain ? .interrupted : (pausedAgentIDs.contains(id) ? .paused : (timedOutTaskIDs.contains(id) ? .timedOut : (cancelled ? .cancelled : (budget ? .paused : .failed))))
                     outcome = state == .paused ? "paused" : (uncertain ? "interrupted" : (state == .timedOut ? "timedOut" : (cancelled ? "cancelled":"failed")))
                     updateTask(id,state:state,finished:true)
                     if let index = tasks.firstIndex(where:{$0.id == id}) {
                         if uncertain { tasks[index].noticeMessage = noticeKey("A tool may have effects. Check the result before starting a new run; nothing was replayed.") }
-                        else if state == .paused { tasks[index].noticeMessage = noticeKey("Agent paused. A new attempt rechecks scope and may repeat completed work; nothing resumes automatically.") }
+                        else if state == .paused {
+                            tasks[index].runTokenPauseReason = tokenError
+                            tasks[index].noticeMessage = tokenError.map(agentTokenPauseNotice) ?? noticeKey("Agent paused. A new attempt rechecks scope and may repeat completed work; nothing resumes automatically.")
+                        }
                         else if !cancelled { tasks[index].noticeMessage = error as? AgentToolError == .denied ? noticeKey("Tool call was denied. No further step was run.") : aiErrorNotice(error) }
                     }
                 }
                 cancelApprovals(runID:id)
                 await recordUsage(id:id,endpoint:service.configuration.endpoint,model:service.configuration.model,purpose:"agent."+definition.id.uuidString,observations:usage,outcome:outcome,recorder:service.usageRecorder)
+                finalizeRunTokenBudget(id)
                 if started { await finishAIReceipt(id, owner: owner) }; await agentToolStore.releaseParentProtection(for:id); finishExecutionReservation(id, owner: owner)
             }
             onOpenWorkspace?(.tasks(id)); return id
@@ -134,10 +142,10 @@ extension WorkbenchModel {
     }
 
     func requestApproval(_ proposal: AgentToolApproval) async throws -> Bool {
-        guard !isShuttingDown, !Task.isCancelled, tasks.first(where:{$0.id == proposal.runID})?.canCancel == true else { throw CancellationError() }
+        guard !isShuttingDown, !Task.isCancelled, tasks.first(where:{$0.id == proposal.runID})?.canCancel == true, approvalMatchesFrozenRun(proposal) else { throw CancellationError() }
         return await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in
-                guard !Task.isCancelled, !isShuttingDown, !cancelledTaskIDs.contains(proposal.runID) else { continuation.resume(returning:false); return }
+                guard !Task.isCancelled, !isShuttingDown, !cancelledTaskIDs.contains(proposal.runID), approvalMatchesFrozenRun(proposal) else { continuation.resume(returning:false); return }
                 pendingApprovals.append(proposal); approvalContinuations[proposal.id] = continuation
                 updateTask(proposal.runID,state:.awaitingApproval)
             }
@@ -146,7 +154,7 @@ extension WorkbenchModel {
     public func resolveApproval(_ id: UUID, approved: Bool) {
         guard let proposal = pendingApprovals.first(where:{$0.id == id}) else { return }
         pendingApprovals.removeAll { $0.id == id }
-        let permitted = approved && !isShuttingDown && !cancelledTaskIDs.contains(proposal.runID) && tasks.first(where:{$0.id == proposal.runID})?.canCancel == true
+        let permitted = approved && !isShuttingDown && !cancelledTaskIDs.contains(proposal.runID) && tasks.first(where:{$0.id == proposal.runID})?.canCancel == true && approvalMatchesFrozenRun(proposal)
         if tasks.first(where:{$0.id == proposal.runID})?.isRunning == true { updateTask(proposal.runID,state:.running) }
         approvalContinuations.removeValue(forKey:id)?.resume(returning:permitted)
     }

@@ -70,7 +70,7 @@ import MacAdapters
         let changes: [(inout AgentDefinition) -> Void] = [
             { $0.id = UUID() }, { $0.version += 1 }, { $0.name += " " }, { $0.instructions += " " }, { $0.modelOverride = "model" },
             { $0.allowedCommandIDs.remove(ids[0]) }, { $0.allowedMCPServerIDs.remove(ids[0]) }, { $0.allowedMCPToolNames.remove("tool_a") },
-            { $0.maxToolCalls += 1 }, { $0.maxTurns += 1 }, { $0.timeoutSeconds += 1 }
+            { $0.maxToolCalls += 1 }, { $0.maxTurns += 1 }, { $0.timeoutSeconds += 1 }, { $0.maxRunTokens = 100 }
         ]
         for change in changes { var changed = value; change(&changed); #expect(try RunDefinitionFingerprint.reference(changed).fingerprint != baseline.fingerprint) }
         var invalid = value; invalid.version = 0

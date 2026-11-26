@@ -70,9 +70,9 @@ class ConfigurationCompatibilityTests(unittest.TestCase):
             self.assertEqual(configuration_readers(old), [1])
         modern = current_data_compatibility()
         self.assertEqual(modern["schemaVersion"], 3)
-        self.assertEqual(configuration_readers(modern), [1,2,3])
-        self.assertEqual(modern["configuration"]["writeVersions"], [3])
-        modern["configuration"]["writeVersions"] = [4]
+        self.assertEqual(configuration_readers(modern), [1,2,3,4])
+        self.assertEqual(modern["configuration"]["writeVersions"], [4])
+        modern["configuration"]["writeVersions"] = [5]
         with self.assertRaises(PipelineError): validate_data_compatibility(modern)
 
     def test_v3_nullable_canonical_actions_and_legacy_field_rejection(self):
@@ -88,4 +88,22 @@ class ConfigurationCompatibilityTests(unittest.TestCase):
             with self.assertRaises(PipelineError): compatibility.probe_configuration(self.root)
         for version in (1, 2):
             self.write(json.dumps(dict(base, schemaVersion=version, savedApplicationActions=None)).encode())
+            with self.assertRaises(PipelineError): compatibility.probe_configuration(self.root)
+
+    def test_v4_requires_explicit_nullable_agent_threshold_and_preserves_bytes(self):
+        base = {"schemaVersion":4, "aiModelSettings":{}, "aiSettingsRevision":"00000000-0000-0000-0000-000000000001", "savedApplicationActions":None}
+        for threshold in (None, 1, 1_000_000_000):
+            body = json.dumps(dict(base, agents=[{"maxRunTokens":threshold}])).encode()
+            path = self.write(body)
+            self.assertEqual(compatibility.probe_configuration(self.root), 4)
+            self.assertEqual(path.read_bytes(), body)
+        for agents in (None, {}, [{}], [{"maxRunTokens":True}], [{"maxRunTokens":0}], [{"maxRunTokens":1.5}], [{"maxRunTokens":1_000_000_001}]):
+            body = json.dumps(dict(base, agents=agents)).encode(); path = self.write(body)
+            with self.subTest(agents=agents), self.assertRaises(PipelineError): compatibility.probe_configuration(self.root)
+            self.assertEqual(path.read_bytes(), body)
+        for version in (1,2,3):
+            body = dict(base, schemaVersion=version, agents=[{"maxRunTokens":None}])
+            if version < 3: body.pop("savedApplicationActions")
+            if version == 1: body.pop("aiModelSettings"); body.pop("aiSettingsRevision")
+            self.write(json.dumps(body).encode())
             with self.assertRaises(PipelineError): compatibility.probe_configuration(self.root)

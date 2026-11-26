@@ -33,6 +33,25 @@ P2 系统 MUST 记录有副作用调用的 intent/result，重启后的 unknown 
 - **WHEN** run 重启时存在 intent 但无完成回执
 - **THEN** 系统标记 interrupted/结果未定并要求核对，不能静默再次写入
 
+### Requirement: 冻结的跨轮token停止阈值
+系统 MUST 将定义级可选已报告token阈值及内建只读Agent固定阈值纳入实际运行合同，按请求身份合并input+output累计，并在工具及后续模型派发前检查。它不是账单硬上限，不自动加额度或重试；原可测费用预算义务继续保留。
+
+#### Scenario: 已达阈值或用量未确认
+- **WHEN** 完整响应返回后总量达到阈值且仍需工具、超过阈值，或本轮缺报／不完整／身份冲突／回退／delta／溢出无法确认消耗
+- **THEN** 运行暂停并保留输出和真实已知用量，后续工具及模型请求均为零；同轮可补齐partial不提前失败，恰好达线的最终答案可完成
+
+#### Scenario: 准确下一轮输出额度
+- **WHEN** Agent仍有已确认剩余额度并提交工具结果
+- **THEN** Chat及Responses仅将下一次输出上限缩为冻结每请求上限与剩余量的较小值，历史／callID／phase／reasoning保持准确且先验证后修改
+
+#### Scenario: 预算编辑及旧审批
+- **WHEN** 运行中编辑profile预算、运行暂停／取消，或新尝试重新审阅
+- **THEN** 旧运行继续使用原冻结阈值，旧审批不能派发已关闭run；新尝试核对当前定义／预算并创建新UUID和空累计器，不恢复旧队列
+
+#### Scenario: schema4显式预算与回退
+- **WHEN** 保存新配置或旧reader尝试安装／回退
+- **THEN** schema4 Agent显式编码nullable阈值，旧1–3不接纳新字段且合法旧定义迁移为关闭阈值；缺失／非法新字段拒绝，签名reader门禁防止旧版重写丢弃预算
+
 ### Requirement: 第三方协议边界
 P3 系统 SHALL 区分 MCP 工具适配与 ACP 外部 Agent 适配，不将进程隔离描述为 OS 权限沙箱。
 

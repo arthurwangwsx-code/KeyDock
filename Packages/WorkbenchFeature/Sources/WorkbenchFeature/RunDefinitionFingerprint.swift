@@ -32,6 +32,7 @@ enum RunDefinitionFingerprint {
     }
     private struct ActionV2: Encodable { let legacy: Action; let scene: AIScene?; let modelOptions: AIModelOptions? }
     private struct AgentV2: Encodable { let legacy: Agent; let modelOptions: AIModelOptions }
+    private struct AgentV3: Encodable { let legacy: Agent; let modelOptions: AIModelOptions?; let maxRunTokens: Int; let tokenBudgetPolicyVersion: Int }
     private struct Workflow: Encodable {
         struct Step: Encodable {
             let id: UUID
@@ -77,6 +78,11 @@ enum RunDefinitionFingerprint {
             allowedMCPServerIDs: value.allowedMCPServerIDs.sorted { $0.uuidString < $1.uuidString },
             allowedMCPToolNames: value.allowedMCPToolNames.sorted(by: utf8Less), maxToolCalls: value.maxToolCalls,
             maxTurns: value.maxTurns, timeoutSeconds: value.timeoutSeconds)
+        if let threshold = value.maxRunTokens {
+            return try reference(kind: .agent, id: value.id, version: value.version,
+                definition: AgentV3(legacy: projected, modelOptions: value.modelOptions, maxRunTokens: threshold,
+                    tokenBudgetPolicyVersion: RunTokenBudgetSnapshot.currentPolicyVersion), projectionVersion: 3)
+        }
         if let options = value.modelOptions {
             return try reference(kind: .agent, id: value.id, version: value.version, definition: AgentV2(legacy: projected, modelOptions: options), projectionVersion: 2)
         }

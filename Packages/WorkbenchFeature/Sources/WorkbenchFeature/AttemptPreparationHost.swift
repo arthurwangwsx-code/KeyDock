@@ -135,6 +135,7 @@ extension WorkbenchModel {
             lines.append(.init(kind: .budget, value: String(value.timeoutSeconds) + " s"))
             lines.append(.init(kind: .turns, value: String(value.maxTurns)))
             lines.append(.init(kind: .calls, value: String(value.maxToolCalls)))
+            lines.append(.init(kind: .budget, value: value.maxRunTokens.map { L("Reported token threshold") + ": " + String($0) } ?? L("Run token threshold is off")))
         case .workflow(let value):
             let plan = try compileWorkflow(value)
             let commands = Set(value.steps.compactMap { if case .savedCommand(let id) = $0.operation { id } else { nil as UUID? } })
@@ -180,7 +181,7 @@ extension WorkbenchModel {
     func beginOwnedReceipt(store: InvocationStore, id: UUID, name: String, authorization: ExecutionRequest,
                            configurationFingerprint: String? = nil, initialMessage: String = "",
                            runDefinition: RunDefinitionReference? = nil, attempt: AttemptExecutionContext? = nil,
-                           materialCapture: TaskMaterialCapture? = nil) async throws -> InvocationWorkerOwnership {
+                           materialCapture: TaskMaterialCapture? = nil, runTokenBudget: RunTokenBudgetSnapshot? = nil) async throws -> InvocationWorkerOwnership {
         var owner: InvocationWorkerOwnership?
         do {
             // 新尝试在取消／关闭时不得消费旧审阅；普通已接纳任务仍写入取消终态所需的intent。
@@ -188,7 +189,7 @@ extension WorkbenchModel {
             if let attempt { guard attempt.id == id, attempt.review.definition == runDefinition else { throw AttemptPreparationError.changed } }
             let begun = try await store.begin(id: id, name: name, commandID: authorization.commandID,
                 commandVersion: authorization.commandVersion, configurationFingerprint: configurationFingerprint,
-                caller: authorization.caller.rawValue, initialMessage: initialMessage, runDefinition: runDefinition,
+                caller: authorization.caller.rawValue, initialMessage: initialMessage, runDefinition: runDefinition, runTokenBudget: runTokenBudget,
                 recovering: attempt?.review.recovery)
             let ownership = InvocationWorkerOwnership(store: store, begun: begun); owner = ownership
             publishAttempt(begun, context: attempt)

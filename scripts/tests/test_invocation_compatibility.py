@@ -30,7 +30,7 @@ class CapabilityTests(unittest.TestCase):
             with self.subTest(versions=versions), self.assertRaises(PipelineError): validate_data_compatibility(value)
         value = current_data_compatibility(); value["invocationEnvelope"]["readVersions"] = [1]
         with self.assertRaises(PipelineError): validate_data_compatibility(value)
-        value = current_data_compatibility(); value["invocationEnvelope"]["readVersions"] = [2, 1]
+        value = current_data_compatibility(); value["invocationEnvelope"]["readVersions"] = [3, 2, 1]
         self.assertEqual(validate_data_compatibility(value), current_data_compatibility())
 
     def test_schema_one_has_no_material_readers_and_schema_two_lists_are_strict(self):
@@ -71,7 +71,7 @@ class InvocationDataTests(unittest.TestCase):
 
     def test_malformed_unknown_nonregular_and_oversized_entries_are_refused(self):
         path = self.file()
-        for body in (b"broken", b'{"version":3,"receipts":[]}', b'{"version":true,"receipts":[]}',
+        for body in (b"broken", b'{"version":4,"receipts":[]}', b'{"version":true,"receipts":[]}',
                      b'{"version":1,"version":2,"receipts":[]}', b'{"version":1,"receipts":[{"runAttempt":{}}]}',
                      b'{"version":2,"receipts":[],"n":NaN}', b'{"version":2,"receipts":[],"n":1e999}'):
             path.write_bytes(body)
@@ -89,6 +89,17 @@ class InvocationDataTests(unittest.TestCase):
         with self.assertRaises(PipelineError): compatibility.probe_versions(self.root)
         (folder / "invocations.json").unlink(); folder.rmdir(); folder.symlink_to(target.parent, target_is_directory=True)
         with self.assertRaises(PipelineError): compatibility.probe_versions(self.root)
+
+    def test_budget_v3_is_numeric_only_and_cannot_be_smuggled_into_older_envelopes(self):
+        path = self.file()
+        budget = {"policyVersion":1, "maximumTokens":34, "knownTokens":40, "completedTurns":2, "status":"thresholdReached"}
+        body = json.dumps({"version":3,"receipts":[{"runTokenBudget":budget}]}).encode(); path.write_bytes(body)
+        self.assertEqual(compatibility.probe_versions(self.root)["invocations"], 3)
+        self.assertEqual(path.read_bytes(), body)
+        for version, invalid in [(1,budget),(2,budget),(1,None),(2,None),(3,None),(3,dict(budget,knownTokens=True)),(3,dict(budget,maximumTokens=0)),(3,dict(budget,status="verified")),(3,dict(budget,completedTurns=0)),(3,dict(budget,knownTokens=2**63))]:
+            body = json.dumps({"version":version,"receipts":[{"runTokenBudget":invalid}]}).encode(); path.write_bytes(body)
+            with self.subTest(version=version, invalid=invalid), self.assertRaises(PipelineError): compatibility.probe_versions(self.root)
+            self.assertEqual(path.read_bytes(), body)
 
     def test_subdirectory_rebind_and_missing_markers_are_rechecked(self):
         for mode in ("rebind", "missing-directory", "missing-file"):

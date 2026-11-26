@@ -293,7 +293,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         if let reviewConfiguration { bootstrapConfiguration = reviewConfiguration }
         else if FileManager.default.fileExists(atPath: url.path) {
             let decoded = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: url))
-            guard decoded.schemaVersion == 3 else { throw CocoaError(.coderReadCorrupt) }
+            guard decoded.schemaVersion == 4 else { throw CocoaError(.coderReadCorrupt) }
             bootstrapConfiguration = decoded
             statisticsEnabled = decoded.activityEnabled
         } else {

@@ -16,10 +16,10 @@ enum AITaskReceiptError: Error { case intentUnavailable }
 extension WorkbenchModel {
     @discardableResult func beginAIReceipt(id: UUID, kind: AITaskReceiptKind, authorization: ExecutionRequest,
                         runDefinition: RunDefinitionReference? = nil, attempt: AttemptExecutionContext? = nil,
-                        materialCapture: TaskMaterialCapture? = nil, configurationFingerprint: String? = nil) async throws -> InvocationWorkerOwnership {
+                        materialCapture: TaskMaterialCapture? = nil, configurationFingerprint: String? = nil, runTokenBudget: RunTokenBudgetSnapshot? = nil) async throws -> InvocationWorkerOwnership {
         try await beginOwnedReceipt(store: aiInvocationStore, id: id, name: kind.rawValue, authorization: authorization,
                                     configurationFingerprint: configurationFingerprint,
-                                    runDefinition: runDefinition, attempt: attempt, materialCapture: materialCapture)
+                                    runDefinition: runDefinition, attempt: attempt, materialCapture: materialCapture, runTokenBudget: runTokenBudget)
     }
 
     func finishAIReceipt(_ id: UUID, owner: InvocationWorkerOwnership? = nil) async {
@@ -32,12 +32,14 @@ extension WorkbenchModel {
         case .interrupted, .paused: state = .interrupted
         default: state = .failed
         }
-        let message = task.status == .draftReady ? "ai.proposal.draftReady" : "ai." + task.status.rawValue
+        var message = task.status == .draftReady ? "ai.proposal.draftReady" : "ai." + task.status.rawValue
+        if task.status == .paused, task.runTokenPauseReason == .thresholdReached { message = "ai.paused.tokens" }
+        if task.status == .paused, task.runTokenPauseReason == .usageUnavailable { message = "ai.paused.usage" }
         do {
             if let owner {
                 guard owner.id == id else { throw InvocationStoreError.staleRecovery }
-                try await owner.finish(.init(state: state, message: message))
-            } else { try await aiInvocationStore.finish(id: id, result: .init(state: state, message: message)) }
+                try await owner.finish(.init(state: state, message: message), runTokenBudget: task.runTokenBudget)
+            } else { try await aiInvocationStore.finish(id: id, result: .init(state: state, message: message), runTokenBudget: task.runTokenBudget) }
         }
         catch {
             // 实际模型结果不因落盘失败被改写；旧 intent 仍是重启时的保守 unknown 围栏。
@@ -55,13 +57,19 @@ extension WorkbenchModel {
         guard !tasks.contains(where: { $0.id == receipt.id }) else { return }
         guard !isShuttingDown, !isClearingHistory, makeSessionRoom(taskSlots: 1) else { return }
         let kind = AITaskReceiptKind(rawValue: receipt.name) ?? .text
-        let status: TaskStatus = receipt.message == "ai.proposal.draftReady" ? .draftReady : (receipt.message == "ai.paused" ? .paused : stateLabel(receipt.state))
+        let paused = ["ai.paused", "ai.paused.tokens", "ai.paused.usage"].contains(receipt.message)
+        let status: TaskStatus = receipt.message == "ai.proposal.draftReady" ? .draftReady : (paused ? .paused : stateLabel(receipt.state))
         var task = RunningTaskItem(id: receipt.id, title: L(kind.rawValue), state: status,
             output: "",
             startedAt: receipt.startedAt, finishedAt: receipt.finishedAt, titleKey: kind.rawValue)
         task.restoredFromReceipt = true
         task.receiptIsAI = true
         task.runAttempt = receipt.runAttempt
+        if let budget = receipt.runTokenBudget {
+            task.runTokenBudget = budget.status == .awaitingUsage ? .init(maximumTokens: budget.maximumTokens, knownTokens: budget.knownTokens, completedTurns: budget.completedTurns, status: .usageUnavailable) : budget
+        }
+        if receipt.message == "ai.paused.tokens" { task.runTokenPauseReason = .thresholdReached; task.noticeMessage = agentTokenPauseNotice(.thresholdReached) }
+        if receipt.message == "ai.paused.usage" { task.runTokenPauseReason = .usageUnavailable; task.noticeMessage = agentTokenPauseNotice(.usageUnavailable) }
         if kind != .context { task.aiUsageSummary = .unknown }
         task.outputIsIncomplete = status == .interrupted
         if status == .interrupted { task.noticeMessage = noticeKey("Previous execution was interrupted. Outcome is unknown; it was not replayed.") }

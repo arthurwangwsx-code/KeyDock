@@ -103,6 +103,21 @@ def _bounded_float(value):
     return result
 
 
+def _valid_run_budget(value):
+    if not isinstance(value, dict) or set(value) != {"policyVersion", "maximumTokens", "knownTokens", "completedTurns", "status"}:
+        return False
+    version, maximum, known, turns, state = (value[key] for key in ("policyVersion", "maximumTokens", "knownTokens", "completedTurns", "status"))
+    if type(version) is not int or version != 1 or type(maximum) is not int or not 1 <= maximum <= 1_000_000_000 or type(turns) is not int or not 0 <= turns <= 16:
+        return False
+    if known is not None and (type(known) is not int or not 0 <= known <= 9_223_372_036_854_775_807):
+        return False
+    if state == "usageUnavailable": return True
+    if known is None: return False
+    if state == "awaitingUsage": return True
+    if turns == 0: return False
+    return (state == "verified" and known < maximum) or (state == "thresholdReached" and known >= maximum)
+
+
 def _read_version(parent):
     descriptor = None
     try:
@@ -123,10 +138,13 @@ def _read_version(parent):
             raise PipelineError("Invocation metadata changed while checking")
         value = json.loads(b"".join(chunks), object_pairs_hook=_unique_object, parse_constant=_reject_constant,
                            parse_int=_bounded_integer, parse_float=_bounded_float)
-        if not isinstance(value, dict) or type(value.get("version")) is not int or value["version"] not in (1, 2) or not isinstance(value.get("receipts"), list) or not all(isinstance(row, dict) for row in value["receipts"]):
+        if not isinstance(value, dict) or type(value.get("version")) is not int or value["version"] not in (1, 2, 3) or not isinstance(value.get("receipts"), list) or not all(isinstance(row, dict) for row in value["receipts"]):
             raise ValueError("unsupported envelope")
         if value["version"] == 1 and any(row.get("runAttempt") is not None for row in value["receipts"]):
             raise ValueError("typed data in a legacy envelope")
+        for row in value["receipts"]:
+            if "runTokenBudget" in row and (value["version"] != 3 or not _valid_run_budget(row["runTokenBudget"])):
+                raise ValueError("invalid run token budget")
         return value["version"]
     except (OSError, ValueError, UnicodeError, RecursionError):
         raise PipelineError("Invocation metadata is unavailable, changed, malformed or unsupported; data was preserved") from None

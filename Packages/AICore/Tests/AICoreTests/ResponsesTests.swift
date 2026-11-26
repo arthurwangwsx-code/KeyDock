@@ -79,6 +79,58 @@ private func provider(_ transport: any AIHTTPTransport, recorder: AIUsageRecorde
 }
 
 @Suite struct ResponsesTests {
+    @Test func tokenThresholdStopsBeforeToolAndPreservesSuccessfulModelUsage() async throws {
+        let transport = ResponsesTransport([try turn([reasoning("opaque-budget"), call()])])
+        let broker = CountingBroker(), recorder = AIUsageRecorder()
+        let runner = BoundedAgentRunner(provider: provider(transport, recorder: recorder), broker: broker, maxRunTokens: 26, perRequestOutputLimit: 4096)
+        do {
+            for try await _ in runner.run(messages: [.init(role: "user", content: "Synthetic budget")], allowedTools: ["current_time"]) { }
+            Issue.record("Threshold must stop pending tools")
+        } catch { #expect(error as? AgentRunTokenError == .thresholdReached) }
+        #expect(await broker.count() == 0)
+        let bodies = await transport.bodies(); #expect(bodies.count == 1 && bodies.first?["max_output_tokens"] == .number(26))
+        let recorded = await recorder.closeAndSnapshot()
+        #expect(recorded.calls.count == 1 && recorded.calls.first?.outcome == .succeeded && recorded.calls.first?.hasUnknownUsage == false)
+        #expect(recorded.calls.first?.usage?.inputTokens == 17 && recorded.calls.first?.usage?.outputTokens == 9)
+    }
+    @Test func tokenThresholdCapsContinuationWithoutChangingOpaqueHistoryAndCanFinishExactlyAtLine() async throws {
+        let transport = ResponsesTransport([try turn([reasoning("opaque-budget-exact"), call()]), try turn([message("Final exact answer")], id: "resp_2")])
+        let broker = CountingBroker()
+        let runner = BoundedAgentRunner(provider: provider(transport), broker: broker, maxRunTokens: 52, perRequestOutputLimit: 4096)
+        var text = "", completed = 0
+        for try await event in runner.run(messages: [.init(role: "user", content: "Synthetic budget")], allowedTools: ["current_time"]) {
+            switch event { case .text(let value): text += value; case .completed: completed += 1; default: break }
+        }
+        #expect(text == "Final exact answer" && completed == 1)
+        let bodies = await transport.bodies(); #expect(bodies.count == 2)
+        #expect(bodies[0]["max_output_tokens"] == .number(52) && bodies[1]["max_output_tokens"] == .number(26))
+        let history = try #require(bodies[1]["input"]?.arrayValue)
+        #expect(history[1].objectValue?["encrypted_content"] == .string("opaque-budget-exact"))
+        #expect(history[2].objectValue?["call_id"] == .string("call_1"))
+        #expect(history[3].objectValue?["call_id"] == .string("call_1") && history[3].objectValue?["output"] == .string("synthetic-time-call_1"))
+    }
+    @Test func missingUsageWithRecorderStillPausesBeforeAnyToolOrNextHTTP() async throws {
+        let transport = ResponsesTransport([try turn([call()], usage: false)])
+        let broker = CountingBroker(), recorder = AIUsageRecorder()
+        let runner = BoundedAgentRunner(provider: provider(transport, recorder: recorder), broker: broker, maxRunTokens: 100)
+        do {
+            for try await _ in runner.run(messages: [.init(role: "user", content: "Synthetic budget")], allowedTools: ["current_time"]) { }
+            Issue.record("Missing usage must not become zero")
+        } catch { #expect(error as? AgentRunTokenError == .usageUnavailable) }
+        #expect(await broker.count() == 0)
+        #expect(await transport.bodies().count == 1)
+        let recorded = await recorder.closeAndSnapshot()
+        #expect(recorded.calls.first?.outcome == .succeeded && recorded.calls.first?.hasUnknownUsage == true)
+    }
+    @Test(arguments: [0, 4097]) func invalidContinuationCapNeverReachesTransport(_ cap: Int) async throws {
+        let transport = ResponsesTransport([try turn([call()])]), conversation = provider(transport).makeConversation()
+        for try await _ in await conversation.stream(.initial(.init(messages: [.init(role: "user", content: "Synthetic")], tools: [CurrentTimeTool().definition]))) { }
+        do {
+            for try await _ in await conversation.stream(.toolOutputs([.init(callID: "call_1", output: "Synthetic")], maxOutputTokens: cap)) { }
+            Issue.record("Invalid cap was accepted")
+        } catch { #expect(error as? AIProviderError == .invalidRequest) }
+        await conversation.close(); #expect(await transport.bodies().count == 1)
+    }
     @Test func threeTurnsPreserveExactOpaqueOrderAndPhaseWithCallIDs() async throws {
         let transport = ResponsesTransport([try turn([reasoning("opaque-final-1"), message("private commentary", id: "msg_c", phase: "commentary"), call()]),
             try turn([reasoning("opaque-final-2"), call("call_2")], id: "resp_2"), try turn([message("你好 final 🌏")], id: "resp_3")])

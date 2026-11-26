@@ -225,7 +225,24 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var selectedTaskID: UUID? { didSet { updateVisibleReferences() } }
     @Published public var draft: AIDraftDocument? { didSet { updateVisibleReferences() } }
     @Published public var agentInput = ""
-    @Published public var agentProfile = AgentDefinition()
+    private var editingAgentTokenThreshold = false
+    @Published var agentRunTokenText = "32000"
+    @Published public var agentProfile = AgentDefinition() {
+        didSet {
+            if !editingAgentTokenThreshold && (agentProfile.id != oldValue.id || agentProfile.version != oldValue.version || agentProfile.maxRunTokens != oldValue.maxRunTokens) {
+                agentRunTokenText = agentProfile.maxRunTokens.map(String.init) ?? "32000"
+            }
+        }
+    }
+    var hasValidAgentTokenThresholdDraft: Bool { agentProfile.maxRunTokens.map { (1...RunTokenBudgetSnapshot.maximumThreshold).contains($0) } ?? true }
+    func setAgentTokenThresholdText(_ text: String) {
+        editingAgentTokenThreshold = true; defer { editingAgentTokenThreshold = false }
+        agentRunTokenText = text; agentProfile.maxRunTokens = Int(text.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+    }
+    func setAgentTokenThresholdEnabled(_ enabled: Bool) {
+        editingAgentTokenThreshold = true; defer { editingAgentTokenThreshold = false }
+        agentProfile.maxRunTokens = enabled ? (Int(agentRunTokenText.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0) : nil
+    }
     var agentProfileLoaded = false
     @Published public var workflowDraft = WorkflowDefinition(name:"",steps:[.init(operation:.transform(.trim))])
     var workflowEditorOrigin: (id: UUID, fingerprint: String)?

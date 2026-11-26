@@ -9,6 +9,7 @@ public enum AgentEvent: Sendable {
     case usage(AIUsage)
     /// 宿主标记一次成功但未报告用量的请求；不是提供商上报的计费观察。
     case usageUnknown(attemptID: UUID)
+    case tokenBudget(RunTokenBudgetSnapshot)
     case completed
 }
 
@@ -19,11 +20,15 @@ public struct BoundedAgentRunner: Sendable {
     private let maxTurns: Int
     private let wallTimeout: Duration
     private let maxOutputBytes: Int
+    private let maxRunTokens: Int?
+    private let perRequestOutputLimit: Int
     public init(provider: any AIProvider, broker: any AgentToolRouting, maxToolCalls: Int = 20,
-                maxTurns: Int = 8, wallTimeout: Duration = .seconds(300), maxOutputBytes: Int = 16_777_216) {
+                maxTurns: Int = 8, wallTimeout: Duration = .seconds(300), maxOutputBytes: Int = 16_777_216,
+                maxRunTokens: Int? = nil, perRequestOutputLimit: Int = 2048) {
         self.provider = provider; self.broker = broker
         self.maxToolCalls = maxToolCalls; self.maxTurns = maxTurns; self.wallTimeout = wallTimeout
         self.maxOutputBytes = min(16_777_216,max(1,maxOutputBytes))
+        self.maxRunTokens = maxRunTokens; self.perRequestOutputLimit = perRequestOutputLimit
     }
     public func run(messages: [AIMessage], allowedTools: Set<String>) -> AsyncThrowingStream<AgentEvent, any Error> {
         let recorder = provider.usageRecorder, worker = recorder?.beginWorker()
@@ -60,14 +65,18 @@ public struct BoundedAgentRunner: Sendable {
     }
     private func executeTurns(messages: [AIMessage], allowedTools: Set<String>, conversation: any AIConversation,
                               continuation: AsyncThrowingStream<AgentEvent, any Error>.Continuation) async throws {
+        var tokens = try AgentRunTokenMeter(maximumTokens: maxRunTokens)
+        let initialCap = try tokens.nextOutputLimit(perRequestLimit: perRequestOutputLimit)
         let available = await broker.definitions()
         guard allowedTools.isSubset(of: Set(available.map(\.name))) else { throw AIProviderError.unknownTool }
         let definitions = available.filter { allowedTools.contains($0.name) }
-        var input = AIConversationInput.initial(.init(messages: messages, tools: definitions))
+        var input = AIConversationInput.initial(.init(messages: messages, maxTokens: initialCap, tools: definitions))
         var toolCount = 0
         var outputBytes = 0
         for _ in 0..<maxTurns {
             try Task.checkCancellation()
+            try tokens.beginTurn()
+            if let snapshot = tokens.snapshot { continuation.yield(.tokenBudget(snapshot)) }
             var calls: [AIToolCall] = []
             var completed = false
             let unreportedAttemptID = UUID()
@@ -85,12 +94,16 @@ public struct BoundedAgentRunner: Sendable {
                     outputBytes += call.id.utf8.count + call.name.utf8.count + call.arguments.utf8.count
                     guard outputBytes <= maxOutputBytes else { throw AIProviderError.outputLimit }
                     calls.append(call)
-                case .usage(let usage): receivedUsage = true; continuation.yield(.usage(usage))
+                case .usage(let usage): receivedUsage = true; tokens.observe(usage); continuation.yield(.usage(usage))
                 case .completed: completed = true
                 }
             }
             guard completed else { throw AIProviderError.truncatedStream }
+            try Task.checkCancellation()
             if !receivedUsage && provider.usageRecorder == nil { continuation.yield(.usageUnknown(attemptID: unreportedAttemptID)) }
+            tokens.finishTurn()
+            if let snapshot = tokens.snapshot { continuation.yield(.tokenBudget(snapshot)) }
+            try tokens.authorizeContinuation(hasToolCalls: !calls.isEmpty)
             if calls.isEmpty { return }
             toolCount += calls.count
             guard toolCount <= maxToolCalls, Set(calls.map(\.id)).count == calls.count else {
@@ -109,7 +122,7 @@ public struct BoundedAgentRunner: Sendable {
                 continuation.yield(.toolFinished(id: call.id, result: result))
                 outputs.append(.init(callID: call.id, output: result))
             }
-            input = .toolOutputs(outputs)
+            input = .toolOutputs(outputs, maxOutputTokens: try tokens.nextOutputLimit(perRequestLimit: perRequestOutputLimit))
         }
         throw AIProviderError.toolBudgetExceeded
     }

@@ -77,6 +77,7 @@ struct AIContentView: View {
                         Button(L("Read-only agent")) { store.performUserInputAction { store.runReadOnlyAgent(draft: draft) } }.disabled((try? store.resolveAISettings(scene: .readOnlyAgent, requiresTools: true)) == nil)
                         Spacer()
                     }.controlSize(.small)
+                    Text(L("Read-only Agent uses a fixed 32000 reported token threshold. Create an Agent profile to customize this limit.")).font(.caption).foregroundStyle(.secondary)
                 }
             }
             if compact && draft.input.isEmpty && task == nil { Text(L("No selected text. Enter text to begin.")).font(.caption).foregroundStyle(.secondary) }

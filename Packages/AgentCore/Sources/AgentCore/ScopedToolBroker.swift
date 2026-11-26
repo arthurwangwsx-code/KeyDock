@@ -28,8 +28,11 @@ public struct AgentToolApproval: Identifiable, Sendable {
     public let toolName: String
     public let summary: String
     public let effects: Set<ExecutionEffect>
-    public init(id: UUID, runID: UUID, toolName: String, summary: String, effects: Set<ExecutionEffect>) {
+    public let runContractFingerprint: String?
+    public let maxRunTokens: Int?
+    public init(id: UUID, runID: UUID, toolName: String, summary: String, effects: Set<ExecutionEffect>, runContractFingerprint: String? = nil, maxRunTokens: Int? = nil) {
         self.id = id; self.runID = runID; self.toolName = toolName; self.summary = summary; self.effects = effects
+        self.runContractFingerprint = runContractFingerprint; self.maxRunTokens = maxRunTokens
     }
 }
 
@@ -40,14 +43,19 @@ public actor ScopedToolBroker: AgentToolRouting {
     private let approve: @Sendable (AgentToolApproval) async throws -> Bool
     private let journal: InvocationStore
     private let approvalTimeout: Duration
+    private let runContractFingerprint: String?
+    private let maxRunTokens: Int?
     private var seen: Set<String> = []
     private var active: [UUID: Task<String, any Error>] = [:]
     private var closed = false
     private var uncertainInvocationIDs: Set<UUID> = []
     public init(runID: UUID, tools: [ScopedAITool], journal: InvocationStore,
-                approvalTimeout: Duration = .seconds(90), approve: @escaping @Sendable (AgentToolApproval) async throws -> Bool) throws {
+                approvalTimeout: Duration = .seconds(90), runContractFingerprint: String? = nil, maxRunTokens: Int? = nil,
+                approve: @escaping @Sendable (AgentToolApproval) async throws -> Bool) throws {
         var entries: [String: ScopedAITool] = [:]
         guard tools.count <= 64, approvalTimeout > .zero else { throw AgentToolError.invalidDefinition }
+        guard runContractFingerprint.map({ $0.range(of: "^[0-9a-f]{64}$", options: .regularExpression) != nil }) ?? true,
+              maxRunTokens.map({ (1...RunTokenBudgetSnapshot.maximumThreshold).contains($0) && runContractFingerprint != nil }) ?? true else { throw AgentToolError.invalidDefinition }
         for tool in tools {
             guard tool.definition.name.range(of:"^[A-Za-z0-9_-]{1,64}$",options:.regularExpression) != nil,
                   tool.version > 0, !tool.effects.isEmpty, entries[tool.definition.name] == nil,
@@ -60,6 +68,7 @@ public actor ScopedToolBroker: AgentToolRouting {
             entries[tool.definition.name] = tool
         }
         self.runID = runID; self.tools = entries; self.journal = journal; self.approvalTimeout = approvalTimeout; self.approve = approve
+        self.runContractFingerprint = runContractFingerprint; self.maxRunTokens = maxRunTokens
     }
     public func definitions() -> [AIToolDefinition] { tools.keys.sorted().compactMap { tools[$0]?.definition } }
     public func invoke(_ call: AIToolCall, allowed: Set<String>) async throws -> String {
@@ -88,7 +97,7 @@ public actor ScopedToolBroker: AgentToolRouting {
         if effectful {
             let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys,.prettyPrinted]
             let argumentPreview = String(decoding:try encoder.encode(arguments),as:UTF8.self)
-            let proposal = AgentToolApproval(id:id,runID:runID,toolName:call.name,summary:tool.approvalSummary+"\n"+argumentPreview,effects:tool.effects)
+            let proposal = AgentToolApproval(id:id,runID:runID,toolName:call.name,summary:tool.approvalSummary+"\n"+argumentPreview,effects:tool.effects,runContractFingerprint:runContractFingerprint,maxRunTokens:maxRunTokens)
             let approved = try await withThrowingTaskGroup(of:Bool.self) { group in
                 group.addTask { try await self.approve(proposal) }
                 group.addTask { try await Task.sleep(for:self.approvalTimeout); throw AgentToolError.approvalTimedOut }
@@ -102,7 +111,7 @@ public actor ScopedToolBroker: AgentToolRouting {
         let grant = PolicyGrant(caller:.agent,callerInstanceID:runID.uuidString,commandID:command,commandVersion:1,toolID:request.toolID,toolVersion:tool.version,resourceScope:tool.resource,allowedEffects:tool.effects,expiresAt:Date().addingTimeInterval(30),sideEffectsApproved:effectful,invocationID:id,actionID:request.actionID,actionVersion:request.actionVersion,agentInvocationApproved:effectful)
         try ExecutionPolicy.authorize(request:request,grant:grant)
         try Task.checkCancellation()
-        do { try await journal.begin(id:id,name:call.name,commandID:command,commandVersion:1,caller:"agent",initialMessage:"agent.toolIntent") }
+        do { try await journal.begin(id:id,name:call.name,commandID:command,commandVersion:1,configurationFingerprint:runContractFingerprint,caller:"agent",initialMessage:"agent.toolIntent") }
         catch { await journal.abandonUndispatched(id); throw error }
         let result: String
         var dispatched = false

@@ -15408,6 +15408,374 @@
           }
         }
       }
+    },
+    "Agent paused at the reported token threshold. No further tool or model request was dispatched.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent paused at the reported token threshold. No further tool or model request was dispatched."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent 已达到已报告 token 阈值并暂停，未继续调用工具或模型。"
+          }
+        }
+      }
+    },
+    "Agent paused because reported usage could not be verified. No further tool or model request was dispatched.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent paused because reported usage could not be verified. No further tool or model request was dispatched."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent 因无法核实已报告用量而暂停，未继续调用工具或模型。"
+          }
+        }
+      }
+    },
+    "Budgets are frozen when a run starts. Profile edits affect new runs; pause the current run to stop it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Budgets are frozen when a run starts. Profile edits affect new runs; pause the current run to stop it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务开始时会固定用量限制。修改配置仅影响新任务；停止当前任务请使用暂停。"
+          }
+        }
+      }
+    },
+    "Counts include reported input and output tokens. Missing or conflicting usage pauses the run. A request can exceed this threshold before its usage is returned; this is not a billing hard limit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts include reported input and output tokens. Missing or conflicting usage pauses the run. A request can exceed this threshold before its usage is returned; this is not a billing hard limit."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计数包含已报告的输入和输出 token。用量缺失或冲突时暂停任务。单次请求可能在返回用量前超出阈值，不能保证账单硬上限。"
+          }
+        }
+      }
+    },
+    "Enter a valid positive run token threshold.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a valid positive run token threshold."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入有效的正整数任务 token 阈值。"
+          }
+        }
+      }
+    },
+    "Enter a whole number from 1 to 1000000000.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a whole number from 1 to 1000000000."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入 1 到 1000000000 之间的整数。"
+          }
+        }
+      }
+    },
+    "Frozen run token threshold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frozen run token threshold"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本次任务固定的 token 阈值"
+          }
+        }
+      }
+    },
+    "Known counts may be partial. They are not a remaining quota.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known counts may be partial. They are not a remaining quota."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已知数量可能不完整，不能据此推算剩余额度。"
+          }
+        }
+      }
+    },
+    "Known reported tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known reported tokens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已知的已报告 token 数"
+          }
+        }
+      }
+    },
+    "No run token threshold was enabled for this run.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No run token threshold was enabled for this run."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本次任务未启用 token 阈值。"
+          }
+        }
+      }
+    },
+    "Off": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        }
+      }
+    },
+    "Profile edits affect new runs. Pause this run before changing its execution budget.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile edits affect new runs. Pause this run before changing its execution budget."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改配置仅影响新任务。要改变当前任务的执行限制，请先暂停任务。"
+          }
+        }
+      }
+    },
+    "Read-only Agent uses a fixed 32000 reported token threshold. Create an Agent profile to customize this limit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read-only Agent uses a fixed 32000 reported token threshold. Create an Agent profile to customize this limit."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只读 Agent 使用固定的 32000 已报告 token 阈值。创建 Agent 配置可自定义此限制。"
+          }
+        }
+      }
+    },
+    "Remaining threshold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining threshold"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "距阈值剩余 token 数"
+          }
+        }
+      }
+    },
+    "Reported token threshold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported token threshold"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已报告 token 阈值"
+          }
+        }
+      }
+    },
+    "Reported token threshold reached": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported token threshold reached"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已达到已报告 token 阈值"
+          }
+        }
+      }
+    },
+    "Run token threshold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run token threshold"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务 token 阈值"
+          }
+        }
+      }
+    },
+    "Run token threshold is off": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run token threshold is off"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务 token 阈值已关闭"
+          }
+        }
+      }
+    },
+    "Stop at a reported token threshold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop at a reported token threshold"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "达到已报告 token 阈值时停止"
+          }
+        }
+      }
+    },
+    "This threshold includes input and output tokens and stops later work. A request can exceed it before usage is returned; it is not a billing hard limit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This threshold includes input and output tokens and stops later work. A request can exceed it before usage is returned; it is not a billing hard limit."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阈值包含输入和输出 token，用于停止后续操作。单次请求可能在返回用量前超出阈值，不能保证账单硬上限。"
+          }
+        }
+      }
+    },
+    "Usage could not be verified": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage could not be verified"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法核实用量"
+          }
+        }
+      }
+    },
+    "Usage verified for completed requests": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage verified for completed requests"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已完成请求的用量已核实"
+          }
+        }
+      }
+    },
+    "Waiting for this request's final usage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for this request's final usage"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等待本次请求的最终用量"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

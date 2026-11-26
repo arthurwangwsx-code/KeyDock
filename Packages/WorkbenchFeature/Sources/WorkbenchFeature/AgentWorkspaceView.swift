@@ -17,7 +17,7 @@ struct AgentWorkspaceView: View {
                 HStack {
                     TextField(L("Name"),text:$session.agentProfile.name)
                     Button(L("New profile")) { session.agentProfile = AgentDefinition() }
-                    Button(L("Save profile")) { session.saveAgentProfile(in: store) }
+                    Button(L("Save profile")) { session.saveAgentProfile(in: store) }.disabled(!session.hasValidAgentTokenThresholdDraft)
                     if store.configuration.agents.contains(where:{$0.id == session.agentProfile.id}) { Button(L("Remove"),role:.destructive) { confirmRemoval = true } }
                 }
                 let saveState = session.agentProfileSaveState(in: store)
@@ -79,11 +79,18 @@ struct AgentWorkspaceView: View {
                 Stepper(L("Tool calls")+": \(session.agentProfile.maxToolCalls)",value:$session.agentProfile.maxToolCalls,in:0...20)
                 Stepper(L("Model turns")+": \(session.agentProfile.maxTurns)",value:$session.agentProfile.maxTurns,in:1...16)
                 Stepper(L("Time budget (seconds)")+": \(session.agentProfile.timeoutSeconds)",value:$session.agentProfile.timeoutSeconds,in:15...300,step:15)
+                Toggle(L("Stop at a reported token threshold"), isOn: Binding(get: { session.agentProfile.maxRunTokens != nil }, set: session.setAgentTokenThresholdEnabled))
+                if session.agentProfile.maxRunTokens != nil {
+                    TextField(L("Reported token threshold"), text: Binding(get: { session.agentRunTokenText }, set: session.setAgentTokenThresholdText))
+                    if !session.hasValidAgentTokenThresholdDraft { KDInlineNotice(L("Enter a whole number from 1 to 1000000000.")) }
+                    Text(L("Counts include reported input and output tokens. Missing or conflicting usage pauses the run. A request can exceed this threshold before its usage is returned; this is not a billing hard limit.")).font(.caption).foregroundStyle(.secondary)
+                }
+                Text(L("Budgets are frozen when a run starts. Profile edits affect new runs; pause the current run to stop it.")).font(.caption).foregroundStyle(.secondary)
                 Text(L("Tool scope is frozen when a run starts. Every command call needs approval; its output is sent to the selected model. Cancelling does not undo effects already completed.")).font(.caption).foregroundStyle(.secondary)
             }
             Section(L("Your task")) {
                 TextEditor(text:$session.agentInput).font(.body).frame(minHeight:140).modifier(KDReadingSurface()).accessibilityLabel(L("Agent task input"))
-                Button(L("Run agent")) { store.performUserInputAction { store.runAgent(session.agentProfile,input:session.agentInput) } }.buttonStyle(.borderedProminent).disabled(session.agentInput.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty)
+                Button(L("Run agent")) { store.performUserInputAction { store.runAgent(session.agentProfile,input:session.agentInput) } }.buttonStyle(.borderedProminent).disabled(session.agentInput.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty || !session.hasValidAgentTokenThresholdDraft)
             }
         }.formStyle(.grouped).confirmationDialog(L("Remove this Agent profile? Running tasks keep their original snapshot."),isPresented:$confirmRemoval) { Button(L("Remove"),role:.destructive) { if store.removeAgent(session.agentProfile.id) { session.agentProfile = store.configuration.agents.first ?? AgentDefinition() } } }.onAppear {
             if !session.agentProfileLoaded { session.agentProfile = store.configuration.agents.first ?? AgentDefinition(); session.agentProfileLoaded = true }
@@ -101,6 +108,10 @@ struct AgentApprovalView: View {
                 Text(approval.toolName).font(.headline)
                 ScrollView { Text(approval.summary).font(.system(.caption,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading) }.frame(maxHeight:180)
                 Text(L("This tool may change your computer. Review its full arguments. Output may be sent to AI by this run.")).font(.caption).foregroundStyle(.secondary)
+                if approval.runContractFingerprint != nil {
+                    Text(L("Frozen run token threshold") + ": " + (approval.maxRunTokens.map(String.init) ?? L("Off"))).font(.caption)
+                    Text(L("Profile edits affect new runs. Pause this run before changing its execution budget.")).font(.caption).foregroundStyle(.secondary)
+                }
                 HStack {
                     Button(L("Deny")) { store.resolveApproval(approval.id,approved:false) }
                     Button(L("Approve once")) { store.resolveApproval(approval.id,approved:true) }.buttonStyle(.borderedProminent)

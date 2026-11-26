@@ -47,6 +47,16 @@ enum ConfigurationExportFixture {
 
 struct ConfigurationExportProjectionTests {
     private let all = Set(ConfigurationExportSection.allCases)
+    @Test(arguments: [nil, 34] as [Int?]) func definitionsV2ExportsExplicitNullableTokenThreshold(_ threshold: Int?) throws {
+        var configuration = AppConfiguration(); configuration.agents[0].maxRunTokens = threshold
+        let source = try ConfigurationExportFixture.source(configuration)
+        let frozen = try ConfigurationExportProjection.make(source: source, sections: [.definitions])
+        let document = try ConfigurationExportFixture.object(frozen)
+        let definitions = try #require(document["definitions"] as? [String: Any]), agents = try #require(definitions["agents"] as? [[String: Any]])
+        #expect(definitions["schemaVersion"] as? Int == 2)
+        if let threshold { #expect(agents[0]["maxRunTokens"] as? Int == threshold) }
+        else { #expect(agents[0]["maxRunTokens"] is NSNull) }
+    }
     @Test func contentRetentionPreferenceIsExportedWithoutAnyTaskBody() throws {
         var configuration = AppConfiguration(); configuration.taskMaterialRetentionEnabled = true
         let source = try ConfigurationExportFixture.source(configuration)
@@ -116,7 +126,7 @@ struct ConfigurationExportProjectionTests {
         c.preferences.favorites = []; let command = SavedCommand(name: "Synthetic", executable: "/synthetic/missing")
         c.savedCommands = [command, command]
         #expect(throws: ConfigurationExportError.self) { try ConfigurationExportProjection.make(source: ConfigurationExportFixture.source(c), sections: [.definitions]) }
-        c.savedCommands = []; c.schemaVersion = 4
+        c.savedCommands = []; c.schemaVersion = 5
         #expect(throws: ConfigurationExportError.self) { try ConfigurationExportProjection.make(source: ConfigurationExportFixture.source(c), sections: [.preferences]) }
     }
     @Test func invalidWorkflowCLIBindingsAndEndpointStructuresFail() throws {

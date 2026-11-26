@@ -36,7 +36,7 @@ struct SettingsSummaryProjectionTests {
         configuration.mcpServers = [.init(name: sentinel, endpoint: try #require(URL(string: "https://example.com/" + sentinel)), secretReference: sentinel)]
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         // 摘要仍须过滤未知schema号；主配置writer则只编码当前schema。
-        func comparable() throws -> Data { var copy = configuration; copy.schemaVersion = 3; return try encoder.encode(copy) }
+        func comparable() throws -> Data { var copy = configuration; copy.schemaVersion = 4; return try encoder.encode(copy) }
         let original = try comparable()
         let snapshot = try SettingsSummaryProjection.make(configuration: configuration, clipboard: clipboard, sections: Set(SettingsSummarySection.allCases))
         #expect(!snapshot.preview.contains(sentinel) && !snapshot.preview.contains(Data(sentinel.utf8).base64EncodedString()))

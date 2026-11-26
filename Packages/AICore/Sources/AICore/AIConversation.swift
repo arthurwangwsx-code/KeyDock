@@ -5,7 +5,7 @@ public struct AIToolOutput: Sendable {
     public let output: String
     public init(callID: String, output: String) { self.callID = callID; self.output = output }
 }
-public enum AIConversationInput: Sendable { case initial(AIRequest), toolOutputs([AIToolOutput]) }
+public enum AIConversationInput: Sendable { case initial(AIRequest), toolOutputs([AIToolOutput], maxOutputTokens: Int? = nil) }
 public protocol AIConversation: Sendable {
     func stream(_ input: AIConversationInput) async -> AsyncThrowingStream<AIEvent, any Error>
     func close() async
@@ -24,10 +24,13 @@ actor ChatAIConversation: AIConversation {
         do {
             switch input {
             case .initial(let value): guard request == nil else { throw AIProviderError.invalidRequest }; request = value
-            case .toolOutputs(let values):
+            case .toolOutputs(let values, let cap):
                 guard request != nil, !pending.isEmpty, values.count == pending.count,
                       Set(values.map(\.callID)) == pending else { throw AIProviderError.invalidRequest }
+                guard cap.map({ (1...32_768).contains($0) }) ?? true else { throw AIProviderError.invalidRequest }
+                guard values.allSatisfy({ $0.output.utf8.count <= 1_048_576 }) else { throw AIProviderError.outputLimit }
                 request!.messages += values.map { .init(role: "tool", content: $0.output, toolCallID: $0.callID) }
+                if let cap { request!.maxTokens = cap }
                 pending = []
             }
             let value = request!

@@ -81,8 +81,8 @@ struct InvocationWorkerOwnership: Sendable {
     let store: InvocationStore
     let begun: InvocationBeginReceipt
     var id: UUID { begun.receipt.id }
-    func finish(_ result: ProcessResult) async throws {
-        try await store.finish(id: id, result: result, expectedRunStamp: begun.runStamp)
+    func finish(_ result: ProcessResult, runTokenBudget: RunTokenBudgetSnapshot? = nil) async throws {
+        try await store.finish(id: id, result: result, runTokenBudget: runTokenBudget, expectedRunStamp: begun.runStamp)
     }
     func release() async { await store.releaseProtection(for: id, expectedRunStamp: begun.runStamp) }
     func abandon() async { await store.abandonUndispatched(id, expectedRunStamp: begun.runStamp) }

@@ -66,7 +66,7 @@ def probe_configuration(root, guard=None):
                            parse_int=_bounded_integer, parse_float=_bounded_float)
         if not isinstance(value, dict): raise ValueError("invalid configuration")
         version = value.get("schemaVersion", 1)
-        if type(version) is not int or version not in (1, 2, 3): raise ValueError("unsupported configuration")
+        if type(version) is not int or version not in (1, 2, 3, 4): raise ValueError("unsupported configuration")
         if version == 1 and any(key in value for key in ("aiModelSettings", "aiSettingsRevision")):
             raise ValueError("new settings in legacy configuration")
         if version >= 2:
@@ -74,9 +74,19 @@ def probe_configuration(root, guard=None):
                 raise ValueError("missing model settings or revision")
             uuid.UUID(value["aiSettingsRevision"])
         if version < 3 and "savedApplicationActions" in value: raise ValueError("new actions in legacy configuration")
-        if version == 3:
+        if version >= 3:
             if "savedApplicationActions" not in value: raise ValueError("missing action source state")
             _application_actions(value["savedApplicationActions"])
+        agents = value.get("agents")
+        if version >= 4 or agents is not None:
+            if not isinstance(agents, list) or not all(isinstance(row, dict) for row in agents): raise ValueError("invalid agents")
+            for row in agents:
+                if version < 4:
+                    if "maxRunTokens" in row: raise ValueError("new token threshold in legacy configuration")
+                else:
+                    if "maxRunTokens" not in row: raise ValueError("missing token threshold state")
+                    threshold = row["maxRunTokens"]
+                    if threshold is not None and (type(threshold) is not int or not 1 <= threshold <= 1_000_000_000): raise ValueError("invalid token threshold")
         if guard is not None: guard.assert_current()
         return version
     except (OSError, ValueError, KeyError, TypeError, AttributeError, UnicodeError, RecursionError):

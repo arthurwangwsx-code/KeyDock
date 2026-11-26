@@ -7,7 +7,7 @@ import MacAdapters
 enum ConfigurationExportProjection {
     static func make(source: ConfigurationExportSource, sections: Set<ConfigurationExportSection>, maximumBytes: Int = ConfigurationExportBudget.maximumBytes) throws -> FrozenConfigurationExport {
         guard !sections.isEmpty else { throw ConfigurationExportError.noSections }
-        guard source.configuration.schemaVersion == 3 else { throw ConfigurationExportError.invalidDefinition("configuration.schemaVersion") }
+        guard source.configuration.schemaVersion == 4 else { throw ConfigurationExportError.invalidDefinition("configuration.schemaVersion") }
         if let canonical = source.configuration.savedApplicationActions, canonical != source.applicationActions {
             throw ConfigurationExportError.invalidDefinition("configuration.savedApplicationActions")
         }
@@ -129,7 +129,7 @@ enum ConfigurationExportProjection {
             for name in v.allowedMCPToolNames.sorted() { try graph.mcpTool(name, allowedSources: v.allowedMCPServerIDs, owner: owner) }
             return .init(id: v.id, version: v.version, name: v.name, instructions: v.instructions, modelOverride: v.modelOverride, modelOptions: v.modelOptions,
                 allowedCommandIDs: v.allowedCommandIDs.sorted { $0.uuidString < $1.uuidString }, allowedMCPServerIDs: v.allowedMCPServerIDs.sorted { $0.uuidString < $1.uuidString },
-                allowedMCPToolNames: v.allowedMCPToolNames.sorted(), maxToolCalls: v.maxToolCalls, maxTurns: v.maxTurns, timeoutSeconds: v.timeoutSeconds)
+                allowedMCPToolNames: v.allowedMCPToolNames.sorted(), maxToolCalls: v.maxToolCalls, maxTurns: v.maxTurns, timeoutSeconds: v.timeoutSeconds, maxRunTokens: v.maxRunTokens)
         }
         let workflows = try c.workflows.map { v -> ExportWorkflow in
             let owner = "workflow." + v.id.uuidString

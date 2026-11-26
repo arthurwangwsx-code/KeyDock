@@ -20,6 +20,7 @@ import MacAdapters
     func oldConfiguration(_ version: Int) throws {
         var document = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(AppConfiguration())) as? [String: Any])
         document["schemaVersion"] = version; document.removeValue(forKey: "savedApplicationActions")
+        document["agents"] = (document["agents"] as! [[String: Any]]).map { value in var row = value; row.removeValue(forKey: "maxRunTokens"); return row }
         if version == 1 { document.removeValue(forKey: "aiModelSettings"); document.removeValue(forKey: "aiSettingsRevision") }
         try JSONSerialization.data(withJSONObject: document).write(to: configuration)
     }
@@ -49,7 +50,7 @@ import MacAdapters
         #expect(lease.isCurrent && store.legacyApplicationActions == nil)
         #expect(try Data(contentsOf: f.legacy) == raw)
         let decoded = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: f.configuration))
-        #expect(decoded.schemaVersion == 3 && decoded.savedApplicationActions == [f.action])
+        #expect(decoded.schemaVersion == 4 && decoded.savedApplicationActions == [f.action])
         await store.shutdownAndWait()
         try Data("old-source-now-unreadable".utf8).write(to: f.legacy)
         let reopened = try f.model()

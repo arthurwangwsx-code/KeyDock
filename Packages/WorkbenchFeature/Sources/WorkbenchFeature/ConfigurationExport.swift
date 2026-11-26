@@ -116,6 +116,18 @@ struct ExportAgent: Encodable {
     let allowedCommandIDs: [UUID], allowedMCPServerIDs: [UUID]
     let allowedMCPToolNames: [String]
     let maxToolCalls: Int, maxTurns: Int, timeoutSeconds: Int
+    let maxRunTokens: Int?
+    private enum CodingKeys: String, CodingKey { case id, version, name, instructions, modelOverride, modelOptions, allowedCommandIDs, allowedMCPServerIDs, allowedMCPToolNames, maxToolCalls, maxTurns, timeoutSeconds, maxRunTokens }
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id); try c.encode(version, forKey: .version)
+        try c.encode(name, forKey: .name); try c.encode(instructions, forKey: .instructions)
+        try c.encode(modelOverride, forKey: .modelOverride); try c.encodeIfPresent(modelOptions, forKey: .modelOptions)
+        try c.encode(allowedCommandIDs, forKey: .allowedCommandIDs); try c.encode(allowedMCPServerIDs, forKey: .allowedMCPServerIDs)
+        try c.encode(allowedMCPToolNames, forKey: .allowedMCPToolNames); try c.encode(maxToolCalls, forKey: .maxToolCalls)
+        try c.encode(maxTurns, forKey: .maxTurns); try c.encode(timeoutSeconds, forKey: .timeoutSeconds)
+        try c.encode(maxRunTokens, forKey: .maxRunTokens)
+    }
 }
 struct ExportWorkflowStep: Encodable {
     let id: UUID
@@ -135,7 +147,7 @@ struct ExportSnippet: Encodable { let id: UUID; let name: String; let text: Stri
 struct ExportWebAction: Encodable { let id: UUID; let name: String; let urlTemplate: String }
 struct ExportCollection: Encodable { let id: UUID; let name: String; let commandIDs: [String] }
 struct ExportDefinitions: Encodable {
-    let schemaVersion = 1
+    let schemaVersion = 2
     let commands: [ExportCommand]
     let aiActions: [ExportAIAction]
     let agents: [ExportAgent]

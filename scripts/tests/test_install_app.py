@@ -166,6 +166,39 @@ class InstallAppTests(unittest.TestCase):
             self.assertEqual(tree_digest(self.destination), tree_digest(modern))
             self.assertEqual(tree_digest(Path(record["backup_path"])), tree_digest(old))
 
+    def test_budget_data_blocks_old_install_and_rollback_even_when_configuration_still_v3(self):
+        old = self.app("budget-old", "synthetic previous reader")
+        capability = current_data_compatibility()
+        capability["configuration"] = {"readVersions":[1,2,3], "writeVersions":[3]}
+        capability["invocationEnvelope"] = {"readVersions":[1,2], "writeVersions":[1,2]}
+        (old / "synthetic-capability.json").write_text(json.dumps(capability))
+        installer.install(self.arguments(old, "budget-first"))
+        modern = self.app("budget-new", "synthetic budget reader")
+        args = self.arguments(modern, "budget-second"); record = installer.install(args)
+        rollback = SimpleNamespace(rollback=args.receipt, helper=self.helper, quit_running=False, dry_run=False)
+        config = self.data_root / "configuration.json"
+        base = {"schemaVersion":3, "savedApplicationActions":None, "aiModelSettings":{}, "aiSettingsRevision":"00000000-0000-0000-0000-000000000001"}
+        config.write_text(json.dumps(base)); config.chmod(0o600)
+        folder = self.data_root / "ai-invocations"; folder.mkdir(mode=0o700)
+        receipt = folder / "invocations.json"
+        budget = {"policyVersion":1,"maximumTokens":32000,"knownTokens":14,"completedTurns":1,"status":"verified"}
+        original = json.dumps({"version":3,"receipts":[{"runTokenBudget":budget}]}).encode(); receipt.write_bytes(original); receipt.chmod(0o600)
+        self.calls.clear()
+        with self.assertRaises(PipelineError): installer.install(self.arguments(old, "budget-declined"))
+        with self.assertRaises(PipelineError): installer.rollback(rollback)
+        self.assertFalse(any("quit" in call for call in self.calls))
+        self.assertEqual(receipt.read_bytes(), original)
+        self.assertEqual(tree_digest(self.destination), tree_digest(modern))
+        self.assertEqual(tree_digest(Path(record["backup_path"])), tree_digest(old))
+        receipt.unlink()
+        for threshold in (None, 34):
+            original = json.dumps(dict(base, schemaVersion=4, agents=[{"maxRunTokens":threshold}])).encode()
+            config.write_bytes(original); self.calls.clear()
+            with self.assertRaisesRegex(PipelineError, "current configuration"): installer.install(self.arguments(old, "budget-config-declined"))
+            with self.assertRaisesRegex(PipelineError, "current configuration"): installer.rollback(rollback)
+            self.assertFalse(any("quit" in call for call in self.calls))
+            self.assertEqual(config.read_bytes(), original)
+
     def test_material_created_after_quiesce_is_rechecked_and_prevents_old_swap(self):
         import base64
         modern = self.app("material-quiesce-modern", "modern")

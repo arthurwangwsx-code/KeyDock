@@ -30,6 +30,7 @@ import MacAdapters
             // 真实v1没有模型策略或撤权revision，不能仅改版本号伪装新版数据。
             legacy.removeValue(forKey: "aiModelSettings"); legacy.removeValue(forKey: "aiSettingsRevision")
             legacy.removeValue(forKey: "savedApplicationActions")
+            legacy["agents"] = (legacy["agents"] as! [[String: Any]]).map { value in var row = value; row.removeValue(forKey: "maxRunTokens"); return row }
             var decoded = try JSONDecoder().decode(AppConfiguration.self, from: JSONSerialization.data(withJSONObject: legacy))
             #expect(decoded.preferences.favorites.isSuperset(of: ids) && ids.allSatisfy { decoded.preferences.aliases[$0] != nil })
             #expect(decoded.savedApplicationActions == nil)

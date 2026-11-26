@@ -38,6 +38,7 @@ class FixtureServer(ThreadingHTTPServer):
                       "slow_open": 0, "slow_closed": 0,
                       "proposal_started": 0, "agent_requests": 0,
                       "agent_tool_messages": 0, "ordinary_tools_advertised": 0,
+                      "agent_initial_max_tokens": 0, "agent_followup_max_tokens": 0,
                       "authorization_seen": 0, "post_requests": 0,
                       "limit_agent_requests": 0, "held_text_started": 0,
                       "context_label_leaks": 0, "context_body_requests": 0,
@@ -123,6 +124,8 @@ class Handler(BaseHTTPRequestHandler):
             path = urlsplit(self.path).path
             if path == "/stream":
                 self.stream()
+            elif path == "/responses-agent-budget":
+                self.responses_agent_budget(json.loads(body))
             elif path in ("/request-settings", "/responses-settings"):
                 request = json.loads(body)
                 selected = {key: request.get(key) for key in ("model", "reasoning_effort", "reasoning", "max_completion_tokens", "max_output_tokens", "store")}
@@ -365,7 +368,8 @@ class Handler(BaseHTTPRequestHandler):
             self.start_sse()
             response = {"id": "synthetic-command-agent-1", "choices": [{"index": 0, "delta": {"tool_calls": [
                 {"index": 0, "id": "fixture_command_1", "type": "function", "function": {"name": name, "arguments": "{}"}}]}, "finish_reason": "tool_calls"}]}
-            self.wfile.write(event(response) + b"data: [DONE]\r\n\r\n")
+            self.wfile.write(event(response) + event({"id": "synthetic-command-agent-1", "choices": [], "usage": {
+                "prompt_tokens": 10, "completion_tokens": 4}}) + b"data: [DONE]\r\n\r\n")
             self.wfile.flush()
             return
         calls = [call for message in messages if message.get("role") == "assistant" for call in message.get("tool_calls", [])]
@@ -377,6 +381,41 @@ class Handler(BaseHTTPRequestHandler):
         self.server.increment("agent_tool_messages")
         self.complete_text("Synthetic saved command round-trip complete", "synthetic-command-agent-2")
 
+    def responses_agent_budget(self, request):
+        self.server.increment("agent_requests")
+        history = request.get("input", [])
+        results = [item for item in history if item.get("type") == "function_call_output"]
+        cap = request.get("max_output_tokens", 0)
+        if type(cap) is int:
+            self.server.increment("agent_followup_max_tokens" if results else "agent_initial_max_tokens", cap)
+        opaque = {"type":"reasoning", "id":"rs_budget", "summary":[], "encrypted_content":"synthetic-opaque-budget-exact"}
+        commentary = {"type":"message", "id":"msg_budget_comment", "role":"assistant", "status":"completed", "phase":"commentary",
+                      "content":[{"type":"output_text", "text":"Synthetic commentary", "annotations":[]}]}
+        call = {"type":"function_call", "id":"fc_budget", "call_id":"call_budget", "name":"current_time", "arguments":"{}", "status":"completed"}
+        if request.get("store") is not False or request.get("reasoning") != {"effort":"low"}:
+            self.send_json(422, {"error":MARKER}); return
+        if results:
+            if len(results) != 1 or results[0].get("call_id") != "call_budget" or history[-4:-1] != [opaque, commentary, call]:
+                self.send_json(422, {"error":MARKER}); return
+            try:
+                assert datetime.fromisoformat(results[0]["output"].replace("Z", "+00:00")).tzinfo is not None
+            except (KeyError, TypeError, ValueError, AssertionError):
+                self.send_json(422, {"error":MARKER}); return
+            self.server.increment("agent_tool_messages")
+            output = [{"type":"message", "id":"msg_budget_final", "role":"assistant", "status":"completed", "phase":"final_answer",
+                       "content":[{"type":"output_text", "text":"Synthetic Responses budget complete", "annotations":[]}]}]
+        else: output = [opaque, commentary, call]
+        response_id = "resp_budget_2" if results else "resp_budget_1"
+        self.start_sse()
+        values = [("response.created", {"response":{"id":response_id}})]
+        for index, item in enumerate(output):
+            values.extend([("response.output_item.added", {"output_index":index,"item":item}), ("response.output_item.done", {"output_index":index,"item":item})])
+        usage = {"input_tokens":20 if results else 10,"output_tokens":6 if results else 4}
+        values.append(("response.completed", {"response":{"id":response_id,"status":"completed","output":output,"usage":usage}}))
+        for sequence, (kind, fields) in enumerate(values):
+            self.wfile.write(event(dict(fields, type=kind, sequence_number=sequence)))
+        self.wfile.flush()
+
     def agent(self, request, report_final_usage=True, fail_final_turn=False):
         self.server.increment("agent_requests")
         tools = request.get("tools", [])
@@ -386,6 +425,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         messages = request.get("messages", [])
         results = [m for m in messages if m.get("role") == "tool"]
+        cap = request.get("max_completion_tokens", request.get("max_tokens", 0))
+        if type(cap) is int:
+            self.server.increment("agent_followup_max_tokens" if results else "agent_initial_max_tokens", cap)
         if not results:
             self.tool_response("synthetic-agent-1")
             return

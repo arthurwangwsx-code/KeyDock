@@ -170,13 +170,15 @@ actor ResponsesAIConversation: AIConversation {
                     return .object(["role": .string(message.role), "content": .array([.object(["type": .string("input_text"), "text": .string(message.content)])])])
                 }
                 request = value
-            case .toolOutputs(let values):
+            case .toolOutputs(let values, let cap):
                 guard request != nil, !pending.isEmpty, values.count == pending.count,
                       Set(values.map(\.callID)) == pending else { throw AIProviderError.invalidRequest }
+                guard cap.map({ (1...configuration.maxOutputTokens).contains($0) }) ?? true else { throw AIProviderError.invalidRequest }
+                guard values.allSatisfy({ $0.output.utf8.count <= 1_048_576 }) else { throw AIProviderError.outputLimit }
                 for value in values {
-                    guard value.output.utf8.count <= 1_048_576 else { throw AIProviderError.outputLimit }
                     history.append(.object(["type": .string("function_call_output"), "call_id": .string(value.callID), "output": .string(value.output)]))
                 }
+                if let cap { request!.maxTokens = cap }
                 pending = []
             }
             let wire = try makeRequest()
