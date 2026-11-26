@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-26。当前已有签名公证的公开alpha.20，并已替换本地常规App，实际About20已确认；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-26。当前已有签名公证的公开alpha.21，并已替换本地常规App，实际About21已确认；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -39,8 +39,10 @@
 | [独立桌面验收入口](technical/desktop-review.md) | 合成宿主、身份scope、受限Workbench／UI及启动流水线的完整合同 |
 | [桌面验收模型接线复查](implementation/desktop-review-model-2026-11-26.md) | 窄配置、存储生命周期、网络／任务旁路和108项定向；独立App接入仍开放 |
 | [真实OpenAI合成基线](implementation/openai-live-baseline-2026-11-26.md) | 10次实际调用、用量／估算、工具及Workflow和语言FAIL；无凭据进入工程 |
-| [模型目录与场景设置](technical/ai-model-settings.md) | 最新模型／协议能力、全局及场景覆盖、思考、冻结与配置兼容合同；实施中 |
-| [模型设置及Responses复查](implementation/ai-model-settings-2026-11-26.md) | 共用原生控件、逐入口冻结、三轮opaque续接、schema2／签名reader门禁及本地回归；原生／真实最新模型待验收 |
+| [alpha.21发行与真实模型证据](implementation/alpha21-release-2026-11-26.md) | 985 Swift、12次真实最新模型请求、中英活动修补、同源CI、公证／公开回下载及About21 |
+| [当前服务模型清单](technical/ai-model-inventory.md) | 显式刷新、易失清单、推荐分离、准确ID与凭据／取消／工作预算合同 |
+| [模型目录与场景设置](technical/ai-model-settings.md) | 最新模型／协议能力、全局及场景覆盖、思考、冻结与配置兼容合同；alpha.21已发行 |
+| [模型设置及Responses复查](implementation/ai-model-settings-2026-11-26.md) | 共用原生控件、逐入口冻结、三轮opaque续接、schema2／签名reader门禁；历史分源复查与alpha.21资格链接 |
 | [桌面验收scope基础层复查](implementation/desktop-review-scope-2026-11-26.md) | 12项定向、物理路径误拒绝修复和只读评审；原生接入及真实插入仍开放 |
 | [冻结候选与公证恢复](technical/release-candidate-recovery.md) | 独立inode、不可变输入、持久索引、unknown不重投和同请求续查；新协议完整发行仍开放 |
 | [可选任务材料](technical/task-material-retention.md) | 默认关闭、准确输入／成功边界、手动保存／按需读取、出生身份与删除意图和旧reader门禁；任务35实施中 |

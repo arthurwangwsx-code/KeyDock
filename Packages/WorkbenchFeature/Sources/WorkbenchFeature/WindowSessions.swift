@@ -114,7 +114,7 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published var aiRateDraft: AIRateEditorDraft?
     @Published var aiRateDismissing = false
     var mcpDraftEpoch = UUID()
-    @Published public var pane: SettingsPane = .general { didSet { UserDefaults.standard.set(pane.rawValue, forKey: panePreferenceKey); onPaneChanged?() } }
+    @Published public var pane: SettingsPane = .general { didSet { if pane != .aiService { invalidateModelInventory(clear: false) }; UserDefaults.standard.set(pane.rawValue, forKey: panePreferenceKey); onPaneChanged?() } }
     private var panePreferenceKey = "KeyDock.SettingsPane"
     public var onPaneChanged: (() -> Void)?
     @Published public var editedCommandSourceRunID: UUID? {
@@ -140,14 +140,27 @@ private struct LauncherCatalogProvider: CommandProviding {
         store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && aiRateDraft == nil && !aiRateDismissing && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil && settingsSummaryExport == nil && !settingsSummaryDismissing && configurationExport == nil && !configurationExportDismissing && sourceRemoval == nil && !sourceRemovalDismissing
     }
     @Published var apiSaveNotice: LocalizedNotice = .none
-    @Published public var apiKey = "" { didSet { apiSaveNotice = .none } }
+    @Published public var apiKey = "" { didSet { apiSaveNotice = .none; invalidateModelInventory() } }
     @Published public var keyStored = false
-    @Published public var endpoint = "" { didSet { apiSaveNotice = .none } }
+    @Published public var endpoint = "" {
+        didSet {
+            apiSaveNotice = .none; invalidateModelInventory()
+            // 草稿密钥只属于输入时的准确端点；改地址后必须重新明确输入。
+            if !endpoint.utf8.elementsEqual(oldValue.utf8) { apiKey = "" }
+        }
+    }
     @Published public var modelName = "" { didSet { apiSaveNotice = .none } }
     @Published var aiModelSettings = AIModelSettings() { didSet { apiSaveNotice = .none } }
     @Published var aiModelScene = AIScene.translation
-    @Published public var localHTTP = false { didSet { apiSaveNotice = .none } }
+    @Published public var localHTTP = false { didSet { apiSaveNotice = .none; invalidateModelInventory() } }
     @Published public var tokenParameter = "max_completion_tokens" { didSet { apiSaveNotice = .none } }
+    @Published var modelInventory: AIModelInventory?
+    @Published var modelInventoryBusy = false
+    @Published var modelInventoryNotice: LocalizedNotice = .none
+    var modelInventoryRequestID = UUID()
+    var modelInventoryTask: Task<Void, Never>?
+    var modelInventorySubscription: AnyCancellable?
+    var modelInventoryVisible: Bool { visible }
     @Published public var shortcutQuery = ""
     @Published public var shortcutCategory: ShortcutCategory = .all {
         didSet { if shortcutCategory != oldValue { shortcutTargetID = nil; shortcutQuery = "" } }
@@ -172,6 +185,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         endpoint = store.configuration.endpoint; modelName = store.configuration.model
         aiModelSettings = store.configuration.aiModelSettings
         localHTTP = store.configuration.localHTTP; tokenParameter = store.configuration.tokenLimitParameter
+        modelInventorySubscription = store.$modelInventoryEpoch.dropFirst().sink { [weak self] _ in self?.invalidateModelInventory() }
     }
     public func beginNewCommand() {
         guard canBeginSavedItemEditor else { return }
@@ -192,7 +206,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         editedCommandExistingID = nil; editedCommandSourceRunID = review.id; editedCommand = review.command
         return true
     }
-    public func setVisible(_ value: Bool) { visible = value; if !value { invalidateSettingsSummaryExport(); invalidateConfigurationExport(); invalidateSourceRemoval(); if let draft = aiRateDraft { cancelAIRate(draft.id) }; mcpDraftEpoch = UUID(); mcpDraft.apiKey = "" }; updateVisibleReferences() }
+    public func setVisible(_ value: Bool) { visible = value; if !value { invalidateModelInventory(clear: false); invalidateSettingsSummaryExport(); invalidateConfigurationExport(); invalidateSourceRemoval(); if let draft = aiRateDraft { cancelAIRate(draft.id) }; mcpDraftEpoch = UUID(); mcpDraft.apiKey = "" }; updateVisibleReferences() }
     private func updateVisibleReferences() {
         guard let store else { return }
         if visible { store.setVisibleReferences(owner: visibilityOwner, draftID: nil, taskID: editedCommandSourceRunID) }

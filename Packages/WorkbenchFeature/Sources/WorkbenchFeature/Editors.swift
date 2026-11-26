@@ -78,7 +78,8 @@ struct AIActionEditor: View {
             DisclosureGroup(L("Model and reasoning overrides")) {
                 AIModelSettingsFields(options: Binding(get: { action.modelOptions ?? .init(model: action.modelOverride) }, set: { action.modelOptions = $0; action.modelOverride = "" }),
                     endpoint: store.configuration.endpoint, globalModel: store.configuration.model, settings: store.configuration.aiModelSettings,
-                    scene: action.scene ?? .text, localHTTP: store.configuration.localHTTP, language: store.configuration.language)
+                    scene: action.scene ?? .text, localHTTP: store.configuration.localHTTP, language: store.configuration.language,
+                    inventoryModels: store.savedServiceModels)
             }
             Text(L("Prompt")).font(.headline)
             TextEditor(text: $action.prompt).frame(height: 160).border(.quaternary).accessibilityLabel(L("Prompt"))

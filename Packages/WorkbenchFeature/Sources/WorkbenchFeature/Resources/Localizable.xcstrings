@@ -15120,6 +15120,166 @@
           }
         }
       }
+    },
+    "This endpoint has no unambiguous models URL. Keep using exact model IDs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This endpoint has no unambiguous models URL. Keep using exact model IDs."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法从此端点确定模型清单地址，请继续填写准确模型 ID。"
+          }
+        }
+      }
+    },
+    "Partial model list received. Existing selections are preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial model list received. Existing selections are preserved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已收到部分模型清单，现有选择保持不变。"
+          }
+        }
+      }
+    },
+    "Model list refreshed. Existing selections are preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model list refreshed. Existing selections are preserved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模型清单已刷新，现有选择保持不变。"
+          }
+        }
+      }
+    },
+    "Model list could not be refreshed. Check the endpoint, credentials or connection. Existing selections and the last successful list are preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model list could not be refreshed. Check the endpoint, credentials or connection. Existing selections and the last successful list are preserved."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法刷新模型清单，请检查端点、密钥或网络。现有选择和上次成功的清单已保留。"
+          }
+        }
+      }
+    },
+    "Listed by service · capabilities unverified": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listed by service · capabilities unverified"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务返回模型 · 能力尚未核验"
+          }
+        }
+      }
+    },
+    "Models listed by this service": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Models listed by this service"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前服务的模型清单"
+          }
+        }
+      }
+    },
+    "Refresh model list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh model list"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新模型清单"
+          }
+        }
+      }
+    },
+    "Cancel refresh": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel refresh"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消刷新"
+          }
+        }
+      }
+    },
+    "Refresh sends only a model-list request to this service. It does not change selections, verify model capabilities or update official recommendations.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh sends only a model-list request to this service. It does not change selections, verify model capabilities or update official recommendations."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新只向当前服务请求模型清单，不更改选择、不核验模型能力，也不更新官方推荐。"
+          }
+        }
+      }
+    },
+    "Models returned": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Models returned"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "返回模型数"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

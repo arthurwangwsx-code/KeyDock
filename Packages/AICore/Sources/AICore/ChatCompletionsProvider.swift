@@ -65,7 +65,14 @@ public struct URLSessionAITransport: AIHTTPTransport {
                                 buffer.removeAll(keepingCapacity: true)
                             }
                         }
-                        if !buffer.isEmpty { continuation.yield(buffer) }
+                        if !buffer.isEmpty {
+                            switch continuation.yield(buffer) {
+                            case .enqueued: break
+                            case .dropped: throw AIProviderError.outputLimit
+                            case .terminated: throw CancellationError()
+                            @unknown default: throw AIProviderError.outputLimit
+                            }
+                        }
                         continuation.finish()
                     } catch { continuation.finish(throwing: error) }
             }

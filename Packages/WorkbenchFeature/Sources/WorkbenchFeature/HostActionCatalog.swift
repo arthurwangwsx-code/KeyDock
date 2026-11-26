@@ -5,7 +5,7 @@ import CommandCore
 enum HostOperation: String, Hashable, Sendable, CaseIterable {
     case openApplication, activateWindow, runCommand, prepareAI, generateText
     case proposeCommand, runReadOnlyAgent, runAgent, copyText, replaceSelection, pasteClipboard, readClipboard, navigate, layoutWindow, importContext, captureScreen, revealFile, openURL
-    case applyDesktopWorkspace
+    case applyDesktopWorkspace, discoverModels
     case cycleWindow, minimizeWindow, hideApplication, showApplication, showAllApplicationWindows, quitApplication
 }
 
@@ -72,6 +72,8 @@ enum HostActionCatalog {
             input = .none; output = .none; context = []; effects = [.read]
         case .generateText:
             input = .text; output = .text; context = [.explicitInput]; effects = [.network]
+        case .discoverModels:
+            input = .none; output = .structuredData; context = []; effects = [.network]
         case .proposeCommand:
             input = .text; output = .commandProposal; context = [.explicitInput]; effects = [.network]
         case .runReadOnlyAgent, .runAgent:

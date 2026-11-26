@@ -1,14 +1,12 @@
 # 当前状态总账
 
-当前正式安装与公开发行均为[alpha.20](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.20)，精确源`aa0edfc23f01476ebbc3befeef477da684382f0d`。920 Swift／137 Python／931 key、生产合成OCR双轮、指定同源CI、App／DMG新候选协议公证与装订／Gatekeeper、公开回下载及独立发行审计通过。已原子替换正式App，About实际显示alpha.20(20)，alpha.19回退副本已核验。见[发行证据](implementation/alpha20-release-2026-11-26.md)。
+当前正式安装与公开发行均为[alpha.21](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.21)，精确源`5712546d072414772f8eb65846eed8ea4e1d968f`。985 Swift／142 Python／981 key、生产合成OCR双轮、同源CI、App／DMG公证装订／Gatekeeper、公开回下载与独立发行审计均通过；About实际确认alpha.21(21)。见[发行与真实模型证据](implementation/alpha21-release-2026-11-26.md)。
 
-完整产品仍PARTIAL：已观察的玻璃大结果／关闭审阅／材料保存等子集不替代真实插入、实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉。[剩余工程](technical/remaining-engineering-2026-11-26.md)包括快捷操作验收入口、自定义一致性、Agent总预算、持久步骤、原图附件及稳定增量用量；完整P0–P4目标继续推进。
+本版全局／九场景／定义模型覆盖、思考与预算、Responses多轮和配置schema2接入实际执行。正式App已使用Sol low及翻译Luna none完成12次真实OpenAI合成请求：翻译、中文总结、CLI精确审阅取消、两类Agent时间工具、两步Workflow及中英活动总结通过；2387／1009 token，新模型费用保持未知。原alpha.20活动俄语FAIL保留，中英文复验通过，运行中切语言仍开放；未把局部模型调用当全部质量证明。
 
-当前开发分支`feature/desktop-review`已完成scope及Workbench策略／存储接线，108项相关定向和三方只读复查通过；首轮失败保留。App／签名合成宿主和流水线接入继续进行，尚未完成真实剪贴板插入验收，也未发布alpha.21。见[模型层复查](implementation/desktop-review-model-2026-11-26.md)。
+当前`feature/model-inventory`增加[当前服务模型清单](technical/ai-model-inventory.md)，候选alpha.22。显式GET、有界网络与解码、共享选择器、草稿key端点绑定、凭据epoch和实际drain已接通；24项定向通过，最终接线后的完整本机／CI／原生真实刷新及新发行仍待完成。刷新不自动换模型，不从清单推断能力，不更新版本化推荐。
 
-用户已授权并配置真实OpenAI：alpha.20完成翻译／总结／CLI建议审阅／两条Agent工具／两步Workflow及用量的[合成基线](implementation/openai-live-baseline-2026-11-26.md)，10次调用实际1414／802 token。活动总结输出俄语FAIL，源码语言冻结回归已通过，新二进制真实复验待完成。新增[最新模型、默认／场景和思考设置](technical/ai-model-settings.md)合同；未把旧基线模型标为最新，也未声称全部AI验收完成。
-
-最新源码已接入九类场景及全局／定义模型和思考设置、共用原生控件、Responses多轮会话及配置schema2／安装reader门禁；43项最新协议定向、141项较广定向、142项Python和978条中英key通过。实际原生／最新模型、在线目录清单刷新、精确源完整检查／CI／发行仍待验收，见[本轮复查](implementation/ai-model-settings-2026-11-26.md)。按runID的CLI直接审阅已接线，不改变人工批准执行的边界。
+完整P0–P4仍PARTIAL：独立桌面验收App／合成宿主接入、真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放。[剩余工程](technical/remaining-engineering-2026-11-26.md)的自定义一致性、Agent总预算、持久步骤、原图附件及稳定增量用量继续推进。alpha.20副本保留；schema2写入后旧配置reader不能安全覆盖，不宣传无条件回退。
 
 ## 历史推进与当时资格
 

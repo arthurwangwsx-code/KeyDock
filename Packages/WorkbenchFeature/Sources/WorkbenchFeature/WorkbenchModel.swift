@@ -16,7 +16,11 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public private(set) var isShuttingDown = false
     @Published public var shortcutsUnavailable = false
     @Published public var configuration: AppConfiguration {
-        didSet { configurationExportGeneration = UUID(); if configuration.disabledContributions != oldValue.disabledContributions { contributionEpoch = UUID() } }
+        didSet {
+            configurationExportGeneration = UUID()
+            if configuration.disabledContributions != oldValue.disabledContributions { contributionEpoch = UUID() }
+            if !configuration.endpoint.utf8.elementsEqual(oldValue.endpoint.utf8) || configuration.localHTTP != oldValue.localHTTP { invalidateModelInventories() }
+        }
     }
     var configurationExportGeneration = UUID()
     @Published public private(set) var contributionEpoch = UUID()
@@ -169,6 +173,10 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public internal(set) var mcpSettingsChanging = false
     var mcpSettingsOwner: UUID?
     var configurationOperations: [UUID: ConfigurationOperation] = [:]
+    @Published var modelInventoryEpoch = UUID()
+    @Published var savedServiceModels: [AIModelID] = []
+    var modelInventoryOperationIDs: Set<UUID> = []
+    var modelInventoryWorkingBytes = 0
     @Published public internal(set) var mcpCapabilities: [UUID: Set<String>] = [:]
     var mcpSessionDisabled: Set<UUID> = []
     var mcpClients: [UUID: MCPHTTPClient] = [:]
@@ -577,6 +585,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public func refreshClipboard() { clipboardRevision &+= 1 }
     public func requestAccessibility() { guard allowContextCapture || desktopReviewAvailable else { settingsNoticeMessage = noticeKey("Context capture is disabled in isolated smoke mode"); return }; desktop.requestAccessibility() }
     public func saveAPIConfiguration(endpoint: String, modelName: String, localHTTP: Bool, tokenParameter: String, apiKey: String, modelSettings: AIModelSettings? = nil) -> Bool {
+        invalidateModelInventories()
         guard !isDesktopReview else { desktopReviewUnavailable(); return false }
         guard allowContextCapture || apiKey.isEmpty else {
             settingsNoticeMessage = noticeKey("API keys cannot be stored in this isolated preview. Use a regular build to save a key.")
@@ -597,7 +606,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         return false
     }
     public func credentialExists() -> Bool { guard allowContextCapture else { return false }; return (try? credentialReader(configuration.endpoint)) != nil }
-    public func removeCredential() { guard allowContextCapture else { return }; do { try credentialWriter("", configuration.endpoint) } catch { settingsNoticeMessage = noticeKey("Keychain operation failed") } }
+    public func removeCredential() { guard allowContextCapture else { return }; invalidateModelInventories(); do { try credentialWriter("", configuration.endpoint) } catch { settingsNoticeMessage = noticeKey("Keychain operation failed") } }
     @discardableResult public func saveCommand(_ command: SavedCommand) -> Bool {
         do { try command.validate() }
         catch { settingsNoticeMessage = noticeKey("Check name, absolute paths, arguments, environment and timeout"); return false }

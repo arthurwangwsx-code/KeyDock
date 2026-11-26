@@ -40,7 +40,8 @@ class FixtureServer(ThreadingHTTPServer):
                       "agent_tool_messages": 0, "ordinary_tools_advertised": 0,
                       "authorization_seen": 0, "post_requests": 0,
                       "limit_agent_requests": 0, "held_text_started": 0,
-                      "context_label_leaks": 0, "context_body_requests": 0}
+                      "context_label_leaks": 0, "context_body_requests": 0,
+                      "model_list_requests": 0, "model_redirect_hits": 0}
         self.proposal_release = threading.Event()
         self.text_release = threading.Event()
 
@@ -74,6 +75,25 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/release-proposal":
             self.server.proposal_release.set()
             self.send_json(200, {"released": True})
+        elif path in ("/models", "/empty/models"):
+            self.server.increment("model_list_requests")
+            self.send_json(200, {"object": "list", "data": [] if path.startswith("/empty/") else [{"id": "synthetic-listed-model"}]})
+        elif path == "/redirect/models":
+            self.send_response(302)
+            self.send_header("Location", f"http://localhost:{self.server.server_address[1]}/model-redirect-target")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+        elif path == "/model-redirect-target":
+            self.server.increment("model_redirect_hits")
+            self.send_json(200, {"object": "list", "data": []})
+        elif path == "/model-tail/models":
+            payload = b'{"object":"list","data":[]}' + b'\n' * 64 + b'synthetic-invalid-tail'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            self.wfile.flush()
         else:
             self.send_json(404, {"error": "synthetic fixture route"})
 

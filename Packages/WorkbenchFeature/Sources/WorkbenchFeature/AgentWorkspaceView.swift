@@ -26,7 +26,8 @@ struct AgentWorkspaceView: View {
                 DisclosureGroup(L("Model and reasoning overrides")) {
                     AIModelSettingsFields(options: Binding(get: { session.agentProfile.modelOptions ?? .init(model: session.agentProfile.modelOverride) }, set: { session.agentProfile.modelOptions = $0; session.agentProfile.modelOverride = "" }),
                         endpoint: store.configuration.endpoint, globalModel: store.configuration.model, settings: store.configuration.aiModelSettings,
-                        scene: .agent, localHTTP: store.configuration.localHTTP, language: store.configuration.language, requiresTools: true)
+                        scene: .agent, localHTTP: store.configuration.localHTTP, language: store.configuration.language, requiresTools: true,
+                        inventoryModels: store.savedServiceModels)
                 }
             }
             DisclosureGroup(L("Tools and budgets")) {

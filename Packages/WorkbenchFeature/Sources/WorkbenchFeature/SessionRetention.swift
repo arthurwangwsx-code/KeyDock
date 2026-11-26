@@ -106,6 +106,7 @@ extension WorkbenchModel {
         var bytes = TaskTextLimits.inputBytes + 1_024 + retainedContextSlotBytes, snapshots: [ObjectIdentifier: TargetSnapshot] = [:]
         // Responses每run为有序opaque历史、解析快照、wire及编码临时副本预留8MiB，实际drain后释放。
         bytes += aiConversationReservations.count * 8_388_608
+        bytes += modelInventoryWorkingBytes
         bytes += taskMaterialBuffers.values.reduce(0) { $0 + $1.budgetedBytes }
         bytes += taskMaterialWriteReservations.values.reduce(0, +)
         // 库存最多200条，每个标题最多1024字节；固定预留，异步header发布不挤穿总文本预算。

@@ -5,6 +5,38 @@ import AICore
 
 private enum FixtureError: Error { case missingScript, startupFailed, timedOut }
 
+@Suite struct ModelInventoryLoopbackTests {
+    private struct HeldConsumerTransport: AIHTTPTransport {
+        func open(_ request: URLRequest) async throws -> AIHTTPResponse {
+            let response = try await URLSessionAITransport().open(request)
+            // 暂停消费者，让真实HTTP producer先交付64个换行块和不足4096B尾块。
+            do { try await Task.sleep(for:.milliseconds(500)); return response }
+            catch { response.cancel(); await response.waitForCompletion(); throw error }
+        }
+    }
+    @Test func saturatedHTTPQueueNeverSilentlyDiscardsFinalJSONTail() async throws {
+        let server = try SSEFixture(); defer { server.stop() }
+        let client = AIModelInventoryClient(transport:HeldConsumerTransport())
+        do {
+            _ = try await client.list(endpoint:server.baseURL.appendingPathComponent("model-tail/responses"),allowsLocalHTTP:true,apiKey:"")
+            Issue.record("A valid JSON prefix with discarded invalid tail must never become success")
+        } catch { #expect((error as? AIProviderError) == .outputLimit) }
+    }
+    @Test func actualGETSupportsListAndEmptyListAndRefusesRedirects() async throws {
+        let server = try SSEFixture(); defer { server.stop() }
+        let client = AIModelInventoryClient()
+        let found = try await client.list(endpoint:server.baseURL.appendingPathComponent("chat/completions"),allowsLocalHTTP:true,apiKey:"synthetic-test-key")
+        #expect(found.models == [AIModelID("synthetic-listed-model")])
+        let empty = try await client.list(endpoint:server.baseURL.appendingPathComponent("empty/responses"),allowsLocalHTTP:true,apiKey:"")
+        #expect(empty.models.isEmpty)
+        do { _ = try await client.list(endpoint:server.baseURL.appendingPathComponent("redirect/responses"),allowsLocalHTTP:true,apiKey:"synthetic-test-key"); Issue.record("Redirect must not be followed") }
+        catch { #expect((error as? AIProviderError) == .httpStatus(302)) }
+        let (bytes, _) = try await URLSession.shared.data(from:server.baseURL.appendingPathComponent("stats"))
+        let stats = try JSONDecoder().decode([String:Int].self,from:bytes)
+        #expect(stats["model_list_requests"] == 2 && stats["model_redirect_hits"] == 0 && stats["post_requests"] == 0)
+    }
+}
+
 /// 每个测试使用独立的 loopback 子进程，结束时终止；不读取 Keychain 或调用云服务。
 private final class SSEFixture {
     let baseURL: URL
