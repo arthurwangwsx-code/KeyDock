@@ -29,8 +29,12 @@ import MacAdapters
             legacy["schemaVersion"] = 1
             // 真实v1没有模型策略或撤权revision，不能仅改版本号伪装新版数据。
             legacy.removeValue(forKey: "aiModelSettings"); legacy.removeValue(forKey: "aiSettingsRevision")
-            let decoded = try JSONDecoder().decode(AppConfiguration.self, from: JSONSerialization.data(withJSONObject: legacy))
+            legacy.removeValue(forKey: "savedApplicationActions")
+            var decoded = try JSONDecoder().decode(AppConfiguration.self, from: JSONSerialization.data(withJSONObject: legacy))
             #expect(decoded.preferences.favorites.isSuperset(of: ids) && ids.allSatisfy { decoded.preferences.aliases[$0] != nil })
+            #expect(decoded.savedApplicationActions == nil)
+            // 此fixture已经成功提交canonical；仅接纳旧偏好，不把动作状态退回未确认。
+            decoded.savedApplicationActions = store.configuration.savedApplicationActions
             #expect(store.commitShortcutConfiguration(decoded))
             let session = SettingsSession(store: store)
             session.prepareDeletedToolPreferences(in: store)

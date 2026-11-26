@@ -20,6 +20,8 @@ Review身份probe保存同一次NSRunningApplication快照中的缺失／变化�
 
 初次迁移测试v1／v2因旧测试引用及新增断言语法编译失败；v3一项测试错把favorites归入preferences导出，修正为实际shortcuts分区，产品无需为此改变导出字段。原失败日志和receipt均保留；v4通过不擦除历史失败。
 
+完整检查v1：153 Python通过，Swift发现两处旧fixture仍伪装新版数据为schema1或尝试编码未知schema。修正fixture为真实旧字段集，并保留摘要对未知schema号的过滤检查及当前writer拒绝未知schema的合同；不放宽生产reader／writer来迁就测试。原检查失败保留。
+
 ## 尚待本增量证明
 
 完整检查、优化Preview及双语原生设置／删除／重启、同源CI、签名发行与正式安装分别待执行。原真实插入／实体热键、完整深浅／IME／VoiceOver／多屏、最低系统、长期驻留、20条AI质量样本及P0–P4工程缺口仍开放。

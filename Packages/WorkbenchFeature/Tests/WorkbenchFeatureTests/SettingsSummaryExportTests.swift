@@ -31,14 +31,18 @@ struct SettingsSummaryProjectionTests {
         configuration.snippets = [try .init(name: sentinel, text: sentinel)]
         configuration.webActions = [try .init(name: sentinel, urlTemplate: "https://example.com/" + sentinel + "?secret=" + sentinel)]
         configuration.collections = [try .init(name: sentinel, commandIDs: ["utility." + sentinel])]
+        configuration.savedApplicationActions = [try .init(name: sentinel, applicationID: "app./" + sentinel + ".app", behavior: .hide)]
         configuration.searchFolders = [.init(id: UUID(), name: sentinel, bookmark: Data(sentinel.utf8))]
         configuration.mcpServers = [.init(name: sentinel, endpoint: try #require(URL(string: "https://example.com/" + sentinel)), secretReference: sentinel)]
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
-        let original = try encoder.encode(configuration)
+        // 摘要仍须过滤未知schema号；主配置writer则只编码当前schema。
+        func comparable() throws -> Data { var copy = configuration; copy.schemaVersion = 3; return try encoder.encode(copy) }
+        let original = try comparable()
         let snapshot = try SettingsSummaryProjection.make(configuration: configuration, clipboard: clipboard, sections: Set(SettingsSummarySection.allCases))
         #expect(!snapshot.preview.contains(sentinel) && !snapshot.preview.contains(Data(sentinel.utf8).base64EncodedString()))
         #expect(!snapshot.preview.contains(action.id.uuidString) && !snapshot.preview.contains(agent.id.uuidString))
-        #expect(try encoder.encode(configuration) == original)
+        #expect(try comparable() == original)
+        #expect(configuration.schemaVersion == 978)
         let json = try object(snapshot)
         #expect(Set(json.keys) == ["format", "schemaVersion", "basicPreferences", "launcherShortcut", "configurationCounts"])
         #expect(json["format"] as? String == "KeyDock.settings-summary" && json["schemaVersion"] as? Int == 1)
