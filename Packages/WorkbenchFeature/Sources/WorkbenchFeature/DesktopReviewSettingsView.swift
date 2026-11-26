@@ -37,7 +37,8 @@ public struct DesktopReviewSettingsView: View {
                 HotkeyRecorder(binding: Binding(get: { store.shortcut(for: "utility.clipboard") }, set: { store.setShortcut($0, for: "utility.clipboard") }), onRecording: { store.onShortcutRecordingChanged?($0) })
                     .disabled(!store.desktopReviewAvailable)
             }
-            ClipboardBehaviorSettingsView(preferences: store.clipboardPreferences).disabled(!store.desktopReviewAvailable)
+            ClipboardBehaviorSettingsView(preferences: store.clipboardPreferences)
+                .id(store.configuration.language).disabled(!store.desktopReviewAvailable)
             if !store.settingsNoticeMessage.rendered().isEmpty { KDInlineNotice(store.settingsNoticeMessage.rendered()) }
         }.formStyle(.grouped).frame(minWidth: 560, minHeight: 590)
             .environment(\.locale, KDLocalizer.locale)

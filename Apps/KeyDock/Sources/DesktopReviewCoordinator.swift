@@ -39,7 +39,7 @@ import KeyDockUI
         session = ClipboardPanelSession(preferences: store.clipboardPreferences)
         super.init()
         store.onOpenSettings = { [weak self] _ in self?.openSettings() }
-        store.onLanguageChanged = { [weak self] in self?.installMenus() }
+        store.onLanguageChanged = { [weak self] in self?.installMenus(); self?.refreshTitles() }
         store.onAppearanceChanged = { [weak self] in self?.applyAppearance() }
         store.onShortcutConfigurationChanged = { [weak self] configuration in
             guard let self else { throw DesktopReviewError.unavailable }
@@ -121,15 +121,19 @@ import KeyDockUI
     @objc private func openSettings() {
         dismiss(restore: false)
         if settings == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 600, height: 650), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 600, height: 720), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
             window.contentMinSize = NSSize(width: 560, height: 590)
             window.title = AppL("Desktop review") + " — KeyDock"; window.isReleasedWhenClosed = false; window.delegate = self
             let controller = NSHostingController(rootView: DesktopReviewSettingsView(store: store) { [weak self] in self?.presentClipboard(activateTarget: true) })
             controller.sizingOptions = []; controller.sceneBridgingOptions = []
             window.contentViewController = controller
-            window.setContentSize(NSSize(width: 600, height: 650)); window.center(); settings = window
+            window.setContentSize(NSSize(width: 600, height: 720)); window.center(); settings = window
         }
         NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
+    }
+    private func refreshTitles() {
+        settings?.title = AppL("Desktop review") + " — KeyDock"
+        panel?.title = AppL("Clipboard history")
     }
     private func installMenus() {
         let menu = NSMenu(), appItem = NSMenuItem(), app = NSMenu()
