@@ -58,7 +58,14 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
         throw WorkflowIntegrationFixtureError.timedOut
     }
     func drain(_ id: UUID) async throws {
-        try await eventually { self.store.taskHandles[id] == nil && !self.store.executionReservations.contains(id) }
+        try await eventually { try await self.executionIsDrained(id) }
+    }
+    func executionIsDrained(_ id: UUID) async throws -> Bool {
+        guard store.taskHandles[id] == nil, !store.executionReservations.contains(id) else { return false }
+        guard let task = store.tasks.first(where: { $0.id == id }), let metadata = task.runAttempt else { return true }
+        // 活动索引先收口，owner随后释放；fixture不能把前者误当作可恢复资格。
+        let snapshot = try await store.receiptStore(task.receiptIsAI ? .ai : .cli).runStoreSnapshot()
+        return snapshot.logicalRuns.first(where: { $0.id == metadata.logicalRunID })?.hasLiveAttempts != true
     }
     func task(_ id: UUID) throws -> RunningTaskItem { try #require(store.tasks.first { $0.id == id }) }
     func childReceipts(_ runID: UUID) async -> [InvocationReceipt] {

@@ -65,6 +65,36 @@ private final class AttemptTestIO: @unchecked Sendable {
 }
 
 @MainActor @Suite(.serialized) struct AttemptPreparationIntegrationTests {
+    @Test(arguments: [false, true])
+    func terminalInvocationStillWaitsForItsWorkerOwnership(_ isAI: Bool) async throws {
+        try await withAttemptFixture { f, _ in
+            f.store.configuration.endpoint = "http://127.0.0.1:9/unused"
+            f.store.configuration.localHTTP = true; f.store.configuration.model = "synthetic-owner-model"
+            let definition: SavedRunDefinition
+            if isAI {
+                var agent = AgentDefinition(); agent.name = "Synthetic owned agent"
+                #expect(f.store.saveAgent(agent))
+                agent = try #require(f.store.configuration.agents.first { $0.id == agent.id })
+                definition = .agent(agent)
+            } else { definition = .command(try saveAttemptCommand(f)) }
+            let journal = isAI ? f.store.aiInvocationStore : f.store.invocationStore, id = UUID()
+            let begun = try await journal.begin(id: id, name: "Synthetic terminal but owned", runDefinition: definition.reference)
+            try await journal.finish(id: id, result: .init(state: .succeeded), expectedRunStamp: begun.runStamp)
+            let receipt = try #require(await journal.list().first { $0.id == id })
+            if isAI { f.store.restoreAIReceipt(receipt) } else { f.store.restoreReceipt(receipt) }
+            #expect(f.store.taskHandles[id] == nil && !f.store.executionReservations.contains(id))
+            let early = try await f.executionIsDrained(id); #expect(!early)
+            let presentation = AttemptPreparationPresentation(.init(store: isAI ? .ai : .cli, invocationID: id))
+            await presentation.refresh(in: f.store)?.value
+            #expect(presentation.phase == .needsReview && presentation.review == nil)
+            #expect(presentation.notice == noticeKey("The previous worker is still finishing. Wait, then review again."))
+            await journal.releaseProtection(for: id, expectedRunStamp: begun.runStamp)
+            let closed = try await f.executionIsDrained(id); #expect(closed)
+            await presentation.refresh(in: f.store)?.value
+            #expect(presentation.phase == .ready && presentation.review != nil)
+        }
+    }
+
     @Test(arguments: ["ai", "agent"])
     func actualAIAndAgentUseNewInputAndCurrentRateWithoutAutomaticCopy(_ kind: String) async throws {
         let server = try StoreSSEServer(); defer { server.stop() }
