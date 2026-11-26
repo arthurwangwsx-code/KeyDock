@@ -69,6 +69,6 @@ OCR／单文件导入只提供文本：单文件16MiB、图像20M像素、PDF30�
 
 用户可随时移除来源／目录／Snippets，清空统计和任务元数据。任务和Agent正文默认仅为会话内存；alpha.20候选增加[显式任务内容保存](task-material-retention.md)，与元数据、配置和用量分开。清除历史先确认对应正文清除，再移除父记录；部分失败保留任务记录供再次处理。计划定义删除不撤回已发生的外部副作用。更细协议边界见[Agent与外部协议](agent-protocol-boundaries.md)。
 
-命名应用动作保存在独立application-actions.json，最多100项／1MiB，包含名称、稳定安装引用和受限行为枚举，不含PID、AX对象或授权。旧版基础设置写入不会丢弃这些动作。文件损坏、目录漂移或未知恢复残留时保留原内容并停写；候选不自动进入动作目录。桌面回执仅保存通用名称、能力ID、配置指纹与固定结果／原生操作分类，不持久化窗口引用或选区正文，重启不重放。详见[桌面动作合同](desktop-actions.md)。
+命名应用动作在schema3主配置中与快捷键和偏好统一提交，最多100项／1MiB，只含名称、稳定安装引用和受限行为枚举，不含PID、AX对象或授权。旧application-actions.json仅在未确认状态只读迁移并原样保留；坏源不伪装为空，目录身份失效时拒绝整份配置写入。桌面回执只保存通用名称、能力ID、配置指纹与固定结果／原生操作分类，不持久化窗口引用或选区正文，重启不重放。详见[桌面动作合同](desktop-actions.md)。
 
-桌面工作区定义另存desktop-workspaces.json，包含用户指定名称、应用安装引用和布局／屏幕／缺失策略，最多32项／1MiB。其执行回执增加有界父manifest（workspace UUID、revision、有序条目UUID）及子context（parent／entry UUID、索引、阶段），不含应用路径、PID、AX、frame或标题；普通旧回执无需这些字段。恢复先保护同库已知family再裁剪，缺失child回执不能解释为未执行；存储和应用准备已实现，组合运行入口仍待接通，详见[工作区合同](desktop-workspaces.md)。
+桌面工作区定义另存desktop-workspaces.json，包含用户指定名称、应用安装引用和布局／屏幕／缺失策略，最多32项／1MiB。其执行回执增加有界父manifest（workspace UUID、revision、有序条目UUID）及子context（parent／entry UUID、索引、阶段），不含应用路径、PID、AX、frame或标题；普通旧回执无需这些字段。恢复先保护同库已知family再裁剪，缺失child回执不能解释为未执行；组合执行及profile快捷键已接通，完整真实系统矩阵仍开放，详见[工作区合同](desktop-workspaces.md)。

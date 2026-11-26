@@ -1,14 +1,14 @@
 # 当前状态总账
 
-当前公开发行与正式本机安装均为[alpha.23](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.23)，固定源`3b0dfe2dbcabea16120b887d461e4f5aa4b5a8bb`。1002 Swift执行／142 Python／994中英key、生产合成OCR双轮、指定同源CI／优化Preview、公证装订／Gatekeeper、公开回下载和独立发行审计通过；About23实际已观察。详情见[发行与真实刷新证据](implementation/alpha23-release-2026-11-26.md)。alpha.22为保留的本地未公开候选，原生失败不删除，旧tag／资产不覆写。
+当前公开发行与正式本机安装均为[alpha.24](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.24)，固定源`b1011af95dbac25f3ff52cdb2fc10d9cb49f93f8`。1035 Swift执行／153 Python／1005中英key、生产合成OCR双轮、指定同源CI／优化Preview、master重复CI、公证装订／Gatekeeper、公开回下载和独立发行审计通过；About24实际已观察。应用动作schema3迁移、统一删除、收藏事务及双语原生重启子集见[本轮复查](implementation/application-action-configuration-2026-11-26.md)。alpha.22仍为保留的本地未公开候选，原生失败不删除，旧tag／资产不覆写。
 
 模型设置已接入实际执行：全局、九类场景及动作／Agent逐字段覆盖，思考、预算和协议冻结。官方推荐目录与服务清单独立；正式alpha.23中英各连续3次真实刷新均返回103模型，选择不变，账本未增加模型调用。入口及继承规则见[使用说明](product/model-settings-guide.md)。
 
 真实OpenAI合成输入已覆盖翻译、总结、CLI精确审阅取消、两类Agent时间工具、Workflow及中英活动总结。分源合计23次、3856／1737 token，新模型费率未知，不虚构账单。alpha.21输出合计已由1009纠正为909；旧none界面判断不作wire证明，alpha.22明确保存／重启及55／26翻译后，alpha.23跨升级保留none。原俄语FAIL、CI取消测试竞态、alpha.22清单失败及所有更正见原始记录，不倒推唯一失败原因。
 
-独立桌面验收App／固定宿主已实际Developer ID签名运行。代码`afb97cb`的1012 Swift／151 Python／1003 key、生产合成OCR双轮及同源CI45768775028通过；双语设置、剪贴板查询／合并／复制、明确重启及拒绝态有原生观察，见[App接线复查](implementation/desktop-review-app-2026-11-26.md)。保留旧失效、新targetIdentityChanged及CUA传输故障，未把恢复成功视为全部通过。配对仅本地使用，正式发行仍为alpha.23。
+独立桌面验收App／固定宿主已有实际Developer ID签名运行证据。旧配对代码`afb97cb`的1012 Swift／151 Python／1003 key、生产合成OCR双轮及同源CI45768775028通过；双语设置、剪贴板查询／合并／复制、明确重启及拒绝态有原生观察，见[App接线复查](implementation/desktop-review-app-2026-11-26.md)。保留旧失效、targetIdentityChanged及CUA传输故障。alpha.24增加同次probe字段诊断的代码／测试资格，本轮原生复查使用普通隔离Preview；该旧签名Review配对未自动重建，不借正式发行补算真实插入通过。
 
-完整P0–P4仍PARTIAL：真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放；20条质量样本、在途切语言及所有服务／参数／故障组合未关闭。[剩余工程](technical/remaining-engineering-2026-11-26.md)继续推进。安装／回退检查配置schema2 reader；副本保留不代表无条件回退。
+完整P0–P4仍PARTIAL：真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放；20条质量样本、在途切语言及所有服务／参数／故障组合未关闭。Agent运行总token预算、持久步骤、原图附件与稳定增量用量仍有工程缺口，见[剩余工程](technical/remaining-engineering-2026-11-26.md)。安装／回退检查配置schema3 reader；副本保留不代表无条件回退。
 
 ## 历史推进与当时资格
 
@@ -113,10 +113,10 @@ canonical目录唯一；alpha.18精确源6baaee8已受控fast-forward至master�
 | 启动台／设置／工作区 | PARTIAL | 独立窗口、菜单栏入口、KeyDockUI、系统玻璃材料和中英；基本深浅色／焦点已观察，完整视觉／辅助功能矩阵未完成 |
 | 搜索与快捷键 | PARTIAL | 动作分类、剪贴板专用绑定／别名、目录／generation／过期结果和注册事务测试；Preview录制与重启持久化已观察，物理全局快捷键、IME／全屏／多屏未完整验收 |
 | 窗口切换与布局 | PARTIAL | 13项单窗口布局、循环／最小化与identity恢复；桌面工作区已接通定义、全部预检／冻结、两阶段执行、逐项结果与profile快捷键；真实AX授权／撤销／多屏矩阵仍待验收 |
-| 应用控制与定制 | PARTIAL | 命名动作、显示／隐藏／前台切换／正常退出、独立存储与直接快捷键；合成原生宿主隐藏→显示及单次正常退出请求通过，真实保存界面／Spaces／物理热键仍待验收 |
+| 应用控制与定制 | PARTIAL | 命名动作、显示／隐藏／前台切换／正常退出、schema3统一候选事务与直接快捷键；迁移／删除／偏好清理及原生重启子集通过，真实保存界面／Spaces／物理热键仍待验收 |
 | CLI与任务 | PARTIAL | executable+argv、有限输出／超时、真实进程组取消与回收、durable intent／result／unknown不重放；Terminal GUI继续尊重既有工具拒绝，未计真实通过 |
 | 剪贴板 | PARTIAL | 独立两栏Panel、搜索／↑↓／预览、20项／1MiB有序合并、主动作与分隔符偏好、复制／受控插入及取消／竞争围栏；中文浅色／英文深色、Shift-Return、重排与实际合并复制已观察。记录默认关闭，真实自动插入、物理热键及完整矩阵仍待验收 |
-| AI服务与快捷动作 | PARTIAL | 自定义兼容API、Keychain事务、重定向保护、翻译／总结／命令建议／选区输出、loopback全链路；真实外部API按用户决定稍后配置 |
+| AI服务与快捷动作 | PARTIAL | 自定义兼容API、Keychain事务、全局／九场景／定义模型覆盖及思考／协议冻结；真实OpenAI合成调用与模型清单已有分源证据，20条质量样本及完整服务／故障矩阵仍待验收 |
 | AI用量与估算 | PASS（本增量工程）／PARTIAL（完整验收） | alpha.18按实际请求冻结服务／模型费率，Workflow索引不重复计价，历史与独立7／30／90天原币分析；真实API／账单、完整视觉与稳定delta适配仍独立 |
 | AI质量 | NOT_RUN | 20条合成质量样本已准备；真实模型质量与人工评阅未执行 |
 | 多步Agent | PARTIAL | 保存命令／MCP工具allowlist、冻结范围、schema／预算、逐次审批、暂停／新attempt与unknown回归；真实外部模型／工具组合未全面验收 |

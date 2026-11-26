@@ -37,7 +37,7 @@ continuation、工具参数与编码临时副本纳入原32MiB联合接纳，不
 
 pending快捷键、attempt、调度和Workflow授权纳入有效设置指纹／策略版本；改变模型、思考或输出语言会使旧审批失效。在途结果仍保留自己的事实。费率按准确服务身份与wire模型匹配，继续只累计leaf调用，不以显示名计价。
 
-配置采用明确schema v2并读取迁移v1，保留旧非空modelOverride；Agent新增字段显式缺省解码。导出覆盖新定义／引用／继承，不包含凭据与运行授权。签名安装／回退纳入配置reader能力；旧包不能忽略再重写丢弃新设置。DesktopReview只接受其窄配置，不能因新增字段开放AI。
+模型策略最初由schema2引入并迁移v1，保留旧非空modelOverride；当前主配置已升至schema3，仍读取1／2，详见[应用动作迁移](application-action-configuration.md)。Agent新增字段显式缺省解码。导出覆盖新定义／引用／继承，不包含凭据与运行授权。签名安装／回退纳入配置reader能力；旧包不能忽略再重写丢弃新设置。DesktopReview只接受其窄配置，不能因新增字段开放AI。
 
 ## 验收
 

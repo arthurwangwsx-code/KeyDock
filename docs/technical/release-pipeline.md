@@ -51,6 +51,10 @@ Swift检查采用互补独立阶段：主体、Terminal生命周期和生产Visi
 
 Release构建前后还比较资格与当前OS build／Swift／完整Xcode及SDK版本。完整clean检查记录running／failed／passed，后续失败或未结束会阻止继续消费历史PASS；新完整PASS后才恢复。资格锚点和对应原日志须保留，重复同源检查不会覆盖已装入不可变包的摘要。ZIP与DMG不仅验签：DMG只读／nobrowse挂载到独占目录，核对内部App的源、版本、build、资格及整个bundle摘要与ZIP一致，再精确正常卸载；不选择用户现有卷、不force detach。`make install`消费已核验发行包，避免误装build目录里残留的旧候选；旧alpha.3缺资格，默认安装拒绝。
 
+alpha.24配置reader为[1,2,3]、writer为[3]；旧包副本即使验签成功，也不能在配置升级到3后无条件回退。配置probe包含null待迁移状态，安装／回退在替换前拒绝不兼容reader，原数据保留。
+
+普通隔离Preview的`native-review`应显式复用同一owned fixture并用进程回执确认正常退出；不要对已退出App再调用会选择／启动App的UI入口来“证明退出”。alpha.24复查在退出后AX读取序列中观察到额外默认Preview启动，已正常收口且不纳入资格，未唯一归因底层机制。当前复用root的`review-process.json`更新为最新运行，重启前应保留当次观察；逐次不可覆盖的运行回执仍列入后续调试工程。独立DesktopReview继续使用其独立launch receipt及窄scope，不能将普通Preview当作等价权限入口。
+
 各阶段均显式传入`--no-parallel`，因为CLI帮助中的默认值未让Swift Testing顶层套件串行。集成夹具的合成进程startup／cleanup含同步poll／usleep，并发时会延迟另一套件的SSE消费，导致五秒drain时限误触发。明确串行后日志按套件顺序执行；应用任务的五秒drain、输出上限、真实进程／网络和全部断言保留。隔离Python合成服务使用`-I -S`，准备就绪预算20秒，不占用应用任务断言的时间。
 
 `gh workflow run ci.yml --ref <已推送功能分支> -f diagnose_ocr=true`只运行独立的OCR诊断job，不替代native验收，也不会取消该分支的native job。探针`Tools/Fixtures/vision_diagnostic.swift`只生成自己的同一张合成PNG，准确模式场景分别使用自动语言、英语、两种中英顺序、无语言纠正、旧公共CPU标志和revision2；每场景独占子进程45秒时限，记录设备／revision／原始NSError及PNG摘要。识别错误、超时或结果不匹配返回非零，artifact照常保留，不回退fast，也不读取个人文件或下载模型。诊断工具允许旧公共CPU标志的弃用警告，产品不因此使用旧标志或更改准确模式；`--only <scenario>`可只运行一个已登记场景。

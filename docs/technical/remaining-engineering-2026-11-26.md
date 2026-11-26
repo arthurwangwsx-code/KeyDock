@@ -10,6 +10,7 @@
 | 5.5／完整RunStore | 四类定义引用、run／attempt、CAS、新授权、新UUID及可选材料 | 复用InvocationStore／journal持久化无正文步骤sequence、状态与调用引用。A成功／B失败重启后仍可逐项核对且无自动重放；checkpoint新尝试另行设计重新授权与unknown核对，材料回填不能宣称续接 |
 | 原图／附件 | 文本／PDF／本地OCR及单文本上下文槽 | 先支持明确选择的一张PNG／JPEG，默认text-only，显式模型图像能力后编码content parts；尺寸／字节、revision、移除／关闭／取消和缓存释放。合成图loopback验证，不支持能力时零HTTP，不进导出／普通日志 |
 | 4.7增量用量 | 累计快照、部分／未知、费率快照与叶子计价 | 可选稳定eventID、有界去重及明确协议adapter，无身份仍拒绝delta；验证重复、乱序、冲突、溢出、累计混用与取消，旧历史可读且不重复计价 |
+| 原生视觉与调试证据 | alpha.24设置／删除／重启及正确菜单标题已观察；稀疏查询仍固定面板高度 | 复查内容密度、长名与完整中英深浅矩阵；重建含新字段诊断的签名Review配对。普通native-review复用root改为逐次不可覆盖回执，退出使用进程证明，显式同夹具重启，不把默认Preview额外启动纳入资格 |
 
 收藏先改内存及应用动作跨文件保存的接缝已在本增量修补，具体资格见[实施记录](../implementation/application-action-configuration-2026-11-26.md)。其余明确工程缺口保留：AgentDefinition没有运行总token／费用字段；AIMessage仍是字符串，OCR不代表已支持原图发送；Workflow checkpoint仍在内存。
 
