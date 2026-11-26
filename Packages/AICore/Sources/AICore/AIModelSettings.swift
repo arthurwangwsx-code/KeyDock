@@ -127,6 +127,9 @@ public struct FrozenAIExecutionSettings: Equatable, Sendable {
 }
 
 public enum AIModelResolver {
+    public static func outputTokenLimit(settings: AIModelSettings, scene: AIScene?, override: AIModelOptions = .init()) -> Int? {
+        override.maxOutputTokens ?? scene.flatMap { settings.scenes[$0.rawValue]?.maxOutputTokens } ?? settings.defaults.maxOutputTokens
+    }
     /// 页面在其他参数无效时仍可显示准确选择；nil场景专门表示全局层。
     public static func modelID(globalModel: String, settings: AIModelSettings, scene: AIScene?, override: AIModelOptions = .init(), legacyModelOverride: String = "") -> String {
         let explicit = override.model.isEmpty ? legacyModelOverride : override.model
@@ -146,7 +149,9 @@ public enum AIModelResolver {
             : (sceneValue.requestProtocol != .inherit ? sceneValue.requestProtocol : settings.defaults.requestProtocol)
         let effort = override.reasoning != .inherit ? override.reasoning
             : (sceneValue.reasoning != .inherit ? sceneValue.reasoning : settings.defaults.reasoning)
-        let budget = override.maxOutputTokens ?? sceneValue.maxOutputTokens ?? settings.defaults.maxOutputTokens!
+        guard let budget = outputTokenLimit(settings: settings, scene: scene, override: override) else {
+            throw AIProviderError.invalidConfiguration
+        }
         let capability = AIModelCatalog.capability(model: model, endpoint: endpoint)
         let declaredReasoning = settings.declaredReasoning(for: endpoint)
         let protocolKind: AIRequestProtocol

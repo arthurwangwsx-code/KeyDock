@@ -1,6 +1,6 @@
 # 当前状态总账
 
-费用停止阈值的前置修补已进入开发分支。两种协议在成功终态与传输排空间登记调用；Responses 本地历史超限仍保留已核实 token。6 个失败断言与 51 项定向通过见[费用方案及回归](technical/agent-estimated-cost-limit.md)。正式 alpha.28 的发行范围见下段。
+alpha.28 发布后的开发已有两项合入 master。两种 AI 协议已在传输排空前登记有效成功用量；剪贴板历史已区分读取失败、成功空库与无匹配，并提供重试。签名 A/B/C 合成窗口初始计数与正文已实际观察，尚无一次插入被接收的证据。见[发行后的分项记录](implementation/retention-shutdown-2026-11-26.md)及[费用前置回归](technical/agent-estimated-cost-limit.md)。
 
 当前公开预发布与 `/Applications/KeyDock.app` 均为 [alpha.28，build 28](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.28)，固定源 `6490bc51d00b45c47e0450c90b8f25f5c508c5b6`。1,098 次 Swift、157 项 Python、1,037 个中英键、两轮生产 OCR、同源双 CI、优化 Preview 及两次原生启动通过。App 与 DMG 已公证，公开资产已回下载；正式安装实测 27 → 28 → 27 → 28。详见[本轮证据和 P0–P4 验收总账](implementation/retention-shutdown-2026-11-26.md)。
 

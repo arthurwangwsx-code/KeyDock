@@ -1,10 +1,36 @@
 import Foundation
+import SwiftUI
 import Testing
 import AICore
 import AutomationCore
 @testable import WorkbenchFeature
 
 @Suite(.serialized) @MainActor struct AIModelIntegrationTests {
+    @Test(arguments: [1024, 4096]) func enablingOutputOverrideCopiesTheParentEvenBeforeServiceSetup(_ limit: Int) {
+        var settings = AIModelSettings(), draft = AIModelOptions()
+        settings.defaults.maxOutputTokens = limit
+        settings.scenes[AIScene.translation.rawValue] = .init(maxOutputTokens: 8192)
+        let binding = Binding(get: { draft }, set: { draft = $0 })
+        let scenario = AIModelSettingsFields(options: binding, endpoint: "", globalModel: "", settings: settings, scene: .translation, isScenario: true)
+        scenario.outputLimitOverride.wrappedValue = true
+        #expect(draft.maxOutputTokens == limit)
+        draft.maxOutputTokens = 512
+        scenario.outputLimitOverride.wrappedValue = true
+        #expect(draft.maxOutputTokens == 512)
+        scenario.outputLimitOverride.wrappedValue = false
+        #expect(draft.maxOutputTokens == nil)
+        let definition = AIModelSettingsFields(options: binding, endpoint: "", globalModel: "", settings: settings, scene: .translation)
+        definition.outputLimitOverride.wrappedValue = true
+        #expect(draft.maxOutputTokens == 8192)
+        definition.outputLimitOverride.wrappedValue = false
+        #expect(AIModelResolver.outputTokenLimit(settings: settings, scene: .translation, override: draft) == 8192)
+    }
+    @Test func compatibleServiceKeepsListedCatalogModelProvenance() throws {
+        let known = try #require(AIModelCatalog.models.first { $0.recommended })
+        let fields = AIModelSettingsFields(options: .constant(.init()), endpoint: "https://synthetic.invalid/api",
+            globalModel: known.id, settings: .init(), scene: .text, inventoryModels: [AIModelID(known.id)])
+        #expect(fields.catalogLabel(known) == known.displayName + " · " + L("Listed by service · capabilities unverified"))
+    }
     @Test func legacyMigrationIsIdempotentAndPreservesOverridesWithoutChangingProtocol() throws {
         var old = AppConfiguration()
         old.model = "old-exact-model"; old.aiActions = AppConfiguration.builtins

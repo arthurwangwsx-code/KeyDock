@@ -29,6 +29,16 @@
 
 ## 后续 P0–P4 验收总账
 
+### 发行后已晋升的开发源码
+
+| 范围 | 状态 | 源码和结果 |
+|---|---|---|
+| 提供方成功登记 | PASS | `7aa8a08`。Chat 和 Responses 在收到成功终态后登记调用成功，再等待传输排空。Responses 本地 1 MiB 历史超限保留 17 输入和 9 输出 token。6 个 RED 断言、51 项定向、干净全量 1,100 Swift／157 Python、两轮系统 OCR、优化 Preview 及[同源 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45839335071)分别留证。费用金额阈值仍开放。 |
+| 剪贴板读取失败和重试 | PASS（受控存储） | `d6f7c9a`。独立面板及工作区使用查询实际结果决定错误、空库或无匹配。回归覆盖空／非空查询失败、两窗口隔离、同词重试、断开和迟到结果。干净全量 1,100 Swift／157 Python、两轮生产 OCR 及[同源 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45841572613)通过。 |
+| A/B/C 接收端 | PARTIAL（签名原生宿主） | 同源 Review 与 fixture 均以 Developer ID 签名，独立进程启动。三个真实窗口分别显示自己的 Paste 计数 0，正文与各自合成基线相符。PersonalAI 能按窗口读取 fixture；对菜单栏 Review 指定 bundle 和实际 PID 时均不能取得窗口。没有发送 Paste。两进程已正常退出，stop 回执 `7a9acff6-e84a-46bd-8667-8ce29cc7f609`。一次插入、有序字节、目标漂移及权限撤销仍待实际发送与接收验收。 |
+
+只读审查的源码定位：退出等待在 `WorkbenchModel.swift:430`、延迟 owner 等待在同文件第 442 行；维护报告分类在 `AIUsageMetadataStore.swift:42`，相同 UUID 冲突在第 447 行。直接窗口操作的入口在 `KeyDockApp.swift:380`，等待 intent 后取当前窗口在 `DesktopActions.swift:65–84`。剪贴板实际 AX 插入事务见 `ClipboardPasteService.swift:33–54`。模型场景及输出上限的继承顺序由 `AIModelResolver` 处理。三组证据均按该次检查的源码定位。
+
 定向回归 `da1cf767-a556-4969-8e00-38b726f0cf35` 通过 59 项执行，回执摘要 `fd9be8cdf6565875644a6cfe92f90a639144cb7c80791a44726223d7a0694aa5`。合成 HTTP Workflow 的最后一份索引为一个新叶、两次 POST，显示保留 12 输入／5 输出 token。在候选 alpha.28 上另行记录干净全量、CI、优化 Preview 及真正进程重启。
 
 | 项目 | 证据或差距 | 验收条件 |

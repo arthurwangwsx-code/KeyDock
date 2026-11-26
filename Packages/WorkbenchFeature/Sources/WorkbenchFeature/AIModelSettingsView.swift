@@ -53,6 +53,25 @@ struct AIModelSettingsFields: View {
         return inventoryModels.filter { !catalog.contains($0) }
     }
     private var official: Bool { URL(string: endpoint).map(AIModelCatalog.isOfficial) ?? false }
+    var outputLimitOverride: Binding<Bool> {
+        Binding(get: { options.maxOutputTokens != nil }, set: { enabled in
+            if !enabled { options.maxOutputTokens = nil }
+            else if options.maxOutputTokens == nil {
+                options.maxOutputTokens = AIModelResolver.outputTokenLimit(settings: settings, scene: isScenario ? nil : scene)
+            }
+        })
+    }
+
+    func catalogLabel(_ model: AIModelCapability) -> String {
+        var parts = [model.displayName]
+        if model.deprecated { parts.append(L("Deprecated model")) }
+        if !official && inventoryModels.contains(AIModelID(model.id)) {
+            parts.append(L("Listed by service · capabilities unverified"))
+        } else if !model.deprecated {
+            parts.append(official ? L("Recommended model") : L("Catalog model · verify service support"))
+        }
+        return parts.joined(separator: " · ")
+    }
     private var declaredReasoning: Bool { URL(string: endpoint).map { settings.declaredReasoning(for: $0) } ?? false }
     private var selectedModel: String {
         AIModelResolver.modelID(globalModel: isGlobal ? options.model : globalModel, settings: settings,
@@ -90,7 +109,7 @@ struct AIModelSettingsFields: View {
             Picker(L("Model selection"), selection: modelSelection) {
                 Text(isGlobal ? L("Choose a model") : L("Inherit from parent")).tag(AIModelID(""))
                 ForEach(AIModelCatalog.models) { model in
-                    Text(model.displayName + " · " + (model.deprecated ? L("Deprecated model") : (official ? L("Recommended model") : L("Catalog model · verify service support")))).tag(AIModelID(model.id))
+                    Text(catalogLabel(model)).tag(AIModelID(model.id))
                 }
                 ForEach(discoveredModels) { model in
                     Text(model.value + " · " + L("Listed by service · capabilities unverified")).tag(model)
@@ -111,10 +130,10 @@ struct AIModelSettingsFields: View {
                 ForEach(reasoningChoices, id: \.self) { effort in Text(effort.title).tag(effort) }
             }.accessibilityLabel(contextTitle + " · " + L("Reasoning effort"))
             if !isGlobal {
-                Toggle(L("Override output token limit"), isOn: Binding(get: { options.maxOutputTokens != nil }, set: { options.maxOutputTokens = $0 ? 2048 : nil }))
+                Toggle(L("Override output token limit"), isOn: outputLimitOverride)
             }
-            if options.maxOutputTokens != nil {
-                TextField(L("Maximum output tokens"), value: Binding(get: { options.maxOutputTokens ?? 2048 }, set: { options.maxOutputTokens = $0 }), format: .number.grouping(.never))
+            if let current = options.maxOutputTokens {
+                TextField(L("Maximum output tokens"), value: Binding(get: { options.maxOutputTokens ?? current }, set: { options.maxOutputTokens = $0 }), format: .number.grouping(.never))
             }
             if let effective {
                 VStack(alignment: .leading, spacing: 3) {
