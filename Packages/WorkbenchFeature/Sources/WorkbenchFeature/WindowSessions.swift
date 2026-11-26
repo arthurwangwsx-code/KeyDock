@@ -28,6 +28,8 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public private(set) var resultBatch: ResultBatch?
     public var onExecute: ((CommandItem) -> Void)?
     @Published public var draft: AIDraftDocument? { didSet { updateVisibleReferences() } }
+    @Published var draftCloseIntent: AIDraftCloseIntent?
+    public var ownsDraftCloseReview: Bool { draftCloseIntent != nil }
     private let visibilityOwner = UUID()
     private var visible = false
     private let store: WorkbenchModel
@@ -49,7 +51,19 @@ private struct LauncherCatalogProvider: CommandProviding {
         else { store.releaseVisibleReferences(owner: visibilityOwner) }
     }
     public func removeHistory(draftIDs: Set<UUID>) { if let draft, draftIDs.contains(draft.id) { self.draft = nil } }
-    public func reset() { draft = nil; query = ""; selectedID = nil; actionsVisible = false; focusRequest = UUID(); search() }
+    public func reset() {
+        guard !ownsDraftCloseReview else { return }
+        draft = nil; query = ""; selectedID = nil; actionsVisible = false; focusRequest = UUID(); search()
+    }
+    func prepareDraftClose(_ document: AIDraftDocument) {
+        guard !ownsDraftCloseReview, draft === document, store.ownsDraft(document), !document.isClosing, !store.isShuttingDown else { return }
+        // 先登记逻辑owner，早于原生sheet让出父窗口key；直到实际dismiss才释放。
+        draftCloseIntent = AIDraftCloseIntent(document: document)
+    }
+    func draftCloseDidDismiss(_ id: UUID) {
+        guard draftCloseIntent?.id == id else { return }
+        draftCloseIntent = nil
+    }
     public func search() {
         searchTask?.cancel(); generation &+= 1
         let request = QueryRequest(generation: generation, text: query, source: "keydock.launcher")

@@ -234,7 +234,7 @@ import Darwin
     }
     func reopen() {
         guard !store.isShuttingDown else { return }
-        if focusTaskMaterialReview() { return }
+        if focusBlockingReview() { return }
         // Dock/reopen不能把正在审阅或保存的sheet盖在启动台后面；按当前窗口前后顺序选择。
         for window in NSApp.orderedWindows where (window === settings || window === workspace) && window.isVisible {
             guard window.attachedSheet != nil else { continue }
@@ -247,7 +247,7 @@ import Darwin
     }
     func presentLauncher(commandID: String? = nil) {
         guard !store.isShuttingDown else { return }
-        if focusTaskMaterialReview() { return }
+        if focusBlockingReview() { return }
         let invocation = commandID.flatMap { store.prepareShortcutInvocation(id:$0) }
         if commandID != nil && invocation == nil { return }
         revokeDesktopInvocations()
@@ -290,6 +290,7 @@ import Darwin
     }
     private func runDesktopAction(_ item: CommandItem, caller: ExecutionCaller) {
         guard !store.isShuttingDown else { return }
+        if launcherSession.ownsDraftCloseReview { _ = focusBlockingReview(); return }
         if store.isDesktopWorkspace(item) {
             revokeDesktopInvocations()
             guard !safeSmoke, let app = NSWorkspace.shared.frontmostApplication else { store.showError(DesktopError.accessibilityRequired); store.settingsNotice = store.launcherNotice; return }
@@ -332,6 +333,7 @@ import Darwin
         }
     }
     func dismissLauncher(restore: Bool) {
+        guard !launcherSession.ownsDraftCloseReview else { return }
         launcherSession.setVisible(false)
         store.invalidateLauncherReplies()
         generation = UUID(); captureTask?.cancel(); capturePending = false; launcherSession.contextCapturePending = false; pendingCommand = nil; launcherSession.actionsVisible = false; launcher?.orderOut(nil)
@@ -343,6 +345,7 @@ import Darwin
     }
     func openSettings(_ pane: SettingsPane? = nil) {
         guard !store.isShuttingDown else { return }
+        if launcherSession.ownsDraftCloseReview { _ = focusBlockingReview(); return }
         revokeDesktopInvocations()
         dismissClipboard(restore: false)
         settingsSession.setVisible(true)
@@ -359,6 +362,7 @@ import Darwin
     }
     func openWorkspace(_ route: WorkspaceRoute? = nil) {
         guard !store.isShuttingDown else { return }
+        if launcherSession.ownsDraftCloseReview { _ = focusBlockingReview(); return }
         revokeDesktopInvocations()
         dismissClipboard(restore: false)
         workspaceSession.present(route, in: store)
@@ -374,7 +378,7 @@ import Darwin
     }
     func presentClipboard() {
         guard !store.isShuttingDown else { return }
-        if focusTaskMaterialReview() { return }
+        if focusBlockingReview() { return }
         revokeDesktopInvocations()
         if clipboardPanel?.isKeyWindow == true { dismissClipboard(restore: true); return }
         let ownPID = ProcessInfo.processInfo.processIdentifier
@@ -664,9 +668,12 @@ import Darwin
         else { NSApp.keyWindow?.performClose(nil) }
     }
     @objc private func quitAction() { NSApp.terminate(nil) }
-    private func focusTaskMaterialReview() -> Bool {
-        guard workspaceSession.ownsTaskMaterialReview else { return false }
-        if var target = workspace {
+    private func focusBlockingReview() -> Bool {
+        let owner: NSWindow?
+        if launcherSession.ownsDraftCloseReview { owner = launcher }
+        else if workspaceSession.ownsTaskMaterialReview { owner = workspace }
+        else { return false }
+        if var target = owner {
             while let child = target.attachedSheet, child.isVisible { target = child }
             NSApp.activate(ignoringOtherApps: true); target.makeKeyAndOrderFront(nil)
         }
@@ -678,7 +685,7 @@ import Darwin
         let definitions = entries.map { entry in
             HotkeyDefinition(id: entry.id, binding: entry.binding) { [weak self] in
                 guard let self else { return }
-                if self.focusTaskMaterialReview() { return }
+                if self.focusBlockingReview() { return }
                 if entry.commandID == "utility.clipboard" { self.presentClipboard() }
                 else if let command = entry.commandID, command.hasPrefix("desktop-workspace.") { self.store.performDesktopWorkspaceShortcut(id: command) }
                 else if let command = entry.commandID, self.store.isDesktopCommand(command) { self.store.desktopShortcut(command) }
@@ -708,7 +715,7 @@ import Darwin
         }
     }
     func deactivate() {
-        if launcher?.isVisible == true { dismissLauncher(restore: false) }
+        if launcher?.isVisible == true, !launcherSession.ownsDraftCloseReview, launcher?.attachedSheet == nil { dismissLauncher(restore: false) }
         if clipboardPanel?.isVisible == true && clipboardPaste == nil { dismissClipboard(restore: false) }
     }
     func windowDidResignKey(_ notification: Notification) {
@@ -716,7 +723,8 @@ import Darwin
             if clipboardPanel?.isVisible == true && clipboardPaste == nil { dismissClipboard(restore: false) }
             return
         }
-        guard let window = notification.object as? NSWindow, window === launcher, !launcherSession.actionsVisible else { return }
+        guard let window = notification.object as? NSWindow, window === launcher,
+              !launcherSession.actionsVisible, !launcherSession.ownsDraftCloseReview, window.attachedSheet == nil else { return }
         dismissLauncher(restore: false)
     }
     func windowShouldClose(_ sender: NSWindow) -> Bool {

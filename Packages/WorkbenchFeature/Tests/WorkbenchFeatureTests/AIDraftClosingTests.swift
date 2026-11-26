@@ -9,6 +9,44 @@ import Testing
 }
 
 @Suite(.serialized) @MainActor struct AIDraftClosingTests {
+    @Test func launcherReviewKeepsItsOwnerWhenConfirmationRemovesTheDraft() async throws {
+        let fixture = try RetentionFixture(); defer { Task { await fixture.cleanup() } }
+        let store = fixture.store, draft = store.createDraft(input: "Synthetic compact draft")
+        let launcher = LauncherSession(store: store)
+        launcher.draft = draft; launcher.setVisible(true)
+        store.onHistoryRemoved = { _, drafts in launcher.removeHistory(draftIDs: drafts) }
+        launcher.prepareDraftClose(draft)
+        let intent = try #require(launcher.draftCloseIntent)
+        launcher.reset()
+        #expect(launcher.draft === draft && launcher.ownsDraftCloseReview)
+        #expect(await intent.perform(in: store))
+        #expect(launcher.draft == nil && draft.isDiscarded && launcher.ownsDraftCloseReview)
+        let other = store.createDraft(input: "Synthetic independent draft")
+        launcher.draft = other; launcher.prepareDraftClose(other)
+        #expect(launcher.draftCloseIntent?.id == intent.id)
+        launcher.draftCloseDidDismiss(intent.id)
+        #expect(!launcher.ownsDraftCloseReview && launcher.draft === other && store.ownsDraft(other))
+        launcher.reset()
+        #expect(launcher.draft == nil)
+    }
+    @Test func cancelledOrStaleLauncherReviewCannotReleaseANewerReview() async throws {
+        let fixture = try RetentionFixture(); defer { Task { await fixture.cleanup() } }
+        let store = fixture.store, draft = store.createDraft(input: "Synthetic original")
+        let launcher = LauncherSession(store: store); launcher.draft = draft
+        launcher.prepareDraftClose(draft)
+        let first = try #require(launcher.draftCloseIntent)
+        draft.editInput("Synthetic newer input")
+        #expect(await first.perform(in: store) == false && store.ownsDraft(draft))
+        launcher.draftCloseDidDismiss(first.id)
+        #expect(draft.input == "Synthetic newer input" && launcher.draft === draft && !draft.isClosing)
+        launcher.prepareDraftClose(draft)
+        let second = try #require(launcher.draftCloseIntent)
+        #expect(second.id != first.id && second.isCurrent(in: store))
+        launcher.draftCloseDidDismiss(first.id)
+        #expect(launcher.draftCloseIntent?.id == second.id && launcher.ownsDraftCloseReview)
+        launcher.draftCloseDidDismiss(second.id)
+        #expect(!launcher.ownsDraftCloseReview && store.ownsDraft(draft))
+    }
     @Test func aChangedOriginalCannotBeDiscardedFromAnOldCloseReview() async throws {
         let fixture = try RetentionFixture(); defer { Task { await fixture.cleanup() } }
         let store = fixture.store, draft = store.createDraft(input:"Synthetic original")

@@ -10,9 +10,14 @@ public struct LauncherView: View {
     public init(store: WorkbenchModel, session: LauncherSession) { self.store = store; self.session = session }
     public var body: some View {
         Group {
-            if let draft = session.draft { AIContentView(store: store, draft: draft, compact: true, onBack: { session.reset() }) }
+            if let draft = session.draft { AIContentView(store: store, draft: draft, compact: true, onBack: { session.reset() }, onRequestClose: { session.prepareDraftClose(draft) }) }
             else { search }
         }.frame(width: KDTokens.launcherWidth, height: KDTokens.launcherHeight)
+            .background {
+                if let intent = session.draftCloseIntent {
+                    LauncherDraftCloseSheetHost(store: store, session: session, intent: intent).id(intent.id)
+                }
+            }
             .environment(\.locale, KDLocalizer.locale)
             .onAppear { pointerPosition = NSEvent.mouseLocation }
     }
@@ -101,4 +106,19 @@ public struct LauncherView: View {
     }
     private func category(_ kind: CommandKind) -> String { switch kind { case .application: L("App"); case .window: L("Window"); case .command: L("Command"); case .clipboard: L("Clipboard"); case .ai: L("AI"); case .utility: L("Tool") } }
     private func symbol(_ kind: CommandKind) -> String { switch kind { case .application: "app"; case .window: "macwindow"; case .command: "terminal"; case .clipboard: "clipboard"; case .ai: "sparkles"; case .utility: "square.grid.2x2" } }
+}
+
+/// 关闭确认会移除原AI子视图；sheet由稳定的Launcher根持有到实际dismiss。
+private struct LauncherDraftCloseSheetHost: View {
+    @ObservedObject var store: WorkbenchModel
+    @ObservedObject var session: LauncherSession
+    let intent: AIDraftCloseIntent
+    @State private var presented = false
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0).accessibilityHidden(true)
+            .sheet(isPresented: $presented, onDismiss: { session.draftCloseDidDismiss(intent.id) }) {
+                AIDraftCloseReviewView(store: store, intent: intent)
+            }
+            .onAppear { presented = true }
+    }
 }

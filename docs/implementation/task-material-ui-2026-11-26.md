@@ -1,5 +1,9 @@
 # 任务内容原生审阅与显式输入复用
 
+最终首帧复查补充：干净`426b31b`完整本机918 Swift／137 Python／931 key、同源CI45725802402与正式签名构建通过后，仍发现右侧Open in Workspace／Close draft存在于AX树但首张结果截图仅画出新Copy；AX关闭动作返回搜索，未观察到关闭审阅。owned域为`KeyDock-Review-4c6b3c9a-d743-435b-980b-64c0736b4db1`，优化Preview摘要`55a5ceb470c1176ccd193c2a86ec1b6d7c4a48451e8635a7b6c35a23df8ce7bf`。生命周期测量`alpha20-ai-first-frame-native-v1`虽为exit0（receipt SHA256 `f5d5af2a6795597d83281d4347da3b6f5c7161cd10a4cb463c0765b65d11ae12`），视觉状态明确FAIL。服务一次POST、无Authorization／工具请求，随后正常退出并收口server；未发布或晋升该源。
+
+修补稳定footer左右分组，compact Copy始终存在且无结果时停用，明确使用bordered样式；漏绘的唯一根因尚未证明。源码另确认Launcher对自身sheet让出key没有逻辑owner保护，后续重新呈现会reset移除承载sheet的AI子视图，因此将compact关闭审阅提升到稳定Launcher根，先登记owner，直到实际onDismiss才按ID释放，覆盖reset／呈现／热键／失焦／隐藏门禁。运行与关闭revision／cancel/drain授权保持，新增状态回归和原生复查另记。
+
 2026-11-26，继续`feature/task-material-retention`，主Agent单写；基线`a5deaca8a63e117f0054eef21d96c352d0805794`。基线[原生CI 45707552951](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45707552951)已通过，但这不代表本轮随后新增的UI源码取得同源CI资格。正式安装和公开Release仍为alpha.19，alpha.20尚未发行。
 
 ## 实现与状态

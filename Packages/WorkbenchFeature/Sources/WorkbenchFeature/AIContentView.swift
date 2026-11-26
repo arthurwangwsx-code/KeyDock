@@ -6,6 +6,7 @@ struct AIContentView: View {
     @ObservedObject var draft: AIDraftDocument
     var compact = false
     var onBack: (() -> Void)?
+    var onRequestClose: (() -> Void)?
     @FocusState private var inputFocused: Bool
     @State private var closeIntent: AIDraftCloseIntent?
     private var action: AIActionPreset? { store.configuration.aiActions.first { $0.id == draft.actionID } }
@@ -91,20 +92,27 @@ struct AIContentView: View {
     }
     private var footer: some View {
         HStack(spacing: 12) {
-                if let id = task?.id {
-                    Button(L("Copy")) { store.copyResult(id) }.disabled(task?.output.isEmpty != false)
-                    if store.canReplaceResult(id) { Button(L("Replace original selection")) { store.replaceResult(id) } }
+            HStack(spacing: 12) {
+                if compact || task != nil {
+                    Button(L("Copy")) { if let id = task?.id { store.copyResult(id) } }.disabled(task?.output.isEmpty != false)
+                    if let id = task?.id, store.canReplaceResult(id) { Button(L("Replace original selection")) { store.replaceResult(id) } }
                 }
                 if compact && needsConfiguration && (action == nil || task?.isRunning == true) { Button(L("Configure AI")) { store.onOpenSettings?(.aiService) } }
-                Spacer()
-                if compact {
+            }
+            Spacer()
+            if compact {
+                HStack(spacing: 12) {
                     Button(L("Open in Workspace")) { store.onOpenWorkspace?(.ai(draft.id)) }
                     closeDraftButton
-                }
-                else if !needsConfiguration || task != nil || action == nil { Button(L("Configure AI")) { store.onOpenSettings?(.aiService) } }
-            }.controlSize(.small)
+                }.fixedSize()
+            }
+            else if !needsConfiguration || task != nil || action == nil { Button(L("Configure AI")) { store.onOpenSettings?(.aiService) } }
+        }.buttonStyle(.bordered).controlSize(.small)
     }
     private var closeDraftButton: some View {
-        Button(L("Close draft"),role:.destructive) { closeIntent = AIDraftCloseIntent(document:draft) }
+        Button(L("Close draft"),role:.destructive) {
+            if let onRequestClose { onRequestClose() }
+            else { closeIntent = AIDraftCloseIntent(document:draft) }
+        }
     }
 }
