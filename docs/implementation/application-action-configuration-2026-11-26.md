@@ -22,6 +22,10 @@ Review身份probe保存同一次NSRunningApplication快照中的缺失／变化�
 
 完整检查v1：153 Python通过，Swift发现两处旧fixture仍伪装新版数据为schema1或尝试编码未知schema。修正fixture为真实旧字段集，并保留摘要对未知schema号的过滤检查及当前writer拒绝未知schema的合同；不放宽生产reader／writer来迁就测试。原检查失败保留。
 
+修正后完整检查v2在a9fa255通过，包含本机生产OCR；summary `.local/pipeline/20261126T073826251825Z/check-summary.json`，测量receipt SHA256 `d53622abe5ce14b8ac2906a8dee07db8ec61a96cd46dab2da57105875feacfa0`。后续UI身份修补另需完整检查，不把此旧资格套用于新源。
+
+交互复核发现View.init可在重绘时重算epoch／创建UUID；最终改为SettingsSession持有固定草稿对象和字段，SettingsRoot稳定Host承载sheet。关闭后保留同ID owner到实际dismiss，保存核对对象身份，旧close／dismiss不能释放新owner。`application-action-editor-owner-tests-v2`的23项定向通过，包含导航保留未存文本、A→B→A、关闭动画互斥及旧回调；receipt SHA256 `1af537472201ebc951a8dd002f822a3602c4da5b1c96daf08137cdc70a3eba41`。子Agent静态复核通过，原生弹窗仍待实测。
+
 ## 尚待本增量证明
 
 完整检查、优化Preview及双语原生设置／删除／重启、同源CI、签名发行与正式安装分别待执行。原真实插入／实体热键、完整深浅／IME／VoiceOver／多屏、最低系统、长期驻留、20条AI质量样本及P0–P4工程缺口仍开放。

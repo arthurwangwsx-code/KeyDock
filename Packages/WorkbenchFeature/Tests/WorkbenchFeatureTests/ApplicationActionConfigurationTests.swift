@@ -212,4 +212,39 @@ import MacAdapters
             #expect(throws: (any Error).self) { try JSONDecoder().decode(AppConfiguration.self, from: JSONSerialization.data(withJSONObject: document)) }
         }
     }
+    @Test func editorOwnershipSurvivesPaneChangesAndFreezesIdentityUntilActualDismissal() async throws {
+        let f = try ApplicationConfigurationFixture(), store = try f.model()
+        #expect(store.saveApplicationAction(f.action))
+        let session = SettingsSession(store: store)
+        session.beginApplicationAction(f.action, in: store)
+        let original = try #require(session.applicationActionEditor)
+        session.applicationActionEditorDidAppear(original.id)
+        original.name = "Unsaved draft text"
+        let changed = try SavedApplicationAction(id: f.action.id, name: "Changed", applicationID: f.action.applicationID, behavior: .show)
+        #expect(store.saveApplicationAction(changed) && store.saveApplicationAction(f.action))
+        session.pane = .general
+        #expect(session.applicationActionEditor?.id == original.id && session.applicationActionEditor?.expectedRevision == original.expectedRevision)
+        #expect(session.applicationActionEditor?.name == "Unsaved draft text")
+        #expect(!store.saveApplicationAction(changed, expectedRevision: original.expectedRevision))
+        session.prepareRemoval(.applicationAction(f.action.id), in: store)
+        session.beginApplicationAction(nil, in: store)
+        #expect(session.savedItemRemoval == nil && session.applicationActionEditor?.id == original.id)
+        session.closeApplicationActionEditor(original.id)
+        #expect(!session.canBeginSavedItemEditor)
+        session.beginApplicationAction(nil, in: store); #expect(session.applicationActionEditor?.id == original.id)
+        session.applicationActionEditorDidDismiss(original.id)
+        session.beginApplicationAction(nil, in: store)
+        let creation = try #require(session.applicationActionEditor)
+        session.applicationActionEditorDidAppear(creation.id)
+        #expect(creation.initial == nil && creation.actionID == creation.id && creation.actionID != original.actionID)
+        session.closeApplicationActionEditor(original.id)
+        session.applicationActionEditorDidDismiss(original.id)
+        #expect(session.applicationActionEditor?.id == creation.id && !session.canBeginSavedItemEditor)
+        session.closeApplicationActionEditor(creation.id)
+        session.applicationActionEditorDidDismiss(original.id)
+        #expect(session.applicationActionEditor?.id == creation.id && !session.canBeginSavedItemEditor)
+        session.applicationActionEditorDidDismiss(creation.id)
+        #expect(session.canBeginSavedItemEditor)
+        await f.cleanup(store)
+    }
 }

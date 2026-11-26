@@ -136,8 +136,10 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published var sourceRemoval: SourceRemovalPresentation?
     @Published var sourceRemovalDismissing = false
     @Published var desktopWorkspaceEditor: DesktopWorkspaceEditorDraft?
+    @Published var applicationActionEditor: ApplicationActionEditorDraft?
+    @Published var applicationActionEditorDismissing = false
     var canBeginSavedItemEditor: Bool {
-        store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && aiRateDraft == nil && !aiRateDismissing && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil && settingsSummaryExport == nil && !settingsSummaryDismissing && configurationExport == nil && !configurationExportDismissing && sourceRemoval == nil && !sourceRemovalDismissing
+        store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && aiRateDraft == nil && !aiRateDismissing && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil && applicationActionEditor == nil && !applicationActionEditorDismissing && settingsSummaryExport == nil && !settingsSummaryDismissing && configurationExport == nil && !configurationExportDismissing && sourceRemoval == nil && !sourceRemovalDismissing
     }
     @Published var apiSaveNotice: LocalizedNotice = .none
     @Published public var apiKey = "" { didSet { apiSaveNotice = .none; invalidateModelInventory() } }

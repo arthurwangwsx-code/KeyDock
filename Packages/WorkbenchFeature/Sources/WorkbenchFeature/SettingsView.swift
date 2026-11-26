@@ -38,6 +38,7 @@ public struct SettingsRootView: View {
             .sheet(item: $session.deletedToolPreferencesReview) { presentation in DeletedToolPreferencesView(store: store, session: session, presentation: presentation) }
             .sheet(item: $session.desktopWorkspaceEditor) { draft in DesktopWorkspaceEditorView(store: store, session: session, draft: draft) }
             .background {
+                if let draft = session.applicationActionEditor { ApplicationActionSheetHost(store: store, session: session, draft: draft).id(draft.id) }
                 if let draft = session.aiRateDraft { AIRateSheetHost(store: store, session: session, draft: draft).id(draft.id) }
                 if let presentation = session.sourceRemoval {
                     SourceRemovalSheetHost(store: store, presentation: presentation, cancel: session.cancelSourceRemoval, didAppear: session.sourceRemovalDidAppear, didDismiss: session.sourceRemovalDidDismiss).id(presentation.id)
