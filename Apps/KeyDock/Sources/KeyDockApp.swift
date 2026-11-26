@@ -735,7 +735,19 @@ import Combine
                     window.displayIfNeeded()
                     guard let pixels = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
                     view.cacheDisplay(in: view.bounds, to: pixels)
-                    guard let data = pixels.representation(using: .png, properties: [:]) else { return }
+                    // 语义色随本窗口外观解析；透明区域只合成本窗口底色，不读取桌面背景。
+                    guard let source = pixels.cgImage, let rgb = CGColorSpace(name: CGColorSpace.sRGB),
+                          let canvas = CGContext(data: nil, width: source.width, height: source.height,
+                                                 bitsPerComponent: 8, bytesPerRow: 0, space: rgb,
+                                                 bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return }
+                    let bounds = CGRect(x: 0, y: 0, width: source.width, height: source.height)
+                    view.effectiveAppearance.performAsCurrentDrawingAppearance {
+                        canvas.setFillColor(NSColor.windowBackgroundColor.cgColor)
+                        canvas.fill(bounds)
+                    }
+                    canvas.draw(source, in: bounds)
+                    guard let composed = canvas.makeImage(),
+                          let data = NSBitmapImageRep(cgImage: composed).representation(using: .png, properties: [:]) else { return }
                     try data.write(to: output.appendingPathComponent(id.uuidString + ".png"), options: .withoutOverwriting)
                 }
                 print("KEYDOCK_REVIEW_TASK_VIEWS " + output.lastPathComponent)

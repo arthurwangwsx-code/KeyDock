@@ -699,6 +699,7 @@ def main():
     p = sub.add_parser("verify-assets"); p.add_argument("directory", type=Path)
     p = sub.add_parser("qualify-install"); p.add_argument("--app", type=Path, default=BUILD / "preview/KeyDock Preview.app")
     p = sub.add_parser("native-review"); p.add_argument("--app", type=Path, default=BUILD / "preview/KeyDock Preview.app"); p.add_argument("--fixture", type=Path)
+    p.add_argument("--task-views", nargs=2, metavar=("FIRST", "SECOND"))
     p = sub.add_parser("install"); p.add_argument("--app", type=Path, required=True); p.add_argument("--destination", type=Path); p.add_argument("--quit-running", action="store_true"); p.add_argument("--dry-run", action="store_true"); p.add_argument("--receipt", type=Path)
     p = sub.add_parser("rollback"); p.add_argument("receipt", type=Path); p.add_argument("--dry-run", action="store_true"); p.add_argument("--quit-running", action="store_true")
     p = sub.add_parser("debug"); p.add_argument("--no-launch", action="store_true")
@@ -764,6 +765,7 @@ def main():
     elif args.command == "native-review":
         command = [sys.executable, ROOT / "scripts/native-review.py", "--app", args.app.expanduser().resolve()]
         if args.fixture is not None: command += ["--fixture", args.fixture.expanduser().absolute()]
+        if args.task_views: command += ["--task-views", *args.task_views]
         run(command)
     elif args.command == "install": install(args.app, args.destination, args.quit_running, args.dry_run, args.receipt)
     elif args.command == "rollback":
