@@ -39,6 +39,8 @@ struct ReadOnlyTextPreview: NSViewRepresentable {
     }
     func makeNSView(context: Context) -> NSScrollView {
         let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 600, height: 400))
+        // 长文档的原生绘制与玻璃背景合成均限于实际阅读视口。
+        scroll.clipsToBounds = true; scroll.contentView.clipsToBounds = true
         scroll.hasVerticalScroller = true; scroll.hasHorizontalScroller = false
         scroll.drawsBackground = !transparent
         let view = NSTextView(frame: scroll.contentView.bounds)

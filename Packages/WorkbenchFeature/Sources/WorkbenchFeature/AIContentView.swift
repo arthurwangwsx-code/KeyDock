@@ -20,7 +20,7 @@ struct AIContentView: View {
                 ScrollView { content }.frame(maxWidth: .infinity, maxHeight: .infinity)
             } else { content }
             if compact && !draft.notice.isEmpty { KDInlineNotice(draft.notice).lineLimit(2) }
-            footer
+            footer.zIndex(1)
             if !compact { HStack { Spacer(); closeDraftButton }.controlSize(.small) }
         }.disabled(draft.isClosing).padding(compact ? 22 : 24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .sheet(item:$closeIntent) { intent in AIDraftCloseReviewView(store:store,intent:intent) }
@@ -85,7 +85,7 @@ struct AIContentView: View {
                 if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary, compact: compact) }
                 ReadOnlyTextPreview(text: task.output.isEmpty && task.isRunning ? L("Waiting for response…") : task.output,
                     accessibilityLabel: L("Task output"), pointSize: compact ? 13 : 14)
-                    .frame(maxWidth: .infinity, minHeight: compact ? 140 : 180, idealHeight: compact ? 140 : 260, maxHeight: compact ? 140 : 420).modifier(KDReadingSurface())
+                    .frame(maxWidth: .infinity, minHeight: compact ? 140 : 180, idealHeight: compact ? 140 : 260, maxHeight: compact ? 140 : 420).clipped().modifier(KDReadingSurface())
             } else if !compact { KDEmptyState(symbol: "sparkles", title: L("Ready when you are"), detail: L("Choose an action and add text. Only this input is sent to your model.")) }
             if !compact && !draft.notice.isEmpty { KDInlineNotice(draft.notice).lineLimit(4) }
         }.frame(maxWidth: .infinity, alignment: .leading)

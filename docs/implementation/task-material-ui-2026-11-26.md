@@ -1,5 +1,7 @@
 # 任务内容原生审阅与显式输入复用
 
+`83e06b4`的8项关闭状态回归通过，优化Preview实际显示compact关闭审阅，⌘Return保持审阅且服务仅一次POST，Cancel保留原结果，再次确认关闭后返回搜索，新草稿输入为空且获得焦点。原生生命周期`compact-ai-modal-native-v1` receipt SHA256 `4d9f84dc926d06cf31f422badfb5904885e44c088a5e64e03d533c6a864bc600`；这不覆盖同轮仍失败的大结果首帧按钮绘制。短普通结果玻璃样例首次按钮完整；同一App切为进程内opaque样例后，1MiB partial大结果首次按钮也完整，见`compact-ai-layering-native-v1`与`compact-ai-opaque-native-v1`。opaque测量receipt SHA256 `62edfba67a2b0cfb990307dc94d5b35dfeb9b832fe3e42930f4783174d442e2d`，均只用owned合成域且正常退出。该对照将问题缩小到长原生文本与玻璃合成的交互，仍未证明唯一内部根因；后续显式约束原生scroll／clip视口并提高固定操作层的合成顺序，保留玻璃背景，需原生复验。
+
 最终首帧复查补充：干净`426b31b`完整本机918 Swift／137 Python／931 key、同源CI45725802402与正式签名构建通过后，仍发现右侧Open in Workspace／Close draft存在于AX树但首张结果截图仅画出新Copy；AX关闭动作返回搜索，未观察到关闭审阅。owned域为`KeyDock-Review-4c6b3c9a-d743-435b-980b-64c0736b4db1`，优化Preview摘要`55a5ceb470c1176ccd193c2a86ec1b6d7c4a48451e8635a7b6c35a23df8ce7bf`。生命周期测量`alpha20-ai-first-frame-native-v1`虽为exit0（receipt SHA256 `f5d5af2a6795597d83281d4347da3b6f5c7161cd10a4cb463c0765b65d11ae12`），视觉状态明确FAIL。服务一次POST、无Authorization／工具请求，随后正常退出并收口server；未发布或晋升该源。
 
 修补稳定footer左右分组，compact Copy始终存在且无结果时停用，明确使用bordered样式；漏绘的唯一根因尚未证明。源码另确认Launcher对自身sheet让出key没有逻辑owner保护，后续重新呈现会reset移除承载sheet的AI子视图，因此将compact关闭审阅提升到稳定Launcher根，先登记owner，直到实际onDismiss才按ID释放，覆盖reset／呈现／热键／失焦／隐藏门禁。运行与关闭revision／cancel/drain授权保持，新增状态回归和原生复查另记。
