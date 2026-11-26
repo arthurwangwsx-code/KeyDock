@@ -27,6 +27,8 @@ import MacAdapters
             #expect(addPreferences(ids, in: fixture, shortcuts: false))
             var legacy = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: fixture.file)) as? [String: Any])
             legacy["schemaVersion"] = 1
+            // 真实v1没有模型策略或撤权revision，不能仅改版本号伪装新版数据。
+            legacy.removeValue(forKey: "aiModelSettings"); legacy.removeValue(forKey: "aiSettingsRevision")
             let decoded = try JSONDecoder().decode(AppConfiguration.self, from: JSONSerialization.data(withJSONObject: legacy))
             #expect(decoded.preferences.favorites.isSuperset(of: ids) && ids.allSatisfy { decoded.preferences.aliases[$0] != nil })
             #expect(store.commitShortcutConfiguration(decoded))
