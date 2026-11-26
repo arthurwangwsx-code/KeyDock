@@ -288,3 +288,11 @@
 - [x] 35.5 扩展签名数据能力与安装／rollback header-only门禁，旧reader对材料／tmp／未知格式／pending clear拒绝，完全清空后允许；不修改invocation v2。137项Python及隔离签名Preview真实交换通过；旧能力声明为合成签名样本，非真实alpha.19运行资格。
 - [ ] 35.6 准确输入／成功边界／预算／故障／清除／ABA／重启／费用与签名兼容回归，原生中英明暗／长正文／保存失败和按需复用闭环分别留证；30项追加定向及8项关闭回归，128KiB保存／失败／重审／删除／关闭后回填、1MiB CLI／partial AI保存、900000字节范围／取消、nil／零任务布局、compact关闭审阅与玻璃首次大结果操作区子集已完成；完整焦点／中英明暗／系统矩阵仍开放。
 - [x] 35.7 alpha.20完成aa0edfc干净本机920 Swift／137 Python／931 key、指定同源CI、已观察原生子集、新协议真实签名公证／公开发行／正式原子安装和About20。alpha.19回退副本身份另核验，owned签名Preview回退资格见35.5，不声称正式逆向交换已执行；35.6完整矩阵、完整RunStore及P0–P4保持开放。
+
+## 36. 独立桌面验收入口（承接10.1–10.2）
+
+- [x] 36.1 实现固定BuildInfo绑定合同、owned根／marker／文件FD身份、实例出生与永久撤销scope；12项定向测试（含参数用例）与只读评审通过。保留Foundation误拒/private/var的首轮FAIL及修复探针；实际BuildInfo生产、companion／签名／UI接入仍依36.2–36.5，见基础层复查。
+- [ ] 36.2 Review运行策略保留allowContextCapture=false，隔离配置与新空辅助session、空调度／活动、禁止历史恢复和一般执行；复制与插入使用窄Host动作，覆盖网络／MCP／文件绕行入口。
+- [ ] 36.3 独立编译配置／bundle／profile、复用ClipboardPanel及窄设置／快捷键、标准paste／拖入拒绝；生产安装／package／publish拒绝，普通Preview限制不变。
+- [ ] 36.4 固定companion及owned启动器、源／签名／实例收据、精确正常退出、配置持久化和故障拒绝的流水线／回归。
+- [ ] 36.5 原生检查面板、拒绝态及真实目标恰好接收一次／目标变化／取消／重启；权限、实体键盘和完整系统矩阵继续分别留证，不以Review关闭10.1–10.2。

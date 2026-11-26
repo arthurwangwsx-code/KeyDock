@@ -36,6 +36,8 @@
 | [alpha.19发行与安装证据](implementation/alpha19-release-2026-11-26.md) | 精确源、本机／同源CI、公证恢复、公开回下载与正式App身份；About19未观察 |
 | [alpha.20发行与安装证据](implementation/alpha20-release-2026-11-26.md) | 920 Swift／137 Python／931 key、同源CI、新候选协议真实App／DMG公证、公开审计、原子替换与About20 |
 | [剩余工程与系统验收](technical/remaining-engineering-2026-11-26.md) | 原目标的快捷操作验收入口、自定义一致性、Agent预算、持久步骤、原图与增量用量；实现与证明分开 |
+| [独立桌面验收入口](technical/desktop-review.md) | 合成宿主、身份scope、受限Workbench／UI及启动流水线的完整合同 |
+| [桌面验收scope基础层复查](implementation/desktop-review-scope-2026-11-26.md) | 12项定向、物理路径误拒绝修复和只读评审；原生接入及真实插入仍开放 |
 | [冻结候选与公证恢复](technical/release-candidate-recovery.md) | 独立inode、不可变输入、持久索引、unknown不重投和同请求续查；新协议完整发行仍开放 |
 | [可选任务材料](technical/task-material-retention.md) | 默认关闭、准确输入／成功边界、手动保存／按需读取、出生身份与删除意图和旧reader门禁；任务35实施中 |
 | [任务材料基础层复查](implementation/task-material-core-2026-11-26.md) | 固定FD／CAS／删除恢复、未来输入捕获与签名reader门禁；原生审阅及完整发行仍开放 |

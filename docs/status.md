@@ -4,6 +4,8 @@
 
 完整产品仍PARTIAL：已观察的玻璃大结果／关闭审阅／材料保存等子集不替代真实插入、实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉。API按用户决定稍后配置。[剩余工程](technical/remaining-engineering-2026-11-26.md)包括快捷操作验收入口、自定义一致性、Agent总预算、持久步骤、原图附件及稳定增量用量；完整P0–P4目标继续推进。
 
+当前开发分支`feature/desktop-review`已完成身份scope基础层、12项定向测试及只读评审；首轮物理路径误拒绝已修复，失败证据保留。Workbench／App／签名合成宿主和流水线接入继续进行，尚未完成真实剪贴板插入验收，也未发布alpha.21。见[基础层复查](implementation/desktop-review-scope-2026-11-26.md)。
+
 ## 历史推进与当时资格
 
 最新原生复查：干净`c48f461`优化Preview在保留玻璃背景时，1MiB上限的部分结果首次画面已显示Copy／Open in Workspace／Close draft；实际工作区入口、末尾滚动和明确结果-only保存通过，磁盘核验为1048576字节、partial=true，一次loopback POST且无凭据／工具请求。前序`83e06b4`另完成compact关闭审阅、⌘Return不重跑、取消保留、确认关闭及新空草稿子集。完整焦点／中英明暗／系统矩阵仍开放；最终同源完整检查与新CI／发行继续推进，正式App仍为alpha.19。详情与保留的FAIL见[本轮UI记录](implementation/task-material-ui-2026-11-26.md)。
