@@ -39,7 +39,7 @@ import Testing
                         appPath: app.path, executablePath: binary.path)
     }
     func prepare(beforeHash: @escaping @Sendable () -> Void = {}) async throws -> DesktopReviewScope {
-        try await DesktopReviewScope.prepare(binding: binding, root: root, probe: { [weak self] _ in self?.process }, beforeHash: beforeHash)
+        try await DesktopReviewScope.prepare(binding: binding, root: root, probe: { [weak self] _ in self?.process.map(DesktopReviewProcessSnapshot.init) }, beforeHash: beforeHash)
     }
     func cleanup() { try? FileManager.default.removeItem(at: parent) }
     private static func hash(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
@@ -62,6 +62,18 @@ private final class ReviewHashGate: @unchecked Sendable {
 }
 
 @Suite(.serialized) @MainActor struct DesktopReviewScopeTests {
+    @Test func missingNativeFieldIsLatchedAndASecondProbeCannotRestoreIt() async throws {
+        let f = try ReviewScopeFixture(); defer { f.cleanup() }
+        let original = try #require(f.process)
+        var snapshot = DesktopReviewProcessSnapshot(original), probes = 0
+        let scope = try await DesktopReviewScope.prepare(binding: f.binding, root: f.root, probe: { _ in probes += 1; return snapshot })
+        snapshot.bundleIdentifier = nil
+        #expect(!scope.isCurrent && scope.diagnostic == .targetIdentityChanged && scope.targetDiagnostic == .bundleIdentifierUnavailable)
+        let failedProbeCount = probes
+        snapshot = .init(original)
+        #expect(!scope.isCurrent && !scope.permits(scope.targetIdentity))
+        #expect(scope.targetDiagnostic == .bundleIdentifierUnavailable && probes == failedProbeCount)
+    }
     @Test func firstInvalidationCategorySurvivesLaterChanges() async throws {
         let f = try ReviewScopeFixture(); defer { f.cleanup() }; let scope = try await f.prepare()
         try Data("synthetic replacement".utf8).write(to: f.marker)
@@ -115,7 +127,7 @@ private final class ReviewHashGate: @unchecked Sendable {
         let b = DesktopReviewBuildBinding(rootParent: alias.path, reviewBundleIdentifier: f.binding.reviewBundleIdentifier,
             fixtureBundleIdentifier: f.binding.fixtureBundleIdentifier, fixtureAppPath: f.app.path,
             fixtureBinarySHA256: f.binding.fixtureBinarySHA256, fixtureInfoSHA256: f.binding.fixtureInfoSHA256)
-        await #expect(throws: (any Error).self) { try await DesktopReviewScope.prepare(binding: b, root: root, probe: { _ in f.process }) }
+        await #expect(throws: (any Error).self) { try await DesktopReviewScope.prepare(binding: b, root: root, probe: { _ in f.process.map(DesktopReviewProcessSnapshot.init) }) }
     }
     @Test(arguments: ["/./", "/../", "//"])
     func noncanonicalFixturePathsAreRefused(_ component: String) async throws {
@@ -123,7 +135,7 @@ private final class ReviewHashGate: @unchecked Sendable {
         let b = DesktopReviewBuildBinding(rootParent: f.binding.rootParent, reviewBundleIdentifier: f.binding.reviewBundleIdentifier,
             fixtureBundleIdentifier: f.binding.fixtureBundleIdentifier, fixtureAppPath: f.parent.path + component + f.app.lastPathComponent,
             fixtureBinarySHA256: f.binding.fixtureBinarySHA256, fixtureInfoSHA256: f.binding.fixtureInfoSHA256)
-        await #expect(throws: DesktopReviewError.invalidScope) { try await DesktopReviewScope.prepare(binding: b, root: f.root, probe: { _ in f.process }) }
+        await #expect(throws: DesktopReviewError.invalidScope) { try await DesktopReviewScope.prepare(binding: b, root: f.root, probe: { _ in f.process.map(DesktopReviewProcessSnapshot.init) }) }
     }
     @Test(arguments: ["marker", "binary", "info"])
     func sameBytesAtANewInodePermanentlyRevoke(_ kind: String) async throws {
@@ -202,7 +214,7 @@ private final class ReviewHashGate: @unchecked Sendable {
         let b = DesktopReviewBuildBinding(rootParent: f.binding.rootParent, reviewBundleIdentifier: f.binding.reviewBundleIdentifier,
             fixtureBundleIdentifier: f.binding.fixtureBundleIdentifier, fixtureAppPath: f.binding.fixtureAppPath,
             fixtureBinarySHA256: String(repeating: "0", count: 64), fixtureInfoSHA256: f.binding.fixtureInfoSHA256)
-        await #expect(throws: DesktopReviewError.invalidScope) { try await DesktopReviewScope.prepare(binding: b, root: f.root, probe: { _ in f.process }) }
+        await #expect(throws: DesktopReviewError.invalidScope) { try await DesktopReviewScope.prepare(binding: b, root: f.root, probe: { _ in f.process.map(DesktopReviewProcessSnapshot.init) }) }
         let scope = try await f.prepare()
         #expect(scope.isCurrent)
     }

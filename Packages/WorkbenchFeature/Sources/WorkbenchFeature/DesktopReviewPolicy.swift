@@ -69,7 +69,10 @@ extension WorkbenchModel {
     public var desktopReviewDiagnostic: String {
         guard isDesktopReview else { return "not-review" }
         guard !isShuttingDown else { return "shutting-down" }
-        guard let scope = desktopReviewScope, scope.isCurrent else { return desktopReviewScope?.diagnostic?.rawValue ?? "scope-unavailable" }
+        guard let scope = desktopReviewScope, scope.isCurrent else {
+            let category = desktopReviewScope?.diagnostic?.rawValue ?? "scope-unavailable"
+            return desktopReviewScope?.targetDiagnostic.map { category + ":" + $0.rawValue } ?? category
+        }
         do { try DesktopReviewConfigurationCodec.validate(configuration); return "available" }
         catch { return "configuration-policy" }
     }

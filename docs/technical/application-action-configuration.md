@@ -1,0 +1,19 @@
+# 应用动作与自定义配置的一致性
+
+承接10.3。收藏及动作菜单已采用候选配置／真实动作标题；应用动作原来单独存储，删除时无法与快捷键及偏好共用同一提交。本增量将其并入主配置，复用现有commitShortcutConfiguration，而不引入跨文件重放journal。
+
+## 配置与迁移合同
+
+配置schema3的`savedApplicationActions`是必填nullable字段。数组是已确认的权威定义（含已确认空数组）；null表示旧源尚未确认。schema1/2解码为待迁移，夹带新字段时拒绝；新writer显式编码null及已清除的launcherShortcut。数组沿用100项、唯一UUID、逐项验证与1MiB预算。
+
+普通启动先读主配置。只有待迁移态才通过bounded／no-follow只读reader读取旧application-actions.json；无主配置但有旧动作也是合法旧状态。reader不mkdir、chmod、写文件或清残留；确认旧final及恢复文件都不存在才承认空数组。坏文件、未知残留或变化保持未确认，相关动作停写／停用；其他设置可保存schema3 null，不丢旧源。已确认schema3数组后完全忽略旧源。
+
+已读取的旧动作仍由固定目录／文件身份与原字节约束，首次主配置提交前重查；不把发生变化的旧源写成canonical。首次成功保存才把已确认数组写入主配置，旧文件保持原样，不双写、不自动删除。迁移期间和canonical状态均不能把未知定义当作孤儿偏好清空。
+
+## 编辑与移除
+
+应用动作成为配置派生值。保存、引用检查、删除以及对应的shortcut／favorite／alias／recent使用同一候选事务；成功后才发布目录并撤销旧desktop lease。删除确认复用已有审阅sheet，绑定定义指纹与生命周期；集合引用阻止删除。取消、旧编辑／旧确认及保存失败不复活定义或误清邻居偏好。
+
+完整／部分配置导出消费canonical或已核验迁移快照；未确认来源不可伪装为空数组。签名reader声明read[1,2,3]／write[3]，安装和回退继续通过只读配置probe阻止旧reader。旧App副本保留不代表允许读取schema3。
+
+DesktopReview仍使用独立四字段codec，内存baseline采用已确认空动作，不读取旧源、不开放普通执行。真实窗口／快捷键／插入与完整产品验收继续按原矩阵，不据本地数据事务测试关闭。

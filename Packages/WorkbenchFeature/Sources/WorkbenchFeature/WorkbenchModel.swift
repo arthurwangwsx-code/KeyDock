@@ -523,10 +523,13 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         case .clipboard: break
         }
     }
-    public func toggleFavorite(_ item: CommandItem) {
-        guard !isDesktopReview else { desktopReviewUnavailable(); return }
-        if configuration.preferences.favorites.contains(item.id) { configuration.preferences.favorites.remove(item.id) } else { configuration.preferences.favorites.insert(item.id) }
-        save()
+    @discardableResult public func toggleFavorite(_ item: CommandItem) -> Bool {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return false }
+        var next = configuration
+        if next.preferences.favorites.contains(item.id) { next.preferences.favorites.remove(item.id) } else { next.preferences.favorites.insert(item.id) }
+        let saved = commitSettingsConfiguration(next)
+        launcherNoticeMessage = saved ? .none : settingsNoticeMessage
+        return saved
     }
     @discardableResult public func setAlias(_ alias: String, for id: String) -> Bool {
         var next = configuration

@@ -7,6 +7,7 @@ public struct LauncherView: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: LauncherSession
     @State private var pointerPosition = NSEvent.mouseLocation
+    @State private var favoriteFailure: LocalizedNotice = .none
     public init(store: WorkbenchModel, session: LauncherSession) { self.store = store; self.session = session }
     public var body: some View {
         Group {
@@ -20,6 +21,8 @@ public struct LauncherView: View {
             }
             .environment(\.locale, KDLocalizer.locale)
             .onAppear { pointerPosition = NSEvent.mouseLocation }
+            .onChange(of: session.actionsVisible) { _, visible in if !visible { favoriteFailure = .none } }
+            .onChange(of: session.selectedID) { _, _ in favoriteFailure = .none }
     }
     private var search: some View {
         VStack(spacing: 0) {
@@ -63,7 +66,7 @@ public struct LauncherView: View {
                 }
                 Spacer()
                 KDKeyboardHint("↑↓", label: L("Select"))
-                KDKeyboardHint("↩", label: session.selection.map { primaryAction($0.kind) } ?? L("Open"))
+                KDKeyboardHint("↩", label: session.selection.map { store.launcherPrimaryActionTitle(for: $0) } ?? L("Open"))
                 Button { session.actionsVisible.toggle() } label: { KDKeyboardHint("⌘K", label: L("Actions")).padding(.vertical, 7).contentShape(Rectangle()) }.buttonStyle(.plain).keyboardShortcut("k", modifiers: .command)
                     .disabled(session.selection == nil)
                     .popover(isPresented: $session.actionsVisible, arrowEdge: .bottom) { actionMenu }
@@ -88,14 +91,17 @@ public struct LauncherView: View {
         VStack(alignment: .leading, spacing: 8) {
             if let item = session.selection {
                 Text(item.title).font(.system(size: 12, weight: .semibold)).lineLimit(1).padding(.bottom, 3)
-                Button(primaryAction(item.kind)) { session.actionsVisible = false; session.execute() }
-                Button(store.configuration.preferences.favorites.contains(item.id) ? L("Remove favorite") : L("Add favorite")) { store.toggleFavorite(item); session.actionsVisible = false }
+                Button(store.launcherPrimaryActionTitle(for: item)) { session.actionsVisible = false; session.execute() }
+                Button(store.configuration.preferences.favorites.contains(item.id) ? L("Remove favorite") : L("Add favorite")) {
+                    if store.toggleFavorite(item) { favoriteFailure = .none; session.actionsVisible = false }
+                    else { favoriteFailure = store.launcherNoticeMessage }
+                }
+                if !favoriteFailure.rendered().isEmpty { KDInlineNotice(favoriteFailure.rendered()).fixedSize(horizontal: false, vertical: true) }
                 Divider()
                 Button(L("Edit shortcuts and aliases")) { session.actionsVisible = false; store.onOpenShortcutSettings?(item) }
             }
         }.buttonStyle(.borderless).padding(16).frame(width: 245, alignment: .leading)
     }
-    private func primaryAction(_ kind: CommandKind) -> String { switch kind { case .command, .ai: L("Run"); case .window: L("Switch"); default: L("Open") } }
     private func subtitle(_ item: CommandItem) -> String {
         if item.kind == .application {
             let copies = session.results.lazy.filter { $0.kind == .application && $0.title.localizedCaseInsensitiveCompare(item.title) == .orderedSame }.prefix(2).count

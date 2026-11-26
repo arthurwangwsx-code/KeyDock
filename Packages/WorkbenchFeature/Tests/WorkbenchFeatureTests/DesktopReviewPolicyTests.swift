@@ -72,7 +72,7 @@ import MCPAdapters
             fixtureBinarySHA256: hash(contents), fixtureInfoSHA256: hash(plist))
         let process = DesktopReviewProcessIdentity(pid: 42424, launchTime: 1234.5, bundleIdentifier: DesktopReviewScope.fixtureBundleIdentifier,
             appPath: app.path, executablePath: binary.path)
-        scope = InstrumentedReviewScope(try await DesktopReviewScope.prepare(binding: binding, root: root, probe: { _ in process }))
+        scope = InstrumentedReviewScope(try await DesktopReviewScope.prepare(binding: binding, root: root, probe: { _ in DesktopReviewProcessSnapshot(process) }))
     }
     func open() throws -> WorkbenchModel {
         let materialReads = materialReads

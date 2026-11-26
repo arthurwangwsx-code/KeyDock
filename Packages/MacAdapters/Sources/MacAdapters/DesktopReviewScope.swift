@@ -11,6 +11,7 @@ import Foundation
     var isCurrent: Bool { get }
     var targetIdentity: TargetIdentity { get }
     var diagnostic: DesktopReviewInvalidation? { get }
+    var targetDiagnostic: DesktopReviewTargetDiagnostic? { get }
     func permits(_ target: TargetIdentity) -> Bool
     func revoke()
     func prepareClipboardStorage() throws -> any ClipboardStorageLifetime
@@ -22,7 +23,10 @@ public enum DesktopReviewInvalidation: String, Sendable {
     case explicitlyRevoked, directoryIdentityChanged, markerMetadataChanged, ownerLockMetadataChanged
     case boundAppMetadataChanged, configurationIdentityChanged, clipboardStorageChanged, targetIdentityChanged
 }
-extension DesktopReviewRuntimeScope { public var diagnostic: DesktopReviewInvalidation? { nil } }
+extension DesktopReviewRuntimeScope {
+    public var diagnostic: DesktopReviewInvalidation? { nil }
+    public var targetDiagnostic: DesktopReviewTargetDiagnostic? { nil }
+}
 
 public struct DesktopReviewBuildBinding: Codable, Sendable {
     public let rootParent: String
@@ -49,7 +53,7 @@ struct DesktopReviewMarker: Codable, Sendable {
     let fixtureLaunchTime: Double
 }
 
-struct DesktopReviewProcessIdentity {
+struct DesktopReviewProcessIdentity: Sendable {
     let pid: Int32
     let launchTime: Double
     let bundleIdentifier: String
@@ -63,8 +67,9 @@ struct DesktopReviewProcessIdentity {
     public nonisolated static let fixtureBundleIdentifier = "com.arthurwangwsx.KeyDock.desktopreview.fixture"
     public nonisolated static let fixtureExecutableName = "KeyDockDesktopReviewFixture"
     private let resources: DesktopReviewResources
-    private let probe: @MainActor (Int32) -> DesktopReviewProcessIdentity?
+    private let probe: @MainActor (Int32) -> DesktopReviewProcessSnapshot?
     private var revoked = false
+    public private(set) var targetDiagnostic: DesktopReviewTargetDiagnostic?
     public var dataDirectory: URL { resources.dataDirectory }
     public var sessionDirectory: URL { resources.sessionDirectory }
     public var initialConfigurationData: Data? { resources.configuration }
@@ -74,10 +79,11 @@ struct DesktopReviewProcessIdentity {
     public var isCurrent: Bool {
         guard !revoked else { return false }
         guard resources.isCurrent() else { revoke(); return false }
-        guard let value = probe(resources.marker.fixturePID),
-              value.pid == resources.marker.fixturePID, value.launchTime == resources.marker.fixtureLaunchTime,
-              value.bundleIdentifier == Self.fixtureBundleIdentifier, value.appPath == resources.binding.fixtureAppPath,
-              value.executablePath == resources.executablePath else { resources.invalidate(reason: .targetIdentityChanged); revoke(); return false }
+        let expected = DesktopReviewProcessIdentity(pid: resources.marker.fixturePID, launchTime: resources.marker.fixtureLaunchTime,
+            bundleIdentifier: Self.fixtureBundleIdentifier, appPath: resources.binding.fixtureAppPath, executablePath: resources.executablePath)
+        if let failure = DesktopReviewTargetIdentityCheck.failure(expected: expected, actual: probe(resources.marker.fixturePID)) {
+            targetDiagnostic = failure; resources.invalidate(reason: .targetIdentityChanged); revoke(); return false
+        }
         return true
     }
     public var diagnostic: DesktopReviewInvalidation? { resources.diagnostic }
@@ -106,7 +112,7 @@ struct DesktopReviewProcessIdentity {
         try await prepare(binding: binding, root: root, probe: nativeProbe)
     }
     static func prepare(binding: DesktopReviewBuildBinding, root: URL,
-                        probe: @escaping @MainActor (Int32) -> DesktopReviewProcessIdentity?,
+                        probe: @escaping @MainActor (Int32) -> DesktopReviewProcessSnapshot?,
                         beforeHash: @escaping @Sendable () -> Void = {}) async throws -> DesktopReviewScope {
         let worker = Task.detached(priority: .userInitiated) { try DesktopReviewResources.prepare(binding: binding, root: root, beforeHash: beforeHash) }
         let prepared = try await withTaskCancellationHandler { try await worker.value } onCancel: { worker.cancel() }
@@ -115,14 +121,13 @@ struct DesktopReviewProcessIdentity {
         guard scope.isCurrent else { throw DesktopReviewError.unavailable }
         return scope
     }
-    private init(resources: DesktopReviewResources, probe: @escaping @MainActor (Int32) -> DesktopReviewProcessIdentity?) {
+    private init(resources: DesktopReviewResources, probe: @escaping @MainActor (Int32) -> DesktopReviewProcessSnapshot?) {
         self.resources = resources; self.probe = probe
     }
-    private static func nativeProbe(_ pid: Int32) -> DesktopReviewProcessIdentity? {
-        guard let app = NSRunningApplication(processIdentifier: pid), !app.isTerminated,
-              let launch = app.launchDate, let id = app.bundleIdentifier,
-              let path = app.bundleURL?.path, let executable = app.executableURL?.path else { return nil }
-        return .init(pid: pid, launchTime: launch.timeIntervalSince1970, bundleIdentifier: id, appPath: path, executablePath: executable)
+    private static func nativeProbe(_ pid: Int32) -> DesktopReviewProcessSnapshot? {
+        guard let app = NSRunningApplication(processIdentifier: pid) else { return nil }
+        return .init(pid: app.processIdentifier, isTerminated: app.isTerminated, launchTime: app.launchDate?.timeIntervalSince1970,
+            bundleIdentifier: app.bundleIdentifier, appPath: app.bundleURL?.path, executablePath: app.executableURL?.path)
     }
 }
 

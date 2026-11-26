@@ -25,6 +25,8 @@ for name, folders in targets.items():
             keys.update(re.findall(r'\b(?:L|AppL|noticeKey)\("([^"\\]*(?:\\.[^"\\]*)*)"', text))
             keys.update(re.findall(r'String\(localized: "([^"\\]*(?:\\.[^"\\]*)*)"\)', text))
             keys.update(re.findall(r'(?:builtinKey|titleKey): "([^"\\]+)"', text))
+            # 编译期贡献的动作标题同时用于Launcher；不采集用户运行时自定义名称。
+            keys.update(re.findall(r'HostActionCatalog\.action\(\s*\.[A-Za-z]+\s*,\s*title:\s*"([^"\\]+)"', text))
     if 'WorkbenchFeature/' in name:
         geometry = (root / 'Packages/CommandCore/Sources/CommandCore/WindowGeometry.swift').read_text()
         keys.update(re.findall(r'case \.[A-Za-z]+: "([^"\\]+)"', geometry))

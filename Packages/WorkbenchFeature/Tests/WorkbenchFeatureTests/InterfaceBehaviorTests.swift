@@ -19,6 +19,45 @@ import KeyDockUI
 
 /// 真实设置提交与窗口会话，只使用合成目录；不接触 AX、系统剪贴板或钥匙串。
 @Suite(.serialized) @MainActor struct InterfaceBehaviorTests {
+    @Test(arguments: [InterfaceWriteRelay.Failure.before, .after], [false, true])
+    func failedFavoriteKeepsMemoryAndExactPreviousFile(failure: InterfaceWriteRelay.Failure, initiallyFavorite: Bool) throws {
+        try withStore { store, relay, directory in
+            let item = CommandItem(id: "utility.tools", title: "Synthetic tools", kind: .utility, payload: "tools")
+            if initiallyFavorite { #expect(store.toggleFavorite(item)) }
+            let file = directory.appendingPathComponent("configuration.json")
+            var original = try JSONEncoder().encode(store.configuration); original.append(10); try original.write(to: file)
+            relay.failure = failure
+            #expect(!store.toggleFavorite(item))
+            #expect(store.configuration.preferences.favorites.contains(item.id) == initiallyFavorite)
+            #expect(try Data(contentsOf: file) == original)
+            #expect(!store.launcherNotice.isEmpty && store.launcherNoticeMessage == store.settingsNoticeMessage)
+            #expect(store.tasks.isEmpty)
+        }
+    }
+    @Test(arguments: [InterfaceWriteRelay.Failure.before, .after])
+    func failedFirstFavoriteDoesNotCreateAConfiguration(failure: InterfaceWriteRelay.Failure) throws {
+        try withStore { store, relay, directory in
+            let item = CommandItem(id: "utility.tools", title: "Synthetic tools", kind: .utility, payload: "tools")
+            relay.failure = failure
+            #expect(!store.toggleFavorite(item))
+            #expect(store.configuration.preferences.favorites.isEmpty)
+            #expect(!FileManager.default.fileExists(atPath: directory.appendingPathComponent("configuration.json").path))
+        }
+    }
+    @Test func favoriteAdditionAndRemovalSurviveReopening() async throws {
+        let fixture = try RetentionFixture()
+        do {
+            let item = CommandItem(id: "utility.tools", title: "Synthetic tools", kind: .utility, payload: "tools")
+            #expect(fixture.store.toggleFavorite(item)); await fixture.store.shutdownAndWait()
+            let reopened = try WorkbenchModel(dataDirectory: fixture.directory, allowContextCapture: false,
+                credentialReader: { _ in nil }, credentialWriter: { _, _ in }, applicationCatalog: ApplicationCatalog(roots: []))
+            #expect(reopened.configuration.preferences.favorites.contains(item.id))
+            #expect(reopened.toggleFavorite(item))
+            let disk = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: fixture.directory.appendingPathComponent("configuration.json")))
+            #expect(!disk.preferences.favorites.contains(item.id) && reopened.launcherNotice.isEmpty)
+            await reopened.shutdownAndWait(); await fixture.cleanup()
+        } catch { await fixture.cleanup(); throw error }
+    }
     private func withStore(_ body: (WorkbenchModel, InterfaceWriteRelay, URL) throws -> Void) throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-Interface-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

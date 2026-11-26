@@ -25,6 +25,10 @@ import AutomationCore
             launcher.setVisible(true); launcher.query = "2+3"
             try await storeEventually { launcher.resultBatch?.isComplete == true }
             let item = try #require(launcher.results.first(where:{$0.id == "utility.calculator.result"}))
+            #expect(store.launcherPrimaryActionTitle(for: item) == L("Copy calculated result"))
+            let fileBinding = try store.contributionSnapshot.binding(for: BuiltinContributionID.files)
+            let file = CommandItem(id: "file.synthetic", title: "Synthetic file", kind: .utility, payload: "file.synthetic", contribution: fileBinding)
+            #expect(store.launcherPrimaryActionTitle(for: file) == L("Reveal in Finder"))
             #expect(item.title == (try store.calculate(.expression("2+3"))) && writes.isEmpty)
             let plan = try store.contributions.queryPlan(configuration:store.configuration,snapshot:store.contributionSnapshot,files:nil)
             let source = try #require(plan.sources[BuiltinContributionID.calculator])
@@ -37,6 +41,7 @@ import AutomationCore
             store.execute(forged); store.execute(item,caller:.agent)
             #expect(writes == ["5"] && store.tasks.isEmpty)
             #expect(store.setContributionEnabled(false,id:BuiltinContributionID.calculator))
+            #expect(store.launcherPrimaryActionTitle(for: item) == L("Unavailable"))
             #expect(store.setContributionEnabled(true,id:BuiltinContributionID.calculator))
             store.execute(item)
             #expect(writes == ["5"])
