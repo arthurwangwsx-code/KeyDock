@@ -31,6 +31,7 @@ private final class LayoutFixture: @unchecked Sendable {
         var unwritable: Set<pid_t> = []
         var writes: [pid_t] = []
         var focusChanged = false
+        var focusedWindow: DesktopWindowTarget?
         var failBeforeWrite = false
         var failAfterSubmission = false
         var simulatePriorSubmission = false
@@ -65,8 +66,11 @@ private final class LayoutFixture: @unchecked Sendable {
             }
             try afterSubmission?.wait(); try lease.check(); try submission.check()
             self.withState { $0.frames[target.identity.pid] = destination }
-        }, checkFocused: { _ in
-            guard !self.withState({ $0.focusChanged }) else { throw WindowLayoutError.changed }
+        }, checkFocused: { target in
+            let matches = self.withState { state in
+                !state.focusChanged && (state.focusedWindow.map { CFEqual($0.reference.element, target.reference.element) } ?? true)
+            }
+            guard matches else { throw WindowLayoutError.changed }
         }))
     }
     func target(_ pid: pid_t = 41001) -> DesktopWindowTarget {
@@ -76,6 +80,25 @@ private final class LayoutFixture: @unchecked Sendable {
 
 /// 仅合成窗口、屏幕与worker；不读个人窗口，不请求系统权限。
 @Suite @MainActor struct PreparedWindowLayoutTests {
+    @Test func directLayoutRejectsChangedFocusDuringPreparationWithoutWriting() async throws {
+        let fixture = LayoutFixture(), controller = fixture.controller(), gate = LayoutGate()
+        let source = fixture.target(), lease = DesktopOperationLease()
+        let other = DesktopWindowTarget(identity: source.identity, element: AXUIElementCreateSystemWide())
+        #expect(!CFEqual(source.reference.element, other.reference.element))
+        fixture.withState { $0.readGate = gate; $0.focusedWindow = source }
+        let invocation = Task { try await controller.apply(.leftHalf, target: source, lease: lease, requiresFocusedWindow: true) }
+        do {
+            try await gate.waitForEntry()
+        } catch {
+            gate.release()
+            _ = await invocation.result
+            throw error
+        }
+        fixture.withState { $0.readGate = nil; $0.focusedWindow = other }
+        gate.release()
+        await #expect(throws: WindowLayoutError.changed) { try await invocation.value }
+        #expect(!lease.didSubmit && fixture.withState { $0.writes.isEmpty })
+    }
     @Test func workspaceFocusChangeBeforeFrameSubmissionDoesNotMoveFrozenWindow() async throws {
         let fixture = LayoutFixture(), controller = fixture.controller()
         let plan = try await controller.prepare(.leftHalf, target: fixture.target(), displays: controller.captureDisplaySnapshot())

@@ -409,7 +409,8 @@ import Combine
         let togglesOriginal = behavior == .toggleVisibility && identity.flatMap { NSRunningApplication(processIdentifier: $0.pid)?.bundleURL?.path } == destination
         let allowsDeactivation = behavior == .hide || behavior == .requestQuit || togglesOriginal
         let lease = DesktopOperationLease()
-        guard let id = store.runDesktopCommand(item, original: identity, window: window, caller: caller, lease: lease) else { lease.revoke(); return }
+        guard let id = store.runDesktopCommand(item, original: identity, window: window, caller: caller, lease: lease,
+                                               captureFrontmostWindow: !inherited) else { lease.revoke(); return }
         desktopInvocations[id] = DesktopInvocation(lease: lease, source: identity, destinationPath: destination, allowsDeactivationAfterSubmission: allowsDeactivation, isWindowCycle: isCycle)
         dismissClipboard(restore: false)
         dismissLauncher(restore: false)

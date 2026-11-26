@@ -77,13 +77,14 @@ public enum WindowLayoutError: Error { case unavailable, expired, busy, unsuppor
         try lease.begin()
         try await execute(plan, lease: lease, requiresFocusedWindow: requiresFocusedWindow)
     }
-    public func apply(_ layout: WindowLayout, target: DesktopWindowTarget, lease: DesktopOperationLease, restoreFocus: Bool = false) async throws {
+    public func apply(_ layout: WindowLayout, target: DesktopWindowTarget, lease: DesktopOperationLease,
+                      restoreFocus: Bool = false, requiresFocusedWindow: Bool = false) async throws {
         try lease.begin()
         guard environment.trusted() else { throw DesktopError.accessibilityRequired }
         if restoreFocus { try await DesktopApplicationFocus.activate(target.identity, lease: lease) }
         let plan = try await prepare(layout, target: target, displays: captureDisplaySnapshot())
         try lease.check()
-        try await execute(plan, lease: lease)
+        try await execute(plan, lease: lease, requiresFocusedWindow: requiresFocusedWindow)
     }
 
     private func execute(_ plan: PreparedWindowLayout, lease: DesktopOperationLease, requiresFocusedWindow: Bool = false) async throws {
@@ -166,6 +167,7 @@ public enum WindowLayoutError: Error { case unavailable, expired, busy, unsuppor
     nonisolated private static func checkWritable(_ ref: WindowReference) throws {
         try Task.checkCancellation()
         try validateLiveReference(ref)
+        guard AX.string(ref.element, kAXRoleAttribute) == kAXWindowRole else { throw WindowLayoutError.unsupported }
         var positionWritable = DarwinBoolean(false), sizeWritable = DarwinBoolean(false)
         guard AXUIElementIsAttributeSettable(ref.element, kAXPositionAttribute as CFString, &positionWritable) == .success,
               AXUIElementIsAttributeSettable(ref.element, kAXSizeAttribute as CFString, &sizeWritable) == .success,

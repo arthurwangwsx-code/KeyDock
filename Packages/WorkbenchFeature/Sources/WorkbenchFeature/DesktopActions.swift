@@ -32,7 +32,7 @@ extension WorkbenchModel {
     }
 
     /// 不显示Launcher，不读选区正文。进程/窗口上下文由真实UI组合根提供。
-    @discardableResult public func runDesktopCommand(_ item: CommandItem, original: TargetIdentity?, window: DesktopWindowTarget?, caller: ExecutionCaller, lease: DesktopOperationLease) -> UUID? {
+    @discardableResult public func runDesktopCommand(_ item: CommandItem, original: TargetIdentity?, window: DesktopWindowTarget?, caller: ExecutionCaller, lease: DesktopOperationLease, captureFrontmostWindow: Bool = true) -> UUID? {
         if item.payload.hasPrefix("application-action."), !validateApplicationActionSource() { return nil }
         guard !isShuttingDown, catalog.contains(where: { $0.id == item.id && $0.objectRevision == item.objectRevision }) else { return nil }
         let operation: HostOperation
@@ -54,6 +54,17 @@ extension WorkbenchModel {
                 availableContext: needsWindow ? [.window] : [], caller: caller, invocation: id)
         } catch { showError(error); return nil }
         guard reserveExecution(id) else { return nil }
+        // Capture the window at admission. A refused capture still receives its normal intent and outcome.
+        let capturedWindow = Result<DesktopWindowTarget?, Error> {
+            guard layout != nil || windowCommand == .minimize else { return nil }
+            guard let original, let birth = original.launchDate else { throw DesktopError.targetExpired }
+            let target: DesktopWindowTarget
+            if let window { target = window }
+            else if captureFrontmostWindow { target = try desktop.freezeFrontmostWindow(original) }
+            else { throw DesktopError.targetExpired }
+            guard target.identity.pid == original.pid, target.identity.launchDate == birth else { throw DesktopError.targetExpired }
+            return target
+        }
         let previousWorkspaceRuns = desktopWorkspaceGroups.keys.compactMap { taskHandles[$0] }
         cancelDesktopWorkspaceRuns()
         desktopLeases[id] = lease
@@ -71,17 +82,12 @@ extension WorkbenchModel {
                 try lease.check(); try Task.checkCancellation()
                 guard !isShuttingDown else { throw CancellationError() }
                 updateTask(id, state: .running)
-                if let layout, let original {
-                    let captured: DesktopWindowTarget
-                    if let window { captured = window } else { captured = try await desktop.captureWindowTarget(original) }
-                    try await windowLayouts.apply(layout, target: captured, lease: lease, restoreFocus: true)
+                let frozenWindow = try capturedWindow.get()
+                if let layout, let frozenWindow {
+                    try await windowLayouts.apply(layout, target: frozenWindow, lease: lease, restoreFocus: true, requiresFocusedWindow: true)
                     result = .confirmed
                 } else if let windowCommand, let original {
-                    let captured: DesktopWindowTarget?
-                    if windowCommand == .minimize {
-                        if let window { captured = window } else { captured = try await desktop.captureWindowTarget(original) }
-                    } else { captured = nil }
-                    result = try await windowCommands.perform(windowCommand, identity: original, target: captured, lease: lease)
+                    result = try await windowCommands.perform(windowCommand, identity: original, target: frozenWindow, lease: lease)
                 } else if let application {
                     result = try await applicationControl.perform(behavior, item: application, original: original, lease: lease)
                 } else { throw ApplicationControlError.unavailable }

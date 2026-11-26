@@ -1,6 +1,6 @@
 # 当前状态总账
 
-alpha.28 发布后的开发已有两项合入 master。两种 AI 协议已在传输排空前登记有效成功用量；剪贴板历史已区分读取失败、成功空库与无匹配，并提供重试。签名 A/B/C 合成窗口初始计数与正文已实际观察，尚无一次插入被接收的证据。见[发行后的分项记录](implementation/retention-shutdown-2026-11-26.md)及[费用前置回归](technical/agent-estimated-cost-limit.md)。
+发行后的开发已验证提供方成功用量、剪贴板查询失败重试、模型上限继承和启动台重复目录发布。模型与启动台修复源 `299a240` 已通过[同源 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45847402118)、干净本机全量、两轮系统 OCR 和优化 Preview。签名 A/B/C 合成接收窗口初始计数均为零；实际插入、实体快捷键、具体窗口切换及权限撤销仍须分别验证。见[发行后的分项记录](implementation/retention-shutdown-2026-11-26.md)及[费用前置回归](technical/agent-estimated-cost-limit.md)。
 
 当前公开预发布与 `/Applications/KeyDock.app` 均为 [alpha.28，build 28](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.28)，固定源 `6490bc51d00b45c47e0450c90b8f25f5c508c5b6`。1,098 次 Swift、157 项 Python、1,037 个中英键、两轮生产 OCR、同源双 CI、优化 Preview 及两次原生启动通过。App 与 DMG 已公证，公开资产已回下载；正式安装实测 27 → 28 → 27 → 28。详见[本轮证据和 P0–P4 验收总账](implementation/retention-shutdown-2026-11-26.md)。
 
