@@ -11,3 +11,5 @@
 每Store最多一个实际worker，使用ConfigurationOperation随App取消／等待；4MiB工作预留计入32MiB会话预算，不为刷新逐出历史，实际drain后释放。每设置窗口只留一份最多128KiB原始ID文本的易失清单；保存服务的成功清单才可给动作／Agent选择器复用，草稿连接不污染它。变更连接或凭据使清单失效；取消／关闭／离开pane撤销发布资格，drain前禁止新请求。A→B→A及删key／换key／保存失败补偿都不能发布旧结果。相同服务刷新失败保留上次成功清单及时间，明确失败；不写配置或AI账本，不增加token调用。
 
 定向`ai-inventory-core-v2`通过24项声明测试，含参数化情况：准确Unicode、无key／新端点、取消／ABA／关闭／删key／shutdown实际drain、预算拒绝、零自动联网、配置及选择不变；真实loopback清单／空清单／302零跳转及64槽饱和非法尾块。只读评审发现的草稿key跨端点和尾块静默丢弃已修补，旧测量保留。最终共享选择器接线、完整本机／CI和原生真实刷新另记。
+
+首个干净源`d425092`的完整本机1000 Swift／142 Python／989 key、生产OCR及签名构建通过；[CI45756214368](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45756214368)失败于旧Responses取消测试在consumer结束后、实际worker屏障之前读取drain状态。原生AsyncStream消费者取消可以先结束，宿主实际先等待recorder.closeAndSnapshot再释放任务预算。测试现按同一屏障等待，再保留原drain／零Broker／cancelled用量与无opaque断言，不放宽时限或修改生产规则。该FAIL保留，公证未启动；修补后的完整同源资格另记。

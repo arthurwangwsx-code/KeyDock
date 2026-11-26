@@ -180,10 +180,11 @@ private func provider(_ transport: any AIHTTPTransport, recorder: AIUsageRecorde
         }
         #expect(await transport.state().0)
         task.cancel(); _ = await task.result
+        // AsyncStream消费者先结束不表示producer收口；与宿主一致先等待实际worker屏障。
+        let recorded = await recorder.closeAndSnapshot()
         let state = await transport.state()
         let toolCount = await broker.count()
         #expect(state.1 && toolCount == 0)
-        let recorded = await recorder.closeAndSnapshot()
         #expect(recorded.calls.count == 1 && recorded.calls.first?.outcome == .cancelled)
         #expect(!String(decoding: try JSONEncoder().encode(recorded), as: UTF8.self).contains("opaque-cancelled"))
     }
