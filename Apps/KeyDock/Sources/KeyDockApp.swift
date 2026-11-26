@@ -17,11 +17,29 @@ import Darwin
 }
 
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var coordinator: WindowCoordinator?
+    private var coordinator: (any KeyDockWindowCoordinating)?
     private var terminating = false
     private var dataLease: RuntimeDirectoryLease?
+    private var startup: Task<Void, Never>?
     func applicationDidFinishLaunching(_ notification: Notification) {
+        #if KEYDOCK_DESKTOP_REVIEW
+        startup = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let launch = try DesktopReviewLaunch.current()
+                if let id = Bundle.main.bundleIdentifier, NSRunningApplication.runningApplications(withBundleIdentifier: id).contains(where: { $0.processIdentifier != ProcessInfo.processInfo.processIdentifier && !$0.isTerminated }) { throw DesktopReviewError.alreadyOwned }
+                let scope = try await DesktopReviewScope.prepare(binding: launch.binding, root: launch.root)
+                guard !Task.isCancelled, !terminating else { scope.revoke(); return }
+                let store = try WorkbenchModel(dataDirectory: scope.dataDirectory, allowContextCapture: false, desktopReviewScope: scope)
+                coordinator = DesktopReviewCoordinator(store: store, scope: scope); coordinator?.start()
+            } catch {
+                guard !terminating else { return }
+                reportStartupFailure(error)
+            }
+        }
+        #else
         do {
+            guard !ProcessInfo.processInfo.arguments.contains("--desktop-review-root") else { throw RuntimeDirectoryLeaseError.invalidDirectory }
             #if !KEYDOCK_PREVIEW
             // 显式合成域只属于Preview；正式App拒绝此参数，不能误落入真实用户数据域。
             guard !ProcessInfo.processInfo.arguments.contains("--review-fixture-root") else { throw RuntimeDirectoryLeaseError.invalidDirectory }
@@ -33,17 +51,21 @@ import Darwin
             else { directory = try PrivateFiles.applicationDirectory() }
             dataLease = try RuntimeDirectoryLease(directory:directory)
             let store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: !smoke)
-            coordinator = WindowCoordinator(store: store, safeSmoke: smoke)
-            coordinator?.start()
+            let windows = WindowCoordinator(store: store, safeSmoke: smoke)
+            coordinator = windows; windows.start()
             // 仅隔离Preview可用：使用明确的合成夹具做界面验收，不启用系统采集。
             if smoke && ProcessInfo.processInfo.arguments.contains("--demo-clipboard") {
-                coordinator?.loadClipboardDemo()
+                windows.loadClipboardDemo()
             }
         } catch {
-            let alert = NSAlert(); alert.messageText = "KeyDock"
-            alert.informativeText = error as? RuntimeDirectoryLeaseError == .alreadyOwned ? AppL("Another KeyDock instance owns this data directory. Close it before opening this copy.") : AppL("Local data could not be opened. Existing files were preserved.")
-            alert.runModal(); NSApp.terminate(nil)
+            reportStartupFailure(error)
         }
+        #endif
+    }
+    private func reportStartupFailure(_ error: any Error) {
+        let alert = NSAlert(); alert.messageText = "KeyDock"
+        alert.informativeText = error as? RuntimeDirectoryLeaseError == .alreadyOwned ? AppL("Another KeyDock instance owns this data directory. Close it before opening this copy.") : AppL("Local data could not be opened. Existing files were preserved.")
+        alert.runModal(); NSApp.terminate(nil)
     }
     private func previewDataDirectory() throws -> URL {
         #if KEYDOCK_PREVIEW
@@ -70,8 +92,9 @@ import Darwin
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { coordinator?.reopen(); return false }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !terminating else { return .terminateLater }; terminating = true
+        startup?.cancel()
         coordinator?.beginShutdown()
-        Task { await coordinator?.prepareForQuit(); sender.reply(toApplicationShouldTerminate: true) }
+        Task { await startup?.value; await coordinator?.prepareForQuit(); sender.reply(toApplicationShouldTerminate: true) }
         return .terminateLater
     }
     func applicationDidResignActive(_ notification: Notification) { coordinator?.deactivate() }
@@ -86,7 +109,7 @@ import Darwin
 }
 
 /// 只负责窗口生命周期、路由、系统菜单与全局触发；业务服务只有一个 Store。
-@MainActor final class WindowCoordinator: NSObject, NSWindowDelegate, NSToolbarDelegate, NSMenuItemValidation {
+@MainActor final class WindowCoordinator: NSObject, KeyDockWindowCoordinating, NSWindowDelegate, NSToolbarDelegate, NSMenuItemValidation {
     let store: WorkbenchModel
     let launcherSession: LauncherSession
     let settingsSession: SettingsSession
@@ -756,4 +779,4 @@ import Darwin
     }
 }
 
-private func AppL(_ key: String) -> String { KDLocalizer.string(key, bundle: .main) }
+func AppL(_ key: String) -> String { KDLocalizer.string(key, bundle: .main) }

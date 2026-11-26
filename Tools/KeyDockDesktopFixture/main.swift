@@ -11,7 +11,11 @@ import AppKit
 
 @MainActor final class FixtureDelegate: NSObject, NSApplicationDelegate {
     private var windows: [NSWindow] = []
+    #if KEYDOCK_DESKTOP_REVIEW_FIXTURE
+    private var refuseQuit = false
+    #else
     private var refuseQuit = true
+    #endif
     private var quitRequests = 0
     private var labels: [NSTextField] = []
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -38,7 +42,7 @@ import AppKit
             let scroll = NSScrollView(); scroll.documentView = editor; scroll.hasVerticalScroller = true
             scroll.translatesAutoresizingMaskIntoConstraints = false; scroll.heightAnchor.constraint(equalToConstant: 100).isActive = true
             let quitToggle = NSButton(checkboxWithTitle: "Hold normal quit requests for review", target: self, action: #selector(toggleQuit(_:)))
-            quitToggle.state = .on
+            quitToggle.state = refuseQuit ? .on : .off
             let status = NSTextField(labelWithString: "Normal quit requests: 0"); labels.append(status)
             let stack = NSStackView(views: [title, scroll, quitToggle, status])
             stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 16
@@ -48,6 +52,7 @@ import AppKit
                 NSLayoutConstraint.activate([stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 24), stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -24), stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 24), scroll.widthAnchor.constraint(equalTo: stack.widthAnchor)])
             }
             windows.append(window); window.makeKeyAndOrderFront(nil)
+            window.makeFirstResponder(editor); editor.setSelectedRange(NSRange(location: editor.string.utf16.count, length: 0))
         }
         NSApp.activate(ignoringOtherApps: true)
     }

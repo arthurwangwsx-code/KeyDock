@@ -157,6 +157,8 @@ def require_swift_tests(log):
 
 
 def build(profile="preview", configuration=None, allow_dirty=False, identity=None):
+    if profile not in ("release", "preview"):
+        raise PipelineError("Use the independent desktop-review-build pipeline for local Review pairs")
     if platform.system() != "Darwin" or platform.machine() != CONFIG["architecture"]:
         raise PipelineError("This pipeline currently qualifies macOS arm64 only")
     require_build_space()
@@ -230,6 +232,9 @@ def notarize(path, profile, name, binding):
 
 
 def package(app=None, profile=None, resume_work=None):
+    if app is not None:
+        if inspect_app(app)["profile"] != "release":
+            raise PipelineError("Only production Release Apps can be packaged for distribution")
     with delivery.exclusive(ROOT / ".local/release-delivery/package.lock"):
         return package_candidate(app, profile, resume_work)
 
@@ -698,6 +703,11 @@ def main():
     p = sub.add_parser("rollback"); p.add_argument("receipt", type=Path); p.add_argument("--dry-run", action="store_true"); p.add_argument("--quit-running", action="store_true")
     p = sub.add_parser("debug"); p.add_argument("--no-launch", action="store_true")
     sub.add_parser("desktop-fixture")
+    sub.add_parser("desktop-review-build")
+    p = sub.add_parser("desktop-review"); p.add_argument("--pair", type=Path, default=ROOT / "build/pipeline/desktop-review/pair"); p.add_argument("--reuse-root", type=Path)
+    for command in ("desktop-review-status", "desktop-review-stop"):
+        p = sub.add_parser(command); p.add_argument("--receipt", type=Path, required=True)
+        if command == "desktop-review-stop": p.add_argument("--review-only", action="store_true")
     p = sub.add_parser("prepare-mcp-interop"); p.add_argument("--python", type=Path, required=True); p.add_argument("--output", type=Path, required=True)
     p = sub.add_parser("mcp-interop"); p.add_argument("--environment", type=Path, required=True); p.add_argument("--run-name", required=True); p.add_argument("--scenario", choices=["time", "sdk-lifecycle"], default="time")
     p = sub.add_parser("release"); p.add_argument("--publish", action="store_true"); p.add_argument("--install", action="store_true")
@@ -708,6 +718,15 @@ def main():
                           "notaryProfileConfigured": bool(os.environ.get("KEYDOCK_NOTARY_PROFILE")), "buildStorage": build_storage_status()}, indent=2))
     elif args.command == "performance": performance(args.mode, args.app, args.pid, args.duration_seconds, args.interval_seconds, args.condition)
     elif args.command == "desktop-fixture": desktop_fixture()
+    elif args.command == "desktop-review-build":
+        import desktop_review
+        desktop_review.build_pair(stage)
+    elif args.command == "desktop-review":
+        import desktop_review
+        desktop_review.launch(args.pair, args.reuse_root)
+    elif args.command in ("desktop-review-status", "desktop-review-stop"):
+        import desktop_review
+        desktop_review.status(args.receipt, args.command == "desktop-review-stop", getattr(args, "review_only", False))
     elif args.command == "prepare-mcp-interop":
         stage("mcp-interop-prepare", [sys.executable, ROOT / "scripts/prepare-mcp-interop.py", "--python", args.python, "--output", args.output], timeout=900)
     elif args.command == "mcp-interop": mcp_interop(args.environment, args.run_name, args.scenario)

@@ -1,4 +1,4 @@
-.PHONY: doctor check build debug desktop-fixture performance mcp-interop-prepare mcp-interop package release publish verify-release install rollback
+.PHONY: doctor check build debug desktop-fixture desktop-review-build desktop-review desktop-review-status desktop-review-stop performance mcp-interop-prepare mcp-interop package release publish verify-release install rollback
 doctor:
 	python3 scripts/keydock.py doctor
 check:
@@ -11,6 +11,14 @@ debug:
 	python3 scripts/keydock.py debug
 desktop-fixture:
 	python3 scripts/keydock.py desktop-fixture
+desktop-review-build:
+	python3 scripts/keydock.py desktop-review-build
+desktop-review:
+	python3 scripts/keydock.py desktop-review $(if $(REVIEW_ROOT),--reuse-root "$(REVIEW_ROOT)")
+desktop-review-status:
+	python3 scripts/keydock.py desktop-review-status --receipt "$(RECEIPT)"
+desktop-review-stop:
+	python3 scripts/keydock.py desktop-review-stop --receipt "$(RECEIPT)" $(if $(REVIEW_ONLY),--review-only)
 mcp-interop-prepare:
 	python3 scripts/keydock.py prepare-mcp-interop --python "$(MCP_PYTHON)" --output "$(MCP_OUTPUT)"
 mcp-interop:

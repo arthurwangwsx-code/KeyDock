@@ -15360,6 +15360,102 @@
           }
         }
       }
+    },
+    "Review session available": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review session available"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "验收会话可用"
+          }
+        }
+      }
+    },
+    "Synthetic clipboard history and its fixed companion only. Restart the session if its identity changes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synthetic clipboard history and its fixed companion only. Restart the session if its identity changes."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅使用合成剪贴板历史与固定配对宿主。身份发生变化后，请重新启动验收会话。"
+          }
+        }
+      }
+    },
+    "Desktop review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop review"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面验收"
+          }
+        }
+      }
+    },
+    "Load synthetic history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load synthetic history"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "载入合成历史记录"
+          }
+        }
+      }
+    },
+    "Review session expired": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review session expired"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "验收会话已失效"
+          }
+        }
+      }
+    },
+    "Open clipboard for synthetic target": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open clipboard for synthetic target"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "为合成目标打开剪贴板"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

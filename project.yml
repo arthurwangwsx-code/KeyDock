@@ -4,6 +4,8 @@ configs:
   Release: release
   DebugPreview: debug
   ReleasePreview: release
+  DebugDesktopReview: debug
+  ReleaseDesktopReview: release
 options:
   bundleIdPrefix: com.arthurwangwsx
   deploymentTarget:
@@ -54,5 +56,15 @@ targets:
           PRODUCT_NAME: KeyDockPreview
           PRODUCT_BUNDLE_IDENTIFIER: com.arthurwangwsx.KeyDock.preview
           INFOPLIST_KEY_CFBundleDisplayName: KeyDock Preview
+        DebugDesktopReview:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) KEYDOCK_DESKTOP_REVIEW
+          PRODUCT_NAME: KeyDockDesktopReview
+          PRODUCT_BUNDLE_IDENTIFIER: com.arthurwangwsx.KeyDock.desktopreview
+          INFOPLIST_KEY_CFBundleDisplayName: KeyDock Desktop Review
+        ReleaseDesktopReview:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) KEYDOCK_DESKTOP_REVIEW
+          PRODUCT_NAME: KeyDockDesktopReview
+          PRODUCT_BUNDLE_IDENTIFIER: com.arthurwangwsx.KeyDock.desktopreview
+          INFOPLIST_KEY_CFBundleDisplayName: KeyDock Desktop Review
     scheme:
       testTargets: []

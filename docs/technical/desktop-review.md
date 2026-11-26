@@ -25,4 +25,14 @@ Review模式强制inert ClipboardCaptureSource、nil一般剪贴板reader、拒�
 
 ## 实施进度
 
-2026-11-26，scope基础层及Workbench策略／存储接线已实现，参见[基础层复查](../implementation/desktop-review-scope-2026-11-26.md)和[模型层复查](../implementation/desktop-review-model-2026-11-26.md)。本节完整运行合同仍待App接入；当前尚无可启动的Review配置、窄设置或真实companion会话，不据基础层通过声称真实插入已验收。正式发行与安装仍为alpha.20。
+2026-11-26，scope基础层、Workbench策略及App组合根已接入。独立Coordinator只组合原ClipboardPanel、窄设置和HotkeyCenter，不构造通用Launcher／Workspace。原生field editor拒绝paste／readSelection／drop，保留键入与组合输入；关闭时等待本次捕获／插入任务收口。源、签名配对与原生结果分别记录在[App复查](../implementation/desktop-review-app-2026-11-26.md)，不据编译通过声称真实插入已验收。正式发行与安装为alpha.23。
+
+## 可重复调试入口
+
+在干净的命名分支运行`make desktop-review-build`，默认使用release/config.json中的Developer ID签名。先签名companion，再把最终binary／Info摘要写入Review的BuildInfo并签名Review；固定cache为`build/pipeline/desktop-review/DerivedData`。活动配对存在、任何固定输出祖先为symlink或源发生变化时拒绝重建；普通build／install／package／publish不接纳此profile。
+
+`make desktop-review`新建private UUID会话，先持久化intent再启动companion／写marker／启动Review。输出的launch receipt保存PID、非空birth、精确路径和源，不含正文。`ready=false`只表示启动器没有证明App/UI就绪，不是失败结论；需原生观察。启动失败保留partial回执，只对已确认的本次实例请求正常退出；未确认身份或退出拒绝时保留，绝不强杀。TERM/HUP同样进入这一收口。它不提供同UID恶意进程隔离。
+
+用`make desktop-review-status RECEIPT="<输出的绝对回执路径>"`核对；`make desktop-review-stop RECEIPT="..." REVIEW_ONLY=1`只正常退出Review，保留原companion，然后`make desktop-review REVIEW_ROOT="<原root绝对路径>"`验证重启持久化。复用前检查owner锁已释放且companion的PID/birth未变，不改活跃marker。完整结束使用`make desktop-review-stop RECEIPT="<最新回执>"`，先Review后companion；任一身份未知先整批拒绝。
+
+窄设置中明确载入合成历史，再选择“为合成目标打开剪贴板”，或在companion前台按用户录制的快捷键。系统Accessibility须由用户在系统设置正常授权；本入口不改TCC。缺权限时仍可验证面板及复制，插入保持不可用。真实目标文本、其他窗口、取消／切换／重启与实体按键需分别取证。

@@ -26,7 +26,8 @@ public struct ClipboardPanelView: View {
                 KDSearchField(text: Binding(get: { browser.query }, set: session.editQuery), focusRequest: session.focusRequest,
                               placeholder: L("Search clipboard history"), onMove: session.move,
                               onSubmit: session.commitPrimary, onCancel: dismiss,
-                              onAlternateSubmit: session.commitAlternate, onToggleSelection: session.toggleCurrent).frame(height: 34)
+                              onAlternateSubmit: session.commitAlternate, onToggleSelection: session.toggleCurrent,
+                              acceptsExternalText: !store.isDesktopReview).frame(height: 34)
                 if browser.isSearching || session.isCommitting { ProgressView().controlSize(.small) }
                 KDKeycap("esc")
             }.padding(.horizontal, 22).frame(height: 76)
