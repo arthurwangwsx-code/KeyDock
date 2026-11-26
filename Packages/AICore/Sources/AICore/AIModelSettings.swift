@@ -189,3 +189,12 @@ public enum AIModelResolver {
 }
 
 public enum AIModelSettingsError: Error, Equatable, Sendable { case unsupportedReasoning, toolsRequireResponses }
+
+public enum AIModelOrigin: Equatable, Sendable { case globalDefault, scenarioDefault, definitionOverride }
+public extension AIModelResolver {
+    static func modelOrigin(settings: AIModelSettings, scene: AIScene?, override: AIModelOptions = .init(), legacyModelOverride: String = "") -> AIModelOrigin {
+        if !override.model.isEmpty || !legacyModelOverride.isEmpty { return .definitionOverride }
+        if let scene, settings.scenes[scene.rawValue]?.model.isEmpty == false { return .scenarioDefault }
+        return .globalDefault
+    }
+}

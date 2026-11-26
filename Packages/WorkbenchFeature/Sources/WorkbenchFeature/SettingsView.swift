@@ -151,10 +151,12 @@ public struct SettingsRootView: View {
                 HStack {
                     Button(L("Save API configuration")) {
                         if store.saveAPIConfiguration(endpoint: session.endpoint, modelName: session.modelName, localHTTP: session.localHTTP, tokenParameter: session.tokenParameter, apiKey: session.apiKey, modelSettings: session.aiModelSettings) { session.apiKey = ""; session.keyStored = store.credentialExists() }
+                        session.apiSaveNotice = store.settingsNoticeMessage
                     }.buttonStyle(.borderedProminent)
                     Spacer()
                     Button(L("Remove API key"), role: .destructive) { store.removeCredential(); session.keyStored = store.credentialExists() }.disabled(session.endpoint != store.configuration.endpoint || !session.keyStored)
                 }
+                if !session.apiSaveNotice.rendered().isEmpty { KDInlineNotice(session.apiSaveNotice.rendered()) }
             }
             AIRateSettingsSection(store: store, session: session)
         case .aiActions:
@@ -162,7 +164,7 @@ public struct SettingsRootView: View {
                 ForEach(store.configuration.aiActions) { action in
                     HStack(spacing: 12) {
                         Image(systemName: "sparkles").foregroundStyle(.tint)
-                        VStack(alignment: .leading, spacing: 4) { Text(action.displayName).fontWeight(.medium); Text(action.modelOverride.isEmpty ? L("Default model") : action.modelOverride).font(.caption).foregroundStyle(.secondary) }
+                        VStack(alignment: .leading, spacing: 4) { Text(action.displayName).fontWeight(.medium); Text((action.scene ?? .text).title + " · " + store.effectiveAIModelName(for: action)).font(.caption).foregroundStyle(.secondary) }
                         Spacer(); if let key = action.shortcut { KDKeycap(key.display) }
                         Button(L("Edit")) { session.editAction(action) }.accessibilityLabel(L("Edit") + " " + action.displayName)
                         Button(L("Remove"), role: .destructive) { session.prepareRemoval(.aiAction(action.id), in: store) }.accessibilityLabel(L("Remove") + " " + action.displayName)

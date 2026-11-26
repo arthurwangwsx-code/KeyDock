@@ -40,6 +40,7 @@ struct AIModelSettingsFields: View {
     let settings: AIModelSettings
     let scene: AIScene
     var isGlobal = false
+    var isScenario = false
     var localHTTP = false
     var language = "system"
     var requiresTools = false
@@ -52,6 +53,15 @@ struct AIModelSettingsFields: View {
     private var capability: AIModelCapability? {
         guard let url = URL(string: endpoint) else { return nil }
         return AIModelCatalog.capability(model: selectedModel, endpoint: url)
+    }
+    private var contextTitle: String { isGlobal ? L("Global AI defaults") : scene.title }
+    private var originTitle: String {
+        let origin = isGlobal ? AIModelOrigin.globalDefault : AIModelResolver.modelOrigin(settings: settings, scene: scene, override: isScenario ? .init() : options)
+        return switch origin {
+        case .globalDefault: L("Global default")
+        case .scenarioDefault: L("Scenario default") + " · " + scene.title
+        case .definitionOverride: L("Definition override")
+        }
     }
     private var effective: FrozenAIExecutionSettings? {
         guard let url = URL(string: endpoint) else { return nil }
@@ -77,9 +87,9 @@ struct AIModelSettingsFields: View {
                 if !options.model.isEmpty && !AIModelCatalog.models.contains(where: { $0.id.utf8.elementsEqual(options.model.utf8) }) {
                     Text(options.model + " · " + L("Custom model · capabilities unknown")).tag(options.model)
                 }
-            }.accessibilityLabel(scene.title + " · " + L("Model selection"))
+            }.accessibilityLabel(contextTitle + " · " + L("Model selection"))
             TextField(L("Exact model ID"), text: $options.model)
-                .textFieldStyle(.roundedBorder).accessibilityLabel(scene.title + " · " + L("Exact model ID"))
+                .textFieldStyle(.roundedBorder).accessibilityLabel(contextTitle + " · " + L("Exact model ID"))
             Picker(L("API protocol"), selection: $options.requestProtocol) {
                 if !isGlobal { Text(L("Inherit from parent")).tag(AIProtocolSelection.inherit) }
                 Text(L("Automatic protocol")).tag(AIProtocolSelection.automatic)
@@ -88,7 +98,7 @@ struct AIModelSettingsFields: View {
             }
             Picker(L("Reasoning effort"), selection: $options.reasoning) {
                 ForEach(reasoningChoices, id: \.self) { effort in Text(effort.title).tag(effort) }
-            }.accessibilityLabel(scene.title + " · " + L("Reasoning effort"))
+            }.accessibilityLabel(contextTitle + " · " + L("Reasoning effort"))
             if !isGlobal {
                 Toggle(L("Override output token limit"), isOn: Binding(get: { options.maxOutputTokens != nil }, set: { options.maxOutputTokens = $0 ? 2048 : nil }))
             }
@@ -98,7 +108,8 @@ struct AIModelSettingsFields: View {
             if let effective {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L("Effective model") + ": " + effective.configuration.model).fontWeight(.medium)
-                    Text((effective.configuration.requestProtocol == .responses ? "Responses" : "Chat Completions") + " · " + (effective.configuration.reasoningEffort ?? L("Model default")) + " · " + String(effective.configuration.maxOutputTokens))
+                    Text(L("Model source") + ": " + originTitle)
+                    Text((effective.configuration.requestProtocol == .responses ? "Responses" : "Chat Completions") + " · " + (effective.configuration.reasoningEffort.flatMap { AIReasoningSelection(rawValue: $0)?.title } ?? L("Model default")) + " · " + String(effective.configuration.maxOutputTokens))
                 }.font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
             } else {
                 KDInlineNotice(L("These model settings cannot run. Check the endpoint, model, protocol, reasoning and token limit."))
@@ -141,7 +152,7 @@ struct AIServiceModelSections: View {
             AIModelSettingsFields(options: Binding(get: { session.aiModelSettings.scenes[session.aiModelScene.rawValue] ?? .init() }, set: { value in
                 session.aiModelSettings.scenes[session.aiModelScene.rawValue] = value.isInherited ? nil : value
             }), endpoint: session.endpoint, globalModel: session.modelName, settings: session.aiModelSettings, scene: session.aiModelScene,
-                localHTTP: session.localHTTP, language: store.configuration.language,
+                isScenario: true, localHTTP: session.localHTTP, language: store.configuration.language,
                 requiresTools: session.aiModelScene == .agent || session.aiModelScene == .readOnlyAgent)
             Text(L("Explicit action or profile settings override the scenario. Each workflow AI step keeps its action override, then inherits Workflow AI steps.")).font(.caption).foregroundStyle(.secondary)
         }

@@ -12,6 +12,9 @@ import AICore
     @Test func fieldsInheritIndependentlyAndDefinitionsWin() throws {
         var settings = AIModelSettings(defaults: .init(requestProtocol: .automatic, reasoning: .medium, maxOutputTokens: 4096))
         settings.scenes[AIScene.translation.rawValue] = .init(model: "gpt-6-luna", reasoning: .none)
+        #expect(AIModelResolver.modelOrigin(settings: settings, scene: .translation, override: .init(maxOutputTokens: 8192)) == .scenarioDefault)
+        #expect(AIModelResolver.modelOrigin(settings: settings, scene: .translation, override: .init(model: "explicit")) == .definitionOverride)
+        #expect(AIModelResolver.modelOrigin(settings: settings, scene: nil) == .globalDefault)
         let scene = try resolve(settings, scene: .translation)
         #expect(scene.configuration.model == "gpt-6-luna")
         #expect(scene.configuration.reasoningEffort == "none")

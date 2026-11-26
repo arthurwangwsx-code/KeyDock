@@ -68,7 +68,6 @@ public struct BoundedAgentRunner: Sendable {
         var outputBytes = 0
         for _ in 0..<maxTurns {
             try Task.checkCancellation()
-            var text = ""
             var calls: [AIToolCall] = []
             var completed = false
             let unreportedAttemptID = UUID()
@@ -81,7 +80,7 @@ public struct BoundedAgentRunner: Sendable {
                 case .text(let delta):
                     outputBytes += delta.utf8.count
                     guard outputBytes <= maxOutputBytes else { throw AIProviderError.outputLimit }
-                    text += delta; continuation.yield(.text(delta))
+                    continuation.yield(.text(delta))
                 case .toolCall(let call):
                     outputBytes += call.id.utf8.count + call.name.utf8.count + call.arguments.utf8.count
                     guard outputBytes <= maxOutputBytes else { throw AIProviderError.outputLimit }

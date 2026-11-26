@@ -139,14 +139,15 @@ private struct LauncherCatalogProvider: CommandProviding {
     var canBeginSavedItemEditor: Bool {
         store?.isShuttingDown == false && editedCommand == nil && editedAction == nil && aiRateDraft == nil && !aiRateDismissing && savedItemRemoval == nil && deletedToolPreferencesReview == nil && desktopWorkspaceEditor == nil && settingsSummaryExport == nil && !settingsSummaryDismissing && configurationExport == nil && !configurationExportDismissing && sourceRemoval == nil && !sourceRemovalDismissing
     }
-    @Published public var apiKey = ""
+    @Published var apiSaveNotice: LocalizedNotice = .none
+    @Published public var apiKey = "" { didSet { apiSaveNotice = .none } }
     @Published public var keyStored = false
-    @Published public var endpoint = ""
-    @Published public var modelName = ""
-    @Published var aiModelSettings = AIModelSettings()
+    @Published public var endpoint = "" { didSet { apiSaveNotice = .none } }
+    @Published public var modelName = "" { didSet { apiSaveNotice = .none } }
+    @Published var aiModelSettings = AIModelSettings() { didSet { apiSaveNotice = .none } }
     @Published var aiModelScene = AIScene.translation
-    @Published public var localHTTP = false
-    @Published public var tokenParameter = "max_completion_tokens"
+    @Published public var localHTTP = false { didSet { apiSaveNotice = .none } }
+    @Published public var tokenParameter = "max_completion_tokens" { didSet { apiSaveNotice = .none } }
     @Published public var shortcutQuery = ""
     @Published public var shortcutCategory: ShortcutCategory = .all {
         didSet { if shortcutCategory != oldValue { shortcutTargetID = nil; shortcutQuery = "" } }

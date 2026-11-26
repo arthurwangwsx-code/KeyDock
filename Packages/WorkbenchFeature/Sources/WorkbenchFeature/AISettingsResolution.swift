@@ -2,6 +2,11 @@ import Foundation
 import AICore
 
 extension WorkbenchModel {
+    func effectiveAIModelName(for action: AIActionPreset) -> String {
+        let value = AIModelResolver.modelID(globalModel: configuration.model, settings: configuration.aiModelSettings,
+            scene: action.scene ?? .text, override: action.modelOptions ?? .init(), legacyModelOverride: action.modelOptions == nil ? action.modelOverride : "")
+        return value.isEmpty ? L("No model configured") : value
+    }
     /// 只有成功写入的候选会发布revision；A→B→A仍需重新批准AI调度。
     func preparedAIConfiguration(_ value: AppConfiguration) -> AppConfiguration {
         struct Action: Encodable { let id: UUID; let model: String; let options: AIModelOptions?; let scene: AIScene? }

@@ -32,6 +32,14 @@
 
 三位Agent只读研究／评审，主Agent独占写入和验证。评审发现的wire门禁、准确ID、编辑器高度、声明跨服务、全局展示误继承、v2 null回退及SSE配额／incomplete类别均已修补。
 
+## 干净检查与首次原生复查
+
+`210bce5`的首轮完整本机与[CI 45748332323](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45748332323)均失败于旧配置测试夹具：只改schemaVersion为1，却保留了v2新增字段。修正夹具、保留生产严格规则后，干净`ca7bb2063f0b729df1b86937cabcedd8cc8d6881`的`ai-model-full-check-v2`通过：984 Swift、142 Python、978 key、原配置生产OCR双轮。资格摘要在`.local/pipeline/20261126T032323586506Z/check-summary.json`；首轮FAIL不删除。
+
+同源Release优化Preview构建`ai-model-preview-build-v1`通过。`ai-model-native-review-v1`使用owned fixture `KeyDock-Review-8e0f0ddb-5075-4cb3-ba63-452fd8722291`，bundle摘要`63d08fab8e84ffa19cfa5aa4105d180fde807927a384d7ddf7f81314277a5ea0`，PID71104正常退出0。中英文实际菜单已确认推荐／弃用、Sol无none／Luna可none、全局Sol low＋翻译Luna none；读回owned配置证实schema2及准确设置。两种语言展开动作编辑器，固定Save／Cancel可见；取消不保存动作，语言恢复system。未触发AI请求或使用凭据。退出后的AX检查曾自动打开正常Preview，已正常关闭该次新进程；不把不同域的画面混入owned验收。
+
+首次原生结果为PARTIAL：动作列表错误显示“Default model”、全局AX名称混用普通文本场景、保存反馈在屏外顶部、有效强度显示raw token。源码随后修补为准确模型／继承来源、独立全局标签、按钮旁反馈及编辑后清除、当地语言强度。`ai-model-ui-feedback-v1`相关Workbench44＋AICore23＝67项通过；新原生二进制复查仍待执行。
+
 ## 保持开放
 
-实际中英设置与展开编辑器、VoiceOver／IME／最小窗口；模型目录在线清单刷新；Responses完整并发／故障矩阵；签名reader门禁；最新模型的真实翻译／总结／命令／Agent／Workflow、活动语言修补及CLI直接入口复验；干净精确源完整本机／CI、公证／公开回下载和本地替换分别验收。旧alpha.20十次调用基线及活动俄语FAIL继续保留，不作新模型质量证明。
+原生修补复查及完整明暗／VoiceOver／IME／最小窗口；模型目录在线清单刷新；Responses完整并发／故障矩阵；签名reader门禁；最新模型的真实翻译／总结／命令／Agent／Workflow、活动语言修补及CLI直接入口复验；最终干净精确源完整本机／CI、公证／公开回下载和本地替换分别验收。旧alpha.20十次调用基线及活动俄语FAIL继续保留，不作新模型质量证明。
