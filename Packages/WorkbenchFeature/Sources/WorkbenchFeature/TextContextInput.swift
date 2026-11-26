@@ -75,6 +75,7 @@ extension WorkbenchModel {
     var retainedContextSlotBytes: Int { contextSessions.values.filter { $0.session != nil }.count * Self.contextSlotBytes }
 
     func textContextAdmissionBytes(_ session: WorkspaceSession) -> Int? {
+        guard !isDesktopReview else { return nil }
         guard !isShuttingDown, !isClearingHistory, !mutatingSession, session.toolsOwner == nil || session.toolsOwner === self else { return nil }
         return contextSessions[session.contextOwnerID]?.session === session ? 0 : Self.contextSlotBytes
     }

@@ -10,8 +10,8 @@ import MCPAdapters
 import AICore
 
 public enum AIInputSource: String, Codable, CaseIterable, Sendable { case selection, clipboard, manual }
-public enum AIDraftSource: String { case selection, clipboard, manual, commandOutput, importedContext
-    var title: String { switch self { case .selection: L("Selected text"); case .clipboard: L("Current clipboard"); case .manual: L("Manual input"); case .commandOutput: L("Command output"); case .importedContext: L("Imported text") } }
+public enum AIDraftSource: String { case selection, clipboard, manual, commandOutput, importedContext, scheduled
+    var title: String { switch self { case .selection: L("Selected text"); case .clipboard: L("Current clipboard"); case .manual: L("Manual input"); case .commandOutput: L("Command output"); case .importedContext: L("Imported text"); case .scheduled: L("Scheduled input") } }
 }
 public enum AIOutputMode: String, Codable, CaseIterable, Sendable { case display, copy }
 public struct AIActionPreset: Identifiable, Codable, Sendable {

@@ -38,7 +38,7 @@ extension WorkbenchModel {
         return lines.joined(separator:"\n\n")
     }
     func startSchedules() {
-        guard !isShuttingDown,scheduleTimer == nil,schedules.contains(where:{$0.definition.enabled}) else { return }
+        guard !isDesktopReview,!isShuttingDown,scheduleTimer == nil,schedules.contains(where:{$0.definition.enabled}) else { return }
         scheduleTimer = Task { [weak self] in
             defer { self?.scheduleTimer = nil }
             while !Task.isCancelled {

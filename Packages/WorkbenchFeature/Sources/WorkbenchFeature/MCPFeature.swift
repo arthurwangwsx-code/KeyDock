@@ -51,6 +51,7 @@ extension WorkbenchModel {
         await saveMCPServerResult(draft, trusted: trusted) != nil
     }
     func saveMCPServerResult(_ draft: MCPServerDraft, trusted: Bool = false) async -> MCPServerConfiguration? {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return nil }
         guard !isShuttingDown, !Task.isCancelled else { return nil }
         let id = UUID()
         let worker = Task { @MainActor in
@@ -113,6 +114,7 @@ extension WorkbenchModel {
         }
     }
     func makeMCPClient(_ source: MCPServerConfiguration) throws -> MCPHTTPClient {
+        try requireGeneralRuntime()
         guard !isShuttingDown, mcpSettingsOwner == nil, !mcpSettingsChanging, source.enabled, !mcpSessionDisabled.contains(source.id) else { throw MCPClientError.disabled }
         let secret = MCPKeychainAccess { [weak self] id,reference in
             guard let self, self.allowContextCapture, id == source.id,
@@ -123,6 +125,7 @@ extension WorkbenchModel {
         return try MCPHTTPClient(configuration:source,transport:MCPTransportRouter(http:MCPHTTPTransport(secrets:secret)))
     }
     func discoverMCP(_ client: MCPHTTPClient, parentRun: UUID? = nil, validateBeforeDispatch: (@MainActor () throws -> Void)? = nil) async throws -> MCPToolCatalog {
+        try requireGeneralRuntime()
         try Task.checkCancellation()
         let id = UUID(), source = client.configuration
         do { try await agentToolStore.begin(id:id,name:"MCP connection",commandID:(parentRun.map{"keydock.agent."+$0.uuidString} ?? "keydock.mcp-source."+source.id.uuidString),commandVersion:1,configurationFingerprint:source.revision.uuidString,caller:parentRun == nil ? "user":"agent",initialMessage:"mcp.connectionIntent") }
@@ -144,6 +147,7 @@ extension WorkbenchModel {
         await agentToolStore.releaseProtection(for:id); return catalog
     }
     public func connectMCP(_ id: UUID) {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return }
         guard !isShuttingDown, !mcpBusy, mcpSettingsOwner == nil, !mcpSettingsChanging, let source = configuration.mcpServers.first(where:{$0.id == id && $0.enabled}) else { return }
         mcpSessionDisabled.remove(id)
         mcpBusy = true; let token = mcpGeneration
@@ -184,6 +188,7 @@ extension WorkbenchModel {
         settingsNoticeMessage = noticeKey("Review this MCP source in Settings before removing it.")
     }
     func prepareMCPTools(_ definition: AgentDefinition, sources:[MCPServerConfiguration], runID: UUID, attempt: AttemptExecutionContext? = nil) async throws -> [ScopedAITool] {
+        try requireGeneralRuntime()
         var tools: [ScopedAITool] = [], resolved: Set<String> = []
         mcpRunScopes[runID] = Set(sources.map(\.id))
         for source in sources where definition.allowedMCPToolNames.contains(where:{$0.hasPrefix("mcp_"+String(source.id.uuidString.replacingOccurrences(of:"-",with:"").lowercased().prefix(12))+"_")}) {
@@ -262,6 +267,7 @@ extension WorkbenchModel {
         }
     }
     private func performMCPContext(_ id: UUID, prepare:@MainActor ()->Bool = { true }, operation:@escaping @MainActor (MCPHTTPClient,MCPExplicitSourceSelection) async throws->Void) {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return }
         guard !isShuttingDown,!mcpBusy,!mcpSessionDisabled.contains(id),let client = mcpClients[id],let source = configuration.mcpServers.first(where:{$0.id == id && $0.enabled}),source == client.configuration else { return }
         mcpBusy = true
         guard prepare() else { mcpBusy = false; return }

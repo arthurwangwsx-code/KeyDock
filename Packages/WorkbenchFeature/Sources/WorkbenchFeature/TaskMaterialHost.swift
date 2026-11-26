@@ -7,6 +7,7 @@ extension WorkbenchModel {
         return .init(receiptStore: task.receiptIsAI ? .ai : .cli, invocationID: task.id, receiptRecordIdentity: metadata.recordIdentity)
     }
     func materialOwnerExists(_ key: TaskMaterialKey) async throws -> Bool {
+        try requireGeneralRuntime()
         let store = key.receiptStore == .cli ? invocationStore : aiInvocationStore
         guard let owner = try await store.materialOwner(key.invocationID) else { return false }
         return owner.recordIdentity == key.receiptRecordIdentity && (owner.kind == .savedCommand) == (key.receiptStore == .cli)
@@ -26,6 +27,7 @@ extension WorkbenchModel {
 
     /// 冻结指定时刻的可见正文；不从后来草稿推断输入，取消审阅不写任何正文文件。
     func freezeTaskMaterialReview(_ id: UUID) throws -> TaskMaterialBuffer {
+        try requireGeneralRuntime()
         guard !isShuttingDown, !isClearingHistory, !taskMaterialClearing, taskMaterialFence.current.enabled,
               let task = tasks.first(where: { $0.id == id }), let key = taskMaterialKey(task) else { throw TaskMaterialError.permissionDenied }
         let capture = taskMaterialCaptures[id]?.snapshot()
@@ -46,6 +48,7 @@ extension WorkbenchModel {
 
     /// 读取和解析的完整预算从await前保留到真实worker收口；取消仅撤销发布资格。
     func readTaskMaterial(_ handle: TaskMaterialHandle) async throws -> TaskMaterialBuffer {
+        try requireGeneralRuntime()
         guard !isShuttingDown, !isClearingHistory, !taskMaterialClearing else { throw TaskMaterialError.unavailable }
         let reservation = 2 * (TaskMaterialLimits.inputBytes + TaskMaterialLimits.outputBytes)
         guard makeSessionRoom(additionalBytes: reservation) else { throw TaskMaterialError.capacity }
@@ -81,6 +84,7 @@ extension WorkbenchModel {
     }
     func startTaskMaterialSave(_ selected: SelectedTaskMaterial, buffer: TaskMaterialBuffer,
                                expected: TaskMaterialVersion?) throws -> Task<TaskMaterialHandle, Error> {
+        try requireGeneralRuntime()
         guard !isShuttingDown, !isClearingHistory, !taskMaterialClearing, !buffer.invalidated,
               buffer.purpose == .saveReview, taskMaterialBuffers[buffer.id] === buffer,
               taskMaterialFence.current.enabled else { throw TaskMaterialError.permissionDenied }
@@ -116,6 +120,7 @@ extension WorkbenchModel {
     }
 
     func refreshTaskMaterialIndex() async {
+        guard !isDesktopReview else { return }
         guard !isShuttingDown, !isClearingHistory, !taskMaterialClearing else { return }
         let request = UUID(); taskMaterialIndexRequest = request
         taskMaterialIndexPhase = .loading

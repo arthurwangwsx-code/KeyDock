@@ -173,10 +173,11 @@ extension WorkbenchModel {
         }
     }
     func canAcceptRestoredUsage(_ id: UUID, history: UInt64, usage: UInt64) -> Bool {
-        !isShuttingDown && historyGeneration == history && usageHistoryGeneration == usage && !invalidatedUsageRuns.contains(id) &&
+        !isDesktopReview && !isShuttingDown && historyGeneration == history && usageHistoryGeneration == usage && !invalidatedUsageRuns.contains(id) &&
         tasks.contains { $0.id == id && $0.restoredFromReceipt }
     }
     func applyRestoredAIUsage(_ summary: AIUsageSummary, id: UUID, historyGeneration: UInt64, usageGeneration: UInt64, metadataRevision: UInt64? = nil) {
+        guard !isDesktopReview else { return }
         guard !isShuttingDown, self.historyGeneration == historyGeneration, usageHistoryGeneration == usageGeneration, !invalidatedUsageRuns.contains(id),
               metadataRevision == nil || metadataRevision == usageMetadataStore.revisionFence.current,
               let index = tasks.firstIndex(where: { $0.id == id }), tasks[index].restoredFromReceipt else { return }

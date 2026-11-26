@@ -1,6 +1,8 @@
 import Combine
+import CryptoKit
 import Foundation
 import CommandCore
+import MacAdapters
 
 public enum ClipboardPrimaryAction: String, CaseIterable, Sendable {
     case insert, copy
@@ -22,9 +24,28 @@ extension ClipboardSeparator {
     }
     @Published private(set) var revision = UUID()
     private let defaults: UserDefaults
-    public init(defaults: UserDefaults = .standard) {
+    public convenience init(defaults: UserDefaults = .standard) {
+        self.init(defaults: defaults, reviewDirectory: nil)
+    }
+    let reviewDirectory: URL?
+    private init(defaults: UserDefaults, reviewDirectory: URL?) {
         self.defaults = defaults
+        self.reviewDirectory = reviewDirectory
         primaryAction = defaults.string(forKey: "clipboard.panel.primaryAction").map { ClipboardPrimaryAction(rawValue: $0) ?? .copy } ?? .insert
         separator = defaults.string(forKey: "clipboard.panel.separator").flatMap(ClipboardSeparator.init(rawValue:)) ?? .newline
+    }
+    static func desktopReviewSuiteName(_ directory: URL) -> String {
+        let hash = SHA256.hash(data: Data(directory.path.utf8)).map { String(format: "%02x", $0) }.joined()
+        return DesktopReviewScope.bundleIdentifier + ".preferences." + hash
+    }
+    static func desktopReview(directory: URL) throws -> ClipboardPanelPreferences {
+        guard let defaults = UserDefaults(suiteName: desktopReviewSuiteName(directory)) else { throw DesktopReviewError.invalidScope }
+        if let raw = defaults.object(forKey: "clipboard.panel.primaryAction") {
+            guard let value = raw as? String, ClipboardPrimaryAction(rawValue: value) != nil else { throw DesktopReviewError.invalidScope }
+        }
+        if let raw = defaults.object(forKey: "clipboard.panel.separator") {
+            guard let value = raw as? String, ClipboardSeparator(rawValue: value) != nil else { throw DesktopReviewError.invalidScope }
+        }
+        return .init(defaults: defaults, reviewDirectory: directory)
     }
 }

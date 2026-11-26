@@ -11,6 +11,8 @@ import Foundation
     var isCurrent: Bool { get }
     var targetIdentity: TargetIdentity { get }
     func permits(_ target: TargetIdentity) -> Bool
+    func revoke()
+    func prepareClipboardStorage() throws -> any ClipboardStorageLifetime
     func writeConfiguration(_ data: Data, to url: URL) throws
 }
 
@@ -66,13 +68,19 @@ struct DesktopReviewProcessIdentity {
         guard resources.isCurrent(), let value = probe(resources.marker.fixturePID),
               value.pid == resources.marker.fixturePID, value.launchTime == resources.marker.fixtureLaunchTime,
               value.bundleIdentifier == Self.fixtureBundleIdentifier, value.appPath == resources.binding.fixtureAppPath,
-              value.executablePath == resources.executablePath else { revoked = true; return false }
+              value.executablePath == resources.executablePath else { revoke(); return false }
         return true
     }
     public func permits(_ target: TargetIdentity) -> Bool {
         isCurrent && target.pid == resources.marker.fixturePID && target.launchDate?.timeIntervalSince1970 == resources.marker.fixtureLaunchTime
     }
-    public func revoke() { revoked = true }
+    public func revoke() { revoked = true; resources.invalidate() }
+    public func prepareClipboardStorage() throws -> any ClipboardStorageLifetime {
+        guard isCurrent else { throw DesktopReviewError.unavailable }
+        try resources.prepareClipboardStorage()
+        guard isCurrent else { throw DesktopReviewError.unavailable }
+        return resources
+    }
     public func activateTarget() -> Bool {
         guard isCurrent else { return false }
         guard let app = NSRunningApplication(processIdentifier: resources.marker.fixturePID),
@@ -136,7 +144,7 @@ private struct ReviewFileIdentity: Equatable, Sendable {
     }
 }
 
-private final class DesktopReviewResources: @unchecked Sendable {
+private final class DesktopReviewResources: @unchecked Sendable, ClipboardStorageLifetime {
     struct Node {
         let descriptor: Int32
         let parent: Int32
@@ -150,14 +158,25 @@ private final class DesktopReviewResources: @unchecked Sendable {
     var directories: [String: Int32] = [:]
     var lock: Int32 = -1
     var dataFD: Int32 = -1
+    var clipboardFD: Int32 = -1
+    var clipboardIdentity: ReviewFileIdentity?
+    private let validityLock = NSLock()
+    private var invalidated = false
+    func invalidate() { validityLock.lock(); invalidated = true; validityLock.unlock() }
+    var databaseURL: URL { dataDirectory.appendingPathComponent("clipboard.sqlite") }
+    func validate() throws {
+        guard clipboardFD >= 0, isCurrent() else { throw DesktopReviewError.unavailable }
+    }
     var marker: DesktopReviewMarker!
     var configuration: Data?
+    private var expectedConfigurationIdentity: ReviewFileIdentity?
     var dataDirectory: URL { root.appendingPathComponent("Data", isDirectory: true) }
     var sessionDirectory: URL!
     var executablePath: String { binding.fixtureAppPath + "/Contents/MacOS/" + DesktopReviewScope.fixtureExecutableName }
     init(binding: DesktopReviewBuildBinding, root: URL) { self.binding = binding; self.root = root }
     deinit { close() }
     func close() {
+        if clipboardFD >= 0 { Darwin.close(clipboardFD); clipboardFD = -1 }
         if lock >= 0 { _ = flock(lock, LOCK_UN); lock = -1 }
         for node in nodes.reversed() { Darwin.close(node.descriptor) }
         nodes.removeAll(); directories.removeAll()
@@ -205,6 +224,9 @@ private final class DesktopReviewResources: @unchecked Sendable {
             defer { Darwin.close(configFD) }
             try validateFile(configFD, privateOwned: true, maximum: 65_536)
             configuration = try read(configFD, maximum: 65_536)
+            var identity = stat()
+            guard fstat(configFD, &identity) == 0 else { throw DesktopReviewError.io(errno) }
+            expectedConfigurationIdentity = .init(identity)
         } else if errno != ENOENT { throw DesktopReviewError.invalidScope }
         let name = ".review-session-" + UUID().uuidString
         guard mkdirat(dataFD, name, mode_t(0o700)) == 0 else { throw DesktopReviewError.io(errno) }
@@ -213,20 +235,74 @@ private final class DesktopReviewResources: @unchecked Sendable {
         guard isCurrent() else { throw DesktopReviewError.invalidScope }
     }
     func isCurrent() -> Bool {
+        validityLock.lock(); defer { validityLock.unlock() }
+        guard !invalidated else { return false }
+        let valid = identitiesAreCurrent()
+        if !valid { invalidated = true }
+        return valid
+    }
+    private func identitiesAreCurrent() -> Bool {
         for node in nodes {
             var original = stat()
             guard fstat(node.descriptor, &original) == 0, node.identity.matches(.init(original), directory: node.directory) else { return false }
-            let fd = node.parent < 0 ? Darwin.open("/", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC) :
-                openat(node.parent, node.name, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC | (node.directory ? O_DIRECTORY : 0))
-            guard fd >= 0 else { return false }
-            var current = stat(); let valid = fstat(fd, &current) == 0 && node.identity.matches(.init(current), directory: node.directory)
-            Darwin.close(fd); if !valid { return false }
+            var current = stat()
+            let valid = fstatat(node.parent < 0 ? AT_FDCWD : node.parent, node.name, &current, AT_SYMLINK_NOFOLLOW) == 0 &&
+                node.identity.matches(.init(current), directory: node.directory)
+            if !valid { return false }
+        }
+        do { guard try configurationIdentity() == expectedConfigurationIdentity else { return false } }
+        catch { return false }
+        return clipboardFD < 0 || clipboardStorageIsCurrent()
+    }
+    func prepareClipboardStorage() throws {
+        if clipboardFD >= 0 {
+            guard clipboardStorageIsCurrent() else { throw DesktopReviewError.invalidScope }; return
+        }
+        guard isCurrent(), validClipboardSidecars() else { throw DesktopReviewError.invalidScope }
+        var existing = stat()
+        if fstatat(dataFD, "clipboard.sqlite", &existing, AT_SYMLINK_NOFOLLOW) == 0 {
+            guard validMutableClipboardFile(existing) else { throw DesktopReviewError.invalidScope }
+        } else {
+            guard errno == ENOENT, !["clipboard.sqlite-journal", "clipboard.sqlite-wal", "clipboard.sqlite-shm"].contains(where: {
+                var s = stat(); return fstatat(dataFD, $0, &s, AT_SYMLINK_NOFOLLOW) == 0 || errno != ENOENT
+            }) else { throw DesktopReviewError.invalidScope }
+        }
+        let fd = openat(dataFD, "clipboard.sqlite", O_RDWR | O_CREAT | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC, mode_t(0o600))
+        guard fd >= 0 else { throw DesktopReviewError.invalidScope }
+        do {
+            try validateFile(fd, privateOwned: true, maximum: 268_435_456)
+            var s = stat()
+            guard fstat(fd, &s) == 0, s.st_mode & 0o777 == 0o600 else { throw DesktopReviewError.invalidScope }
+            clipboardIdentity = .init(s); clipboardFD = fd
+        } catch { Darwin.close(fd); throw error }
+        guard clipboardStorageIsCurrent() else { throw DesktopReviewError.invalidScope }
+    }
+    private func validClipboardSidecars() -> Bool {
+        for name in ["clipboard.sqlite-journal", "clipboard.sqlite-wal", "clipboard.sqlite-shm"] {
+            var s = stat()
+            if fstatat(dataFD, name, &s, AT_SYMLINK_NOFOLLOW) != 0 {
+                if errno == ENOENT { continue }; return false
+            }
+            guard validMutableClipboardFile(s) else { return false }
         }
         return true
     }
+    private func validMutableClipboardFile(_ s: stat) -> Bool {
+        s.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG) && s.st_uid == getuid() &&
+            s.st_mode & 0o777 == 0o600 && s.st_nlink == 1 && s.st_size >= 0 && s.st_size <= 268_435_456
+    }
+    private func clipboardStorageIsCurrent() -> Bool {
+        guard let identity = clipboardIdentity else { return false }
+        var held = stat(), entry = stat()
+        // SQLite使用进程级POSIX锁；不可在连接存活时为复查反复open／close同一inode。
+        return fstat(clipboardFD, &held) == 0 && validMutableClipboardFile(held) &&
+            fstatat(dataFD, "clipboard.sqlite", &entry, AT_SYMLINK_NOFOLLOW) == 0 && validMutableClipboardFile(entry) &&
+            identity.matches(.init(held), directory: true) && identity.matches(.init(entry), directory: true) && validClipboardSidecars()
+    }
     func writeConfiguration(_ data: Data) throws {
-        guard data.count <= 65_536, isCurrent() else { throw DesktopReviewError.invalidScope }
-        let previous = try configurationIdentity()
+        guard data.count <= 65_536 else { throw DesktopReviewError.invalidScope }
+        validityLock.lock(); defer { validityLock.unlock() }
+        guard !invalidated, identitiesAreCurrent() else { invalidated = true; throw DesktopReviewError.invalidScope }
         let name = ".review-config-" + UUID().uuidString
         let fd = openat(dataFD, name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, mode_t(0o600))
         guard fd >= 0 else { throw DesktopReviewError.io(errno) }
@@ -239,15 +315,20 @@ private final class DesktopReviewResources: @unchecked Sendable {
                 guard written > 0 else { throw DesktopReviewError.io(errno) }; offset += written
             }
         }
-        guard fsync(fd) == 0, isCurrent(), try configurationIdentity() == previous,
-              renameat(dataFD, name, dataFD, "configuration.json") == 0, fsync(dataFD) == 0 else { throw DesktopReviewError.invalidScope }
+        guard fsync(fd) == 0 else { throw DesktopReviewError.io(errno) }
+        guard identitiesAreCurrent() else { invalidated = true; throw DesktopReviewError.invalidScope }
+        guard renameat(dataFD, name, dataFD, "configuration.json") == 0, fsync(dataFD) == 0 else { throw DesktopReviewError.invalidScope }
+        var replacement = stat()
+        guard fstat(fd, &replacement) == 0 else { throw DesktopReviewError.io(errno) }
+        expectedConfigurationIdentity = .init(replacement)
     }
     private func configurationIdentity() throws -> ReviewFileIdentity? {
-        let fd = openat(dataFD, "configuration.json", O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC)
-        if fd < 0 { if errno == ENOENT { return nil }; throw DesktopReviewError.invalidScope }
-        defer { Darwin.close(fd) }
-        try validateFile(fd, privateOwned: true, maximum: 65_536)
-        var s = stat(); guard fstat(fd, &s) == 0 else { throw DesktopReviewError.io(errno) }
+        var s = stat()
+        if fstatat(dataFD, "configuration.json", &s, AT_SYMLINK_NOFOLLOW) != 0 {
+            if errno == ENOENT { return nil }; throw DesktopReviewError.invalidScope
+        }
+        guard s.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG), s.st_uid == getuid(), s.st_mode & 0o077 == 0,
+              s.st_nlink == 1, s.st_size >= 0, s.st_size <= 65_536 else { throw DesktopReviewError.invalidScope }
         return .init(s)
     }
     private func directory(_ path: String, privateOwned: Bool = false) throws -> Int32 {

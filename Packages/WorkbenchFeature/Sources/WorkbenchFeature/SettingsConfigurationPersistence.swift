@@ -11,6 +11,7 @@ extension WorkbenchModel {
 
     /// 先持久化候选，成功后才更新界面；写入后抛错也补偿旧文件。
     @discardableResult func commitSettingsConfiguration(_ next: AppConfiguration) -> Bool {
+        if isDesktopReview { return commitDesktopReviewConfiguration(next) }
         guard !isShuttingDown else { settingsNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return false }
         let url = directory.appendingPathComponent("configuration.json")
         do {

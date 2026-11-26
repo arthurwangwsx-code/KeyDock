@@ -34,6 +34,7 @@ extension WorkbenchModel {
         return actual
     }
     func isCurrentAttemptReview(_ review: AttemptPreparationReview) -> Bool {
+        guard !isDesktopReview else { return false }
         guard !isShuttingDown, !isClearingHistory, attemptReviewStamp == review.stamp,
               !executionReservations.contains(review.origin.invocationID), taskHandles[review.origin.invocationID] == nil,
               let current = SavedRunDefinition.resolve(review.definition, in: configuration),
@@ -51,6 +52,7 @@ extension WorkbenchModel {
         return true
     }
     func reviewAttempt(_ origin: AttemptOrigin) async throws -> AttemptPreparationReview {
+        try requireGeneralRuntime()
         guard !isShuttingDown, !isClearingHistory else { throw AttemptPreparationError.changed }
         guard !executionReservations.contains(origin.invocationID), taskHandles[origin.invocationID] == nil else { throw AttemptPreparationError.busy }
         let stamp = attemptReviewStamp

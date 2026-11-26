@@ -9,6 +9,7 @@ extension WorkbenchModel {
         }.map(\.id))
     }
     func restoreHistorySnapshot(cli: [InvocationReceipt], ai: [InvocationReceipt], generation: UInt64) {
+        guard !isDesktopReview else { return }
         guard !isShuttingDown, !isClearingHistory, historyGeneration == generation else { return }
         let aiIDs = Set(ai.map(\.id))
         let workspaceParents = Set(cli.filter { $0.desktopWorkspaceRun != nil }.map(\.id))
@@ -35,6 +36,7 @@ extension WorkbenchModel {
     }
 
     func startReceiptMaintenance() {
+        guard !isDesktopReview else { return }
         receiptMaintenanceTask?.cancel()
         receiptMaintenanceTask = Task { [weak self] in
             while !Task.isCancelled {
@@ -45,6 +47,7 @@ extension WorkbenchModel {
         }
     }
     func maintainTaskHistory() async {
+        guard !isDesktopReview else { return }
         guard !isShuttingDown, !isClearingHistory else { return }
         let protected = executionReservations.union(taskHandles.keys)
         let cli = await invocationStore.maintain(protecting: protected)
@@ -61,6 +64,7 @@ extension WorkbenchModel {
     }
 
     public func clearFinishedHistory() async {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return }
         guard !isShuttingDown, !isClearingHistory else { return }
         isClearingHistory = true; historyGeneration &+= 1
         revokeTaskMaterialCaptures(disabling: false)
@@ -131,6 +135,7 @@ extension WorkbenchModel {
     }
 
     public func clearAIUsageHistory() async {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return }
         guard !isShuttingDown, !isClearingUsage else { return }
         isClearingUsage = true; usageHistoryGeneration &+= 1
         invalidateUsageAnalysis()

@@ -49,6 +49,7 @@ extension WorkbenchModel {
     }
 
     func restoreAIReceipt(_ receipt: InvocationReceipt) {
+        guard !isDesktopReview else { return }
         // 启动读取与用户新建任务可能交错；当前进程已有任务不能被恢复列表重复插入。
         guard !tasks.contains(where: { $0.id == receipt.id }) else { return }
         guard !isShuttingDown, !isClearingHistory, makeSessionRoom(taskSlots: 1) else { return }

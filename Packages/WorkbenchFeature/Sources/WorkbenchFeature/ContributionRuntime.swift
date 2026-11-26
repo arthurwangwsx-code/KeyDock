@@ -99,13 +99,16 @@ struct ContributionQueryOptions: Sendable {
         }
     }
     private func validateCurrent(_ resolved:ResolvedContributionAction,store:WorkbenchModel) throws {
+        try store.requireGeneralRuntime()
         guard !store.isShuttingDown, !Task.isCancelled, store.contributionEpoch == resolved.epoch,
               store.contributionSnapshot.isEnabled(resolved.manifest.reference.toolID) else { throw ContributionCatalogError.staleSnapshot }
     }
 }
 
 extension WorkbenchModel {
-    var contributionSnapshot: ContributionCatalogSnapshot { contributions.catalog.snapshot(disabled:configuration.disabledContributions,epoch:contributionEpoch) }
+    var contributionSnapshot: ContributionCatalogSnapshot {
+        contributions.catalog.snapshot(disabled: isDesktopReview ? Set(contributions.catalog.manifests.map { $0.reference.toolID }) : configuration.disabledContributions, epoch: contributionEpoch)
+    }
     public var contributionPresentations: [ContributionPresentation] {
         contributions.providers.map { provider in
             let (title,detail) = provider.presentation(), id = provider.manifest.reference.toolID
@@ -124,10 +127,12 @@ extension WorkbenchModel {
         return contributions.providers.filter { snapshot.isEnabled($0.manifest.reference.toolID) }.flatMap { (try? $0.catalogItems(self,snapshot)) ?? [] }
     }
     func resolveContribution(_ binding:CommandContributionBinding,id:String,title:String,keywords:[String] = []) throws -> ResolvedContributionAction {
+        try requireGeneralRuntime()
         guard !isShuttingDown else { throw WorkbenchLifecycleError.shuttingDown }
         return try contributionSnapshot.resolve(binding,instanceID:"keydock.command."+fingerprint(id),title:title,keywords:keywords)
     }
     @discardableResult func authorizeContribution(_ resolved:ResolvedContributionAction,resource:String,context:Set<CommandContextRequirement> = [],caller:ExecutionCaller,invocation:UUID = UUID()) throws -> ExecutionRequest {
+        try requireGeneralRuntime()
         guard !isShuttingDown else { throw WorkbenchLifecycleError.shuttingDown }
         return try HostDescriptorPolicy.authorize(descriptor:resolved.descriptor,actionID:resolved.action.id,availableContext:context,
             resourceScope:.exact(namespace:"keydock.resource",identifier:fingerprint(resource)),caller:caller,
@@ -135,6 +140,7 @@ extension WorkbenchModel {
     }
     /// 已解析的在途运行无需重解析最新版；新UI请求必须先经过当前snapshot。
     func executeContributionItem(_ item:CommandItem,caller:ExecutionCaller) -> Bool {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return true }
         guard let provider = contributions.owner(of:item) else {
             if item.contribution != nil { contributionUnavailable(); return true }; return false
         }
@@ -148,6 +154,7 @@ extension WorkbenchModel {
         return true
     }
     @discardableResult func dispatchContributionSelection(_ item:CommandItem,plan:ContributionQueryPlan,stillCurrent:@escaping @MainActor ()->Bool) -> Bool {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return false }
         guard let binding = item.contribution, let source = plan.sources[binding.reference.contribution.toolID] else { return false }
         guard !isShuttingDown, contributionActionTasks.count < sessionLimits.activeTasks else { admissionNotice(); return true }
         let id = UUID()

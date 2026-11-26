@@ -39,6 +39,7 @@ extension WorkbenchModel {
     /// 只检查配置结构，不读取凭据或测试服务联通；匿名服务不要求密钥。
     public func hasValidAIConfiguration(modelOverride: String = "") -> Bool { (try? providerConfiguration(override: modelOverride)) != nil }
     func providerConfiguration(override: String) throws -> AIProviderConfiguration {
+        try requireGeneralRuntime()
         guard let url = URL(string: configuration.endpoint), !configuration.endpoint.isEmpty else { throw AIProviderError.invalidConfiguration }
         let selectedModel = override.isEmpty ? configuration.model : override
         let config = AIProviderConfiguration(endpoint: url, model: selectedModel, allowsLocalHTTP: configuration.localHTTP, tokenLimitParameter: TokenLimitParameter(rawValue: configuration.tokenLimitParameter) ?? .maxCompletionTokens)
@@ -46,6 +47,7 @@ extension WorkbenchModel {
         return config
     }
     func provider(override: String = "") throws -> ChatCompletionsProvider {
+        try requireGeneralRuntime()
         let config = try providerConfiguration(override: override)
         let key = allowContextCapture ? (try credentialReader(configuration.endpoint) ?? "") : ""
         return ChatCompletionsProvider(configuration: config, apiKey: key,

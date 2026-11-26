@@ -22,7 +22,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public private(set) var contributionEpoch = UUID()
     @Published public private(set) var catalog: [CommandItem] = []
     @Published public private(set) var clipboardRevision: UInt64 = 0
-    public let clipboardPreferences = ClipboardPanelPreferences()
+    public let clipboardPreferences: ClipboardPanelPreferences
     @Published private var clipboardCaptureIssue: ClipboardRejection?
     @Published public private(set) var clipboardPauseNeedsPersistence = false
     public var clipboardCaptureNotice: String {
@@ -190,6 +190,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     private var launcherReplyGeneration = UUID()
     private var applicationItems: [CommandItem] = []
     public let allowContextCapture: Bool
+    public let desktopReviewScope: (any DesktopReviewRuntimeScope)?
     let clipboardWriter: @MainActor (String) throws -> Void
     let clipboardSelectionWriter: @MainActor (String) throws -> Void
     let clipboardChangeCount: @MainActor () -> Int
@@ -207,6 +208,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     var fileRevealer: @MainActor ([URL])->Void = { NSWorkspace.shared.activateFileViewerSelecting($0) }
 
     public init(dataDirectory: URL? = nil, allowContextCapture: Bool = true,
+                desktopReviewScope: (any DesktopReviewRuntimeScope)? = nil,
                 clipboardWriter: (@MainActor (String) throws -> Void)? = nil,
                 clipboardSelectionWriter: (@MainActor (String) throws -> Void)? = nil,
                 clipboardChangeCount: @escaping @MainActor () -> Int = { NSPasteboard.general.changeCount },
@@ -224,41 +226,66 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
                 taskMaterialPersistenceFault: @escaping @Sendable (TaskMaterialWriteRole, TaskMaterialPersistencePoint, String) -> Int32? = { _, _, _ in nil },
                 taskMaterialReadObserver: @escaping @Sendable (TaskMaterialReadKind, Int) -> Void = { _, _ in },
                 languageApplier: @escaping @MainActor (String) -> Void = { KDLocalizer.setLanguage($0) }) throws {
+        let reviewConfiguration: AppConfiguration?
+        if let scope = desktopReviewScope {
+            guard !allowContextCapture, dataDirectory == scope.dataDirectory, scope.isCurrent else { throw DesktopReviewError.invalidScope }
+            reviewConfiguration = try DesktopReviewConfigurationCodec.load(scope.initialConfigurationData)
+            clipboardPreferences = try ClipboardPanelPreferences.desktopReview(directory: scope.dataDirectory)
+        } else {
+            reviewConfiguration = nil; clipboardPreferences = ClipboardPanelPreferences()
+        }
+        self.desktopReviewScope = desktopReviewScope
+        let isReview = desktopReviewScope != nil
         contributions = try WorkbenchContributionRuntime()
         self.sessionLimits = sessionLimits
-        let desktop = DesktopService(applicationCatalog: applicationCatalog ?? ApplicationCatalog())
+        let desktop = DesktopService(applicationCatalog: isReview ? ApplicationCatalog(roots: []) : (applicationCatalog ?? ApplicationCatalog()))
         self.desktop = desktop
         applicationControl = ApplicationControlService(catalog: desktop.applicationCatalog)
         workspaceApplications = DesktopApplicationPreparationService(catalog: desktop.applicationCatalog)
-        self.applicationLauncher = applicationLauncher ?? { try await desktop.launchApplication($0) }
+        if isReview { self.applicationLauncher = { _ in throw DesktopReviewError.unavailable } }
+        else { self.applicationLauncher = applicationLauncher ?? { try await desktop.launchApplication($0) } }
         self.allowContextCapture = allowContextCapture
-        self.clipboardWriter = clipboardWriter ?? { try ClipboardMonitor.copy($0) }
+        if isReview {
+            self.clipboardWriter = { _ in throw DesktopReviewError.unavailable }
+            self.clipboardReader = { nil }
+            self.credentialReader = { _ in throw DesktopReviewError.unavailable }
+            self.credentialWriter = { _, _ in throw DesktopReviewError.unavailable }
+            self.configurationWriter = { _, _ in throw DesktopReviewError.unavailable }
+        } else {
+            self.clipboardWriter = clipboardWriter ?? { try ClipboardMonitor.copy($0) }
+            self.clipboardReader = clipboardReader
+            self.credentialReader = credentialReader
+            self.credentialWriter = credentialWriter
+            self.configurationWriter = configurationWriter
+        }
         // 既有注入仍覆盖所有复制，避免测试或隔离宿主意外触及真实剪贴板。
-        self.clipboardSelectionWriter = clipboardSelectionWriter ?? clipboardWriter ?? { try ClipboardMonitor.copyHistory($0) }
+        self.clipboardSelectionWriter = clipboardSelectionWriter ?? (isReview ? nil : clipboardWriter) ?? { try ClipboardMonitor.copyHistory($0) }
         self.clipboardChangeCount = clipboardChangeCount
-        self.clipboardReader = clipboardReader
-        self.credentialReader = credentialReader
-        self.credentialWriter = credentialWriter
-        self.configurationWriter = configurationWriter
         self.languageApplier = languageApplier
         self.terminalHandoff = terminalHandoff
-        directory = try dataDirectory ?? PrivateFiles.applicationDirectory()
-        do {
+        if let scope = desktopReviewScope { directory = scope.dataDirectory }
+        else { directory = try dataDirectory ?? PrivateFiles.applicationDirectory() }
+        let auxiliary = desktopReviewScope?.sessionDirectory ?? directory
+        if isReview { applicationActionStore = nil; desktopWorkspaceStore = nil }
+        else {
+          do {
             let actions = try ApplicationActionStore(directory: directory)
             applicationActionStore = actions; applicationActions = actions.actions; applicationActionsWritable = actions.writable
-        } catch { applicationActionStore = nil }
-        do {
+          } catch { applicationActionStore = nil }
+          do {
             let workspaces = try DesktopWorkspaceStore(directory: directory, faultHook: desktopWorkspaceFaultHook)
             desktopWorkspaceStore = workspaces; desktopWorkspaces = workspaces.workspaces; desktopWorkspacesWritable = workspaces.writable
-        } catch { desktopWorkspaceStore = nil }
-        usageMetadataStore = AIUsageMetadataStore(directory: directory.appendingPathComponent("usage"))
+          } catch { desktopWorkspaceStore = nil }
+        }
+        usageMetadataStore = AIUsageMetadataStore(directory: auxiliary.appendingPathComponent("usage"))
         let materialFence = TaskMaterialFence(); taskMaterialFence = materialFence
         taskMaterialGeneration = materialFence.current.generation
-        taskMaterialStore = try TaskMaterialStore(directory: directory.appendingPathComponent("task-materials"), fence: materialFence,
+        taskMaterialStore = try TaskMaterialStore(directory: auxiliary.appendingPathComponent("task-materials"), fence: materialFence,
             fault: taskMaterialPersistenceFault, observeRead: taskMaterialReadObserver)
         let url = directory.appendingPathComponent("configuration.json")
         var statisticsEnabled = false
-        if FileManager.default.fileExists(atPath: url.path) {
+        if let reviewConfiguration { configuration = reviewConfiguration }
+        else if FileManager.default.fileExists(atPath: url.path) {
             let decoded = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: url))
             guard decoded.schemaVersion == 1 else { throw CocoaError(.coderReadCorrupt) }
             configuration = decoded
@@ -268,25 +295,33 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             c.aiActions = AppConfiguration.builtins
             configuration = c
         }
-        clipboardStore = try ClipboardStore(url: directory.appendingPathComponent("clipboard.sqlite"))
-        monitor = ClipboardMonitor(store: clipboardStore, source: clipboardCaptureSource)
-        invocationStore = try InvocationStore(directory: directory.appendingPathComponent("invocations"), persistenceFault: { invocationPersistenceFault("cli", $0) })
-        aiInvocationStore = try InvocationStore(directory: directory.appendingPathComponent("ai-invocations"), persistenceFault: { invocationPersistenceFault("ai", $0) })
-        agentToolStore = try InvocationStore(directory: directory.appendingPathComponent("agent-tool-invocations"), persistenceFault: { invocationPersistenceFault("tools", $0) })
-        let scheduler = try ScheduleLedger(directory:directory.appendingPathComponent("schedules"),now:Date())
+        let clipboardLifetime = try desktopReviewScope?.prepareClipboardStorage()
+        clipboardStore = try ClipboardStore(url: directory.appendingPathComponent("clipboard.sqlite"), storageLifetime: clipboardLifetime)
+        monitor = ClipboardMonitor(store: clipboardStore, source: isReview ? DisabledClipboardCaptureSource() : clipboardCaptureSource)
+        invocationStore = try InvocationStore(directory: auxiliary.appendingPathComponent("invocations"), persistenceFault: { invocationPersistenceFault("cli", $0) })
+        aiInvocationStore = try InvocationStore(directory: auxiliary.appendingPathComponent("ai-invocations"), persistenceFault: { invocationPersistenceFault("ai", $0) })
+        agentToolStore = try InvocationStore(directory: auxiliary.appendingPathComponent("agent-tool-invocations"), persistenceFault: { invocationPersistenceFault("tools", $0) })
+        let scheduler = isReview
+            ? try ScheduleLedger(persistence: .init(load: { nil }, save: { _ in throw ScheduleError.invalidStorage }), now: Date())
+            : try ScheduleLedger(directory:directory.appendingPathComponent("schedules"),now:Date())
         scheduleLedger = scheduler; _schedules = Published(initialValue:scheduler.initialSnapshots)
-        do { activityLedger = try ActivityLedger(directory:directory.appendingPathComponent("activity"),enabled:statisticsEnabled) }
+        do {
+            activityLedger = isReview
+                ? try ActivityLedger(persistence: .init(load: { nil }, save: { _ in throw ActivityError.invalidStorage }))
+                : try ActivityLedger(directory:directory.appendingPathComponent("activity"),enabled:statisticsEnabled)
+        }
         catch {
             activityLedger = try ActivityLedger(persistence:.init(load:{nil},save:{_ in throw ActivityError.invalidStorage}))
             configuration.activityEnabled = false
         }
         languageApplier(configuration.language)
-        applyTaskMaterialPermission()
+        if !isReview { applyTaskMaterialPermission() }
         monitor.enabled = allowContextCapture && configuration.clipboardEnabled
         monitor.excludedApplications = Set(configuration.clipboardExclusions)
         monitor.onChange = { [weak self] in self?.refreshClipboard() }
         monitor.onFailure = { [weak self] in self?.workspaceNoticeMessage = noticeKey("Clipboard storage failed") }
         monitor.onCaptureIssue = { [weak self] in self?.clipboardCaptureIssue = $0 }
+        if isReview { rebuildCatalog(); return }
         monitor.start()
         desktop.applicationCatalog.onChange = { [weak self] items in
             guard let self, !self.isShuttingDown else { return }
@@ -356,10 +391,10 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         await taskMaterialMaintenanceTask?.value
         await taskMaterialStore.shutdown()
     }
-    public func startApplicationUpdates() { guard !isShuttingDown else { return }; desktop.applicationCatalog.start() }
-    public func refreshApplications() { guard !isShuttingDown else { return }; desktop.applicationCatalog.refresh() }
+    public func startApplicationUpdates() { guard !isDesktopReview, !isShuttingDown else { return }; desktop.applicationCatalog.start() }
+    public func refreshApplications() { guard !isDesktopReview, !isShuttingDown else { return }; desktop.applicationCatalog.refresh() }
     public func invalidateLauncherReplies() { launcherReplyGeneration = UUID() }
-    public func prepareLauncher(target: TargetSnapshot?) { invalidateLauncherReplies(); self.target = target; desktop.applicationCatalog.refreshIfStale(); refreshWindows() }
+    public func prepareLauncher(target: TargetSnapshot?) { guard !isDesktopReview else { return }; invalidateLauncherReplies(); self.target = target; desktop.applicationCatalog.refreshIfStale(); refreshWindows() }
     public func refreshWindows() {
         guard allowContextCapture else { rebuildCatalog(); return }
         windowGeneration = UUID(); let current = windowGeneration
@@ -371,6 +406,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         }
     }
     private func commandItems() -> [CommandItem] {
+        if isDesktopReview { return [CommandItem(id: "utility.clipboard", title: L("Clipboard history"), kind: .utility, payload: "clipboard")] }
         let saved = contributionItems()
         let ai: [CommandItem] = configuration.aiActions.compactMap { action in
             guard let revision = objectFingerprint(action) else { return nil }
@@ -397,9 +433,14 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         }
         return saved + ai + builtins + layouts + windowActions + appActions + additional + workflows + snippets + web + collections + desktopWorkspaces.map(desktopWorkspaceItem)
     }
-    func rebuildCatalog() { catalog = catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
+    func rebuildCatalog() { catalog = isDesktopReview ? commandItems() : catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
     public func execute(_ item: CommandItem, caller: ExecutionCaller = .user) {
         guard !isShuttingDown else { launcherNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return }
+        if isDesktopReview {
+            guard desktopReviewAvailable, item.id == "utility.clipboard", item.kind == .utility,
+                  item.payload == "clipboard", item.contribution == nil, caller == .user || caller == .shortcut else { desktopReviewUnavailable(); return }
+            onOpenClipboard?(); return
+        }
         if isSavedToolShortcut(item.id) || item.id.hasPrefix("workflow."), !isCurrentCommandItem(item) {
             workspaceNoticeMessage = noticeKey("This saved tool changed or is no longer available. Choose it again.")
             launcherNoticeMessage = workspaceNoticeMessage
@@ -473,6 +514,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         }
     }
     public func toggleFavorite(_ item: CommandItem) {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return }
         if configuration.preferences.favorites.contains(item.id) { configuration.preferences.favorites.remove(item.id) } else { configuration.preferences.favorites.insert(item.id) }
         save()
     }
@@ -482,6 +524,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         return commitSettingsConfiguration(next)
     }
     public func save() {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return }
         do {
             let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             try configurationWriter(encoder.encode(configuration), directory.appendingPathComponent("configuration.json"))
@@ -489,6 +532,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         } catch { settingsNoticeMessage = noticeKey("Configuration could not be saved") }
     }
     func applyConfigurationEffects() {
+        if isDesktopReview { monitor.enabled = false; languageApplier(configuration.language); rebuildCatalog(); return }
         applyTaskMaterialPermission()
         monitor.excludedApplications = Set(configuration.clipboardExclusions)
         monitor.enabled = !isShuttingDown && allowContextCapture && configuration.clipboardEnabled
@@ -506,7 +550,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         return true
     }
     @discardableResult public func saveClipboardExclusions(_ applications: [String]) -> Bool {
-        guard !isShuttingDown else { return false }
+        guard !isDesktopReview, !isShuttingDown else { return false }
         monitor.enabled = false
         var next = configuration; next.clipboardExclusions = applications
         guard commitSettingsConfiguration(next) else {
@@ -529,8 +573,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     }
     /// 各窗口按自己的查询重读；不把整库正文发布到 MainActor。
     public func refreshClipboard() { clipboardRevision &+= 1 }
-    public func requestAccessibility() { guard allowContextCapture else { settingsNoticeMessage = noticeKey("Context capture is disabled in isolated smoke mode"); return }; desktop.requestAccessibility() }
+    public func requestAccessibility() { guard allowContextCapture || desktopReviewAvailable else { settingsNoticeMessage = noticeKey("Context capture is disabled in isolated smoke mode"); return }; desktop.requestAccessibility() }
     public func saveAPIConfiguration(endpoint: String, modelName: String, localHTTP: Bool, tokenParameter: String, apiKey: String) -> Bool {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return false }
         guard allowContextCapture || apiKey.isEmpty else {
             settingsNoticeMessage = noticeKey("API keys cannot be stored in this isolated preview. Use a regular build to save a key.")
             return false
@@ -562,6 +607,10 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         return commitShortcutConfiguration(next)
     }
     public func createDraft(actionID: UUID? = nil, input: String? = nil, target: TargetSnapshot? = nil, source: AIDraftSource? = nil, provenance: TextContextProvenance? = nil, caller: ExecutionCaller = .user) -> AIDraftDocument {
+        if isDesktopReview {
+            let draft = AIDraftDocument(input: "", actionID: nil, target: nil)
+            _ = registerDraft(draft); return draft
+        }
         let action = configuration.aiActions.first { $0.id == actionID } ?? configuration.aiActions.first
         var value = input ?? "", original: TargetSnapshot?
         var origin = source ?? .manual
@@ -586,6 +635,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         return draft
     }
     private func authorizedClipboardInput(caller: ExecutionCaller) throws -> String? {
+        try requireGeneralRuntime()
         try authorizeHostAction(id: "clipboard.input", operation: .readClipboard, resource: "general|\(clipboardChangeCount())", availableContext: [.clipboard], caller: caller)
         return clipboardReader()
     }
@@ -610,7 +660,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         recordDirectActivity(commandID:"clipboard.copy",category:.clipboard,outcome:.succeeded)
     }
     func copyAuthorizedText(_ text: String, caller: ExecutionCaller = .user, historySelection: Bool = false) throws {
-        try authorizeHostAction(id: "result.copy", operation: .copyText, resource: "general|" + fingerprint(text), caller: caller)
+        try authorizeHostAction(id: historySelection ? "clipboard.copy" : "result.copy", operation: .copyText, resource: "general|" + fingerprint(text), caller: caller)
         latestAutoCopyRunID = nil
         if historySelection { try clipboardSelectionWriter(text) }
         else { try clipboardWriter(text) }
@@ -652,6 +702,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         if id.hasPrefix("ai."), let action = configuration.aiActions.first(where: { "ai." + $0.id.uuidString == id }) { return action.shortcut }; return configuration.commandShortcuts[id]
     }
     @discardableResult public func setShortcut(_ binding: HotkeyBinding?, for id: String) -> Bool {
+        guard !isDesktopReview || id == "utility.clipboard" else { desktopReviewUnavailable(); return false }
         if binding != nil && id.hasPrefix("desktop-workspace.") && !desktopWorkspaces.contains(where: { $0.commandID == id }) {
             settingsNoticeMessage = noticeKey("The shortcut target is no longer available"); return false
         }

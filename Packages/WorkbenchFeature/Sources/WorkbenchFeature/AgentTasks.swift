@@ -58,6 +58,7 @@ extension WorkbenchModel {
             guard ownsDraft(draft), reserveExecution(id,draft:draft) else { return nil }
             draft.latestRunID = id; agentRunDefinitions[id] = definition
             tasks.insert(RunningTaskItem(id:id,title:definition.name,state:.running,draftID:draft.id,modelName:service.configuration.model),at:0)
+            AIInputOrigin(draft).apply(to: &tasks[0])
             tasks[0].aiUsageSummary = .pending; tasks[0].receiptIsAI = true; aiTaskIDs.insert(id)
             let materialCapture = beginTaskMaterialCapture(id, definition: runDefinition, input: input)
             registerActivity(id,commandID:"agent."+definition.id.uuidString,category:.agent)

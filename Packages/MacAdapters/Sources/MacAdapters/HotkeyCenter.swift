@@ -5,6 +5,10 @@ public struct HotkeyBinding: Codable, Hashable, Sendable {
     public var keyCode: UInt32
     public var modifiers: UInt32
     public init(keyCode: UInt32 = 49, modifiers: UInt32 = UInt32(optionKey)) { self.keyCode = keyCode; self.modifiers = modifiers }
+    public var isValid: Bool {
+        let allowed = UInt32(controlKey | optionKey | shiftKey | cmdKey)
+        return keyCode <= 127 && modifiers != 0 && modifiers & ~allowed == 0
+    }
     public var display: String {
         var prefix = ""
         if modifiers & UInt32(controlKey) != 0 { prefix += "⌃" }
@@ -149,8 +153,7 @@ public struct HotkeyRegistrationError: Error, Sendable {
         for wireID in old.keys { registry.unregister(id: wireID) }
     }
     private static func valid(_ binding: HotkeyBinding) -> Bool {
-        let allowed = UInt32(controlKey | optionKey | shiftKey | cmdKey)
-        return binding.keyCode <= 127 && binding.modifiers != 0 && binding.modifiers & ~allowed == 0
+        binding.isValid
     }
     private static func registrationError(_ error: any Error) -> HotkeyRegistrationError {
         error as? HotkeyRegistrationError ?? HotkeyRegistrationError(status: OSStatus(paramErr))

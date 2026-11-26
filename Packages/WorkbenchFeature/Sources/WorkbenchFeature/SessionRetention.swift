@@ -44,6 +44,7 @@ extension WorkbenchModel {
 
     /// 整份输出在任何Published更新/窗口回调之前预留，避免同步重入绕过并发上限。
     func reserveExecution(_ id: UUID, draft: AIDraftDocument? = nil, additionalBytes: Int = 0) -> Bool {
+        guard !isDesktopReview else { desktopReviewUnavailable(); draft?.noticeMessage = workspaceNoticeMessage; return false }
         guard !isShuttingDown, !isClearingHistory, !mutatingSession,
               executionReservations.count < sessionLimits.activeTasks else { admissionNotice(draft); return false }
         executionReservations.insert(id)
@@ -130,6 +131,7 @@ extension WorkbenchModel {
     }
 
     func registerDraft(_ draft: AIDraftDocument) -> Bool {
+        guard !isDesktopReview else { draft.discard(); desktopReviewUnavailable(); draft.noticeMessage = workspaceNoticeMessage; return false }
         guard !isShuttingDown, !isClearingHistory, !draft.isDiscarded,
               makeSessionRoom(draftSlots: 1, additionalBytes: TaskTextLimits.inputBytes + 8_192 + (draft.inputProvenance?.retainedBytes ?? 0) + (draft.sourceTarget?.selectedText?.utf8.count ?? 0) + (draft.sourceTarget?.applicationName.utf8.count ?? 0)) else {
             draft.discard(); admissionNotice(draft); return false

@@ -47,24 +47,42 @@ public enum ClipboardInsertion: Sendable, Equatable {
 }
 
 public enum ClipboardDatabaseError: Error { case open, statement, incompatibleVersion, invalidLimits }
+/// 保持Review的文件owner存活，直到SQLite连接已关闭；不向调用方提供文件读写端口。
+public protocol ClipboardStorageLifetime: AnyObject, Sendable {
+    var databaseURL: URL { get }
+    func validate() throws
+}
 private final class ClipboardConnection: @unchecked Sendable {
     let db: OpaquePointer
-    init(url: URL) throws {
+    let storageLifetime: (any ClipboardStorageLifetime)?
+    init(url: URL, storageLifetime: (any ClipboardStorageLifetime)?) throws {
+        self.storageLifetime = storageLifetime
+        if let storageLifetime {
+            guard storageLifetime.databaseURL == url else { throw ClipboardDatabaseError.open }
+            try storageLifetime.validate()
+        }
         var handle: OpaquePointer?
-        guard sqlite3_open_v2(url.path, &handle, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK, let handle else { if let handle { sqlite3_close(handle) }; throw ClipboardDatabaseError.open }
+        let flags = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX | (storageLifetime == nil ? 0 : SQLITE_OPEN_NOFOLLOW)
+        guard sqlite3_open_v2(url.path, &handle, flags, nil) == SQLITE_OK, let handle else { if let handle { sqlite3_close(handle) }; throw ClipboardDatabaseError.open }
+        do { try storageLifetime?.validate() } catch { sqlite3_close(handle); throw error }
         db = handle
     }
-    deinit { sqlite3_close(db) }
+    deinit { sqlite3_close(db); withExtendedLifetime(storageLifetime) {} }
 }
 
 public actor ClipboardStore {
     private let connection: ClipboardConnection
     private let limits: ClipboardLimits
-    public init(url: URL, limits: ClipboardLimits = ClipboardLimits()) throws {
+    public init(url: URL, limits: ClipboardLimits = ClipboardLimits(), storageLifetime: (any ClipboardStorageLifetime)? = nil) throws {
         guard limits.retention.isFinite, limits.retention > 0, limits.maxEntries > 0,
               limits.maxItemBytes > 0, limits.maxTotalBytes > 0 else { throw ClipboardDatabaseError.invalidLimits }
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        connection = try ClipboardConnection(url: url); self.limits = limits
+        if let storageLifetime {
+            guard storageLifetime.databaseURL == url else { throw ClipboardDatabaseError.open }
+            try storageLifetime.validate()
+        } else {
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        }
+        connection = try ClipboardConnection(url: url, storageLifetime: storageLifetime); self.limits = limits
         let db = connection.db
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, "PRAGMA user_version", -1, &statement, nil) == SQLITE_OK else { throw ClipboardDatabaseError.statement }
@@ -72,26 +90,35 @@ public actor ClipboardStore {
         sqlite3_finalize(statement)
         guard version >= 0 && version <= 1 else { throw ClipboardDatabaseError.incompatibleVersion }
         guard sqlite3_exec(db, "PRAGMA secure_delete=ON; CREATE TABLE IF NOT EXISTS clips(id TEXT PRIMARY KEY,body TEXT NOT NULL,created REAL NOT NULL,pinned INTEGER NOT NULL DEFAULT 0,source TEXT NOT NULL,bytes INTEGER NOT NULL); PRAGMA user_version=1;", nil, nil, nil) == SQLITE_OK else { throw ClipboardDatabaseError.statement }
-        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        try storageLifetime?.validate()
+        if storageLifetime == nil { try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path) }
     }
     private func prepare(_ sql: String) throws -> OpaquePointer {
+        try validateStorage()
         var s: OpaquePointer?
-        guard sqlite3_prepare_v2(connection.db, sql, -1, &s, nil) == SQLITE_OK, let s else { throw ClipboardDatabaseError.statement }; return s
+        guard sqlite3_prepare_v2(connection.db, sql, -1, &s, nil) == SQLITE_OK, let s else { throw ClipboardDatabaseError.statement }
+        do { try validateStorage() } catch { sqlite3_finalize(s); throw error }
+        return s
     }
+    private func validateStorage() throws { try connection.storageLifetime?.validate() }
     private func bind(_ value: String, _ index: Int32, _ statement: OpaquePointer) {
         _ = value.withCString { sqlite3_bind_text(statement, index, $0, Int32(value.utf8.count), unsafeBitCast(-1, to: sqlite3_destructor_type.self)) }
     }
     private func transaction<T>(_ body: () throws -> T) throws -> T {
+        try validateStorage()
         let db = connection.db
         guard sqlite3_exec(db, "BEGIN IMMEDIATE", nil, nil, nil) == SQLITE_OK else { throw ClipboardDatabaseError.statement }
         var committed = false
         defer { if !committed { sqlite3_exec(db, "ROLLBACK", nil, nil, nil) } }
         let result = try body()
+        try validateStorage()
         guard sqlite3_exec(db, "COMMIT", nil, nil, nil) == SQLITE_OK else { throw ClipboardDatabaseError.statement }
         committed = true
+        try validateStorage()
         return result
     }
     @discardableResult public func insert(text: String, source: String, now: Date = Date()) throws -> ClipboardInsertion {
+        try validateStorage()
         guard !text.isEmpty else { return .ignoredEmpty }
         let bytes = text.utf8.count
         guard bytes <= limits.maxItemBytes else { return .rejected(.itemTooLarge) }
@@ -166,6 +193,7 @@ public actor ClipboardStore {
             guard query.isEmpty || body.localizedCaseInsensitiveContains(query) else { continue }
             rows.append(ClipboardPreview(id: text(0), preview: Self.previewText(body), createdAt: Date(timeIntervalSince1970: sqlite3_column_double(statement, 2)), pinned: sqlite3_column_int(statement, 3) != 0, source: text(4), byteCount: Int(sqlite3_column_int64(statement, 5))))
         }
+        try validateStorage()
         return rows
     }
 
@@ -208,12 +236,14 @@ public actor ClipboardStore {
         defer { sqlite3_finalize(statement) }
         bind(id, 1, statement)
         let status = sqlite3_step(statement)
+        try validateStorage()
         if status == SQLITE_DONE { return nil }
         guard status == SQLITE_ROW, let bytes = sqlite3_column_text(statement, 0) else { throw ClipboardDatabaseError.statement }
         let count = Int(sqlite3_column_bytes(statement, 0))
         guard count <= limits.maxItemBytes else { throw ClipboardDatabaseError.statement }
         let body = String(decoding: UnsafeBufferPointer(start: bytes, count: count), as: UTF8.self)
         guard sqlite3_step(statement) == SQLITE_DONE else { throw ClipboardDatabaseError.statement }
+        try validateStorage()
         return body
     }
 
@@ -232,6 +262,7 @@ public actor ClipboardStore {
             guard status == SQLITE_ROW else { throw ClipboardDatabaseError.statement }
             rows.append(ClipboardEntry(id: text(0), text: text(1), createdAt: Date(timeIntervalSince1970: sqlite3_column_double(s, 2)), pinned: sqlite3_column_int(s, 3) != 0, source: text(4)))
         }
+        try validateStorage()
         return rows
     }
     public func setPinned(id: String, pinned: Bool) throws {
@@ -242,8 +273,11 @@ public actor ClipboardStore {
     public func delete(id: String) throws {
         let s = try prepare("DELETE FROM clips WHERE id=?"); defer { sqlite3_finalize(s) }; bind(id, 1, s)
         guard sqlite3_step(s) == SQLITE_DONE else { throw ClipboardDatabaseError.statement }
+        try validateStorage()
     }
     public func clear() throws {
+        try validateStorage()
         guard sqlite3_exec(connection.db, "DELETE FROM clips; VACUUM;", nil, nil, nil) == SQLITE_OK else { throw ClipboardDatabaseError.statement }
+        try validateStorage()
     }
 }

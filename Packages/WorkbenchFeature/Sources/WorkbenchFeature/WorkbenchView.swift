@@ -181,8 +181,9 @@ private struct TaskHistoryRow: View {
     let language: String
     var body: some View {
         HStack(spacing: 9) {
-            Image(systemName: task.isRunning ? "circle.dotted" : (task.status == .completed || task.status == .handedOff ? "checkmark.circle" : "exclamationmark.circle"))
+            Image(systemName: task.isRunning ? "circle.dotted" : (task.status == .completed || task.status == .handedOff ? "checkmark.circle" : (task.status == .draftReady ? "doc.text" : "exclamationmark.circle")))
                 .foregroundStyle(task.isRunning ? Color.accentColor : .secondary)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(task.displayTitle).font(.system(size: 12, weight: .medium)).lineLimit(1)
                 Text(task.state).font(.system(size: 10)).foregroundStyle(.secondary)

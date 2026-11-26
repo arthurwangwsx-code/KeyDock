@@ -81,6 +81,7 @@ struct FileSearchCommandProvider: CommandProviding {
 
 extension WorkbenchModel {
     func addSearchFolder(_ url:URL) {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return }
         do {
             let access = url.startAccessingSecurityScopedResource(); defer { if access { url.stopAccessingSecurityScopedResource() } }
             let properties = try url.resourceValues(forKeys:[.isDirectoryKey,.isSymbolicLinkKey])
@@ -93,6 +94,7 @@ extension WorkbenchModel {
     }
     func removeSearchFolder(_ id:UUID) { var next = configuration; next.searchFolders.removeAll{$0.id == id}; _ = commitSettingsConfiguration(next) }
     func searchFiles(_ session:FileSearchSession) {
+        guard !isDesktopReview else { session.cancel(); desktopReviewUnavailable(); return }
         do {
             let configuration = configuration, snapshot = contributionSnapshot, folders = configuration.searchFolders
             guard snapshot.isEnabled(BuiltinContributionID.files) else { session.cancel(); contributionUnavailable(); return }
@@ -107,6 +109,7 @@ extension WorkbenchModel {
         _ = dispatchContributionSelection(item,plan:plan,stillCurrent:{ [weak session] in session?.report?.requestID == report.requestID })
     }
     func revealPreparedFile(_ prepared:PreparedFileReveal,resolved:ResolvedContributionAction,caller:ExecutionCaller) async throws -> Bool {
+        try requireGeneralRuntime()
         let access = try await Task.detached { try SearchFolderAccess(prepared.folders) }.value
         let url = try await prepared.service.validate(prepared.result,allowedRoots:access.urls)
         guard !Task.isCancelled, !isShuttingDown, prepared.stillCurrent(), contributionEpoch == resolved.epoch,

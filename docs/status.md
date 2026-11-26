@@ -2,9 +2,11 @@
 
 当前正式安装与公开发行均为[alpha.20](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.20)，精确源`aa0edfc23f01476ebbc3befeef477da684382f0d`。920 Swift／137 Python／931 key、生产合成OCR双轮、指定同源CI、App／DMG新候选协议公证与装订／Gatekeeper、公开回下载及独立发行审计通过。已原子替换正式App，About实际显示alpha.20(20)，alpha.19回退副本已核验。见[发行证据](implementation/alpha20-release-2026-11-26.md)。
 
-完整产品仍PARTIAL：已观察的玻璃大结果／关闭审阅／材料保存等子集不替代真实插入、实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉。API按用户决定稍后配置。[剩余工程](technical/remaining-engineering-2026-11-26.md)包括快捷操作验收入口、自定义一致性、Agent总预算、持久步骤、原图附件及稳定增量用量；完整P0–P4目标继续推进。
+完整产品仍PARTIAL：已观察的玻璃大结果／关闭审阅／材料保存等子集不替代真实插入、实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉。[剩余工程](technical/remaining-engineering-2026-11-26.md)包括快捷操作验收入口、自定义一致性、Agent总预算、持久步骤、原图附件及稳定增量用量；完整P0–P4目标继续推进。
 
-当前开发分支`feature/desktop-review`已完成身份scope基础层、12项定向测试及只读评审；首轮物理路径误拒绝已修复，失败证据保留。Workbench／App／签名合成宿主和流水线接入继续进行，尚未完成真实剪贴板插入验收，也未发布alpha.21。见[基础层复查](implementation/desktop-review-scope-2026-11-26.md)。
+当前开发分支`feature/desktop-review`已完成scope及Workbench策略／存储接线，108项相关定向和三方只读复查通过；首轮失败保留。App／签名合成宿主和流水线接入继续进行，尚未完成真实剪贴板插入验收，也未发布alpha.21。见[模型层复查](implementation/desktop-review-model-2026-11-26.md)。
+
+用户已授权并配置真实OpenAI：alpha.20完成翻译／总结／CLI建议审阅／两条Agent工具／两步Workflow及用量的[合成基线](implementation/openai-live-baseline-2026-11-26.md)，10次调用实际1414／802 token。活动总结输出俄语FAIL，源码语言冻结回归已通过，新二进制真实复验待完成。新增[最新模型、默认／场景和思考设置](technical/ai-model-settings.md)合同；未把旧基线模型标为最新，也未声称全部AI验收完成。
 
 ## 历史推进与当时资格
 

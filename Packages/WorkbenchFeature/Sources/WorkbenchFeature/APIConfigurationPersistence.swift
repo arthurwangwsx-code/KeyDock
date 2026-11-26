@@ -14,6 +14,7 @@ enum ConfigurationSnapshot {
 extension WorkbenchModel {
     /// 配置在本方法成功返回后才发布；跨 Keychain/文件失败时分别补偿，并验证旧状态。
     func persistAPIConfiguration(_ next: AppConfiguration, apiKey: String) throws {
+        try requireGeneralRuntime()
         let bytes = try JSONEncoder().encode(next)
         let url = directory.appendingPathComponent("configuration.json")
         let previousFile: ConfigurationSnapshot = FileManager.default.fileExists(atPath: url.path)
@@ -51,6 +52,7 @@ extension WorkbenchModel {
     }
 
     func restoreConfiguration(_ snapshot: ConfigurationSnapshot, at url: URL) throws {
+        try requireGeneralRuntime()
         switch snapshot {
         case .bytes(let previousBytes):
             if (try? Data(contentsOf: url)) == previousBytes { return }

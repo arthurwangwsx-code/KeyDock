@@ -100,6 +100,8 @@ extension WorkbenchModel {
             let draft = createDraft(input:input)
             guard ownsDraft(draft), reserveExecution(id,draft:draft) else { return nil }
             tasks.insert(RunningTaskItem(id:id,title:definition.name,state:.running,draftID:draft.id),at:0)
+            AIInputOrigin(draft).apply(to: &tasks[0])
+            if scheduleAuthorization != nil { tasks[0].source = .scheduled }
             tasks[0].receiptIsAI = true
             let materialCapture = beginTaskMaterialCapture(id, definition: runDefinition, input: input)
             tasks[0].aiUsageSummary = .pending; workflowAIUsage[id] = WorkflowUsageState()

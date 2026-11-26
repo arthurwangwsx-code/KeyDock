@@ -30,10 +30,12 @@ private enum ShortcutConfigurationError: Error { case runtimeUnavailable }
 
 extension WorkbenchModel {
     @discardableResult public func setLauncherShortcut(_ binding: HotkeyBinding?) -> Bool {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return false }
         var next = configuration; next.launcherShortcut = binding
         return commitShortcutConfiguration(next)
     }
     @discardableResult func commitShortcutConfiguration(_ next: AppConfiguration) -> Bool {
+        if isDesktopReview { return commitDesktopReviewConfiguration(next) }
         guard !isShuttingDown else { settingsNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return false }
         let previous = configuration
         let changed = ShortcutPlan.entries(previous) != ShortcutPlan.entries(next)
@@ -83,6 +85,7 @@ extension WorkbenchModel {
         }
     }
     public func retryShortcuts() {
+        guard !isDesktopReview || desktopReviewAvailable else { desktopReviewUnavailable(); return }
         guard !isShuttingDown else { return }
         do {
             guard let onShortcutConfigurationChanged else { throw ShortcutConfigurationError.runtimeUnavailable }

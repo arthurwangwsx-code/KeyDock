@@ -3761,6 +3761,38 @@
         }
       }
     },
+    "Desktop review only allows clipboard history actions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop review only allows clipboard history actions."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面验收模式仅支持剪贴板历史操作。"
+          }
+        }
+      }
+    },
+    "Desktop review settings could not be confirmed. Close this review and start a new session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop review settings could not be confirmed. Close this review and start a new session."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法确认桌面验收设置是否已保存。请关闭本次验收并启动新会话。"
+          }
+        }
+      }
+    },
     "Desktop workspace": {
       "localizations": {
         "en": {
@@ -9885,6 +9917,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schedule storage failed. No failed schedule is automatically retried."
+          }
+        }
+      }
+    },
+    "Scheduled input": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scheduled input"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计划任务输入"
           }
         }
       }

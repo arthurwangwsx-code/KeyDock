@@ -29,6 +29,7 @@ extension WorkbenchModel {
         return removeSavedItem(review)
     }
     public func importDocument(_ url: URL, session: WorkspaceSession) {
+        guard !isDesktopReview else { desktopReviewUnavailable(); return }
         runContextOperation(resource:url.path,operation:.importContext,session:session,work:{
             let access = url.startAccessingSecurityScopedResource()
             defer { if access { url.stopAccessingSecurityScopedResource() } }

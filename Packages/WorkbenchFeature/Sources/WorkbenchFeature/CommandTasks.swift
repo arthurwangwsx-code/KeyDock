@@ -6,6 +6,7 @@ import MacAdapters
 
 extension WorkbenchModel {
     func restoreReceipt(_ receipt: InvocationReceipt) {
+        guard !isDesktopReview else { return }
         guard !tasks.contains(where: { $0.id == receipt.id }) else { return }
         guard !isShuttingDown, !isClearingHistory, makeSessionRoom(taskSlots: 1) else { return }
         tasks.append(RunningTaskItem(id: receipt.id, title: receipt.name, state: receipt.message == "terminal.handedOff" ? .handedOff : stateLabel(receipt.state), output: "", exitCode: receipt.exitCode, startedAt: receipt.startedAt, finishedAt: receipt.finishedAt))

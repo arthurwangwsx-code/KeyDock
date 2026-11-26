@@ -104,6 +104,11 @@ class Handler(BaseHTTPRequestHandler):
                 inputs = [m.get("content", "") for m in request.get("messages", []) if m.get("role") == "user"]
                 text = inputs[-1] if inputs and isinstance(inputs[-1], str) else "missing synthetic input"
                 self.complete_text(text, "synthetic-attempt-response")
+            elif path == "/system-prompt-echo":
+                # 只用于合成联调，核对调用前冻结的语言指令已进入实际请求。
+                request = json.loads(body)
+                systems = [m.get("content", "") for m in request.get("messages", []) if m.get("role") == "system"]
+                self.complete_text("\n".join(systems), "synthetic-language-response")
             elif path == "/empty":
                 self.complete_text("", "synthetic-empty-response")
             elif path == "/no-usage":

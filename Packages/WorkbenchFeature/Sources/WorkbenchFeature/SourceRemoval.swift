@@ -37,7 +37,7 @@ enum MCPToolReference {
 extension WorkbenchModel {
     // owner先于Published状态占位，避免同步订阅者在willSet中重入。
     func beginScheduleMutation() -> UUID? {
-        guard !isShuttingDown, scheduleMutationOwner == nil, !scheduleBusy else { return nil }
+        guard !isDesktopReview, !isShuttingDown, scheduleMutationOwner == nil, !scheduleBusy else { return nil }
         let owner = UUID(); scheduleMutationOwner = owner; scheduleBusy = true; return owner
     }
     func finishScheduleMutation(_ owner: UUID) {
@@ -45,7 +45,7 @@ extension WorkbenchModel {
         scheduleBusy = false; scheduleMutationOwner = nil
     }
     func beginMCPSettingsMutation() -> UUID? {
-        guard !isShuttingDown, mcpSettingsOwner == nil, !mcpSettingsChanging else { return nil }
+        guard !isDesktopReview, !isShuttingDown, mcpSettingsOwner == nil, !mcpSettingsChanging else { return nil }
         let owner = UUID(); mcpSettingsOwner = owner; mcpSettingsChanging = true; return owner
     }
     func finishMCPSettingsMutation(_ owner: UUID) {

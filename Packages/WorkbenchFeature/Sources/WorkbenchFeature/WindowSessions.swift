@@ -71,7 +71,9 @@ private struct LauncherCatalogProvider: CommandProviding {
         let snapshot = store.contributionSnapshot, configuration = store.configuration
         let items = store.catalog.filter { (!query.isEmpty || $0.kind != .window) && ($0.contribution == nil || $0.contribution?.epoch == snapshot.epoch) }
         let provider = LauncherCatalogProvider(items: items), preferences = configuration.preferences
-        let plan = (try? store.contributions.queryPlan(configuration:configuration,snapshot:snapshot,files:fileService)) ?? ContributionQueryPlan(epoch:snapshot.epoch,sources:[:])
+        let plan: ContributionQueryPlan
+        if store.isDesktopReview { plan = ContributionQueryPlan(epoch: snapshot.epoch, sources: [:]) }
+        else { plan = (try? store.contributions.queryPlan(configuration:configuration,snapshot:snapshot,files:fileService)) ?? ContributionQueryPlan(epoch:snapshot.epoch,sources:[:]) }
         contributionQueryPlan = plan
         searchTask = Task { [weak self] in
             guard let self, !Task.isCancelled else { return }

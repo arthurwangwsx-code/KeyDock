@@ -25,4 +25,4 @@ Review模式强制inert ClipboardCaptureSource、nil一般剪贴板reader、拒�
 
 ## 实施进度
 
-2026-11-26，scope基础层及12项定向测试已实现，参见[基础层复查](../implementation/desktop-review-scope-2026-11-26.md)。本节上述完整运行合同仍是待接入目标；当前尚无可启动的Review配置、窄设置或真实companion会话，不据基础层通过声称真实插入已验收。正式发行与安装仍为alpha.20。
+2026-11-26，scope基础层及Workbench策略／存储接线已实现，参见[基础层复查](../implementation/desktop-review-scope-2026-11-26.md)和[模型层复查](../implementation/desktop-review-model-2026-11-26.md)。本节完整运行合同仍待App接入；当前尚无可启动的Review配置、窄设置或真实companion会话，不据基础层通过声称真实插入已验收。正式发行与安装仍为alpha.20。

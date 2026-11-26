@@ -2,6 +2,7 @@ import Foundation
 
 extension WorkbenchModel {
     func scheduleTaskMaterialPermissionBarrier() {
+        guard !isDesktopReview else { return }
         guard taskMaterialPermissionTask == nil else { return }
         taskMaterialPermissionChanging = true
         let writes = Array(taskMaterialSaveOperations.values)
@@ -12,6 +13,7 @@ extension WorkbenchModel {
         }
     }
     func scheduleTaskMaterialMaintenance() {
+        guard !isDesktopReview else { return }
         guard !isShuttingDown, !isClearingHistory, !taskMaterialClearing, taskMaterialMaintenanceTask == nil else { return }
         taskMaterialMaintenanceTask = Task { @MainActor [self] in
             defer { taskMaterialMaintenanceTask = nil }
@@ -40,6 +42,7 @@ extension WorkbenchModel {
         taskMaterialFence.invalidateContent(); invalidateTaskMaterialBuffers(includeLoadedReads: true)
     }
     func clearTaskMaterialOwners(_ keys: Set<TaskMaterialKey>) async -> TaskMaterialMutationReport {
+        guard !isDesktopReview else { return .init(failure: .unavailable) }
         let id = UUID()
         let operation = Task { [taskMaterialStore] in await taskMaterialStore.clearOwners(keys) }
         taskMaterialMutationOperations[id] = operation
@@ -50,6 +53,7 @@ extension WorkbenchModel {
         return result
     }
     func clearTaskMaterials() async {
+        guard !isDesktopReview else { return }
         guard !isShuttingDown, !isClearingHistory, !taskMaterialClearing else { return }
         taskMaterialClearing = true
         revokeTaskMaterialCaptures(disabling: false)
@@ -66,6 +70,7 @@ extension WorkbenchModel {
         await refreshTaskMaterialIndex()
     }
     func deleteTaskMaterial(_ handle: TaskMaterialHandle) async -> TaskMaterialMutationReport {
+        guard !isDesktopReview else { return .init(failure: .unavailable) }
         guard !isShuttingDown, !isClearingHistory, !taskMaterialClearing else { return .init(failure: .unavailable) }
         taskMaterialClearing = true
         taskMaterialFence.invalidateContent(); invalidateTaskMaterialBuffers(includeLoadedReads: true)

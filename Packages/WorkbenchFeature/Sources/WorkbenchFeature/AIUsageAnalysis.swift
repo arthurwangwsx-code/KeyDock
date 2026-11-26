@@ -178,6 +178,7 @@ extension WorkbenchModel {
         usageAnalysisRefreshToken = UUID()
     }
     func refreshAIUsageAnalysis(days: Int, reader: (@Sendable (Date, Date) async throws -> AIUsageAnalysisReport)? = nil) async {
+        guard !isDesktopReview else { return }
         guard !isShuttingDown, !isClearingUsage, !Task.isCancelled, [7, 30, 90].contains(days) else { return }
         let request = UUID(), generation = usageHistoryGeneration, metadata = usageMetadataStore
         usageAnalysisRequestID = request; usageAnalysisReport = nil; usageAnalysisLoading = true

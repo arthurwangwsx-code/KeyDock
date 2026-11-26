@@ -3,6 +3,7 @@ import CryptoKit
 import CommandCore
 import ExecutionCore
 import AICore
+import MacAdapters
 
 /// 真实 UI/已保存快捷键的宿主决策边界；模型只能产生草稿或工具参数，不能提供 grant。
 extension WorkbenchModel {
@@ -23,6 +24,10 @@ extension WorkbenchModel {
         caller: ExecutionCaller = .user, invocation: UUID = UUID()
     ) throws -> ExecutionRequest {
         guard !isShuttingDown else { throw WorkbenchLifecycleError.shuttingDown }
+        if isDesktopReview {
+            guard desktopReviewAvailable, caller == .user || caller == .shortcut,
+                  (id == "clipboard.copy" && operation == .copyText) || (id == "clipboard.insert" && operation == .pasteClipboard) else { throw DesktopReviewError.unavailable }
+        }
         let descriptor = try hostDescriptor(id: id, title: "KeyDock", operations: [operation], modelOverride: modelOverride)
         let scope = ExecutionResourceScope.exact(namespace: "keydock.resource", identifier: fingerprint(resource))
         let source = caller == .shortcut ? "shortcut." + fingerprint(id) : "interactive-ui"
@@ -51,6 +56,7 @@ extension WorkbenchModel {
 
     /// 使用同一个实际目录描述执行；不会先检查一个描述，再重建另一套 effect/version。
     @discardableResult func authorizeHostItem(_ item: CommandItem, caller: ExecutionCaller) throws -> ExecutionRequest {
+        try requireGeneralRuntime()
         guard !isShuttingDown else { throw WorkbenchLifecycleError.shuttingDown }
         let context: Set<CommandContextRequirement> = item.kind == .window || (item.payload.hasPrefix("window-layout.") && target != nil) ? [.window] : []
         return try HostDescriptorPolicy.authorize(

@@ -37,6 +37,9 @@
 | [alpha.20发行与安装证据](implementation/alpha20-release-2026-11-26.md) | 920 Swift／137 Python／931 key、同源CI、新候选协议真实App／DMG公证、公开审计、原子替换与About20 |
 | [剩余工程与系统验收](technical/remaining-engineering-2026-11-26.md) | 原目标的快捷操作验收入口、自定义一致性、Agent预算、持久步骤、原图与增量用量；实现与证明分开 |
 | [独立桌面验收入口](technical/desktop-review.md) | 合成宿主、身份scope、受限Workbench／UI及启动流水线的完整合同 |
+| [桌面验收模型接线复查](implementation/desktop-review-model-2026-11-26.md) | 窄配置、存储生命周期、网络／任务旁路和108项定向；独立App接入仍开放 |
+| [真实OpenAI合成基线](implementation/openai-live-baseline-2026-11-26.md) | 10次实际调用、用量／估算、工具及Workflow和语言FAIL；无凭据进入工程 |
+| [模型目录与场景设置](technical/ai-model-settings.md) | 最新模型／协议能力、全局及场景覆盖、思考、冻结与配置兼容合同；实施中 |
 | [桌面验收scope基础层复查](implementation/desktop-review-scope-2026-11-26.md) | 12项定向、物理路径误拒绝修复和只读评审；原生接入及真实插入仍开放 |
 | [冻结候选与公证恢复](technical/release-candidate-recovery.md) | 独立inode、不可变输入、持久索引、unknown不重投和同请求续查；新协议完整发行仍开放 |
 | [可选任务材料](technical/task-material-retention.md) | 默认关闭、准确输入／成功边界、手动保存／按需读取、出生身份与删除意图和旧reader门禁；任务35实施中 |
