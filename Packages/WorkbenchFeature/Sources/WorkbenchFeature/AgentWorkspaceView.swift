@@ -109,7 +109,8 @@ struct AgentApprovalView: View {
                 if approval.displayTitle != approval.toolName {
                     Text(L("Tool identifier") + ": " + approval.toolName).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
                 }
-                ScrollView { Text(approval.summary).font(.system(.caption,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading) }.frame(maxHeight:180)
+                ReadOnlyTextPreview(text: approval.summary, transparent: true, accessibilityLabel: L("Tool arguments"), monospaced: true, pointSize: 12)
+                    .frame(height: 140)
                 Text(L("This tool may change your computer. Review its full arguments. Output may be sent to AI by this run.")).font(.caption).foregroundStyle(.secondary)
                 if approval.runContractFingerprint != nil {
                     Text(L("Frozen run token threshold") + ": " + (approval.maxRunTokens.map(String.init) ?? L("Off"))).font(.caption)

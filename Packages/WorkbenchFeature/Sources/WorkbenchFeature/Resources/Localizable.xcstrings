@@ -15840,6 +15840,22 @@
           }
         }
       }
+    },
+    "Tool arguments": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool arguments"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具参数"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
