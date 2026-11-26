@@ -436,11 +436,12 @@ import Combine
         dismissLauncher(restore: false); if let pane { settingsSession.pane = pane }
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 840, height: 620), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-            window.contentMinSize = NSSize(width: 740, height: 530); window.isReleasedWhenClosed = false; window.delegate = self
+            window.isReleasedWhenClosed = false; window.delegate = self
             window.toolbarStyle = .unified; window.standardWindowButton(.zoomButton)?.isHidden = true
             installContent(SettingsRootView(store: store, session: settingsSession), in: window)
-            window.setFrameAutosaveName("KeyDock.Settings"); window.center(); settings = window
+            window.setFrameAutosaveName("KeyDock.Settings"); settings = window
             installToolbar("KeyDock.Settings.Toolbar", in: window)
+            constrainContentSize(of: window, minimum: NSSize(width: 740, height: 530)); window.center()
         }
         refreshTitles(); NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
     }
@@ -452,11 +453,12 @@ import Combine
         workspaceSession.present(route, in: store)
         dismissLauncher(restore: false)
         if workspace == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 680), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-            window.contentMinSize = NSSize(width: 820, height: 560); window.isReleasedWhenClosed = false; window.delegate = self
+            let window = NSWindow(contentRect: NSRect(origin: .zero, size: KDTokens.workspaceDefaultSize), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false; window.delegate = self
             window.toolbarStyle = .unified; installContent(WorkspaceView(store: store, session: workspaceSession), in: window)
-            window.setFrameAutosaveName("KeyDock.Workspace"); window.center(); workspace = window
+            window.setFrameAutosaveName("KeyDock.Workspace"); workspace = window
             installToolbar("KeyDock.Workspace.Toolbar", in: window)
+            constrainContentSize(of: window, minimum: KDTokens.workspaceMinimumSize); window.center()
         }
         refreshTitles(); NSApp.activate(ignoringOtherApps: true); workspace?.makeKeyAndOrderFront(nil)
     }
@@ -535,6 +537,14 @@ import Combine
                 // 失败提示不抢回其他应用的键盘焦点，也不会自动重试。
                 clipboardPanel?.orderFrontRegardless()
             }
+        }
+    }
+    private func constrainContentSize(of window: NSWindow, minimum: NSSize) {
+        // contentViewController安装及autosave恢复后才由AppKit应用下限，也修复旧的过小frame。
+        window.contentMinSize = minimum
+        let size = window.contentRect(forFrameRect: window.frame).size
+        if size.width < minimum.width || size.height < minimum.height {
+            window.setContentSize(NSSize(width: max(size.width, minimum.width), height: max(size.height, minimum.height)))
         }
     }
     private func installContent<Content: View>(_ content: Content, in window: NSWindow) {
@@ -690,7 +700,7 @@ import Combine
     }
     @objc private func resizeReviewWorkspace(_ sender: NSMenuItem) {
         guard safeSmoke, visualReview.allowsChanges, let window = workspace, window.isVisible, sender.tag == 0 || sender.tag == 1 else { return }
-        window.setContentSize(sender.tag == 0 ? window.contentMinSize : NSSize(width: 1000, height: 680))
+        window.setContentSize(sender.tag == 0 ? KDTokens.workspaceMinimumSize : KDTokens.workspaceDefaultSize)
         // 仅自有Preview壳的无正文几何收据；不控制其他应用或改变系统设置。
         if ProcessInfo.processInfo.arguments.contains("--review-fixture-root") {
             let size = window.contentRect(forFrameRect: window.frame).size

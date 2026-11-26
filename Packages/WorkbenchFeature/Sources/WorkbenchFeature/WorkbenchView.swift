@@ -44,7 +44,7 @@ public struct WorkspaceView: View {
                 }
                 }
             }
-        }.frame(minWidth: 820, minHeight: 560).environment(\.locale, KDLocalizer.locale)
+        }.frame(minWidth: KDTokens.workspaceMinimumSize.width, minHeight: KDTokens.workspaceMinimumSize.height).environment(\.locale, KDLocalizer.locale)
             .background {
                 if let presentation = session.taskMaterialPresentation { TaskMaterialSheetHost(store: store, session: session, presentation: presentation).id(presentation.id) }
                 if let launch = session.workflowLaunch { WorkflowLaunchSheetHost(store: store, session: session, launch: launch).id(launch.id) }
