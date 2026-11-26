@@ -31,6 +31,10 @@
 
 ### 发行后的开发资格
 
+普通布局和最小化冻结窗口的生产代码为 `d125202393c1c36f2e61b57b4c4cdc988ff5ecb9`，已通过[同源 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45851482288)。干净本机 1,103 次 Swift、157 项 Python、1,037 个中英键、两轮生产 OCR 通过。优化 Preview 在两个独立进程打开真实任务详情，旧预算未知、新预算 31 token，均正常退出。回执 `02e0ee45-4fc7-4c7b-82bd-c81b1fadde1e`、`06a455a3-119f-445c-86e7-3402ce2e7c06`、`cc2aa9bb-79ca-4524-bb1f-78386107c047`。窗口焦点 A→B 的零写入来自受控适配器；这两次原生进程验证用量恢复。
+
+保留首轮本机全量失败 `cc325337-eaf8-46a4-b860-8a22333c401a`。历史过期用例的 5 秒期限在合成 HTTP 收口中耗尽，当时已有 1 个 POST、20 字节输出，尚未改写日期或运行过期维护。同一源码的该用例连续三次和下一轮完整检查均通过。历史清除、收口、过期用例现使用已有 `/usage` 回路，真实 URLSession、SSE 和 12 输入／5 输出用量仍参与；`/stream` 的逐字节延时保留给传输测试，5 秒观察期限保持原值。
+
 修正后的模型与启动台代码固定源为 `299a240c710f06a4664861c7f35ad35a68500bdd`，同一提交通过 [GitHub 构建检查](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45847402118)。本机干净全量回执 `e15a212e-a26d-4bc0-97c3-e27da06b0fde`、优化 Preview 回执 `dcfd87d5-3e62-407b-a934-355c640bb1a3`。正式 alpha.28 的二进制所含功能仍以发行提交为准。
 
 模型继承最初源码 `6aff14b` 在本机通过 1,102 次 Swift 执行、157 项 Python、两轮系统 OCR 及优化 Preview。同源 [GitHub CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45844223763) 在计算器选择后复制的三处断言失败。合成回归让启动恢复在已显示结果与 Return 之间重建相同目录，观察到一次无变化发布、复制零次，四处 RED，回执 `eb1122e7-dbed-48ee-b2b8-8a6ccececa10`。启动、应用索引与窗口刷新现共用同一目录更新路径。仅完整有序内容变化时发布，标题、身份、绑定或修订变化仍使旧选择失效。定向 9 项通过，回执 `74e49048-507f-47e4-86ed-8ac0f8426173`。

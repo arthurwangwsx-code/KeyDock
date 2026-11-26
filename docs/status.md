@@ -1,5 +1,7 @@
 # 当前状态总账
 
+直接窗口布局与最小化已合入 `master`，生产代码 `d125202`。同应用 A→B 的受控竞态修复后零写入；干净源码 1,103 次 Swift、157 项 Python、1,037 个中英键、两轮系统 OCR、优化 Preview 两个真实进程及[同源 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45851482288)通过。两个进程验证了旧／新用量恢复。真实窗口切换和实体键的资格继续开放，安装版本仍为下述 alpha.28。
+
 发行后的开发已验证提供方成功用量、剪贴板查询失败重试、模型上限继承和启动台重复目录发布。模型与启动台修复源 `299a240` 已通过[同源 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45847402118)、干净本机全量、两轮系统 OCR 和优化 Preview。签名 A/B/C 合成接收窗口初始计数均为零；实际插入、实体快捷键、具体窗口切换及权限撤销仍须分别验证。见[发行后的分项记录](implementation/retention-shutdown-2026-11-26.md)及[费用前置回归](technical/agent-estimated-cost-limit.md)。
 
 当前公开预发布与 `/Applications/KeyDock.app` 均为 [alpha.28，build 28](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.28)，固定源 `6490bc51d00b45c47e0450c90b8f25f5c508c5b6`。1,098 次 Swift、157 项 Python、1,037 个中英键、两轮生产 OCR、同源双 CI、优化 Preview 及两次原生启动通过。App 与 DMG 已公证，公开资产已回下载；正式安装实测 27 → 28 → 27 → 28。详见[本轮证据和 P0–P4 验收总账](implementation/retention-shutdown-2026-11-26.md)。

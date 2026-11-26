@@ -96,7 +96,7 @@ import ExecutionCore
     }
 
     @Test func usageClearRemovesDiskAndCachedCountsAndRejectsLateRecovery() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let draft = fixture.store.createDraft(input: "Synthetic clear usage")
             let id = try #require(fixture.store.runAI(action: fixture.action, draft: draft))
             try await fixture.drain(id)
@@ -118,7 +118,7 @@ import ExecutionCore
     }
 
     @Test func usageSavedDuringReceiptClosingIsRemovedFromBothDiskAndCache() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let draft = fixture.store.createDraft(input: "Synthetic closing usage")
             let id = try #require(fixture.store.runAI(action: fixture.action, draft: draft))
             try await fixture.drain(id)
@@ -133,12 +133,13 @@ import ExecutionCore
     }
 
     @Test func automaticExpirationAlsoInvalidatesCachedUsageAndLateReaders() async throws {
-        try await withStoreHTTPFixture(path: "stream") { fixture in
+        try await withStoreHTTPFixture(path: "usage") { fixture in
             let draft = fixture.store.createDraft(input: "Synthetic expiring usage")
             let id = try #require(fixture.store.runAI(action: fixture.action, draft: draft))
             try await fixture.drain(id)
             let index = try #require(fixture.store.tasks.firstIndex { $0.id == id })
             let previous = try #require(fixture.store.tasks[index].aiUsageSummary)
+            #expect(previous.state == .reported && previous.reportedInputTokens == 12 && previous.reportedOutputTokens == 5)
             let oldUsageRead = fixture.store.captureUsageRestoreRead()
             let file = fixture.directory.appendingPathComponent("usage/" + id.uuidString + ".json")
             var json = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
