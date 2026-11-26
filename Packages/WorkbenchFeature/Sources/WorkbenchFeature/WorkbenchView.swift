@@ -103,14 +103,14 @@ public struct WorkspaceView: View {
                         if store.isRemovedMCPSource(task.inputProvenance) { Text(L("This MCP source was removed. The imported text is kept as a snapshot.")).font(.caption).foregroundStyle(.secondary) }
                     }
                     AgentApprovalView(store:store,runID:task.id)
-                    if let budget = task.runTokenBudget { RunTokenBudgetStatusView(snapshot: budget).id(store.configuration.language) }
+                    if let budget = task.runTokenBudget { RunTokenBudgetStatusView(snapshot: budget, language: store.configuration.language) }
                     else if task.agentRunContractFingerprint != nil { Text(L("No run token threshold was enabled for this run.")).font(.caption).foregroundStyle(.secondary) }
                     if let checkpoint = store.workflowCheckpoints[task.id] { Text(L("Step")+" \(checkpoint.stepIndex+1) · "+workflowPhaseTitle(checkpoint.phase)).font(.caption).foregroundStyle(.secondary) }
                     ForEach(store.pendingWorkflowInputs.filter{$0.runID == task.id}) { request in WorkflowInputView(store:store,request:request) }
-                    if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary).id(store.configuration.language) }
+                    if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary, language: store.configuration.language) }
                     if let code = task.exitCode { Text(L("Exit code") + ": \(code)").font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary) }
                     if let result = task.desktopWorkspaceResult {
-                        DesktopWorkspaceResultView(result: result, labels: task.desktopWorkspaceLabels)
+                        DesktopWorkspaceResultView(result: result, language: store.configuration.language, labels: task.desktopWorkspaceLabels)
                     } else {
                     ReadOnlyTextPreview(text: task.output.isEmpty ? (task.restoredFromReceipt ? L("Session output is not restored here. Use Task content to view text you saved.") : L("No output")) : task.output,
                         accessibilityLabel: L("Task output"), monospaced: true)
@@ -202,6 +202,7 @@ private struct TaskHistoryRow: View {
 struct AIDraftMenuLabel: View {
     @ObservedObject var draft: AIDraftDocument
     let selected: Bool
+    let language: String
     var body: some View {
         let title = draft.input.split(whereSeparator: \.isNewline).first.map { String($0.prefix(50)) } ?? L("Untitled draft")
         Label(title, systemImage: selected ? "checkmark" : "doc.text")

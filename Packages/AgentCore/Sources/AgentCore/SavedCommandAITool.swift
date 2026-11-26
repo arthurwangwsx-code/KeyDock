@@ -9,7 +9,7 @@ public enum SavedCommandAITool {
         let name = "command_" + command.id.uuidString.replacingOccurrences(of:"-",with:"").lowercased()
         let definition = AIToolDefinition(name:name,description:"Run the saved command named " + String(command.name.prefix(128)) + ". The user must approve each call. Arguments and environment cannot be changed by the model.",parameters:["type":.string("object"),"properties":.object([:]),"required":.array([]),"additionalProperties":.bool(false)])
         let summary = command.executable + " " + command.arguments.map { String(reflecting:$0) }.joined(separator:" ") + "\n" + command.workingDirectory
-        return ScopedAITool(definition:definition,version:version,executionToolID:executionToolID,actionID:actionID,actionVersion:actionVersion,effects:[.executeProcess],resource:.exact(namespace:"keydock.saved-command",identifier:resourceFingerprint),approvalSummary:summary) { _,id in
+        return ScopedAITool(definition:definition,version:version,executionToolID:executionToolID,actionID:actionID,actionVersion:actionVersion,effects:[.executeProcess],resource:.exact(namespace:"keydock.saved-command",identifier:resourceFingerprint),approvalSummary:summary,displayTitle:command.name) { _,id in
             try await withTaskCancellationHandler {
                 var output = "", final: ProcessResult?, exceeded = false
                 for await event in await runner.run(command,id:id) {

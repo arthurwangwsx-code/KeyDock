@@ -6,6 +6,7 @@ import SwiftUI
     public static func make<Content: View>(root: Content, review: KDVisualReviewState? = nil) -> NSView {
         let review = review ?? KDVisualReviewState()
         let hosting = ClearHostingView(rootView: KDVisualReviewHost(review: review) { root.modifier(LauncherMaterialModifier()) })
+        hosting.sizingOptions = []
         hosting.autoresizingMask = [.width, .height]
         return hosting
     }

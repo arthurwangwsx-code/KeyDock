@@ -105,7 +105,10 @@ struct AgentApprovalView: View {
         ForEach(store.pendingApprovals.filter {$0.runID == runID}) { approval in
             VStack(alignment:.leading,spacing:10) {
                 Label(L("Approve this tool call?"),systemImage:"hand.raised")
-                Text(approval.toolName).font(.headline)
+                Text(approval.displayTitle).font(.headline).lineLimit(2).textSelection(.enabled)
+                if approval.displayTitle != approval.toolName {
+                    Text(L("Tool identifier") + ": " + approval.toolName).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                }
                 ScrollView { Text(approval.summary).font(.system(.caption,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading) }.frame(maxHeight:180)
                 Text(L("This tool may change your computer. Review its full arguments. Output may be sent to AI by this run.")).font(.caption).foregroundStyle(.secondary)
                 if approval.runContractFingerprint != nil {

@@ -4,6 +4,7 @@ import SwiftUI
 public enum KDTokens {
     public static let launcherWidth: CGFloat = 680
     public static let launcherHeight: CGFloat = 456
+    public static let launcherNoticeHeight: CGFloat = 56
     public static let corner: CGFloat = 24
     public static let rowHeight: CGFloat = 50
     public static let space: CGFloat = 16

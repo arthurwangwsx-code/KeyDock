@@ -156,13 +156,15 @@ import AutomationCore
             let id = try #require(store.runAgent(definition,input:"Synthetic tool request"))
             try await storeEventually { store.pendingApprovals.contains(where:{$0.runID == id}) }
             let approval = try #require(store.pendingApprovals.first(where:{$0.runID == id}))
+            #expect(approval.displayTitle == "Synthetic Agent command")
             #expect(approval.summary.contains("original") && approval.effects == [.executeProcess])
             #expect(store.setContributionEnabled(false,id:BuiltinContributionID.commands))
-            command.arguments = ["%s","changed"]; store.configuration.savedCommands = [command]
+            command.name = "Synthetic renamed command"; command.arguments = ["%s","changed"]; store.configuration.savedCommands = [command]
             #expect(store.runAgent(definition,input:"Synthetic blocked request") == nil)
             store.resolveApproval(approval.id,approved:true); try await fixture.drain(id)
             let task = try #require(store.tasks.first(where:{$0.id == id}))
             #expect(task.status == .completed && task.output.contains("original") && !task.output.contains("changed"))
+            #expect(approval.displayTitle == "Synthetic Agent command" && approval.toolName.hasPrefix("command_"))
             #expect(task.output.contains("Synthetic saved command round-trip complete"))
             let toolReceipts = await store.agentToolStore.list()
             #expect(toolReceipts.count == 1 && store.tasks.count == 1)

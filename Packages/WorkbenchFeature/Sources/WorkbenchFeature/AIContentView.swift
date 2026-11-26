@@ -14,12 +14,12 @@ struct AIContentView: View {
     private var task: RunningTaskItem? { store.tasks.first { $0.id == draft.latestRunID } }
     private var effectiveSettings: FrozenAIExecutionSettings? { action.flatMap { try? store.resolveAISettings(action: $0) } }
     private var needsConfiguration: Bool { effectiveSettings == nil }
+    private var commandSettings: FrozenAIExecutionSettings? { try? store.resolveAISettings(scene: .commandProposal) }
+    private var readOnlySettings: FrozenAIExecutionSettings? { try? store.resolveAISettings(scene: .readOnlyAgent, requiresTools: true) }
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 12 : 18) {
             heading
-            if compact {
-                ScrollView { content }.frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else { content }
+            ScrollView { content }.frame(maxWidth: .infinity, maxHeight: .infinity)
             if compact && !draft.notice.isEmpty { KDInlineNotice(draft.notice).lineLimit(2) }
             footer.zIndex(1)
             if !compact { HStack { Spacer(); closeDraftButton }.controlSize(.small) }
@@ -73,10 +73,14 @@ struct AIContentView: View {
                     HStack {
                         Button(L("Use clipboard")) { store.useClipboardInput(draft) }
                         Button(L("Clear input")) { draft.clearInput() }.disabled(draft.input.isEmpty && draft.inputProvenance == nil)
-                        Button(L("Suggest CLI")) { store.performUserInputAction { store.generateCommandProposal(draft: draft) } }.disabled((try? store.resolveAISettings(scene: .commandProposal)) == nil)
-                        Button(L("Read-only agent")) { store.performUserInputAction { store.runReadOnlyAgent(draft: draft) } }.disabled((try? store.resolveAISettings(scene: .readOnlyAgent, requiresTools: true)) == nil)
+                        Button(L("Suggest CLI")) { store.performUserInputAction { store.generateCommandProposal(draft: draft) } }.disabled(commandSettings == nil)
+                        Button(L("Read-only agent")) { store.performUserInputAction { store.runReadOnlyAgent(draft: draft) } }.disabled(readOnlySettings == nil)
                         Spacer()
                     }.controlSize(.small)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(L("CLI suggestions model") + ": " + (commandSettings?.configuration.model ?? L("No model configured")))
+                        Text(L("Read-only Agent model") + ": " + (readOnlySettings?.configuration.model ?? L("No model configured")))
+                    }.font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
                     Text(L("Read-only Agent uses a fixed 32000 reported token threshold. Create an Agent profile to customize this limit.")).font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -87,7 +91,7 @@ struct AIContentView: View {
                 if store.pendingCommandReviews.contains(where: { $0.id == task.id }) {
                     Button(L("Review command draft")) { store.presentCommandReview(task.id) }
                 }
-                if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary, compact: compact) }
+                if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary, language: store.configuration.language, compact: compact) }
                 ReadOnlyTextPreview(text: task.output.isEmpty && task.isRunning ? L("Waiting for response…") : task.output,
                     accessibilityLabel: L("Task output"), pointSize: compact ? 13 : 14)
                     .frame(maxWidth: .infinity, minHeight: compact ? 140 : 180, idealHeight: compact ? 140 : 260, maxHeight: compact ? 140 : 420).clipped().modifier(KDReadingSurface())

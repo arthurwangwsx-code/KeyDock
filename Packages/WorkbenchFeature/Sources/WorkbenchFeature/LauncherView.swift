@@ -12,8 +12,8 @@ public struct LauncherView: View {
     public var body: some View {
         Group {
             if let draft = session.draft { AIContentView(store: store, draft: draft, compact: true, onBack: { session.reset() }, onRequestClose: { session.prepareDraftClose(draft) }) }
-            else { search }
-        }.frame(width: KDTokens.launcherWidth, height: KDTokens.launcherHeight)
+            else { GeometryReader { geometry in search(availableHeight: geometry.size.height) } }
+        }.frame(width: KDTokens.launcherWidth).frame(maxHeight: .infinity)
             .background {
                 if let intent = session.draftCloseIntent {
                     LauncherDraftCloseSheetHost(store: store, session: session, intent: intent).id(intent.id)
@@ -24,7 +24,7 @@ public struct LauncherView: View {
             .onChange(of: session.actionsVisible) { _, visible in if !visible { favoriteFailure = .none } }
             .onChange(of: session.selectedID) { _, _ in favoriteFailure = .none }
     }
-    private var search: some View {
+    private func search(availableHeight: CGFloat) -> some View {
         VStack(spacing: 0) {
             HStack(spacing: 14) {
                 Image(systemName: "magnifyingglass").font(.system(size: 22, weight: .light)).foregroundStyle(.secondary)
@@ -34,10 +34,18 @@ public struct LauncherView: View {
                 if session.contextCapturePending { ProgressView().controlSize(.small) }
                 KDKeycap("esc")
             }.padding(.horizontal, KDTokens.contentInset).frame(height: KDTokens.searchHeight)
-            Divider().opacity(0.55)
+            Divider().frame(height: 1).opacity(0.55)
             KDResultSectionHeader(session.query.isEmpty ? L("Suggestions") : L("Results"), count: session.query.isEmpty ? nil : session.results.count)
+            Group {
             if session.results.isEmpty {
-                KDEmptyState(symbol: "magnifyingglass", title: L("No matching actions"), detail: L("Try an application name, a saved command, or an AI action."))
+                if session.resultBatch?.isComplete != true {
+                    VStack(spacing: 12) { ProgressView().controlSize(.small); Text(L("Searching…")).foregroundStyle(.secondary) }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                ViewThatFits(in: .vertical) {
+                    KDEmptyState(symbol: "magnifyingglass", title: L("No matching actions"), detail: L("Try an application name, a saved command, or an AI action.")).frame(minHeight: 160)
+                    Text(L("No matching actions")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                }
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -54,10 +62,19 @@ public struct LauncherView: View {
                     }
                 }
             }
-            if !store.applicationIndexNotice.isEmpty { KDInlineNotice(store.applicationIndexNotice).lineLimit(2) }
-            if store.shortcutsUnavailable { KDInlineNotice(L("Shortcuts are inactive. Choose another shortcut or retry registration.")).lineLimit(2) }
-            if !store.launcherNotice.isEmpty { KDInlineNotice(store.launcherNotice).lineLimit(2) }
-            Divider().opacity(0.5)
+            }.frame(minHeight: 0, maxHeight: .infinity).clipped()
+            let notices = [!store.applicationIndexNotice.isEmpty, store.shortcutsUnavailable, !store.launcherNotice.isEmpty].filter { $0 }.count
+            if notices > 0 {
+                // popover持有／低矮屏幕时通知仍可滚动读取，不把固定底栏顶出窗口。
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if !store.applicationIndexNotice.isEmpty { KDInlineNotice(store.applicationIndexNotice).lineLimit(2).frame(height: KDTokens.launcherNoticeHeight) }
+                        if store.shortcutsUnavailable { KDInlineNotice(L("Shortcuts are inactive. Choose another shortcut or retry registration.")).lineLimit(2).frame(height: KDTokens.launcherNoticeHeight) }
+                        if !store.launcherNotice.isEmpty { KDInlineNotice(store.launcherNotice).lineLimit(2).frame(height: KDTokens.launcherNoticeHeight) }
+                    }
+                }.frame(height: LauncherLayoutMetrics.noticeViewportHeight(availableHeight: availableHeight, slots: notices))
+            }
+            Divider().frame(height: 1).opacity(0.5)
             HStack(spacing: 10) {
                 KDIconButton("gearshape", label: L("Settings")) { store.onOpenSettings?(nil) }.keyboardShortcut(",", modifiers: .command)
                 KDIconButton("rectangle.stack", label: L("Running tasks")) { store.onOpenWorkspace?(.tasks(nil)) }

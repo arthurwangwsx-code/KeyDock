@@ -23,12 +23,13 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var selectedID: String?
     @Published public private(set) var selectionScrollRequest = UUID()
     @Published public var focusRequest = UUID()
-    @Published public var actionsVisible = false
+    @Published public var actionsVisible = false { didSet { if oldValue != actionsVisible { layoutModeRevision &+= 1 } } }
     @Published public var contextCapturePending = false
     @Published public private(set) var queryRequest: QueryRequest?
     @Published public private(set) var resultBatch: ResultBatch?
     public var onExecute: ((CommandItem) -> Void)?
-    @Published public var draft: AIDraftDocument? { didSet { updateVisibleReferences() } }
+    @Published public var draft: AIDraftDocument? { didSet { if oldValue?.id != draft?.id { layoutModeRevision &+= 1 }; updateVisibleReferences() } }
+    var layoutModeRevision: UInt64 = 0
     @Published var draftCloseIntent: AIDraftCloseIntent?
     public var ownsDraftCloseReview: Bool { draftCloseIntent != nil }
     private let visibilityOwner = UUID()
@@ -336,5 +337,20 @@ private struct LauncherCatalogProvider: CommandProviding {
     }
     public func availableDrafts(in store: WorkbenchModel) -> [AIDraftDocument] {
         store.draftOrder.reversed().compactMap { store.drafts[$0] }.filter { store.ownsDraft($0) }
+    }
+}
+
+
+extension LauncherSession {
+    public var layoutSnapshot: LauncherLayoutSnapshot {
+        let request = queryRequest
+        let batch = resultBatch.flatMap { value in
+            request?.queryID == value.queryID && request?.generation == value.generation ? value : nil
+        }
+        let notices = [!store.applicationIndexNotice.isEmpty, store.shortcutsUnavailable, !store.launcherNotice.isEmpty].filter { $0 }.count
+        return .init(mode: draft == nil ? .search : .compactAI, modeRevision: layoutModeRevision,
+            queryID: request?.queryID, generation: request?.generation ?? 0,
+            resultCount: batch?.items.count, isComplete: batch?.isComplete ?? false, noticeSlots: notices,
+            held: actionsVisible || ownsDraftCloseReview)
     }
 }

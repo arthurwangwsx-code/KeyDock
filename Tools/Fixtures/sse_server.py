@@ -124,6 +124,12 @@ class Handler(BaseHTTPRequestHandler):
             path = urlsplit(self.path).path
             if path == "/stream":
                 self.stream()
+            elif path == "/native-ui":
+                request = json.loads(body)
+                if request.get("tools"):
+                    self.agent_command(request)
+                else:
+                    self.complete_text("Synthetic usage result", "synthetic-native-ui")
             elif path == "/responses-agent-budget":
                 self.responses_agent_budget(json.loads(body))
             elif path in ("/request-settings", "/responses-settings"):

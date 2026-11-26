@@ -1,5 +1,7 @@
 # 当前状态总账
 
+任务41正在推进alpha.26：原生实际复现并修复用量卡与空草稿菜单切语言残留，审批增加冻结人类名称及协议标识、辅助AI展示场景模型、工具栏固有宽度和Launcher有界高度已接通。开发态原生0／1／3／7／12条、方向键滚动、compact／工作区、中英往返及在途改名确认子集已观察；最终clean源／CI／发行尚待资格，完整视觉和最窄／多屏等仍开放。详见[本轮记录](implementation/native-ui-clarity-2026-11-26.md)。
+
 当前公开发行与正式本机安装均为[alpha.25](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.25)，固定源`630ef838788723c58a6c1ed54f8a47c92bab78ce`。1062 Swift执行／156 Python／1028中英key、生产合成OCR双轮、同源CI／优化Preview、master重复CI、公证装订／Gatekeeper、公开回下载和独立发行审计通过；About25已实际观察。[Agent预算复查](implementation/agent-run-token-budget-2026-11-26.md)记录跨轮token阈值、原生语言刷新修补、双语重启及真实OpenAI时间工具两轮490 token。alpha.24应用动作迁移等资格仍见[前序复查](implementation/application-action-configuration-2026-11-26.md)。alpha.22未公开候选及失败保留，旧tag／资产不覆写。
 
 Agent可明确开关运行总token阈值，当前轮完整用量核实后才继续工具／模型；内建只读Agent固定32000。每请求输出上限继承模型设置，并按下一轮剩余阈值收紧。审批固定旧限制，运行中修改仅影响新任务；清除AI用量同步擦除已结束预算计数。配置schema4与回执Envelope3分别保护字段，不能承诺旧版可无条件回退。费用停止阈值尚未实现，也不把报告token阈值当账单硬上限。

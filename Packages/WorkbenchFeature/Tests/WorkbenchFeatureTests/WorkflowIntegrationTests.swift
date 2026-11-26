@@ -43,6 +43,7 @@ import ExecutionCore
             let expected = command.executable + " " + ["%s", input].map { String(reflecting: $0) }.joined(separator: " ") + "\n" + command.workingDirectory
             #expect(proposal.summary == expected && proposal.effects == [.executeProcess])
             #expect(proposal.toolName == "workflow_command" && proposal.runID == runID)
+            #expect(proposal.displayTitle == command.name)
             let waiting = try fixture.task(runID), beforeChildren = await fixture.childReceipts(runID)
             #expect(waiting.status == .awaitingApproval && waiting.output.isEmpty && beforeChildren.isEmpty)
             #expect(!FileManager.default.fileExists(atPath: marker.path))

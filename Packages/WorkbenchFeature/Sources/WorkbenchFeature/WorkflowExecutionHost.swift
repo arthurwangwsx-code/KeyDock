@@ -61,7 +61,7 @@ actor WorkflowExecutionHost {
                 if command.arguments.contains("{{input}}") {
                     guard request.allowsInteraction else { return .init(outcome:.failed) }
                     let summary = bound.executable+" "+bound.arguments.map{String(reflecting:$0)}.joined(separator:" ")+"\n"+bound.workingDirectory
-                    guard try await approve(.init(id:id,runID:request.runID,toolName:"workflow_command",summary:summary,effects:[.executeProcess])) else { return .init(outcome:.cancelled) }
+                    guard try await approve(.init(id:id,runID:request.runID,toolName:"workflow_command",summary:summary,effects:[.executeProcess],displayTitle:command.name)) else { return .init(outcome:.cancelled) }
                     try Task.checkCancellation()
                 }
                 effect = .executeProcess; resource = try prepared.contract.fingerprint(bound)

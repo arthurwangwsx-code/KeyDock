@@ -21,6 +21,45 @@ private actor ApprovalWaiter {
 }
 
 @Suite(.serialized) struct ScopedToolBrokerTests {
+    @Test func displayNamesRemainSeparateFromDispatchIdentityForSameNamedTools() async throws {
+        let (directory, journal) = try fixture(); defer { try? FileManager.default.removeItem(at: directory) }
+        let counter = CallCounter(), title = "Synthetic shared title"
+        let tools = ["synthetic_a", "synthetic_b"].map { name in
+            ScopedAITool(definition: .init(name: name, description: "Synthetic test", parameters: ["type":.string("object"),"properties":.object([:]),"required":.array([]),"additionalProperties":.bool(false)]),
+                effects: [.writeFile], resource: .exact(namespace: "synthetic.file", identifier: name), approvalSummary: "Synthetic arguments", displayTitle: title) { _, _ in
+                await counter.increment(); return name
+            }
+        }
+        let broker = try ScopedToolBroker(runID: UUID(), tools: tools, journal: journal) { proposal in
+            #expect(proposal.displayTitle == title)
+            #expect(["synthetic_a", "synthetic_b"].contains(proposal.toolName))
+            return true
+        }
+        await #expect(throws: AIProviderError.unknownTool) { try await broker.invoke(.init(id: "bad", name: title, arguments: "{}"), allowed: [title, "synthetic_a", "synthetic_b"]) }
+        #expect(await counter.count == 0)
+        for name in ["synthetic_a", "synthetic_b"] {
+            let output = try await broker.invoke(.init(id: name, name: name, arguments: "{}"), allowed: ["synthetic_a", "synthetic_b"])
+            #expect(output == name)
+        }
+        #expect(await counter.count == 2)
+        let definitions = await broker.definitions(), object = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(definitions)) as? [[String: Any]])
+        #expect(definitions.map(\.name) == ["synthetic_a", "synthetic_b"])
+        #expect(object.allSatisfy { $0["displayTitle"] == nil })
+    }
+
+    @Test(arguments: ["", " \n ", "Synthetic\nname", String(repeating: "🙂", count: 200), String(repeating: "e\u{301}", count: 300), String(repeating: "a", count: 511) + "🙂"])
+    func hostTitlesHaveBoundedValidSingleLinePreviews(_ title: String) {
+        let proposal = AgentToolApproval(id: UUID(), runID: UUID(), toolName: "synthetic_protocol", summary: "Synthetic", effects: [.writeFile], displayTitle: title)
+        #expect(proposal.displayTitle.utf8.count <= 512)
+        #expect(!proposal.displayTitle.contains("\n") && !proposal.displayTitle.contains("\u{fffd}"))
+        #expect(proposal.toolName == "synthetic_protocol")
+        if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { #expect(proposal.displayTitle == proposal.toolName) }
+    }
+
+    @Test func defaultDisplayTitlePreservesOldApprovalCallers() {
+        let proposal = AgentToolApproval(id: UUID(), runID: UUID(), toolName: "legacy_protocol", summary: "Synthetic", effects: [.writeFile])
+        #expect(proposal.displayTitle == "legacy_protocol")
+    }
     func fixture() throws -> (URL,InvocationStore) {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("keydock-scoped-broker-"+UUID().uuidString)
         return (directory,try InvocationStore(directory:directory))

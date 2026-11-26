@@ -4,6 +4,7 @@ import KeyDockUI
 
 struct RunTokenBudgetStatusView: View {
     let snapshot: RunTokenBudgetSnapshot
+    let language: String
     private var stateTitle: String {
         switch snapshot.status {
         case .awaitingUsage: L("Waiting for this request's final usage")

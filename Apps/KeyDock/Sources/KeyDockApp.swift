@@ -6,6 +6,7 @@ import ExecutionCore
 import MacAdapters
 import KeyDockUI
 import Darwin
+import Combine
 
 @main @MainActor enum KeyDockApp {
     static func main() {
@@ -119,6 +120,11 @@ import Darwin
     private let safeSmoke: Bool
     private let visualReview: KDVisualReviewState
     private var launcher: LauncherPanel?
+    private var launcherLayout = LauncherLayoutState()
+    private var launcherPresentation = UUID()
+    private var launcherLayoutRequest: UUID?
+    private var launcherLayoutTask: Task<Void, Never>?
+    private var launcherLayoutSubscriptions: Set<AnyCancellable> = []
     private var settings: NSWindow?
     private var workspace: NSWindow?
     private var clipboardPanel: LauncherPanel?
@@ -235,10 +241,54 @@ import Darwin
         }
     }
     func start() {
+        if launcherLayoutSubscriptions.isEmpty {
+            launcherSession.objectWillChange.sink { [weak self] in self?.scheduleLauncherLayout() }.store(in: &launcherLayoutSubscriptions)
+            store.objectWillChange.sink { [weak self] in self?.scheduleLauncherLayout() }.store(in: &launcherLayoutSubscriptions)
+            NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
+                .receive(on: RunLoop.main)
+                .sink { [weak self] _ in self?.scheduleLauncherLayout() }.store(in: &launcherLayoutSubscriptions)
+        }
         store.startApplicationUpdates(); applyAppearance(); installMenus()
         do { try installShortcuts(configuration: store.configuration) }
         catch { store.reportShortcutRegistrationFailure() }
         presentLauncher()
+    }
+    private func scheduleLauncherLayout() {
+        guard launcherLayoutTask == nil, launcher?.isVisible == true, !store.isShuttingDown else { return }
+        let presentation = launcherPresentation, request = UUID()
+        launcherLayoutRequest = request
+        launcherLayoutTask = Task { @MainActor [weak self] in
+            await Task.yield()
+            guard let self, launcherLayoutRequest == request else { return }
+            launcherLayoutTask = nil; launcherLayoutRequest = nil
+            guard !Task.isCancelled, launcherPresentation == presentation, !store.isShuttingDown,
+                  let panel = launcher, panel.isVisible, panel.attachedSheet == nil,
+                  let screen = panel.screen ?? NSScreen.main else { return }
+            let snapshot = launcherSession.layoutSnapshot
+            var candidate = launcherLayout
+            let height: CGFloat
+            switch candidate.resolve(snapshot, maximumHeight: screen.visibleFrame.height-48) {
+            case .rejected: return
+            case .held: launcherLayout = candidate; return
+            case .place(let value): height = value
+            }
+            guard let next = LauncherFrameGeometry.resized(panel.frame, height: height, visibleFrame: screen.visibleFrame) else { return }
+            launcherLayout = candidate
+            guard next != panel.frame else { return }
+            panel.setFrame(next, display: true, animate: false)
+            traceLauncherLayout(panel, snapshot: snapshot, event: "resized")
+        }
+    }
+    private func traceLauncherLayout(_ panel: NSWindow, snapshot: LauncherLayoutSnapshot, event: String) {
+        // 仅owned Preview验收日志；不记录查询正文、选区、目标或授权。
+        guard safeSmoke, ProcessInfo.processInfo.arguments.contains("--review-fixture-root") else { return }
+        let frame = panel.frame
+        let value: [String: Any] = ["event": event, "mode": snapshot.mode.rawValue, "generation": snapshot.generation,
+            "count": snapshot.resultCount.map { $0 as Any } ?? NSNull(), "complete": snapshot.isComplete,
+            "x": Double(frame.minX), "y": Double(frame.minY), "width": Double(frame.width), "height": Double(frame.height)]
+        if let data = try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]), let text = String(data: data, encoding: .utf8) {
+            print("KEYDOCK_LAUNCHER_LAYOUT " + text)
+        }
     }
     private func applyAppearance() {
         switch store.configuration.appearance {
@@ -289,6 +339,7 @@ import Darwin
             }
             return
         }
+        launcherPresentation = UUID(); launcherLayoutRequest = nil; launcherLayoutTask?.cancel(); launcherLayoutTask = nil
         generation = UUID(); let current = generation
         captureTask?.cancel(); originalIdentity = safeSmoke ? nil : store.desktop.frontmostTarget()
         let identity = originalIdentity
@@ -298,14 +349,18 @@ import Darwin
             let point = NSEvent.mouseLocation
             if let screen = NSScreen.screens.first(where: { $0.frame.contains(point) }) ?? NSScreen.main {
                 var frame = launcher.frame; let visible = screen.visibleFrame
+                frame.size.height = min(KDTokens.launcherHeight, max(1, visible.height-48))
                 frame.origin.x = visible.midX - frame.width / 2
                 frame.origin.y = visible.maxY - visible.height * 0.22 - frame.height
                 frame.origin.y = max(visible.minY + 24, frame.origin.y)
                 launcher.setFrame(frame, display: false)
             }
+            launcherLayout.reset(initialHeight: launcher.frame.height)
         }
         launcherSession.setVisible(true)
         NSApp.activate(ignoringOtherApps: true); launcher.makeKeyAndOrderFront(nil)
+        traceLauncherLayout(launcher, snapshot: launcherSession.layoutSnapshot, event: "present")
+        scheduleLauncherLayout()
         if let identity {
             captureTask = Task { [weak self] in
                 guard let self else { return }
@@ -362,6 +417,7 @@ import Darwin
     }
     func dismissLauncher(restore: Bool) {
         guard !launcherSession.ownsDraftCloseReview else { return }
+        launcherPresentation = UUID(); launcherLayoutRequest = nil; launcherLayoutTask?.cancel(); launcherLayoutTask = nil
         launcherSession.setVisible(false)
         store.invalidateLauncherReplies()
         generation = UUID(); captureTask?.cancel(); capturePending = false; launcherSession.contextCapturePending = false; pendingCommand = nil; launcherSession.actionsVisible = false; launcher?.orderOut(nil)
@@ -754,6 +810,15 @@ import Darwin
     func deactivate() {
         if launcher?.isVisible == true, !launcherSession.ownsDraftCloseReview, launcher?.attachedSheet == nil { dismissLauncher(restore: false) }
         if clipboardPanel?.isVisible == true && clipboardPaste == nil { dismissClipboard(restore: false) }
+    }
+    func windowDidChangeScreen(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window === launcher { scheduleLauncherLayout() }
+    }
+    func windowDidResize(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow, window === launcher, window.isVisible,
+              abs(window.frame.height-launcherLayout.currentHeight) > 0.5 else { return }
+        launcherLayout.synchronizeActualHeight(window.frame.height)
+        scheduleLauncherLayout()
     }
     func windowDidResignKey(_ notification: Notification) {
         if let window = notification.object as? NSWindow, window === clipboardPanel {

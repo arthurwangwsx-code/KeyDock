@@ -12,7 +12,7 @@ public struct WorkspaceToolbarView: View {
                 KDIconButton("square.and.pencil", label: L("New AI task"), style: .toolbar) { session.createDraft(in: store) }
                 Menu {
                     ForEach(session.availableDrafts(in: store)) { draft in
-                        Button { session.navigate(.ai(draft.id), store: store) } label: { AIDraftMenuLabel(draft: draft, selected: session.draft?.id == draft.id) }
+                        Button { session.navigate(.ai(draft.id), store: store) } label: { AIDraftMenuLabel(draft: draft, selected: session.draft?.id == draft.id, language: store.configuration.language) }
                     }
                 } label: { Label(L("AI drafts"), systemImage: "clock").labelStyle(.iconOnly) }
                     .menuStyle(.borderlessButton).fixedSize()
@@ -20,6 +20,6 @@ public struct WorkspaceToolbarView: View {
                     .disabled(session.availableDrafts(in: store).isEmpty)
             }
             KDIconButton("gearshape", label: L("Settings"), style: .toolbar) { store.onOpenSettings?(nil) }
-        }.buttonStyle(.borderless).frame(width: 160, height: 32, alignment: .trailing).environment(\.locale, KDLocalizer.locale)
+        }.buttonStyle(.borderless).fixedSize(horizontal: true, vertical: false).frame(height: 32).environment(\.locale, KDLocalizer.locale)
     }
 }

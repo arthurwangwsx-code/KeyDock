@@ -208,7 +208,7 @@ extension WorkbenchModel {
             for tool in catalog.tools where definition.allowedMCPToolNames.contains(tool.definition.name) {
                 resolved.insert(tool.definition.name)
                 let scope = fingerprint(source.id.uuidString+"|"+source.revision.uuidString+"|"+catalog.revision+"|"+tool.originalName)
-                tools.append(ScopedAITool(definition:tool.definition,effects:[.network,.executeProcess,.writeFile],resource:.exact(namespace:"keydock.mcp",identifier:scope),approvalSummary:source.name+"\n"+source.endpoint.absoluteString+"\n"+tool.originalName) { arguments,_ in
+                tools.append(ScopedAITool(definition:tool.definition,effects:[.network,.executeProcess,.writeFile],resource:.exact(namespace:"keydock.mcp",identifier:scope),approvalSummary:source.name+"\n"+source.endpoint.absoluteString+"\n"+tool.originalName,displayTitle:source.name+" · "+tool.originalName) { arguments,_ in
                     let result = try await client.call(modelToolName:tool.definition.name,arguments:arguments,catalogRevision:catalog.revision)
                     guard !result.isError else { throw AgentToolError.toolFailed }
                     var text = result.text

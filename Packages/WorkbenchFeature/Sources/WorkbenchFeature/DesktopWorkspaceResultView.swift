@@ -4,6 +4,7 @@ import KeyDockUI
 
 struct DesktopWorkspaceResultView: View {
     let result: DesktopWorkspaceRunResult
+    let language: String
     var labels: [UUID: String] = [:]
     var body: some View {
         GeometryReader { geometry in

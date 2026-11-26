@@ -4,6 +4,21 @@ import ExecutionCore
 
 public enum AgentToolError: Error, Equatable, Sendable { case denied, approvalTimedOut, duplicateCall, missingJournal, toolFailed, invalidDefinition, receiptUnavailable }
 
+/// 只产生有界、单行的名称预览；协议ID和授权对象仍沿原字段传递。
+private func frozenApprovalTitle(_ value: String?, fallback: String) -> String {
+    let candidate = (value ?? fallback).trimmingCharacters(in: .whitespacesAndNewlines)
+    let raw = candidate.isEmpty ? fallback : candidate
+    let prefix = raw.utf8.prefix(513), truncated = prefix.count > 512
+    var bytes = Array(prefix.prefix(truncated ? 509 : 512))
+    while String(bytes: bytes, encoding: .utf8) == nil { bytes.removeLast() }
+    let controls = CharacterSet.controlCharacters.union(.newlines)
+    let text = String(decoding: bytes, as: UTF8.self).unicodeScalars.map {
+        controls.contains($0) ? " " : String($0)
+    }.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+    let safeFallback = fallback.range(of: "^[A-Za-z0-9_-]{1,64}$", options: .regularExpression) != nil ? fallback : "…"
+    return (text.isEmpty ? safeFallback : text) + (truncated ? "…" : "")
+}
+
 /// 宿主定义，不可从模型数据解码；描述与效果在创建运行时冻结。
 public struct ScopedAITool: Sendable {
     public let definition: AIToolDefinition
@@ -14,25 +29,28 @@ public struct ScopedAITool: Sendable {
     public let effects: Set<ExecutionEffect>
     public let resource: ExecutionResourceScope
     public let approvalSummary: String
+    public let displayTitle: String
     public let invoke: @Sendable ([String: JSONValue], UUID) async throws -> String
     public init(definition: AIToolDefinition, version: Int = 1, executionToolID:String? = nil, actionID:String? = nil, actionVersion:Int? = nil, effects: Set<ExecutionEffect>, resource: ExecutionResourceScope,
-                approvalSummary: String, invoke: @escaping @Sendable ([String: JSONValue], UUID) async throws -> String) {
+                approvalSummary: String, displayTitle: String? = nil, invoke: @escaping @Sendable ([String: JSONValue], UUID) async throws -> String) {
         self.definition = definition; self.version = version; self.effects = effects; self.resource = resource
         self.executionToolID = executionToolID; self.actionID = actionID; self.actionVersion = actionVersion
-        self.approvalSummary = approvalSummary; self.invoke = invoke
+        self.approvalSummary = approvalSummary; self.displayTitle = frozenApprovalTitle(displayTitle, fallback: definition.name); self.invoke = invoke
     }
 }
 public struct AgentToolApproval: Identifiable, Sendable {
     public let id: UUID
     public let runID: UUID
     public let toolName: String
+    public let displayTitle: String
     public let summary: String
     public let effects: Set<ExecutionEffect>
     public let runContractFingerprint: String?
     public let maxRunTokens: Int?
-    public init(id: UUID, runID: UUID, toolName: String, summary: String, effects: Set<ExecutionEffect>, runContractFingerprint: String? = nil, maxRunTokens: Int? = nil) {
+    public init(id: UUID, runID: UUID, toolName: String, summary: String, effects: Set<ExecutionEffect>, runContractFingerprint: String? = nil, maxRunTokens: Int? = nil, displayTitle: String? = nil) {
         self.id = id; self.runID = runID; self.toolName = toolName; self.summary = summary; self.effects = effects
         self.runContractFingerprint = runContractFingerprint; self.maxRunTokens = maxRunTokens
+        self.displayTitle = frozenApprovalTitle(displayTitle, fallback: toolName)
     }
 }
 
@@ -97,7 +115,7 @@ public actor ScopedToolBroker: AgentToolRouting {
         if effectful {
             let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys,.prettyPrinted]
             let argumentPreview = String(decoding:try encoder.encode(arguments),as:UTF8.self)
-            let proposal = AgentToolApproval(id:id,runID:runID,toolName:call.name,summary:tool.approvalSummary+"\n"+argumentPreview,effects:tool.effects,runContractFingerprint:runContractFingerprint,maxRunTokens:maxRunTokens)
+            let proposal = AgentToolApproval(id:id,runID:runID,toolName:call.name,summary:tool.approvalSummary+"\n"+argumentPreview,effects:tool.effects,runContractFingerprint:runContractFingerprint,maxRunTokens:maxRunTokens,displayTitle:tool.displayTitle)
             let approved = try await withThrowingTaskGroup(of:Bool.self) { group in
                 group.addTask { try await self.approve(proposal) }
                 group.addTask { try await Task.sleep(for:self.approvalTimeout); throw AgentToolError.approvalTimedOut }
