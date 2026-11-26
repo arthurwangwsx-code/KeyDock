@@ -300,10 +300,10 @@
 ## 37. 可选模型、场景默认与思考设置（2026-11-26追加）
 
 - [x] 37.1 已建立2026-11-26官方能力目录、准确ID保留和全局／九类场景／定义逐字段解析；继承／默认省略／none、非法强度零请求、NFC／NFD及自定义reasoning声明按服务绑定已回归。最新原生／真实模型仍依37.6，见模型设置复查。
-- [ ] 37.2 全部AI入口、Agent多轮和Workflow逐步消费同一冻结设置；准确模型／参数／语言／策略进入授权、pending快捷键、attempt与调度围栏，费率继续按服务身份＋wire模型冻结。
-- [ ] 37.3 增加Responses provider及store=false多轮continuation，覆盖文本／工具／reasoning opaque items、有界取消／错误／用量和现有Broker；不能以旧Chat工具兼容模式替代最新模型工具资格。
+- [x] 37.2 全部AI入口、Agent多轮和Workflow逐步共用冻结设置；授权／pending／attempt／调度及原服务＋wire模型费率接通，真实URLSession参数与在途编辑、ABA及辅助任务模型回归通过；最新外部模型资格仍依37.6。
+- [x] 37.3 Responses工程核心已接入现有Broker；store=false三轮最终opaque／phase续接、准确callID、取消drain、缺终态零工具及用量回归通过。完整并发／故障与最新模型真实工具资格仍依37.6，不以旧Chat兼容模式替代。
 - [ ] 37.4 原生中英文共用模型选择器、全局／场景／定义继承展示、按能力显示思考与预算；目录刷新不自动换模型，未配置的自定义服务保留手工入口。
-- [ ] 37.5 配置schema v2与v1读取迁移、Agent缺字段兼容、完整导出／引用、签名安装与回退reader门禁；旧包不得静默丢新模型设置，DesktopReview仍拒绝AI配置。
+- [x] 37.5 schema2／v1稳定读取迁移、Agent可选字段、完整导出及DesktopReview新字段拒绝接通；null保全、Python及owned签名配置reader安装／回退门禁通过。签名样本为合成Preview能力声明，非真实alpha.20运行；最终发行依37.6。
 - [ ] 37.6 最新模型的真实翻译／总结／命令／Agent／Workflow、思考参数与默认继承、原生双语、精确源本机／CI／公证发布和安装分别验收。
 
 ## 38. 真实OpenAI联调发现与反馈修补

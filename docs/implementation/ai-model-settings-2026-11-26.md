@@ -40,6 +40,12 @@
 
 首次原生结果为PARTIAL：动作列表错误显示“Default model”、全局AX名称混用普通文本场景、保存反馈在屏外顶部、有效强度显示raw token。源码随后修补为准确模型／继承来源、独立全局标签、按钮旁反馈及编辑后清除、当地语言强度。`ai-model-ui-feedback-v1`相关Workbench44＋AICore23＝67项通过；新原生二进制复查仍待执行。
 
+后续干净`23329ec710a3d9156b2c56da97db924cdb49dc96`已通过完整本机984 Swift／142 Python／981 key、生产OCR双轮及[同源CI 45749931870](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45749931870)。Release优化Preview与Developer ID Release archive／签名构建均通过；尚未公证或替换正式App。
+
+`ai-model-native-review-v2`重用上述owned根验证重启；PID78088／bundle摘要`96cc65629eb0515a881febe170cf048a4fecbe23c1c56c44f6b6c9f70310c0ed`正常退出。中英文已实际确认四处修补；原生键盘输入自定义ID后保留选项并清除旧保存提示；恢复并保存Luna。动作页准确显示翻译Luna、总结／解释Sol；临时Terra定义覆盖显示准确来源，取消后仍为Luna。语言恢复system，读回schema2与动作未保存覆盖，未触发AI请求或使用凭据。此结果是PASS（已观察子集），完整系统矩阵仍开放。
+
+`ai-model-auxiliary-metadata-v1`通过39＋2＝41项相关回归，追加命令建议／只读Agent按其场景冻结模型的任务元数据。流水线`qualify-install`新增配置reader单独案例：调用和材料reader都兼容，仅配置reader不同；`ai-model-signed-reader-v1`通过owned真实签名App安装／原子替换／回退，v2可读安装放行、配置v1 reader安装及回退拒绝、原配置和App／backup摘要不变。声明为修改签名能力的合成Preview，不冒充真实alpha.20运行／回退资格；相关报告保存在`.local/install-qualification-latest.json`。
+
 ## 保持开放
 
 原生修补复查及完整明暗／VoiceOver／IME／最小窗口；模型目录在线清单刷新；Responses完整并发／故障矩阵；签名reader门禁；最新模型的真实翻译／总结／命令／Agent／Workflow、活动语言修补及CLI直接入口复验；最终干净精确源完整本机／CI、公证／公开回下载和本地替换分别验收。旧alpha.20十次调用基线及活动俄语FAIL继续保留，不作新模型质量证明。

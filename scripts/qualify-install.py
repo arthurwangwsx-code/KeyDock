@@ -140,6 +140,43 @@ def main():
         idle_control.write_bytes(base64.b64decode(golden["controlIdleBase64"])); idle_control.chmod(0o600)
         installer.rollback(SimpleNamespace(rollback=material_receipt, helper=args.helper, quit_running=False, dry_run=False), data_root_resolver=resolver)
         require(inspect_app(destination)["bundle_sha256"] == expected_material_legacy["bundle_sha256"], "Actually cleared materials did not permit rollback")
+        # 前两个reader门禁均兼容，单独证明配置v2不会被旧包安装／回退覆盖。
+        configuration_legacy = directory / "ConfigurationV1Reader.app"
+        run(["/usr/bin/ditto", args.app, configuration_legacy])
+        config_metadata = configuration_legacy / "Contents/Resources/BuildInfo.json"
+        config_info = json.loads(config_metadata.read_text())
+        config_info["source"]["dirty"] = True
+        config_info["dataCompatibility"] = {"schemaVersion": 2,
+            "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]},
+            "taskMaterial": {"readVersions": [1], "writeVersions": [1]}}
+        atomic_json(config_metadata, config_info); config_metadata.chmod(0o644)
+        run(["/usr/bin/codesign", "--force", "--sign", "-", "--options", "runtime", "--timestamp=none", "--identifier", CONFIG["previewBundleIdentifier"], configuration_legacy])
+        expected_configuration_legacy = inspect_app(configuration_legacy)
+        install(configuration_legacy, directory / "configuration-legacy.json")
+        config_receipt = directory / "configuration-upgrade.json"
+        install(second, config_receipt)
+        config_record = json.loads(config_receipt.read_text())
+        config_backup = Path(config_record["backup_path"])
+        config_path = data_root / "configuration.json"
+        atomic_json(config_path, {"schemaVersion": 2, "model": "synthetic-global", "endpoint": "https://synthetic.invalid/chat/completions",
+            "aiSettingsRevision": "00000000-0000-0000-0000-000000000001", "aiModelSettings": {
+                "defaults": {"model": "", "requestProtocol": "automatic", "reasoning": "modelDefault", "maxOutputTokens": 2048},
+                "scenes": {"translation": {"model": "synthetic-translation", "requestProtocol": "inherit", "reasoning": "inherit"}},
+                "allowsUnverifiedReasoning": False}})
+        config_bytes = config_path.read_bytes()
+        for operation in (
+            lambda: installer.rollback(SimpleNamespace(rollback=config_receipt, helper=args.helper, quit_running=False, dry_run=False), data_root_resolver=resolver),
+            lambda: install(configuration_legacy, directory / "must-not-install-configuration.json"),
+        ):
+            try: operation()
+            except PipelineError as error:
+                require("cannot read the current configuration" in str(error), "Unexpected configuration refusal: " + str(error))
+            else: raise PipelineError("A signed App without configuration-v2 readers was admitted")
+            require(config_path.read_bytes() == config_bytes, "Configuration refusal changed settings")
+            require(inspect_app(destination)["bundle_sha256"] == expected_second["bundle_sha256"], "Configuration refusal changed installed App")
+            require(inspect_app(config_backup)["bundle_sha256"] == expected_configuration_legacy["bundle_sha256"], "Configuration refusal changed backup App")
+        install(second, directory / "configuration-v2-compatible-install.json")
+        require(config_path.read_bytes() == config_bytes, "Compatible installation changed configuration")
         report = {"state": "PASS", "scope": "owned temporary directory, isolated signed Preview, no app launch or personal data",
                   "dataRootResolver": "owned fixture injection; default runtime domain selection is qualified separately",
                   "firstBuild": expected_first["build_number"], "secondBuild": expected_second["build_number"],
@@ -148,6 +185,9 @@ def main():
                   "incompatibleRollbackRefused": True, "dataBytesPreserved": True,
                   "taskMaterialCapabilityQualified": True, "taskMaterialBodyAndTemporaryAndPendingRefused": True,
                   "taskMaterialClearedRollbackAllowed": True,
+                  "configurationCapabilityQualified": True, "configurationV2CompatibleInstall": True,
+                  "configurationV1InstallAndRollbackRefused": True, "configurationBytesPreserved": True,
+                  "configurationReaderScope": "synthetic invocation-v2/material-v1/configuration-v1 capability, ad-hoc signed Preview; not an actual alpha.20 runtime test",
                   "taskMaterialReaderScope": "synthetic invocation-v2 / no-material-reader capability, ad-hoc signed Preview; not an actual alpha.19 runtime test",
                   "legacyReaderScope": "synthetic read-v1-only capability, ad-hoc signed Preview; not an actual alpha.18 runtime test",
                   "incompatibleCompensationScope": "unit fault-injection coverage; not exercised with signed Apps here"}

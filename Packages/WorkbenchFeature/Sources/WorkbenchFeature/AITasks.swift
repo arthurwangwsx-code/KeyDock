@@ -138,7 +138,7 @@ extension WorkbenchModel {
         do { settings = try resolveAISettings(scene: .commandProposal); service = try provider(settings: settings); authorization = try authorizeHostAction(id: "ai.manual", operation: .proposeCommand, resource: settings.fingerprint + "|" + prompt + "|" + input, availableContext: [.explicitInput], invocation: id, aiSettings: settings) } catch { draft.noticeMessage = aiErrorNotice(error); return }
         guard reserveExecution(id, draft: draft, aiConversation: service.configuration.requestProtocol == .responses) else { return }
         let revision = draft.revision; proposalRequests[draft.id] = id
-        tasks.insert(RunningTaskItem(id: id, title: L("Command proposal"), state: .running, draftID: draft.id, titleKey: "Command proposal"), at: 0)
+        tasks.insert(RunningTaskItem(id: id, title: L("Command proposal"), state: .running, draftID: draft.id, titleKey: "Command proposal", modelName: service.configuration.model), at: 0)
         frozenOrigin.apply(to: &tasks[0])
         tasks[0].aiUsageSummary = .pending
         aiTaskIDs.insert(id)
@@ -191,7 +191,7 @@ extension WorkbenchModel {
         let id = UUID(), revision = draft.revision
         do { settings = try resolveAISettings(scene: .readOnlyAgent, requiresTools: true); service = try provider(settings: settings); authorization = try authorizeHostAction(id: "ai.manual", operation: .runReadOnlyAgent, resource: settings.fingerprint + "|" + input, availableContext: [.explicitInput], invocation: id, aiSettings: settings) } catch { draft.noticeMessage = aiErrorNotice(error); return }
         guard reserveExecution(id, draft: draft, aiConversation: service.configuration.requestProtocol == .responses) else { return }
-        tasks.insert(RunningTaskItem(id: id, title: L("Read-only agent"), state: .running, draftID: draft.id, titleKey: "Read-only agent"), at: 0)
+        tasks.insert(RunningTaskItem(id: id, title: L("Read-only agent"), state: .running, draftID: draft.id, titleKey: "Read-only agent", modelName: service.configuration.model), at: 0)
         frozenOrigin.apply(to: &tasks[0])
         tasks[0].aiUsageSummary = .pending
         aiTaskIDs.insert(id)

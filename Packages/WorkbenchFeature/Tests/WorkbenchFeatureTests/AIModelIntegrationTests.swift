@@ -133,4 +133,20 @@ import AutomationCore
             await f.cleanup()
         } catch { await f.cleanup(); throw error }
     }
+    @Test(arguments: [false, true])
+    func auxiliaryTaskMetadataUsesItsFrozenSceneModel(_ readOnly: Bool) async throws {
+        try await withStoreHTTPFixture(path: readOnly ? "agent" : "proposal") { f in
+            let scene = readOnly ? AIScene.readOnlyAgent : .commandProposal
+            let model = readOnly ? "synthetic-readonly-model" : "synthetic-proposal-model"
+            f.store.configuration.aiModelSettings.scenes[scene.rawValue] = .init(model: model)
+            let draft = f.store.createDraft(input: "Synthetic explicit auxiliary input")
+            if readOnly { f.store.runReadOnlyAgent(draft: draft) } else { f.store.generateCommandProposal(draft: draft) }
+            let id = try #require(f.store.tasks.first?.id)
+            f.store.configuration.aiModelSettings.scenes[scene.rawValue] = .init(model: "changed-after-start")
+            try await f.drain(id)
+            let task = try #require(f.store.tasks.first { $0.id == id })
+            #expect(task.modelName == model && task.status == (readOnly ? .completed : .draftReady))
+            try f.assertNoCommandEffects()
+        }
+    }
 }
