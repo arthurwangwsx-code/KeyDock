@@ -15456,6 +15456,22 @@
           }
         }
       }
+    },
+    "Desktop review ended. Close this review and start a new session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop review ended. Close this review and start a new session."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面验收已结束。请关闭此验收应用并启动新会话。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

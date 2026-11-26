@@ -4,6 +4,7 @@ import WorkbenchFeature
 import MacAdapters
 import KeyDockUI
 import ExecutionCore
+import OSLog
 
 @MainActor protocol KeyDockWindowCoordinating: AnyObject {
     func start()
@@ -76,6 +77,9 @@ import ExecutionCore
                 do { try await Task.sleep(for: .milliseconds(500)) } catch { return }
                 guard let self else { return }
                 guard self.store.desktopReviewAvailable else {
+                    let reason = self.store.desktopReviewDiagnostic
+                    Logger(subsystem: DesktopReviewScope.bundleIdentifier, category: "ReviewScope").error("Review disabled: \(reason, privacy: .public)")
+                    self.store.refreshDesktopReviewAvailability()
                     self.dismiss(restore: false); self.hotkeys.invalidate(); return
                 }
             }

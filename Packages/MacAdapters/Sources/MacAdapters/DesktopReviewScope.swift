@@ -10,11 +10,19 @@ import Foundation
     var initialConfigurationData: Data? { get }
     var isCurrent: Bool { get }
     var targetIdentity: TargetIdentity { get }
+    var diagnostic: DesktopReviewInvalidation? { get }
     func permits(_ target: TargetIdentity) -> Bool
     func revoke()
     func prepareClipboardStorage() throws -> any ClipboardStorageLifetime
     func writeConfiguration(_ data: Data, to url: URL) throws
 }
+
+/// 只报告固定类别；不记录正文、路径、凭据或原应用内容。
+public enum DesktopReviewInvalidation: String, Sendable {
+    case explicitlyRevoked, directoryIdentityChanged, markerMetadataChanged, ownerLockMetadataChanged
+    case boundAppMetadataChanged, configurationIdentityChanged, clipboardStorageChanged, targetIdentityChanged
+}
+extension DesktopReviewRuntimeScope { public var diagnostic: DesktopReviewInvalidation? { nil } }
 
 public struct DesktopReviewBuildBinding: Codable, Sendable {
     public let rootParent: String
@@ -65,12 +73,14 @@ struct DesktopReviewProcessIdentity {
     }
     public var isCurrent: Bool {
         guard !revoked else { return false }
-        guard resources.isCurrent(), let value = probe(resources.marker.fixturePID),
+        guard resources.isCurrent() else { revoke(); return false }
+        guard let value = probe(resources.marker.fixturePID),
               value.pid == resources.marker.fixturePID, value.launchTime == resources.marker.fixtureLaunchTime,
               value.bundleIdentifier == Self.fixtureBundleIdentifier, value.appPath == resources.binding.fixtureAppPath,
-              value.executablePath == resources.executablePath else { revoke(); return false }
+              value.executablePath == resources.executablePath else { resources.invalidate(reason: .targetIdentityChanged); revoke(); return false }
         return true
     }
+    public var diagnostic: DesktopReviewInvalidation? { resources.diagnostic }
     public func permits(_ target: TargetIdentity) -> Bool {
         isCurrent && target.pid == resources.marker.fixturePID && target.launchDate?.timeIntervalSince1970 == resources.marker.fixtureLaunchTime
     }
@@ -162,7 +172,14 @@ private final class DesktopReviewResources: @unchecked Sendable, ClipboardStorag
     var clipboardIdentity: ReviewFileIdentity?
     private let validityLock = NSLock()
     private var invalidated = false
-    func invalidate() { validityLock.lock(); invalidated = true; validityLock.unlock() }
+    private var firstFailure: DesktopReviewInvalidation?
+    var diagnostic: DesktopReviewInvalidation? { validityLock.lock(); defer { validityLock.unlock() }; return firstFailure }
+    func invalidate(reason: DesktopReviewInvalidation = .explicitlyRevoked) {
+        validityLock.lock(); invalidated = true; if firstFailure == nil { firstFailure = reason }; validityLock.unlock()
+    }
+    private func failed(_ reason: DesktopReviewInvalidation) -> Bool {
+        if firstFailure == nil { firstFailure = reason }; return false
+    }
     var databaseURL: URL { dataDirectory.appendingPathComponent("clipboard.sqlite") }
     func validate() throws {
         guard clipboardFD >= 0, isCurrent() else { throw DesktopReviewError.unavailable }
@@ -243,16 +260,19 @@ private final class DesktopReviewResources: @unchecked Sendable, ClipboardStorag
     }
     private func identitiesAreCurrent() -> Bool {
         for node in nodes {
+            let reason: DesktopReviewInvalidation = node.directory ? .directoryIdentityChanged :
+                (node.name == "review-session.json" ? .markerMetadataChanged : (node.name == "review-owner.lock" ? .ownerLockMetadataChanged : .boundAppMetadataChanged))
             var original = stat()
-            guard fstat(node.descriptor, &original) == 0, node.identity.matches(.init(original), directory: node.directory) else { return false }
+            guard fstat(node.descriptor, &original) == 0, node.identity.matches(.init(original), directory: node.directory) else { return failed(reason) }
             var current = stat()
             let valid = fstatat(node.parent < 0 ? AT_FDCWD : node.parent, node.name, &current, AT_SYMLINK_NOFOLLOW) == 0 &&
                 node.identity.matches(.init(current), directory: node.directory)
-            if !valid { return false }
+            if !valid { return failed(reason) }
         }
-        do { guard try configurationIdentity() == expectedConfigurationIdentity else { return false } }
-        catch { return false }
-        return clipboardFD < 0 || clipboardStorageIsCurrent()
+        do { guard try configurationIdentity() == expectedConfigurationIdentity else { return failed(.configurationIdentityChanged) } }
+        catch { return failed(.configurationIdentityChanged) }
+        guard clipboardFD < 0 || clipboardStorageIsCurrent() else { return failed(.clipboardStorageChanged) }
+        return true
     }
     func prepareClipboardStorage() throws {
         if clipboardFD >= 0 {

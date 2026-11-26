@@ -62,6 +62,24 @@ private final class ReviewHashGate: @unchecked Sendable {
 }
 
 @Suite(.serialized) @MainActor struct DesktopReviewScopeTests {
+    @Test func firstInvalidationCategorySurvivesLaterChanges() async throws {
+        let f = try ReviewScopeFixture(); defer { f.cleanup() }; let scope = try await f.prepare()
+        try Data("synthetic replacement".utf8).write(to: f.marker)
+        #expect(!scope.isCurrent && scope.diagnostic == .markerMetadataChanged)
+        f.process = nil; #expect(!scope.isCurrent && scope.diagnostic == .markerMetadataChanged)
+    }
+    @Test func configurationChangeHasItsOwnBoundedCategory() async throws {
+        let f = try ReviewScopeFixture(); defer { f.cleanup() }; let scope = try await f.prepare()
+        try PrivateFiles.write(Data("synthetic".utf8), to: scope.dataDirectory.appendingPathComponent("configuration.json"))
+        #expect(!scope.isCurrent && scope.diagnostic == .configurationIdentityChanged)
+    }
+    @Test func processBirthChangeHasItsOwnCategory() async throws {
+        let f = try ReviewScopeFixture(); defer { f.cleanup() }; let scope = try await f.prepare()
+        let original = try #require(f.process)
+        f.process = .init(pid: original.pid, launchTime: original.launchTime + 1, bundleIdentifier: original.bundleIdentifier,
+                          appPath: original.appPath, executablePath: original.executablePath)
+        #expect(!scope.isCurrent && scope.diagnostic == .targetIdentityChanged)
+    }
     @Test func validScopeAllowsDirectoryGrowthAndOnlyTheBoundInstance() async throws {
         let f = try ReviewScopeFixture(); defer { f.cleanup() }
         let scope = try await f.prepare()

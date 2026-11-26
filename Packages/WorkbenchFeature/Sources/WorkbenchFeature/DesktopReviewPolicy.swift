@@ -66,6 +66,17 @@ extension WorkbenchModel {
         guard !isShuttingDown, let scope = desktopReviewScope, scope.isCurrent else { return false }
         do { try DesktopReviewConfigurationCodec.validate(configuration); return true } catch { return false }
     }
+    public var desktopReviewDiagnostic: String {
+        guard isDesktopReview else { return "not-review" }
+        guard !isShuttingDown else { return "shutting-down" }
+        guard let scope = desktopReviewScope, scope.isCurrent else { return desktopReviewScope?.diagnostic?.rawValue ?? "scope-unavailable" }
+        do { try DesktopReviewConfigurationCodec.validate(configuration); return "available" }
+        catch { return "configuration-policy" }
+    }
+    public func refreshDesktopReviewAvailability() {
+        guard isDesktopReview, !desktopReviewAvailable else { return }
+        settingsNoticeMessage = noticeKey("Desktop review ended. Close this review and start a new session.")
+    }
     func requireGeneralRuntime() throws {
         guard !isDesktopReview else { throw DesktopReviewError.unavailable }
     }
