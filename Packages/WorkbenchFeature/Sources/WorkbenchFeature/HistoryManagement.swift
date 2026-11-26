@@ -126,12 +126,20 @@ extension WorkbenchModel {
     func handleUsageMaintenance(_ report: AIUsageMaintenanceReport) {
         guard !isShuttingDown, report.trigger != .clear else { return }
         invalidateUsageAnalysis()
-        for index in tasks.indices where report.removedIDs.contains(tasks[index].id) {
+        for index in tasks.indices where report.budgetRedactedIDs.contains(tasks[index].id) {
+            let id = tasks[index].id
+            guard usageSummaryRevisions[id, default: 0] <= report.revision else { continue }
+            if let budget = tasks[index].runTokenBudget {
+                tasks[index].runTokenBudget = .init(maximumTokens: budget.maximumTokens, knownTokens: nil, completedTurns: 0, status: .usageUnavailable)
+            }
+        }
+        let invalidated = report.removedIDs.union(report.uncertainRemovedIDs)
+        for index in tasks.indices where invalidated.contains(tasks[index].id) {
             let id = tasks[index].id
             guard usageSummaryRevisions[id, default: 0] <= report.revision else { continue }
             invalidatedUsageRuns.insert(id); tasks[index].aiUsageSummary = .unknown
         }
-        invalidateWorkflowUsage(report.removedIDs, revision: report.revision)
+        invalidateWorkflowUsage(invalidated, revision: report.revision)
         if !report.isComplete { workspaceNoticeMessage = noticeKey("Some AI usage records could not be maintained. Review or clear usage history in Privacy settings.") }
     }
 
@@ -144,15 +152,11 @@ extension WorkbenchModel {
         let candidates = Set(tasks.filter { $0.aiUsageSummary != nil }.map(\.id))
         defer { isClearingUsage = false }
         let report = await usageMetadataStore.clear()
-        var budgetClearComplete = true
-        do {
-            let cleared = try await aiInvocationStore.clearRecordedRunTokenUsage()
-            for index in tasks.indices where cleared.contains(tasks[index].id) && !executionReservations.contains(tasks[index].id) {
-                if let budget = tasks[index].runTokenBudget {
-                    tasks[index].runTokenBudget = .init(maximumTokens: budget.maximumTokens, knownTokens: nil, completedTurns: 0, status: .usageUnavailable)
-                }
+        for index in tasks.indices where report.budgetRedactedIDs.contains(tasks[index].id) {
+            if let budget = tasks[index].runTokenBudget {
+                tasks[index].runTokenBudget = .init(maximumTokens: budget.maximumTokens, knownTokens: nil, completedTurns: 0, status: .usageUnavailable)
             }
-        } catch { budgetClearComplete = false }
+        }
         guard !isShuttingDown, usageHistoryGeneration == generation else { return }
         lastUsageClearRevision = max(lastUsageClearRevision, report.revision)
         if report.didReadDirectory {
@@ -167,7 +171,7 @@ extension WorkbenchModel {
                 invalidatedUsageRuns.insert(id)
             }
         }
-        settingsNoticeMessage = report.isComplete && budgetClearComplete
+        settingsNoticeMessage = report.isComplete
             ? noticeKey("AI usage history cleared. Running requests may create new records when they finish.")
             : noticeKey("AI usage history was only partly cleared. Some records remain; check permissions and try again.")
         invalidateUsageAnalysis()

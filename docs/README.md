@@ -4,6 +4,8 @@
 
 | 文档 | 用途 |
 |---|---|
+| [当前开发收口与多Agent续接](handoffs/2026-11-26-parallel-work.md) | 单写者约束、三位只读Agent分工、剩余完整目标与资格边界 |
+| [自动维护开发收口](implementation/usage-retention-handoff-2026-11-26.md) | 尚未发行的43实现、1094本机执行及待补证边界 |
 | [用量恢复围栏与alpha.27交付](implementation/usage-restoration-fence-2026-11-26.md) | 清除／晚快照RED、读前票据、真实部分失败交错与双语原生子集 |
 | [原生界面清晰度与alpha.26交付](implementation/native-ui-clarity-2026-11-26.md) | Launcher尺寸、双语刷新、冻结审批、最小窗口与失败保留／精确源资格 |
 | [产品愿景](product/vision.md) | 用户、定位、产品原则、成功指标 |

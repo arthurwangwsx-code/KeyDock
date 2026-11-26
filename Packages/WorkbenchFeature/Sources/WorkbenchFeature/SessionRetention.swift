@@ -65,6 +65,7 @@ extension WorkbenchModel {
             if let owner { await owner.release() }
             else { await cli.releaseProtection(for: id); await ai.releaseProtection(for: id) }
             guard let self, !self.isShuttingDown else { return }
+            await self.usageMetadataStore.retryDeferredMaintenance()
             await self.maintainTaskHistory()
         }
     }

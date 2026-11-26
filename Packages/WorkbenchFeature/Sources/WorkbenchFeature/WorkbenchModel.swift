@@ -224,7 +224,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     var contributionActionTasks: [UUID:Task<Void,Never>] = [:]
     var fileRevealer: @MainActor ([URL])->Void = { NSWorkspace.shared.activateFileViewerSelecting($0) }
 
-    public init(dataDirectory: URL? = nil, allowContextCapture: Bool = true,
+    public convenience init(dataDirectory: URL? = nil, allowContextCapture: Bool = true,
                 desktopReviewScope: (any DesktopReviewRuntimeScope)? = nil,
                 clipboardWriter: (@MainActor (String) throws -> Void)? = nil,
                 clipboardSelectionWriter: (@MainActor (String) throws -> Void)? = nil,
@@ -242,6 +242,35 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
                 invocationPersistenceFault: @escaping @Sendable (String, InvocationPersistencePoint) -> Int32? = { _, _ in nil },
                 taskMaterialPersistenceFault: @escaping @Sendable (TaskMaterialWriteRole, TaskMaterialPersistencePoint, String) -> Int32? = { _, _, _ in nil },
                 taskMaterialReadObserver: @escaping @Sendable (TaskMaterialReadKind, Int) -> Void = { _, _ in },
+                languageApplier: @escaping @MainActor (String) -> Void = { KDLocalizer.setLanguage($0) }) throws {
+        try self.init(dataDirectory: dataDirectory, allowContextCapture: allowContextCapture, desktopReviewScope: desktopReviewScope,
+            clipboardWriter: clipboardWriter, clipboardSelectionWriter: clipboardSelectionWriter, clipboardChangeCount: clipboardChangeCount,
+            clipboardReader: clipboardReader, credentialReader: credentialReader, credentialWriter: credentialWriter, configurationWriter: configurationWriter,
+            desktopWorkspaceFaultHook: desktopWorkspaceFaultHook, terminalHandoff: terminalHandoff, applicationCatalog: applicationCatalog,
+            applicationLauncher: applicationLauncher, sessionLimits: sessionLimits, clipboardCaptureSource: clipboardCaptureSource,
+            invocationPersistenceFault: invocationPersistenceFault, taskMaterialPersistenceFault: taskMaterialPersistenceFault,
+            taskMaterialReadObserver: taskMaterialReadObserver, usageStorage: .init(), languageApplier: languageApplier)
+    }
+
+    init(dataDirectory: URL? = nil, allowContextCapture: Bool = true,
+                desktopReviewScope: (any DesktopReviewRuntimeScope)? = nil,
+                clipboardWriter: (@MainActor (String) throws -> Void)? = nil,
+                clipboardSelectionWriter: (@MainActor (String) throws -> Void)? = nil,
+                clipboardChangeCount: @escaping @MainActor () -> Int = { NSPasteboard.general.changeCount },
+                clipboardReader: @escaping @MainActor () -> String? = { ClipboardMonitor.explicitTextInput() },
+                credentialReader: @escaping @MainActor (String) throws -> String? = { try CredentialStore.load(account: $0) },
+                credentialWriter: @escaping @MainActor (String, String) throws -> Void = { try CredentialStore.save($0, account: $1) },
+                configurationWriter: @escaping @MainActor (Data, URL) throws -> Void = { try PrivateFiles.write($0, to: $1) },
+                desktopWorkspaceFaultHook: @escaping @MainActor (DesktopWorkspaceStoreFaultStage) throws -> Void = { _ in },
+                terminalHandoff: TerminalHandoffAdapter = TerminalHandoffAdapter(),
+                applicationCatalog: ApplicationCatalog? = nil,
+                applicationLauncher: (@MainActor (CommandItem) async throws -> PreparedApplicationLaunch)? = nil,
+                sessionLimits: SessionRetentionPolicy = SessionRetentionPolicy(),
+                clipboardCaptureSource: (any ClipboardCaptureSource)? = nil,
+                invocationPersistenceFault: @escaping @Sendable (String, InvocationPersistencePoint) -> Int32? = { _, _ in nil },
+                taskMaterialPersistenceFault: @escaping @Sendable (TaskMaterialWriteRole, TaskMaterialPersistencePoint, String) -> Int32? = { _, _, _ in nil },
+                taskMaterialReadObserver: @escaping @Sendable (TaskMaterialReadKind, Int) -> Void = { _, _ in },
+                usageStorage: AIUsageStorageDependencies,
                 languageApplier: @escaping @MainActor (String) -> Void = { KDLocalizer.setLanguage($0) }) throws {
         let reviewConfiguration: AppConfiguration?
         if let scope = desktopReviewScope {
@@ -315,7 +344,6 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
                 desktopWorkspaceStore = workspaces; desktopWorkspaces = workspaces.workspaces; desktopWorkspacesWritable = workspaces.writable
             } catch { desktopWorkspaceStore = nil }
         }
-        usageMetadataStore = AIUsageMetadataStore(directory: auxiliary.appendingPathComponent("usage"))
         let materialFence = TaskMaterialFence(); taskMaterialFence = materialFence
         taskMaterialGeneration = materialFence.current.generation
         taskMaterialStore = try TaskMaterialStore(directory: auxiliary.appendingPathComponent("task-materials"), fence: materialFence,
@@ -325,6 +353,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         monitor = ClipboardMonitor(store: clipboardStore, source: isReview ? DisabledClipboardCaptureSource() : clipboardCaptureSource)
         invocationStore = try InvocationStore(directory: auxiliary.appendingPathComponent("invocations"), persistenceFault: { invocationPersistenceFault("cli", $0) })
         aiInvocationStore = try InvocationStore(directory: auxiliary.appendingPathComponent("ai-invocations"), persistenceFault: { invocationPersistenceFault("ai", $0) })
+        usageMetadataStore = usageStorage.makeStore(directory: auxiliary.appendingPathComponent("usage"), budgetStore: aiInvocationStore)
         agentToolStore = try InvocationStore(directory: auxiliary.appendingPathComponent("agent-tool-invocations"), persistenceFault: { invocationPersistenceFault("tools", $0) })
         let scheduler = isReview
             ? try ScheduleLedger(persistence: .init(load: { nil }, save: { _ in throw ScheduleError.invalidStorage }), now: Date())
@@ -359,7 +388,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         Task { [weak self] in
             guard let self else { return }
             await usageMetadataStore.setReportHandler { [weak self] report in
-                Task { @MainActor [weak self] in self?.handleUsageMaintenance(report) }
+                await usageStorage.beforeReport(report)
+                await self?.handleUsageMaintenance(report)
             }
             guard !isShuttingDown else { return }
             await usageMetadataStore.start()
@@ -408,7 +438,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         let clients = Array(mcpClients.values) + mcpRunClients.values.flatMap{$0}
         for client in clients { await client.invalidate() }
         mcpClients.removeAll(); mcpRunClients.removeAll(); mcpRunScopes.removeAll()
-        await usageMetadataStore.stop()
+        await usageMetadataStore.close()
         let materialReads = Array(taskMaterialReadOperations.values), materialWrites = Array(taskMaterialSaveOperations.values)
         for operation in materialReads { _ = try? await operation.value }
         for operation in materialWrites { _ = try? await operation.value }

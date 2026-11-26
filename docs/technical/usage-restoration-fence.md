@@ -14,7 +14,7 @@
 
 ## 自动维护的下一切片
 
-只读审计确认，现有维护回调只清显示摘要，不清预算回执；actor到MainActor的异步报告也不能独自保护缓存快照。42.4尚未实现，以下为待验证的设计，不是当前发行行为。
+alpha.27基线的只读审计确认，维护回调只清显示摘要，不清预算回执；actor到MainActor的异步报告也不能独自保护缓存快照。42.4的主要路径已在`fix/usage-retention-budget-redaction`实现并通过本机回归，尚未进入正式发行；关闭／重启等剩余边界和最终资格见[收口记录](../implementation/usage-retention-handoff-2026-11-26.md)。以下是该切片合同，不补算已发行行为。
 
 优先评估“候选预算先持久剥离、再删ledger”的两阶段顺序：只处理绑定的候选ID，当前live owner延后且仍计入容量；Core失败则不删ledger，unlink失败则保守unknown并报告部分完成。不改变阈值、策略、RunAttempt或执行授权。该顺序避免进程中断后留下已删ledger与旧预算；若改用删后清，必须另有持久待清记录和启动恢复。
 

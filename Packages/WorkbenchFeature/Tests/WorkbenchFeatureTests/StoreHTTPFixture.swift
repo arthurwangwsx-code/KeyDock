@@ -173,7 +173,7 @@ final class StoreSSEServer {
     private let languageKey: String
     private let previousLanguage: Any?
 
-    init(path: String, clipboardWriter: @escaping @MainActor (String) throws -> Void = { _ in }, clipboardChangeCount: @escaping @MainActor () -> Int = { 0 }) throws {
+    init(path: String, clipboardWriter: @escaping @MainActor (String) throws -> Void = { _ in }, clipboardChangeCount: @escaping @MainActor () -> Int = { 0 }, usageStorage: AIUsageStorageDependencies = .init()) throws {
         server = try StoreSSEServer()
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("KeyDock-StoreHTTP-" + UUID().uuidString, isDirectory: true)
         languageKey = (Bundle.main.object(forInfoDictionaryKey: "KeyDockSafeSmoke") as? Bool == true) ? "KeyDock.Smoke.Language" : "KeyDock.Language"
@@ -188,7 +188,8 @@ final class StoreSSEServer {
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
             try JSONEncoder().encode(configuration).write(to: directory.appendingPathComponent("configuration.json"))
-            store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: false, clipboardWriter: clipboardWriter, clipboardChangeCount: clipboardChangeCount, applicationCatalog: ApplicationCatalog(roots: []))
+            store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: false, clipboardWriter: clipboardWriter,
+                clipboardChangeCount: clipboardChangeCount, credentialReader: { _ in nil }, applicationCatalog: ApplicationCatalog(roots: []), usageStorage: usageStorage)
         } catch {
             server.stop(); try? FileManager.default.removeItem(at: directory); throw error
         }
@@ -256,8 +257,8 @@ struct StoreUsageReceipt: Decodable {
     let costBasis: String
 }
 
-@MainActor func withStoreHTTPFixture(path: String, clipboardWriter: @escaping @MainActor (String) throws -> Void = { _ in }, clipboardChangeCount: @escaping @MainActor () -> Int = { 0 }, _ operation: (StoreHTTPFixture) async throws -> Void) async throws {
-    let fixture = try StoreHTTPFixture(path: path, clipboardWriter: clipboardWriter, clipboardChangeCount: clipboardChangeCount)
+@MainActor func withStoreHTTPFixture(path: String, clipboardWriter: @escaping @MainActor (String) throws -> Void = { _ in }, clipboardChangeCount: @escaping @MainActor () -> Int = { 0 }, usageStorage: AIUsageStorageDependencies = .init(), _ operation: (StoreHTTPFixture) async throws -> Void) async throws {
+    let fixture = try StoreHTTPFixture(path: path, clipboardWriter: clipboardWriter, clipboardChangeCount: clipboardChangeCount, usageStorage: usageStorage)
     do { try await operation(fixture); await fixture.cleanup() }
     catch { await fixture.cleanup(); throw error }
 }

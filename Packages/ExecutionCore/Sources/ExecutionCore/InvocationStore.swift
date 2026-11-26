@@ -79,6 +79,7 @@ public actor InvocationStore {
     private var liveParentIDs: Set<UUID> = []
     private var pendingPersistence = false
     private let runStoreIdentity = UUID()
+    private var usageBirths: [UUID: UUID] = [:]
     private var liveRecoverySources: [UUID: UUID] = [:]
     private let persistenceFault: @Sendable (InvocationPersistencePoint) -> Int32?
     // finish仅增加固定元数据；begin为每个intent预留结果空间，避免正常完成被自身预算卡住。
@@ -143,6 +144,7 @@ public actor InvocationStore {
         let maintained = try Self.pruned(values, retention: retention, now: now, protecting: recovered)
         self.retention = retention; self.clock = clock; self.persistenceFault = persistenceFault
         self.receipts = maintained; self.recoveredProtection = recovered
+        self.usageBirths = Dictionary(uniqueKeysWithValues: maintained.keys.map { ($0, UUID()) })
         let data = try Self.encoded(maintained)
         if Self.byteBudgetFits(maintained, encodedBytes: data.count, retention: retention) {
             do { try Self.persist(data, directoryFD: pinnedDirectory, fault: persistenceFault) }
@@ -352,16 +354,38 @@ public actor InvocationStore {
 
     /// 清除已收口预算中的用量副本，保留冻结阈值；不修改在途meter或授予重新执行权限。
     public func clearRecordedRunTokenUsage() throws -> Set<UUID> {
-        guard !pendingPersistence else { throw InvocationStoreError.recoveryPersistenceUncertain }
-        let protected = liveProtectedIDs
-        var next = receipts, cleared: Set<UUID> = []
-        for (id, receipt) in receipts where receipt.state.isTerminal && !protected.contains(id) {
+        try prepareUsageRemoval(for: [], clearingAllRecorded: true).budgetRedactedIDs
+    }
+
+    /// ledger仅能消费已持久确认的候选；旧recovery来源不永久豁免用量清理。
+    public func prepareUsageRemoval(for ids: Set<UUID>, clearingAllRecorded: Bool = false,
+                                    retrying tickets: [InvocationUsageClearTicket] = []) throws -> InvocationUsageRemoval {
+        // 只重写已知状态以核实durability，不重放调用或改变恢复身份。
+        if pendingPersistence { try commit(receipts) }
+        let retries = Set(tickets.filter { $0.storeIdentity == runStoreIdentity && usageBirths[$0.invocationID] == $0.birth }.map(\.invocationID))
+        let selected = (clearingAllRecorded ? ids.union(receipts.keys) : ids).union(retries)
+        var next = receipts, cleared: Set<UUID> = [], deferred: Set<UUID> = []
+        var deferredBudgets: [InvocationUsageClearTicket] = []
+        var changed = false
+        for id in selected {
+            guard !liveProtectedIDs.contains(id), receipts[id]?.state.isTerminal != false else {
+                if ids.contains(id) { deferred.insert(id) }
+                if let receipt = receipts[id], receipt.state.isTerminal, let budget = receipt.runTokenBudget,
+                   budget.knownTokens != nil || budget.completedTurns != 0, let birth = usageBirths[id] {
+                    deferred.insert(id)
+                    deferredBudgets.append(.init(invocationID: id, storeIdentity: runStoreIdentity, birth: birth))
+                }
+                continue
+            }
+            guard let receipt = receipts[id] else { continue }
             guard let budget = receipt.runTokenBudget else { continue }
-            next[id]?.runTokenBudget = .init(maximumTokens: budget.maximumTokens, knownTokens: nil, completedTurns: 0, status: .usageUnavailable)
+            let redacted = RunTokenBudgetSnapshot(maximumTokens: budget.maximumTokens, knownTokens: nil, completedTurns: 0, status: .usageUnavailable)
+            changed = changed || redacted != budget
+            next[id]?.runTokenBudget = redacted
             cleared.insert(id)
         }
-        if !cleared.isEmpty { try commit(next) }
-        return cleared
+        if changed { try commit(next) }
+        return .init(approvedIDs: ids.subtracting(deferred), budgetRedactedIDs: cleared, deferredIDs: deferred, deferredBudgets: deferredBudgets)
     }
 
     /// 与清理共享actor事务，避免宿主快照之后新完成的子回执失去父运行保护。
@@ -400,11 +424,15 @@ public actor InvocationStore {
     private func commit(_ next: [UUID: InvocationReceipt]) throws {
         let data = try Self.encoded(next)
         guard Self.byteBudgetFits(next, encodedBytes: data.count, retention: retention) else { throw InvocationStoreError.capacityExceeded }
-        do { try Self.persist(data, directoryFD: directoryFD, fault: persistenceFault); receipts = next; pendingPersistence = false }
+        do { try Self.persist(data, directoryFD: directoryFD, fault: persistenceFault); adopt(next); pendingPersistence = false }
         catch let failure as WriteFailure {
-            if failure.renamed { receipts = next; pendingPersistence = true }
+            if failure.renamed { adopt(next); pendingPersistence = true }
             throw Self.publicError(failure)
         }
+    }
+    private func adopt(_ next: [UUID: InvocationReceipt]) {
+        usageBirths = Dictionary(uniqueKeysWithValues: next.keys.map { ($0, usageBirths[$0] ?? UUID()) })
+        receipts = next
     }
     private func applyCleanup(_ next: [UUID: InvocationReceipt], protected: Set<UUID>) -> InvocationCleanupReport {
         let intended = Set(receipts.keys).subtracting(next.keys)

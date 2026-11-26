@@ -17,6 +17,7 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
          sessionLimits: SessionRetentionPolicy = .init(),
          taskMaterialPersistenceFault: @escaping @Sendable (TaskMaterialWriteRole, TaskMaterialPersistencePoint, String) -> Int32? = { _, _, _ in nil },
          taskMaterialReadObserver: @escaping @Sendable (TaskMaterialReadKind, Int) -> Void = { _, _ in },
+         usageStorage: AIUsageStorageDependencies = .init(),
          invocationPersistenceFault: @escaping @Sendable (String, InvocationPersistencePoint) -> Int32? = { _, _ in nil }) throws {
         directory = try PrivateFiles.physicalTemporaryDirectory().appendingPathComponent("KeyDock-Workflow-Integration-" + UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
@@ -34,7 +35,8 @@ enum WorkflowIntegrationFixtureError: Error { case timedOut, unexpectedCapabilit
                 applicationLauncher: { _ in throw WorkflowIntegrationFixtureError.unexpectedCapability },
                 sessionLimits: sessionLimits,
                 clipboardCaptureSource: WorkflowIntegrationClipboardSource(), invocationPersistenceFault: invocationPersistenceFault,
-                taskMaterialPersistenceFault: taskMaterialPersistenceFault, taskMaterialReadObserver: taskMaterialReadObserver, languageApplier: { _ in })
+                taskMaterialPersistenceFault: taskMaterialPersistenceFault, taskMaterialReadObserver: taskMaterialReadObserver,
+                usageStorage: usageStorage, languageApplier: { _ in })
         } catch { try? FileManager.default.removeItem(at: directory); throw error }
     }
 
