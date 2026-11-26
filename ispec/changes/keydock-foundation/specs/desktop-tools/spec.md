@@ -366,6 +366,25 @@ Statistics MUST default off, store only bounded metadata, preserve explicit cove
 - **THEN** queued older events do not backfill the cleared interval and raw text never enters the report.
 ## 发行系统资格与云端分层
 
+### Requirement: 自定义配置一致提交
+
+系统 MUST 将应用动作与快捷键／收藏／别名／recent置于同一候选配置事务，成功后才发布；schema3保存必填nullable迁移状态，旧源只读且首次提交前复核，不把未知来源清空或自动回退。
+
+#### Scenario: 旧动作来源未确认
+- **GIVEN** 主配置缺失或旧schema，旧动作损坏、残留未确认或读取后变化
+- **WHEN** 保存其他设置或尝试编辑动作
+- **THEN** 可保存schema3 null并保留旧文件，动作不可修改或执行；不能把未知定义视为已删除而清偏好
+
+#### Scenario: 已确认动作的移除
+- **GIVEN** 用户已审阅当前定义且没有集合引用
+- **WHEN** 最终确认移除
+- **THEN** 同一次提交清除定义及准确ID的shortcut／favorite／alias／recent；旧确认和失败保持旧状态，邻居与历史不变
+
+#### Scenario: 新配置与旧reader
+- **GIVEN** 已写schema3配置，包括null迁移态
+- **WHEN** 安装或回退到不声明读取3的App
+- **THEN** 在替换前拒绝，保留配置与App副本，不静默丢失字段
+
 ### Requirement: 生产OCR资格绑定发行源
 
 系统 MUST 区分云端core检查与Vision系统能力；发行必须有同一干净SHA的生产OCR实际识别资格，并绑定完整检查与指定core CI。

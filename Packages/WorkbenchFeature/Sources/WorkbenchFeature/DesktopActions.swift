@@ -10,33 +10,30 @@ extension WorkbenchModel {
         isDesktopWorkspace(item) || item.payload.hasPrefix("window-layout.") || item.payload.hasPrefix("window-command.") || item.payload.hasPrefix("application-action.")
     }
     public var configurableApplications: [CommandItem] { catalog.filter { $0.kind == .application } }
-    @discardableResult public func saveApplicationAction(_ action: SavedApplicationAction) -> Bool {
-        guard !isShuttingDown, let storage = applicationActionStore, applicationActionsWritable else { return false }
-        var next = applicationActions
-        if let i = next.firstIndex(where: { $0.id == action.id }) { next[i] = action } else { next.append(action) }
-        return commitApplicationActions(next, storage: storage)
-    }
-    public func deleteApplicationAction(_ id: UUID) {
-        guard !isShuttingDown, let storage = applicationActionStore, applicationActionsWritable else { return }
-        _ = commitApplicationActions(applicationActions.filter { $0.id != id }, storage: storage)
-    }
-    private func commitApplicationActions(_ next: [SavedApplicationAction], storage: ApplicationActionStore) -> Bool {
-        do {
-            try storage.save(next)
-            // 正在执行的定义不能被原地重定向；旧调用取消后保留明确unknown回执。
-            for lease in desktopLeases.values { lease.revoke() }
-            applicationActions = storage.actions; applicationActionsWritable = storage.writable; rebuildCatalog()
-            settingsNoticeMessage = storage.writable ? .none : noticeKey("Application actions were saved, but a recovery file was retained. Further changes are disabled until the file is checked.")
-            return true
-        } catch {
-            applicationActionsWritable = storage.writable
-            settingsNoticeMessage = noticeKey("Application actions could not be saved. Existing data was preserved; check the file before retrying.")
-            return false
+    @discardableResult public func saveApplicationAction(_ action: SavedApplicationAction, expectedRevision: String? = nil, creating: Bool = false) -> Bool {
+        guard !isShuttingDown, applicationActionsWritable else { return false }
+        if creating, applicationActions.contains(where: { $0.id == action.id }) {
+            settingsNoticeMessage = noticeKey("This application action was removed or changed. Keep this draft and edit the current version or create a new action."); return false
         }
+        if let expectedRevision {
+            guard let current = applicationActions.first(where: { $0.id == action.id }), applicationActionRevision(current) == expectedRevision else {
+                settingsNoticeMessage = noticeKey("This application action was removed or changed. Keep this draft and edit the current version or create a new action."); return false
+            }
+        }
+        var values = applicationActions
+        if let i = values.firstIndex(where: { $0.id == action.id }) { values[i] = action } else { values.append(action) }
+        var next = configuration; next.savedApplicationActions = values
+        return commitShortcutConfiguration(next)
+    }
+    /// 无UI调用者也必须经过同一引用／指纹／候选事务；UI持有最初的审阅身份。
+    @discardableResult public func deleteApplicationAction(_ id: UUID) -> Bool {
+        guard let reviewed = reviewSavedItemRemoval(.applicationAction(id)) else { return false }
+        return removeSavedItem(reviewed)
     }
 
     /// 不显示Launcher，不读选区正文。进程/窗口上下文由真实UI组合根提供。
     @discardableResult public func runDesktopCommand(_ item: CommandItem, original: TargetIdentity?, window: DesktopWindowTarget?, caller: ExecutionCaller, lease: DesktopOperationLease) -> UUID? {
+        if item.payload.hasPrefix("application-action."), !validateApplicationActionSource() { return nil }
         guard !isShuttingDown, catalog.contains(where: { $0.id == item.id && $0.objectRevision == item.objectRevision }) else { return nil }
         let operation: HostOperation
         let layout = item.payload.hasPrefix("window-layout.") ? WindowLayout(rawValue: String(item.payload.dropFirst(14))) : nil

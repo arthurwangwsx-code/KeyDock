@@ -192,7 +192,7 @@ private final class ReviewReadProbe: @unchecked Sendable {
             store.startApplicationUpdates(); store.refreshApplications(); store.startReceiptMaintenance(); store.scheduleTaskMaterialMaintenance()
             await store.refreshTaskMaterialIndex()
             #expect(store.tasks.isEmpty && store.drafts.isEmpty && store.schedules.isEmpty)
-            #expect(store.applicationActionStore == nil && store.desktopWorkspaceStore == nil)
+            #expect(store.legacyApplicationActions == nil && store.configurationDirectoryIdentity == nil && store.desktopWorkspaceStore == nil)
             #expect(store.receiptMaintenanceTask == nil && store.taskMaterialMaintenanceTask == nil && store.scheduleTimer == nil)
             #expect(await store.invocationStore.list().isEmpty && store.catalog.map(\.id) == ["utility.clipboard"])
             let previous = await old.list()

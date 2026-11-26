@@ -10,9 +10,11 @@ extension WorkbenchModel {
     }
 
     /// 先持久化候选，成功后才更新界面；写入后抛错也补偿旧文件。
-    @discardableResult func commitSettingsConfiguration(_ next: AppConfiguration) -> Bool {
-        if isDesktopReview { return commitDesktopReviewConfiguration(next) }
-        let next = preparedAIConfiguration(next)
+    @discardableResult func commitSettingsConfiguration(_ input: AppConfiguration) -> Bool {
+        if isDesktopReview { return commitDesktopReviewConfiguration(input) }
+        let next: AppConfiguration
+        do { next = try preparedApplicationActionConfiguration(preparedAIConfiguration(input)) }
+        catch { settingsNoticeMessage = noticeKey("Application actions changed or remain unconfirmed. Restart and review their source before changing them."); return false }
         guard !isShuttingDown else { settingsNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return false }
         let url = directory.appendingPathComponent("configuration.json")
         do {
@@ -20,7 +22,9 @@ extension WorkbenchModel {
                 ? .bytes(try Data(contentsOf: url)) : .absent
             do {
                 let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                try configurationDirectoryIdentity?.validateCurrent()
                 try configurationWriter(encoder.encode(next), url)
+                try validatePreparedApplicationActionConfiguration(next)
             } catch {
                 do { try restoreConfiguration(snapshot, at: url) }
                 catch { settingsNoticeMessage = noticeKey("Settings could not be saved and the previous file could not be restored. Check settings before restarting."); return false }

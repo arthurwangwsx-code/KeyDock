@@ -22,7 +22,7 @@ class PipelineError(RuntimeError):
 def current_data_compatibility():
     return {"schemaVersion": 3, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]},
             "taskMaterial": {"readVersions": [1], "writeVersions": [1]},
-            "configuration": {"readVersions": [1, 2], "writeVersions": [2]}}
+            "configuration": {"readVersions": [1, 2, 3], "writeVersions": [3]}}
 
 
 def validate_data_compatibility(value):

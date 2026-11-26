@@ -18,6 +18,10 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public var configuration: AppConfiguration {
         didSet {
             configurationExportGeneration = UUID()
+            if (configuration.savedApplicationActions ?? legacyApplicationActions?.actions) != (oldValue.savedApplicationActions ?? legacyApplicationActions?.actions) {
+                applicationActionsEpoch = UUID()
+                for lease in desktopLeases.values { lease.revoke() }
+            }
             if configuration.disabledContributions != oldValue.disabledContributions { contributionEpoch = UUID() }
             if !configuration.endpoint.utf8.elementsEqual(oldValue.endpoint.utf8) || configuration.localHTTP != oldValue.localHTTP { invalidateModelInventories() }
         }
@@ -134,8 +138,9 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     let workspaceApplications: DesktopApplicationPreparationService
     lazy var desktopWorkspaceRunner = DesktopWorkspaceRunner(desktop: desktop, applications: workspaceApplications, layouts: windowLayouts)
     var desktopWorkspaceGroups: [UUID: (definitionID: UUID, group: DesktopOperationGroup)] = [:]
-    let applicationActionStore: ApplicationActionStore?
-    @Published public internal(set) var applicationActions: [SavedApplicationAction] = [] { didSet { configurationExportGeneration = UUID() } }
+    var legacyApplicationActions: LegacyApplicationActionSnapshot?
+    var applicationActionsEpoch = UUID()
+    public var applicationActions: [SavedApplicationAction] { configuration.savedApplicationActions ?? legacyApplicationActions?.actions ?? [] }
     @Published public internal(set) var applicationActionsWritable = false { didSet { configurationExportGeneration = UUID() } }
     let desktopWorkspaceStore: DesktopWorkspaceStore?
     @Published public internal(set) var desktopWorkspaces: [SavedDesktopWorkspace] = [] { didSet { configurationExportGeneration = UUID() } }
@@ -190,6 +195,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     @Published public internal(set) var pendingApprovals: [AgentToolApproval] = []
     var approvalContinuations: [UUID: CheckedContinuation<Bool, Never>] = [:]
     let directory: URL
+    let configurationDirectoryIdentity: PrivateDirectoryIdentity?
     var inputCommitAllowed: @MainActor () -> Bool = { KDTextInputState.permitsCurrentAction }
     var taskHandles: [UUID: Task<Void, Never>] = [:]
     var aiTaskIDs: Set<UUID> = []
@@ -276,35 +282,43 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         if let scope = desktopReviewScope { directory = scope.dataDirectory }
         else { directory = try dataDirectory ?? PrivateFiles.applicationDirectory() }
         let auxiliary = desktopReviewScope?.sessionDirectory ?? directory
-        if isReview { applicationActionStore = nil; desktopWorkspaceStore = nil }
+        if !isReview {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
+        }
+        configurationDirectoryIdentity = isReview ? nil : try PrivateDirectoryIdentity(directory: directory)
+        let url = directory.appendingPathComponent("configuration.json")
+        var statisticsEnabled = false
+        let bootstrapConfiguration: AppConfiguration
+        if let reviewConfiguration { bootstrapConfiguration = reviewConfiguration }
+        else if FileManager.default.fileExists(atPath: url.path) {
+            let decoded = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: url))
+            guard decoded.schemaVersion == 3 else { throw CocoaError(.coderReadCorrupt) }
+            bootstrapConfiguration = decoded
+            statisticsEnabled = decoded.activityEnabled
+        } else {
+            var c = AppConfiguration()
+            c.aiActions = AppConfiguration.builtins
+            c.savedApplicationActions = nil
+            bootstrapConfiguration = c
+        }
+        configuration = bootstrapConfiguration
+        if isReview { desktopWorkspaceStore = nil }
         else {
-          do {
-            let actions = try ApplicationActionStore(directory: directory)
-            applicationActionStore = actions; applicationActions = actions.actions; applicationActionsWritable = actions.writable
-          } catch { applicationActionStore = nil }
-          do {
-            let workspaces = try DesktopWorkspaceStore(directory: directory, faultHook: desktopWorkspaceFaultHook)
-            desktopWorkspaceStore = workspaces; desktopWorkspaces = workspaces.workspaces; desktopWorkspacesWritable = workspaces.writable
-          } catch { desktopWorkspaceStore = nil }
+            if bootstrapConfiguration.savedApplicationActions == nil {
+                let snapshot = try? LegacyApplicationActionSnapshot(directory: directory)
+                legacyApplicationActions = snapshot; applicationActionsWritable = snapshot?.actions != nil
+            } else { applicationActionsWritable = true }
+            do {
+                let workspaces = try DesktopWorkspaceStore(directory: directory, faultHook: desktopWorkspaceFaultHook)
+                desktopWorkspaceStore = workspaces; desktopWorkspaces = workspaces.workspaces; desktopWorkspacesWritable = workspaces.writable
+            } catch { desktopWorkspaceStore = nil }
         }
         usageMetadataStore = AIUsageMetadataStore(directory: auxiliary.appendingPathComponent("usage"))
         let materialFence = TaskMaterialFence(); taskMaterialFence = materialFence
         taskMaterialGeneration = materialFence.current.generation
         taskMaterialStore = try TaskMaterialStore(directory: auxiliary.appendingPathComponent("task-materials"), fence: materialFence,
             fault: taskMaterialPersistenceFault, observeRead: taskMaterialReadObserver)
-        let url = directory.appendingPathComponent("configuration.json")
-        var statisticsEnabled = false
-        if let reviewConfiguration { configuration = reviewConfiguration }
-        else if FileManager.default.fileExists(atPath: url.path) {
-            let decoded = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: url))
-            guard decoded.schemaVersion == 2 else { throw CocoaError(.coderReadCorrupt) }
-            configuration = decoded
-            statisticsEnabled = decoded.activityEnabled
-        } else {
-            var c = AppConfiguration()
-            c.aiActions = AppConfiguration.builtins
-            configuration = c
-        }
         let clipboardLifetime = try desktopReviewScope?.prepareClipboardStorage()
         clipboardStore = try ClipboardStore(url: directory.appendingPathComponent("clipboard.sqlite"), storageLifetime: clipboardLifetime)
         monitor = ClipboardMonitor(store: clipboardStore, source: isReview ? DisabledClipboardCaptureSource() : clipboardCaptureSource)
@@ -538,14 +552,11 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     }
     public func save() {
         guard !isDesktopReview else { desktopReviewUnavailable(); return }
-        do {
-            let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            try configurationWriter(encoder.encode(configuration), directory.appendingPathComponent("configuration.json"))
-            applyConfigurationEffects()
-        } catch { settingsNoticeMessage = noticeKey("Configuration could not be saved") }
+        _ = commitSettingsConfiguration(configuration)
     }
     func applyConfigurationEffects() {
         if isDesktopReview { monitor.enabled = false; languageApplier(configuration.language); rebuildCatalog(); return }
+        if configuration.savedApplicationActions != nil { legacyApplicationActions = nil; applicationActionsWritable = true }
         applyTaskMaterialPermission()
         monitor.excludedApplications = Set(configuration.clipboardExclusions)
         monitor.enabled = !isShuttingDown && allowContextCapture && configuration.clipboardEnabled
@@ -600,7 +611,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             var next = configuration
             next.endpoint = url.absoluteString; next.model = modelName; next.localHTTP = localHTTP; next.tokenLimitParameter = tokenParameter
             if let modelSettings { try modelSettings.validate(); next.aiModelSettings = modelSettings }
-            next = preparedAIConfiguration(next)
+            next = try preparedApplicationActionConfiguration(preparedAIConfiguration(next))
             try persistAPIConfiguration(next, apiKey: apiKey)
             configuration = next; applyConfigurationEffects(); settingsNoticeMessage = noticeKey("API configuration saved"); return true
         } catch AIProviderError.invalidConfiguration { settingsNoticeMessage = noticeKey("Configure a valid API endpoint and model in Settings") }

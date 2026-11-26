@@ -1,6 +1,6 @@
 import Foundation
 
-/// 独立于旧版基础配置；旧App保存configuration.json不会丢弃新动作。
+/// 旧独立文件的只读迁移格式；当前canonical定义与偏好一起保存在主配置v3。
 public struct ApplicationActionArchive: Codable, Sendable {
     public static let maximumActions = 100
     public static let maximumBytes = 1_048_576

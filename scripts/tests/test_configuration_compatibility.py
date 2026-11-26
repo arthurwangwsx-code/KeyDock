@@ -1,5 +1,6 @@
 """仅检查owned合成配置，含实际安装/回退测试使用的reader合同。"""
 import os
+import json
 from pathlib import Path
 import tempfile
 import sys
@@ -69,6 +70,22 @@ class ConfigurationCompatibilityTests(unittest.TestCase):
             self.assertEqual(configuration_readers(old), [1])
         modern = current_data_compatibility()
         self.assertEqual(modern["schemaVersion"], 3)
-        self.assertEqual(configuration_readers(modern), [1,2])
-        modern["configuration"]["writeVersions"] = [3]
+        self.assertEqual(configuration_readers(modern), [1,2,3])
+        self.assertEqual(modern["configuration"]["writeVersions"], [3])
+        modern["configuration"]["writeVersions"] = [4]
         with self.assertRaises(PipelineError): validate_data_compatibility(modern)
+
+    def test_v3_nullable_canonical_actions_and_legacy_field_rejection(self):
+        base = {"schemaVersion":3, "aiModelSettings":{}, "aiSettingsRevision":"00000000-0000-0000-0000-000000000001"}
+        action = {"id":"00000000-0000-0000-0000-000000000002", "version":1, "name":"Synthetic app", "applicationID":"app./Synthetic.app", "behavior":"hide"}
+        for value in (None, [], [action]):
+            data = json.dumps(dict(base, savedApplicationActions=value)).encode()
+            path = self.write(data)
+            self.assertEqual(compatibility.probe_configuration(self.root), 3)
+            self.assertEqual(path.read_bytes(), data)
+        for value in ({}, 1, "", [action, action], [dict(action, behavior="forceQuit")], [dict(action, name="a\nb")]):
+            self.write(json.dumps(dict(base, savedApplicationActions=value)).encode())
+            with self.assertRaises(PipelineError): compatibility.probe_configuration(self.root)
+        for version in (1, 2):
+            self.write(json.dumps(dict(base, schemaVersion=version, savedApplicationActions=None)).encode())
+            with self.assertRaises(PipelineError): compatibility.probe_configuration(self.root)

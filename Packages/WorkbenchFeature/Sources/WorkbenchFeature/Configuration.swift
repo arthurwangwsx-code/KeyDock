@@ -29,11 +29,12 @@ public struct AIActionPreset: Identifiable, Codable, Sendable {
     public init(name: String, prompt: String, builtinKey: String? = nil, scene: AIScene = .text) { self.name = name; self.prompt = prompt; self.builtinKey = builtinKey; self.scene = scene }
 }
 public struct AppConfiguration: Codable, Sendable {
-    public var schemaVersion = 2
+    public var schemaVersion = 3
     public var preferences = CommandPreferences()
     public var launcherShortcut: HotkeyBinding? = HotkeyBinding()
     public var commandShortcuts: [String: HotkeyBinding] = [:]
     public var savedCommands: [SavedCommand] = []
+    public var savedApplicationActions: [SavedApplicationAction]? = []
     public var disabledContributions: Set<String> = []
     public var aiActions: [AIActionPreset] = []
     public var agents: [AgentDefinition] = [AgentDefinition()]
@@ -72,17 +73,21 @@ public struct AppConfiguration: Codable, Sendable {
         }
     }
     public init() {}
-    private enum CodingKeys: String, CodingKey { case schemaVersion, preferences, launcherShortcut, commandShortcuts, savedCommands, disabledContributions, aiActions, agents, activityEnabled, taskMaterialRetentionEnabled, workflows, snippets, webActions, collections, searchFolders, mcpServers, aiRates, endpoint, model, aiModelSettings, aiSettingsRevision, localHTTP, tokenLimitParameter, clipboardEnabled, clipboardExclusions, language, appearance }
+    private enum CodingKeys: String, CodingKey { case schemaVersion, preferences, launcherShortcut, commandShortcuts, savedCommands, savedApplicationActions, disabledContributions, aiActions, agents, activityEnabled, taskMaterialRetentionEnabled, workflows, snippets, webActions, collections, searchFolders, mcpServers, aiRates, endpoint, model, aiModelSettings, aiSettingsRevision, localHTTP, tokenLimitParameter, clipboardEnabled, clipboardExclusions, language, appearance }
     public init(from decoder: any Decoder) throws {
         self.init()
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let version = try c.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
-        guard (1...2).contains(version) else { throw CocoaError(.coderReadCorrupt) }
+        guard (1...3).contains(version) else { throw CocoaError(.coderReadCorrupt) }
         if version == 1, c.contains(.aiModelSettings) || c.contains(.aiSettingsRevision) { throw CocoaError(.coderReadCorrupt) }
-        if version == 2, !c.contains(.aiModelSettings) || !c.contains(.aiSettingsRevision) { throw CocoaError(.coderReadCorrupt) }
+        if version >= 2, !c.contains(.aiModelSettings) || !c.contains(.aiSettingsRevision) { throw CocoaError(.coderReadCorrupt) }
+        if version < 3, c.contains(.savedApplicationActions) { throw CocoaError(.coderReadCorrupt) }
+        if version == 3, !c.contains(.savedApplicationActions) { throw CocoaError(.coderReadCorrupt) }
+        savedApplicationActions = version < 3 ? nil : try c.decodeIfPresent([SavedApplicationAction].self, forKey: .savedApplicationActions)
+        if let actions = savedApplicationActions { _ = try ApplicationActionArchive(actions: actions).encoded() }
         aiModelSettings = version == 1 ? .legacy : try c.decode(AIModelSettings.self, forKey: .aiModelSettings)
         try aiModelSettings.validate()
-        // 旧配置迁移使用固定起点，重复只读迁移得到同一份值，首次保存再写v2。
+        // 旧配置迁移使用固定起点，重复只读迁移得到同一份值，首次保存再写v3。
         aiSettingsRevision = version == 1 ? UUID(uuidString: "00000000-0000-0000-0000-000000000001")! : try c.decode(UUID.self, forKey: .aiSettingsRevision)
         preferences = try c.decodeIfPresent(CommandPreferences.self, forKey: .preferences) ?? .init()
         if c.contains(.launcherShortcut) { launcherShortcut = try c.decodeIfPresent(HotkeyBinding.self, forKey: .launcherShortcut) }
@@ -116,6 +121,40 @@ public struct AppConfiguration: Codable, Sendable {
               Set(snippets.map(\.id)).count == snippets.count, Set(webActions.map(\.id)).count == webActions.count, Set(collections.map(\.id)).count == collections.count, Set(searchFolders.map(\.id)).count == searchFolders.count, searchFolders.count <= 8, Set(mcpServers.map(\.id)).count == mcpServers.count else { throw CocoaError(.coderReadCorrupt) }
         migrateLegacyBuiltins()
     }
+    public func encode(to encoder: any Encoder) throws {
+        guard schemaVersion == 3 else { throw CocoaError(.coderInvalidValue) }
+        if let actions = savedApplicationActions { _ = try ApplicationActionArchive(actions: actions).encoded() }
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(schemaVersion, forKey: .schemaVersion)
+        try c.encode(preferences, forKey: .preferences)
+        try c.encode(launcherShortcut, forKey: .launcherShortcut)
+        try c.encode(commandShortcuts, forKey: .commandShortcuts)
+        try c.encode(savedCommands, forKey: .savedCommands)
+        try c.encode(savedApplicationActions, forKey: .savedApplicationActions)
+        try c.encode(disabledContributions, forKey: .disabledContributions)
+        try c.encode(aiActions, forKey: .aiActions)
+        try c.encode(agents, forKey: .agents)
+        try c.encode(activityEnabled, forKey: .activityEnabled)
+        try c.encode(taskMaterialRetentionEnabled, forKey: .taskMaterialRetentionEnabled)
+        try c.encode(workflows, forKey: .workflows)
+        try c.encode(snippets, forKey: .snippets)
+        try c.encode(webActions, forKey: .webActions)
+        try c.encode(collections, forKey: .collections)
+        try c.encode(searchFolders, forKey: .searchFolders)
+        try c.encode(mcpServers, forKey: .mcpServers)
+        try c.encode(aiRates, forKey: .aiRates)
+        try c.encode(endpoint, forKey: .endpoint)
+        try c.encode(model, forKey: .model)
+        try c.encode(aiModelSettings, forKey: .aiModelSettings)
+        try c.encode(aiSettingsRevision, forKey: .aiSettingsRevision)
+        try c.encode(localHTTP, forKey: .localHTTP)
+        try c.encode(tokenLimitParameter, forKey: .tokenLimitParameter)
+        try c.encode(clipboardEnabled, forKey: .clipboardEnabled)
+        try c.encode(clipboardExclusions, forKey: .clipboardExclusions)
+        try c.encode(language, forKey: .language)
+        try c.encode(appearance, forKey: .appearance)
+    }
+
 }
 
 public enum TaskStatus: String { case queued, running, awaitingApproval, paused, handoffPending, completed, failed, cancelled, timedOut, interrupted, handedOff, draftReady

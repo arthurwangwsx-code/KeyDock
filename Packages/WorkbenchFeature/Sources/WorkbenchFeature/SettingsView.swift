@@ -173,7 +173,7 @@ public struct SettingsRootView: View {
             }
             Section { Text(L("Create a translation, summary or custom prompt, then assign its own shortcut.")).font(.caption).foregroundStyle(.secondary) }
         case .applications:
-            ApplicationActionsSettingsView(store: store)
+            ApplicationActionsSettingsView(store: store, session: session)
         case .desktopWorkspaces:
             DesktopWorkspacesSettingsView(store: store, session: session)
         case .commands:

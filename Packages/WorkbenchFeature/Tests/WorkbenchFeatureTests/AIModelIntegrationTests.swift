@@ -12,11 +12,12 @@ import AutomationCore
         old.agents[0].modelOverride = "legacy-agent-model"
         var document = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(old)) as? [String: Any])
         document["schemaVersion"] = 1; document.removeValue(forKey: "aiModelSettings"); document.removeValue(forKey: "aiSettingsRevision")
+        document.removeValue(forKey: "savedApplicationActions")
         document["aiActions"] = (document["aiActions"] as! [[String: Any]]).map { value in var row = value; row.removeValue(forKey: "scene"); row.removeValue(forKey: "modelOptions"); return row }
         let bytes = try JSONSerialization.data(withJSONObject: document)
         let first = try JSONDecoder().decode(AppConfiguration.self, from: bytes)
         let second = try JSONDecoder().decode(AppConfiguration.self, from: bytes)
-        #expect(first.schemaVersion == 2 && first.aiModelSettings == .legacy && first.aiSettingsRevision == second.aiSettingsRevision)
+        #expect(first.schemaVersion == 3 && first.savedApplicationActions == nil && first.aiModelSettings == .legacy && first.aiSettingsRevision == second.aiSettingsRevision)
         #expect(first.model == "old-exact-model" && first.aiActions[0].modelOverride == "legacy-translation-model")
         #expect(first.aiActions[0].scene == .translation && first.aiActions[1].scene == .summary)
         #expect(first.agents[0].modelOverride == "legacy-agent-model" && first.agents[0].modelOptions == nil)

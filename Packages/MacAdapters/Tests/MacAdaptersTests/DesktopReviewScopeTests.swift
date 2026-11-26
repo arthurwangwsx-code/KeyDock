@@ -65,14 +65,15 @@ private final class ReviewHashGate: @unchecked Sendable {
     @Test func missingNativeFieldIsLatchedAndASecondProbeCannotRestoreIt() async throws {
         let f = try ReviewScopeFixture(); defer { f.cleanup() }
         let original = try #require(f.process)
-        var snapshot = DesktopReviewProcessSnapshot(original), probes = 0
-        let scope = try await DesktopReviewScope.prepare(binding: f.binding, root: f.root, probe: { _ in probes += 1; return snapshot })
-        snapshot.bundleIdentifier = nil
+        @MainActor final class ProbeState { var snapshot: DesktopReviewProcessSnapshot; var probes = 0; init(_ value: DesktopReviewProcessSnapshot) { snapshot = value } }
+        let state = ProbeState(.init(original))
+        let scope = try await DesktopReviewScope.prepare(binding: f.binding, root: f.root, probe: { _ in state.probes += 1; return state.snapshot })
+        state.snapshot.bundleIdentifier = nil
         #expect(!scope.isCurrent && scope.diagnostic == .targetIdentityChanged && scope.targetDiagnostic == .bundleIdentifierUnavailable)
-        let failedProbeCount = probes
-        snapshot = .init(original)
+        let failedProbeCount = state.probes
+        state.snapshot = .init(original)
         #expect(!scope.isCurrent && !scope.permits(scope.targetIdentity))
-        #expect(scope.targetDiagnostic == .bundleIdentifierUnavailable && probes == failedProbeCount)
+        #expect(scope.targetDiagnostic == .bundleIdentifierUnavailable && state.probes == failedProbeCount)
     }
     @Test func firstInvalidationCategorySurvivesLaterChanges() async throws {
         let f = try ReviewScopeFixture(); defer { f.cleanup() }; let scope = try await f.prepare()

@@ -5,7 +5,7 @@ import AutomationCore
 import Combine
 
 enum SavedItemTarget: Equatable {
-    case command(UUID), aiAction(UUID), snippet(UUID), webAction(UUID), collection(UUID)
+    case command(UUID), aiAction(UUID), snippet(UUID), webAction(UUID), collection(UUID), applicationAction(UUID)
     var commandID: String {
         switch self {
         case .command(let id): "command." + id.uuidString
@@ -13,6 +13,7 @@ enum SavedItemTarget: Equatable {
         case .snippet(let id): "snippet." + id.uuidString
         case .webAction(let id): "web." + id.uuidString
         case .collection(let id): "collection." + id.uuidString
+        case .applicationAction(let id): "application-action." + id.uuidString
         }
     }
     var isWorkspaceTool: Bool { switch self { case .snippet, .webAction, .collection: true; default: false } }
@@ -91,6 +92,9 @@ extension WorkbenchModel {
         case .snippet(let id): next.snippets.removeAll { $0.id == id }
         case .webAction(let id): next.webActions.removeAll { $0.id == id }
         case .collection(let id): next.collections.removeAll { $0.id == id }
+        case .applicationAction(let id):
+            guard applicationActionsWritable else { settingsNoticeMessage = noticeKey("Application actions changed or remain unconfirmed. Restart and review their source before changing them."); return false }
+            next.savedApplicationActions = applicationActions.filter { $0.id != id }
         }
         let commandID = reviewed.target.commandID
         next.commandShortcuts[commandID] = nil
@@ -105,6 +109,7 @@ extension WorkbenchModel {
     private func savedItemRemovalSnapshot(_ target: SavedItemTarget) -> SavedItemRemovalReview? {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         let name: String, bytes: Data
+        var lifecycle = ""
         switch target {
         case .command(let id):
             guard let value = configuration.savedCommands.first(where: { $0.id == id }), let data = try? encoder.encode(value) else { return nil }
@@ -121,6 +126,9 @@ extension WorkbenchModel {
         case .collection(let id):
             guard let value = configuration.collections.first(where: { $0.id == id }), let data = try? encoder.encode(value) else { return nil }
             name = value.name; bytes = data
+        case .applicationAction(let id):
+            guard applicationActionsWritable, let value = applicationActions.first(where: { $0.id == id }), let data = try? encoder.encode(value) else { return nil }
+            name = value.name; bytes = data; lifecycle = "|" + applicationActionsEpoch.uuidString
         }
         var dependencies: [SavedItemDependency] = []
         let workflows = configuration.workflows.filter { workflow in
@@ -140,7 +148,7 @@ extension WorkbenchModel {
         dependencies += configuration.collections.filter { $0.commandIDs.contains(target.commandID) || $0.commandIDs.contains(where: { indirectIDs.contains($0) }) }
             .map { .init(kind: .collection, objectID: $0.id, name: $0.name) }
         dependencies += schedules.filter { workflowIDs.contains($0.definition.workflowID) }.map { .init(kind: .schedule, objectID: $0.id, name: $0.definition.name) }
-        return .init(target: target, name: name, fingerprint: fingerprint(String(decoding: bytes, as: UTF8.self)), dependencies: dependencies.sorted { $0.id < $1.id })
+        return .init(target: target, name: name, fingerprint: fingerprint(String(decoding: bytes, as: UTF8.self) + lifecycle), dependencies: dependencies.sorted { $0.id < $1.id })
     }
 }
 

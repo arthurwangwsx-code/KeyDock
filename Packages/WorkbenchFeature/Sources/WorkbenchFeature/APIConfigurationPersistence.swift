@@ -29,7 +29,9 @@ extension WorkbenchModel {
                 credentialAttempted = true
                 try credentialWriter(apiKey, next.endpoint)
             }
+            try configurationDirectoryIdentity?.validateCurrent()
             try configurationWriter(bytes, url)
+            try validatePreparedApplicationActionConfiguration(next)
         } catch {
             var rollbackIncomplete = false
             if credentialAttempted {
@@ -53,14 +55,17 @@ extension WorkbenchModel {
 
     func restoreConfiguration(_ snapshot: ConfigurationSnapshot, at url: URL) throws {
         try requireGeneralRuntime()
+        try configurationDirectoryIdentity?.validateCurrent()
         switch snapshot {
         case .bytes(let previousBytes):
-            if (try? Data(contentsOf: url)) == previousBytes { return }
+            if (try? Data(contentsOf: url)) == previousBytes { try configurationDirectoryIdentity?.validateCurrent(); return }
             try configurationWriter(previousBytes, url)
+            try configurationDirectoryIdentity?.validateCurrent()
             guard try Data(contentsOf: url) == previousBytes else { throw APIConfigurationPersistenceError.rollbackIncomplete }
         case .absent:
             if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
             guard !FileManager.default.fileExists(atPath: url.path) else { throw APIConfigurationPersistenceError.rollbackIncomplete }
         }
+        try configurationDirectoryIdentity?.validateCurrent()
     }
 }

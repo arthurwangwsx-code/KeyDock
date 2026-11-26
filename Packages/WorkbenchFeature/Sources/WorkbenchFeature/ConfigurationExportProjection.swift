@@ -7,7 +7,10 @@ import MacAdapters
 enum ConfigurationExportProjection {
     static func make(source: ConfigurationExportSource, sections: Set<ConfigurationExportSection>, maximumBytes: Int = ConfigurationExportBudget.maximumBytes) throws -> FrozenConfigurationExport {
         guard !sections.isEmpty else { throw ConfigurationExportError.noSections }
-        guard source.configuration.schemaVersion == 2 else { throw ConfigurationExportError.invalidDefinition("configuration.schemaVersion") }
+        guard source.configuration.schemaVersion == 3 else { throw ConfigurationExportError.invalidDefinition("configuration.schemaVersion") }
+        if let canonical = source.configuration.savedApplicationActions, canonical != source.applicationActions {
+            throw ConfigurationExportError.invalidDefinition("configuration.savedApplicationActions")
+        }
         try Task.checkCancellation()
         var graph = ConfigurationExportGraph(source: source, sections: sections)
         try graph.budget.text(source.sourceVersion, maximum: 128)

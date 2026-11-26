@@ -12,6 +12,28 @@ MAX_BYTES = 16 * 1_048_576
 NAME = "configuration.json"
 
 
+def _application_actions(value):
+    # null是尚未确认的旧源，不能转换为空数组。这里只检查reader合同，不迁移数据。
+    if value is None: return
+    if not isinstance(value, list) or len(value) > 100: raise ValueError("invalid actions")
+    seen = set()
+    for action in value:
+        if not isinstance(action, dict): raise ValueError("invalid action")
+        identifier = uuid.UUID(action["id"])
+        if identifier in seen or type(action.get("version")) is not int or action["version"] != 1:
+            raise ValueError("invalid action identity")
+        seen.add(identifier)
+        name, application = action["name"], action["applicationID"]
+        if not isinstance(name, str) or not isinstance(application, str): raise ValueError("invalid action")
+        name = name.strip()
+        forbidden = "\0\n\r\v\f\x85\u2028\u2029"
+        if (not name or len(name.encode("utf-8")) > 160 or any(c in name for c in forbidden)
+                or not application.startswith("app./") or len(application.encode("utf-8")) > 4096
+                or any(c in application for c in forbidden) or not application.rstrip("/").lower().endswith(".app")
+                or action.get("behavior") not in ("launchOrActivate", "toggleVisibility", "hide", "show", "showAllWindows", "requestQuit")):
+            raise ValueError("invalid action")
+
+
 def probe_configuration(root, guard=None):
     parent = descriptor = None
     try:
@@ -44,16 +66,20 @@ def probe_configuration(root, guard=None):
                            parse_int=_bounded_integer, parse_float=_bounded_float)
         if not isinstance(value, dict): raise ValueError("invalid configuration")
         version = value.get("schemaVersion", 1)
-        if type(version) is not int or version not in (1, 2): raise ValueError("unsupported configuration")
+        if type(version) is not int or version not in (1, 2, 3): raise ValueError("unsupported configuration")
         if version == 1 and any(key in value for key in ("aiModelSettings", "aiSettingsRevision")):
             raise ValueError("new settings in legacy configuration")
-        if version == 2:
+        if version >= 2:
             if not isinstance(value.get("aiModelSettings"), dict) or not isinstance(value.get("aiSettingsRevision"), str):
                 raise ValueError("missing model settings or revision")
             uuid.UUID(value["aiSettingsRevision"])
+        if version < 3 and "savedApplicationActions" in value: raise ValueError("new actions in legacy configuration")
+        if version == 3:
+            if "savedApplicationActions" not in value: raise ValueError("missing action source state")
+            _application_actions(value["savedApplicationActions"])
         if guard is not None: guard.assert_current()
         return version
-    except (OSError, ValueError, UnicodeError, RecursionError):
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, UnicodeError, RecursionError):
         raise PipelineError("Configuration is unavailable, changed, malformed or unsupported; data was preserved") from None
     finally:
         if descriptor is not None: os.close(descriptor)

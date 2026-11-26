@@ -11,14 +11,15 @@ private struct ConfigurationExportStamp: Equatable {
 extension WorkbenchModel {
     private var configurationExportStamp: ConfigurationExportStamp {
         .init(generation: configurationExportGeneration, clipboardRevision: clipboardPreferences.revision,
-            actionsAvailable: applicationActionsWritable && applicationActionStore?.writable == true,
+            actionsAvailable: applicationActionsWritable,
             workspacesAvailable: desktopWorkspacesWritable && desktopWorkspaceStore?.writable == true)
     }
 
-    /// 仅捕获已加载值。异步边界之后核对发布代次，不访问磁盘或重新解析本机资源。
+    /// 仅导出已加载值；pending旧源在前后核对只读证明，不重新接纳变化后的定义。
     func captureConfigurationExport(sections: Set<ConfigurationExportSection>, sourceVersion: String,
         scheduleReader: (@Sendable () async -> ScheduleDefinitionExportSnapshot)? = nil) async throws -> ConfigurationExportSource {
         guard !isShuttingDown else { throw CancellationError() }
+        validateApplicationActionSource()
         let stamp = configurationExportStamp
         let configuration = configuration, actions = applicationActions, workspaces = desktopWorkspaces
         let primaryAction = clipboardPreferences.primaryAction, separator = clipboardPreferences.separator
@@ -29,6 +30,7 @@ extension WorkbenchModel {
         } else { definitions = [] }
         try Task.checkCancellation()
         guard !isShuttingDown else { throw CancellationError() }
+        validateApplicationActionSource()
         guard stamp == configurationExportStamp else { throw ConfigurationExportError.snapshotChanged }
         return .init(configuration: configuration, applicationActions: actions, workspaces: workspaces,
             desktopSourcesAvailable: stamp.actionsAvailable && stamp.workspacesAvailable, schedules: definitions,

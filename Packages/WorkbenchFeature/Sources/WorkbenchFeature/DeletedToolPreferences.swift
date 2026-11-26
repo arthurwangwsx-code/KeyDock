@@ -2,7 +2,7 @@ import Foundation
 import Combine
 import MacAdapters
 
-enum DeletedPreferenceTarget: Equatable { case snippet(UUID), webAction(UUID), collection(UUID), workflow(UUID) }
+enum DeletedPreferenceTarget: Equatable { case snippet(UUID), webAction(UUID), collection(UUID), workflow(UUID), applicationAction(UUID) }
 
 struct DeletedToolPreference: Identifiable, Equatable {
     let id: String
@@ -13,7 +13,7 @@ struct DeletedToolPreference: Identifiable, Equatable {
     let recent: Bool
     let fingerprint: String
     var title: String {
-        switch target { case .snippet: L("Snippet"); case .webAction: L("URL action"); case .collection: L("Collection"); case .workflow: L("Workflow") }
+        switch target { case .snippet: L("Snippet"); case .webAction: L("URL action"); case .collection: L("Collection"); case .workflow: L("Workflow"); case .applicationAction: L("Application action") }
     }
 }
 
@@ -51,6 +51,7 @@ extension WorkbenchModel {
             case "web" where !web.contains(uuid): return (id, .webAction(uuid))
             case "collection" where !collections.contains(uuid): return (id, .collection(uuid))
             case "workflow" where !workflows.contains(uuid): return (id, .workflow(uuid))
+            case "application-action" where applicationActionsWritable && !applicationActions.contains(where: { $0.id == uuid }): return (id, .applicationAction(uuid))
             default: return nil
             }
         }

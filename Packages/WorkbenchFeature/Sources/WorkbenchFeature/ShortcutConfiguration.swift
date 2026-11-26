@@ -34,9 +34,11 @@ extension WorkbenchModel {
         var next = configuration; next.launcherShortcut = binding
         return commitShortcutConfiguration(next)
     }
-    @discardableResult func commitShortcutConfiguration(_ next: AppConfiguration) -> Bool {
-        if isDesktopReview { return commitDesktopReviewConfiguration(next) }
-        let next = preparedAIConfiguration(next)
+    @discardableResult func commitShortcutConfiguration(_ input: AppConfiguration) -> Bool {
+        if isDesktopReview { return commitDesktopReviewConfiguration(input) }
+        let next: AppConfiguration
+        do { next = try preparedApplicationActionConfiguration(preparedAIConfiguration(input)) }
+        catch { settingsNoticeMessage = noticeKey("Application actions changed or remain unconfirmed. Restart and review their source before changing them."); return false }
         guard !isShuttingDown else { settingsNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return false }
         let previous = configuration
         let changed = ShortcutPlan.entries(previous) != ShortcutPlan.entries(next)
@@ -58,8 +60,10 @@ extension WorkbenchModel {
                 guard let onShortcutConfigurationChanged else { shortcutsUnavailable = true; throw ShortcutConfigurationError.runtimeUnavailable }
                 try onShortcutConfigurationChanged(next); registeredCandidate = true
             }
+            try configurationDirectoryIdentity?.validateCurrent()
             attemptedStorage = true
             try configurationWriter(bytes, url)
+            try validatePreparedApplicationActionConfiguration(next)
             configuration = next; applyConfigurationEffects(); settingsNoticeMessage = .none
             return true
         } catch {

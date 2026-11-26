@@ -31,8 +31,10 @@ enum ConfigurationExportFixture {
         c.preferences.favorites = ["ai." + actionID.uuidString]
         c.preferences.recent["SECRET_RECENT_SENTINEL"] = Date()
         let application = "app./synthetic/Missing.app"
-        return .init(configuration: configuration ?? c,
-            applicationActions: [try .init(name: "Synthetic app", applicationID: application, behavior: .requestQuit)],
+        c.savedApplicationActions = [try .init(name: "Synthetic app", applicationID: application, behavior: .requestQuit)]
+        let selected = configuration ?? c
+        return .init(configuration: selected,
+            applicationActions: selected.savedApplicationActions ?? [],
             workspaces: [try .init(revision: 3, name: "Synthetic workspace", entries: [.init(applicationID: application, layout: .leftHalf)])],
             desktopSourcesAvailable: available,
             schedules: [.init(id: UUID(), name: "Synthetic schedule", workflowID: workflowID, enabled: true, trigger: .daily(hour: 9, minute: 30, timeZoneID: "Asia/Kuala_Lumpur"), revision: 2)],
@@ -114,7 +116,7 @@ struct ConfigurationExportProjectionTests {
         c.preferences.favorites = []; let command = SavedCommand(name: "Synthetic", executable: "/synthetic/missing")
         c.savedCommands = [command, command]
         #expect(throws: ConfigurationExportError.self) { try ConfigurationExportProjection.make(source: ConfigurationExportFixture.source(c), sections: [.definitions]) }
-        c.savedCommands = []; c.schemaVersion = 3
+        c.savedCommands = []; c.schemaVersion = 4
         #expect(throws: ConfigurationExportError.self) { try ConfigurationExportProjection.make(source: ConfigurationExportFixture.source(c), sections: [.preferences]) }
     }
     @Test func invalidWorkflowCLIBindingsAndEndpointStructuresFail() throws {

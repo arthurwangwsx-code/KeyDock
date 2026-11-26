@@ -1297,38 +1297,6 @@
         }
       }
     },
-    "Application actions could not be saved. Existing data was preserved; check the file before retrying.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Application actions could not be saved. Existing data was preserved; check the file before retrying."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "应用动作保存失败。已有数据已保留，请检查文件后再重试。"
-          }
-        }
-      }
-    },
-    "Application actions were saved, but a recovery file was retained. Further changes are disabled until the file is checked.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Application actions were saved, but a recovery file was retained. Further changes are disabled until the file is checked."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "应用动作已保存，但保留了恢复文件。检查文件前将停用后续修改。"
-          }
-        }
-      }
-    },
     "Application could not be opened. It may have moved or changed; refreshing the list.": {
       "localizations": {
         "en": {
@@ -3585,22 +3553,6 @@
         }
       }
     },
-    "Default model": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Default model"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "默认模型"
-          }
-        }
-      }
-    },
     "Definitions": {
       "localizations": {
         "en": {
@@ -3661,22 +3613,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "删除已保存内容"
-          }
-        }
-      }
-    },
-    "Delete this application action? Its shortcut will become unavailable until removed.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete this application action? Its shortcut will become unavailable until removed."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "删除这个应用动作？已绑定的快捷键将变为不可用，可在快捷键设置中移除。"
           }
         }
       }
@@ -4877,22 +4813,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "跟随系统"
-          }
-        }
-      }
-    },
-    "Full chat completions endpoint": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Full chat completions endpoint"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chat Completions 完整端点"
           }
         }
       }
@@ -6305,22 +6225,6 @@
         }
       }
     },
-    "Model name": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Model name"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "模型名称"
-          }
-        }
-      }
-    },
     "Model output limit reached; the result is incomplete": {
       "localizations": {
         "en": {
@@ -6333,22 +6237,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "已达到模型输出上限，结果不完整"
-          }
-        }
-      }
-    },
-    "Model override (optional)": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Model override (optional)"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "指定模型（可选）"
           }
         }
       }
@@ -15137,38 +15025,6 @@
         }
       }
     },
-    "Partial model list received. Existing selections are preserved.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Partial model list received. Existing selections are preserved."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已收到部分模型清单，现有选择保持不变。"
-          }
-        }
-      }
-    },
-    "Model list refreshed. Existing selections are preserved.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Model list refreshed. Existing selections are preserved."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "模型清单已刷新，现有选择保持不变。"
-          }
-        }
-      }
-    },
     "Model list could not be refreshed. Check the endpoint, credentials or connection. Existing selections and the last successful list are preserved.": {
       "localizations": {
         "en": {
@@ -15517,6 +15373,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "运行已保存命令"
+          }
+        }
+      }
+    },
+    "Application actions changed or remain unconfirmed. Restart and review their source before changing them.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application actions changed or remain unconfirmed. Restart and review their source before changing them."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用动作已变化或尚未确认。请重新启动并检查来源后再修改。"
+          }
+        }
+      }
+    },
+    "This application action was removed or changed. Keep this draft and edit the current version or create a new action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This application action was removed or changed. Keep this draft and edit the current version or create a new action."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此应用动作已被删除或修改。请保留草稿，编辑当前版本或创建新动作。"
           }
         }
       }

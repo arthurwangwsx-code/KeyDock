@@ -4,9 +4,9 @@ import KeyDockUI
 
 struct ApplicationActionsSettingsView: View {
     @ObservedObject var store: WorkbenchModel
+    @ObservedObject var session: SettingsSession
     private struct EditorInput: Identifiable { let id = UUID(); let initial: SavedApplicationAction? }
     @State private var editor: EditorInput?
-    @State private var deleting: UUID?
     var body: some View {
         Section(L("Application actions")) {
             Text(L("Create a named action for an application, then give it an alias or shortcut. Application shortcuts run directly without opening KeyDock.")).font(.callout).foregroundStyle(.secondary)
@@ -24,18 +24,15 @@ struct ApplicationActionsSettingsView: View {
                     if let item = store.catalog.first(where: { $0.id == "application-action." + action.id.uuidString }) {
                         Button(L("Shortcut & alias")) { store.onOpenShortcutSettings?(item) }
                     }
-                    Button(L("Edit")) { editor = EditorInput(initial: action) }.disabled(!store.applicationActionsWritable)
-                    Button(L("Delete"), role: .destructive) { deleting = action.id }.disabled(!store.applicationActionsWritable)
+                    Button(L("Edit")) { editor = EditorInput(initial: action) }.disabled(!store.applicationActionsWritable || !session.canBeginSavedItemEditor)
+                    Button(L("Delete"), role: .destructive) { session.prepareRemoval(.applicationAction(action.id), in: store) }.disabled(!store.applicationActionsWritable || !session.canBeginSavedItemEditor)
                 }.padding(.vertical, 6)
             }
             if store.applicationActions.isEmpty { Text(L("No application actions yet")).foregroundStyle(.secondary) }
             Button { editor = EditorInput(initial: nil) } label: { Label(L("Add application action"), systemImage: "plus") }
-                .disabled(!store.applicationActionsWritable || store.applicationActions.count >= ApplicationActionArchive.maximumActions || store.configurableApplications.isEmpty)
+                .disabled(!session.canBeginSavedItemEditor || !store.applicationActionsWritable || store.applicationActions.count >= ApplicationActionArchive.maximumActions || store.configurableApplications.isEmpty)
         }
         .sheet(item: $editor) { input in ApplicationActionEditor(store: store, initial: input.initial) }
-        .confirmationDialog(L("Delete this application action? Its shortcut will become unavailable until removed."), isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), presenting: deleting) { id in
-            Button(L("Delete"), role: .destructive) { store.deleteApplicationAction(id); deleting = nil }
-        }
         Section {
             Text(L("Normal quit never force-quits or dismisses save dialogs. Show all windows brings windows forward; minimized windows and Spaces remain controlled by macOS.")).font(.caption).foregroundStyle(.secondary)
         }
@@ -48,6 +45,8 @@ struct ApplicationActionsSettingsView: View {
 private struct ApplicationActionEditor: View {
     @ObservedObject var store: WorkbenchModel
     let initial: SavedApplicationAction?
+    private let actionID: UUID
+    private let expectedRevision: String?
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
     @State private var applicationID: String
@@ -55,6 +54,8 @@ private struct ApplicationActionEditor: View {
     @State private var invalid = false
     init(store: WorkbenchModel, initial: SavedApplicationAction?) {
         self.store = store; self.initial = initial
+        actionID = initial?.id ?? UUID()
+        expectedRevision = initial.flatMap { store.applicationActionRevision($0) }
         _name = State(initialValue: initial?.name ?? "")
         _applicationID = State(initialValue: initial?.applicationID ?? "")
         _behavior = State(initialValue: initial?.behavior ?? .toggleVisibility)
@@ -76,9 +77,10 @@ private struct ApplicationActionEditor: View {
                 Spacer()
                 Button(L("Save")) {
                     guard store.configurableApplications.contains(where: { $0.id == applicationID }),
-                          let action = try? SavedApplicationAction(id: initial?.id ?? UUID(), name: name, applicationID: applicationID, behavior: behavior) else { invalid = true; return }
+                          let action = try? SavedApplicationAction(id: actionID, name: name, applicationID: applicationID, behavior: behavior),
+                          initial == nil || expectedRevision != nil else { invalid = true; return }
                     invalid = false
-                    if store.saveApplicationAction(action) { dismiss() }
+                    if store.saveApplicationAction(action, expectedRevision: expectedRevision, creating: initial == nil) { dismiss() }
                 }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction).disabled(!store.applicationActionsWritable)
             }
         }.padding(24).frame(width: 540, height: 390)
