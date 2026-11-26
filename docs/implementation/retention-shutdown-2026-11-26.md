@@ -16,6 +16,17 @@
 
 `f1f7b61` 的干净完整检查为 1,098 Swift、157 Python、1,037 中英键及两轮生产 OCR，精确源[核心 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45830315173)及优化 Preview 通过。实际 Preview 启动持久化了过期项的未知预算，保留新项的 31 token，进程正常退出。桌面观察器无法选择菜单栏 accessory 进程。为取得可复查的中英文图像，隔离 Preview 支持在已验证的合成 fixture 上执行 `scripts/native-review.py --task-views <first-uuid> <second-uuid>`，打开真正的工作区并绘制其自身内容。用户屏幕合成效果、实际键盘输入、VoiceOver 和外部应用观察另外验收。
 
+## alpha.28 正式交付
+
+| 状态 | 项目 | 可复核证据 |
+|---|---|---|
+| PASS | 干净源码、本机回归与 CI | `6490bc51d00b45c47e0450c90b8f25f5c508c5b6`。Apple M1 Pro，macOS 27.2，Xcode 27.2。1,098 次 Swift 执行、1,077 条声明、157 项 Python、1,037 个中英文键，生产 OCR 两轮通过。本机 iSpec 回执 SHA256 `1d529b294f8df05b361630ac37fcfa5e3dd5b91a0a79f704c928e79d03ede085`。[分支 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45834424727) · [master CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45836016504) |
+| PASS | 优化 Preview、正常退出与重启 | 同一合成域先以中文深色启动，再以英文浅色启动，两个独立进程均退出 0。各打开两项工作区任务，原生视图显示过期任务阈值 100／用量未知，新任务阈值 100／已用 31／剩余 69。不可处理的合成目录在两次启动后都保留，界面提示检查或清除记录。两次 attempt 集合相同，第一次回执字节不变。原生配对回执 SHA256 `49d6b79aed00c39dcd75d4548566dc4e36653f0b137b9c2ee71d109735bab49c`。 |
+| PASS | 公开发行、正式安装与回退 | [alpha.28](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.28) 发布 ZIP、DMG、manifest 和 SHA256SUMS。App／DMG 签名、公证、装订、Gatekeeper、ZIP／DMG 内 App 一致及公开回下载均通过。[独立发行检查](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45837561655)。正式路径实测 27 → 28 → 27 → 28，每步复核提交、严格签名与 Gatekeeper。最后安装回执为 `.local/pipeline/20261126T141828365659Z/install-receipt.json`，回退演练记录为 `.local/pipeline/20261126T141801901772Z/install-receipt.json`。 |
+| PARTIAL | 桌面与异常终止 | 这里的四张图来自两个真实 Preview 进程绘制的工作区内容。深色图左栏的文字对比仍需用系统合成画面复核。未取得桌面合成器、真实按键、VoiceOver、GUI 手动清除或强制终止两个事务切点的观察。 |
+
+资格摘要（public manifest）为 `722419230fc65e7d2422efc841ca44a6ec2ec907539e2dfa239b0e0b7b7a7a35`。最终 Preview、全量、签名、打包、发布、安装及回退都使用共享存储准入。仅合成内容用于功能测试，未调用付费模型。
+
 ## 后续 P0–P4 验收总账
 
 定向回归 `da1cf767-a556-4969-8e00-38b726f0cf35` 通过 59 项执行，回执摘要 `fd9be8cdf6565875644a6cfe92f90a639144cb7c80791a44726223d7a0694aa5`。合成 HTTP Workflow 的最后一份索引为一个新叶、两次 POST，显示保留 12 输入／5 输出 token。在候选 alpha.28 上另行记录干净全量、CI、优化 Preview 及真正进程重启。

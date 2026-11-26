@@ -1,12 +1,12 @@
 # 当前状态总账
 
-本轮自动清理在正常退出时的回归已复现并修补。实际发布身份、用量与 Workflow 边界、桌面热键及视觉待验项分别登记在[关停与完整目标验收记录](implementation/retention-shutdown-2026-11-26.md)。
+当前公开预发布与 `/Applications/KeyDock.app` 均为 [alpha.28，build 28](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.28)，固定源 `6490bc51d00b45c47e0450c90b8f25f5c508c5b6`。1,098 次 Swift、157 项 Python、1,037 个中英键、两轮生产 OCR、同源双 CI、优化 Preview 及两次原生启动通过。App 与 DMG 已公证，公开资产已回下载；正式安装实测 27 → 28 → 27 → 28。详见[本轮证据和 P0–P4 验收总账](implementation/retention-shutdown-2026-11-26.md)。
 
-当前公开发行与正式本机安装均为[alpha.27](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.27)，固定代码源`e6c7b98aa3dfd563f957cdb7f6ef6048386a23fc`。1080 Swift执行／156 Python／1035中英key、生产合成OCR双轮、同源CI45816057630、clean优化Preview、公证／装订／Gatekeeper、公开回下载及独立发行审计45818353644通过。正式About27已实际观察，默认Sol low／4096与翻译Luna none配置保留；凭据未读取或重录。本轮未追加真实模型生成，前序真实API资格保持原版本边界。
+上一版公开发行与正式本机安装均为[alpha.27](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.27)，固定代码源`e6c7b98aa3dfd563f957cdb7f6ef6048386a23fc`。1080 Swift执行／156 Python／1035中英key、生产合成OCR双轮、同源CI45816057630、clean优化Preview、公证／装订／Gatekeeper、公开回下载及独立发行审计45818353644通过。正式About27已实际观察，默认Sol low／4096与翻译Luna none配置保留；凭据未读取或重录。本轮未追加真实模型生成，前序真实API资格保持原版本边界。
 
 清除用量与旧回执晚发布的确定性RED已修补，失效票据剥离数字、保留阈值及恢复身份；真实失败组EIO交错和清除后的新事实均留证。原生只证明清除后恢复显示与新值对照，不宣称已捕获GUI启动竞态或执行GUI清除按钮；自动TTL／数量／字节维护仍属42.4。[实施记录](implementation/usage-restoration-fence-2026-11-26.md)与[技术合同](technical/usage-restoration-fence.md)区分这些边界。
 
-当前开发收口：`fix/usage-retention-budget-redaction`已有自动维护／显式清除的预算预清、FIFO／retention围栏及Host接线，44项定向和1094 Swift／156 Python／1035 key本机通过。按用户要求提交交接，未晋升master、未发行或替换正式App；最终clean源CI／优化Preview／原生及关闭／重启边界仍待完成。见[开发记录](implementation/usage-retention-handoff-2026-11-26.md)和[多Agent续接提示词](handoffs/2026-11-26-parallel-work.md)。
+历史开发交接（当时尚未晋升）：`fix/usage-retention-budget-redaction`已有自动维护／显式清除的预算预清、FIFO／retention围栏及Host接线，44项定向和1094 Swift／156 Python／1035 key本机通过。按用户要求提交交接，未晋升master、未发行或替换正式App；最终clean源CI／优化Preview／原生及关闭／重启边界仍待完成。见[开发记录](implementation/usage-retention-handoff-2026-11-26.md)和[多Agent续接提示词](handoffs/2026-11-26-parallel-work.md)。
 
 启动台密度、语言叶子刷新、冻结审批名称／协议ID和原生参数、任务详情滚动及明确窗口下限已交付。参数坍缩、详情溢出、0×0调试探针、CUA会话重置和旧CI失败均保留。[实施记录](implementation/native-ui-clarity-2026-11-26.md)记录原生子集及未关闭的首帧／初始滚动问题。完整玻璃、IME／VoiceOver、多屏、实体热键、真实目标插入及完整产品仍PARTIAL；下文alpha.25等段落为各自历史记录。
 

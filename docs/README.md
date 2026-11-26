@@ -1,11 +1,11 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-26。当前公开及本机正式安装均为已公证alpha.27，实际About27、清除后未知预算／新回执准确值的双语原生子集与同源本机／CI／发行审计已确认。模型、token阈值和真实OpenAI联调继续按各原始版本独立记录，未重复发起付费生成；alpha.22未公开候选和历史FAIL保留，自动维护预算副本与完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间为 2026-11-26。当前公开与正式安装版本为已公证的 alpha.28（28）。[自动清理、重启和发行记录](implementation/retention-shutdown-2026-11-26.md)汇总当前源码、CI、原生界面、正式回退和完整目标缺口。此前版本的真实模型、视觉和设备验收保留各自边界。
 
 | 文档 | 用途 |
 |---|---|
 | [当前开发收口与多Agent续接](handoffs/2026-11-26-parallel-work.md) | 单写者约束、三位只读Agent分工、剩余完整目标与资格边界 |
-| [自动维护开发收口](implementation/usage-retention-handoff-2026-11-26.md) | 尚未发行的43实现、1094本机执行及待补证边界 |
+| [自动维护开发收口](implementation/usage-retention-handoff-2026-11-26.md) | 43 实现的历史开发快照、1094本机执行及待补证边界 |
 | [用量恢复围栏与alpha.27交付](implementation/usage-restoration-fence-2026-11-26.md) | 清除／晚快照RED、读前票据、真实部分失败交错与双语原生子集 |
 | [原生界面清晰度与alpha.26交付](implementation/native-ui-clarity-2026-11-26.md) | Launcher尺寸、双语刷新、冻结审批、最小窗口与失败保留／精确源资格 |
 | [产品愿景](product/vision.md) | 用户、定位、产品原则、成功指标 |
