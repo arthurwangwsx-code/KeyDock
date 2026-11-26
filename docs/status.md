@@ -1,5 +1,7 @@
 # 当前状态总账
 
+最新原生复查：干净`c48f461`优化Preview在保留玻璃背景时，1MiB上限的部分结果首次画面已显示Copy／Open in Workspace／Close draft；实际工作区入口、末尾滚动和明确结果-only保存通过，磁盘核验为1048576字节、partial=true，一次loopback POST且无凭据／工具请求。前序`83e06b4`另完成compact关闭审阅、⌘Return不重跑、取消保留、确认关闭及新空草稿子集。完整焦点／中英明暗／系统矩阵仍开放；最终同源完整检查与新CI／发行继续推进，正式App仍为alpha.19。详情与保留的FAIL见[本轮UI记录](implementation/task-material-ui-2026-11-26.md)。
+
 补充：干净`426b31b`的918 Swift／137 Python／931 key完整本机和同源CI45725802402均通过，正式签名构建也已完成；但同源优化Preview首次AI输出后再次观察到固定右侧按钮漏绘，点击关闭未呈现审阅而回到搜索，因此未晋升master、未创建tag／公证候选／发行或替换。正在稳定footer左右结构，并将compact关闭审阅移至Launcher根owner，直到原生实际dismiss才释放；修补后需重新检查。正式App仍是alpha.19。
 
 2026-11-26进度快照：完整产品仍为PARTIAL，正式安装／公开发行是alpha.19；alpha.20处于开发与资格复查阶段。独立Launcher／Settings／菜单入口、剪贴板历史与有序合并、窗口／应用动作及快捷键设置、兼容API的AI动作、Agent／Workflow／MCP和常用工具均已有实现。真实目标插入、物理热键、AX／多屏、完整视觉／IME／辅助功能、长期可靠性及外部模型质量仍分别开放。真实API继续按用户决定稍后配置。

@@ -1,5 +1,9 @@
 # 任务内容原生审阅与显式输入复用
 
+裁剪修补后，干净`c48f4617ee66d0450a7daee0a9ade56ca79294a6`优化Preview（摘要`c495cbd8bd9a1e9a58684fcf134dfbd0e8559dac39ba138988daf3900a674742`）在owned域`KeyDock-Review-1a31c578-79bf-40a8-b1cb-29371feb981b`完成玻璃背景的大输出复查。首次结果画面三个固定按钮均实际绘制，未先拖动或切换材质；点击可见Open in Workspace沿用准确输入和结果，末尾滚动保持可达。保存审阅默认均未选、部分结果提示明确，手动仅勾选结果并保存后正常退出。`compact-ai-clipping-native-v1` receipt SHA256 `63db6afcfa5a5c9ee706aeb8f7c536e7dac443e8d3fc68b1ae239f1192d07aa5`。部分窗口切换及关闭审阅仍返回瞬时AX failure；随后重新读取实际状态已完成切换，未重复触发动作。
+
+独立后置`compact-ai-clipping-proof-v1` receipt SHA256 `fb6bb2b34f1818a8e0e7046ec37f9f52963c1795c6deb18339b03e1300aba9cb`确认保存visibleResult恰为1048576个x字节，partial=true，未保存输入，出生key对应这次failed AI回执；两份旧回执逐字段未变、无CLI／工具回执、control idle。材料文件SHA256 `16ec6fd80f39026a0859582dfec1ae3bbb6d59ef80332d158a862edaf8ccfe5e`；服务仅一次POST、无Authorization。该子集证明裁剪没有靠截短结果改善绘制；不将单次玻璃首帧通过扩大为全部系统／视觉资格。正式App及公开发行仍为alpha.19。
+
 `83e06b4`的8项关闭状态回归通过，优化Preview实际显示compact关闭审阅，⌘Return保持审阅且服务仅一次POST，Cancel保留原结果，再次确认关闭后返回搜索，新草稿输入为空且获得焦点。原生生命周期`compact-ai-modal-native-v1` receipt SHA256 `4d9f84dc926d06cf31f422badfb5904885e44c088a5e64e03d533c6a864bc600`；这不覆盖同轮仍失败的大结果首帧按钮绘制。短普通结果玻璃样例首次按钮完整；同一App切为进程内opaque样例后，1MiB partial大结果首次按钮也完整，见`compact-ai-layering-native-v1`与`compact-ai-opaque-native-v1`。opaque测量receipt SHA256 `62edfba67a2b0cfb990307dc94d5b35dfeb9b832fe3e42930f4783174d442e2d`，均只用owned合成域且正常退出。该对照将问题缩小到长原生文本与玻璃合成的交互，仍未证明唯一内部根因；后续显式约束原生scroll／clip视口并提高固定操作层的合成顺序，保留玻璃背景，需原生复验。
 
 最终首帧复查补充：干净`426b31b`完整本机918 Swift／137 Python／931 key、同源CI45725802402与正式签名构建通过后，仍发现右侧Open in Workspace／Close draft存在于AX树但首张结果截图仅画出新Copy；AX关闭动作返回搜索，未观察到关闭审阅。owned域为`KeyDock-Review-4c6b3c9a-d743-435b-980b-64c0736b4db1`，优化Preview摘要`55a5ceb470c1176ccd193c2a86ec1b6d7c4a48451e8635a7b6c35a23df8ce7bf`。生命周期测量`alpha20-ai-first-frame-native-v1`虽为exit0（receipt SHA256 `f5d5af2a6795597d83281d4347da3b6f5c7161cd10a4cb463c0765b65d11ae12`），视觉状态明确FAIL。服务一次POST、无Authorization／工具请求，随后正常退出并收口server；未发布或晋升该源。
