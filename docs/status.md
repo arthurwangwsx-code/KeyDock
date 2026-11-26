@@ -1,6 +1,8 @@
 # 当前状态总账
 
-当前公开发行与正式本机安装均为[alpha.24](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.24)，固定源`b1011af95dbac25f3ff52cdb2fc10d9cb49f93f8`。1035 Swift执行／153 Python／1005中英key、生产合成OCR双轮、指定同源CI／优化Preview、master重复CI、公证装订／Gatekeeper、公开回下载和独立发行审计通过；About24实际已观察。应用动作schema3迁移、统一删除、收藏事务及双语原生重启子集见[本轮复查](implementation/application-action-configuration-2026-11-26.md)。alpha.22仍为保留的本地未公开候选，原生失败不删除，旧tag／资产不覆写。
+当前公开发行与正式本机安装均为[alpha.25](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.25)，固定源`630ef838788723c58a6c1ed54f8a47c92bab78ce`。1062 Swift执行／156 Python／1028中英key、生产合成OCR双轮、同源CI／优化Preview、master重复CI、公证装订／Gatekeeper、公开回下载和独立发行审计通过；About25已实际观察。[Agent预算复查](implementation/agent-run-token-budget-2026-11-26.md)记录跨轮token阈值、原生语言刷新修补、双语重启及真实OpenAI时间工具两轮490 token。alpha.24应用动作迁移等资格仍见[前序复查](implementation/application-action-configuration-2026-11-26.md)。alpha.22未公开候选及失败保留，旧tag／资产不覆写。
+
+Agent可明确开关运行总token阈值，当前轮完整用量核实后才继续工具／模型；内建只读Agent固定32000。每请求输出上限继承模型设置，并按下一轮剩余阈值收紧。审批固定旧限制，运行中修改仅影响新任务；清除AI用量同步擦除已结束预算计数。配置schema4与回执Envelope3分别保护字段，不能承诺旧版可无条件回退。费用停止阈值尚未实现，也不把报告token阈值当账单硬上限。
 
 模型设置已接入实际执行：全局、九类场景及动作／Agent逐字段覆盖，思考、预算和协议冻结。官方推荐目录与服务清单独立；正式alpha.23中英各连续3次真实刷新均返回103模型，选择不变，账本未增加模型调用。入口及继承规则见[使用说明](product/model-settings-guide.md)。
 
@@ -8,7 +10,9 @@
 
 独立桌面验收App／固定宿主已有实际Developer ID签名运行证据。旧配对代码`afb97cb`的1012 Swift／151 Python／1003 key、生产合成OCR双轮及同源CI45768775028通过；双语设置、剪贴板查询／合并／复制、明确重启及拒绝态有原生观察，见[App接线复查](implementation/desktop-review-app-2026-11-26.md)。保留旧失效、targetIdentityChanged及CUA传输故障。alpha.24增加同次probe字段诊断的代码／测试资格，本轮原生复查使用普通隔离Preview；该旧签名Review配对未自动重建，不借正式发行补算真实插入通过。
 
-完整P0–P4仍PARTIAL：真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放；20条质量样本、在途切语言及所有服务／参数／故障组合未关闭。Agent运行总token预算、持久步骤、原图附件与稳定增量用量仍有工程缺口，见[剩余工程](technical/remaining-engineering-2026-11-26.md)。安装／回退检查配置schema3 reader；副本保留不代表无条件回退。
+alpha.25另新增3次真实OpenAI请求，共651输入／56输出token：首次模型未取时间工具，只核实一轮217；改用确需当前时间的问题后，两轮时间工具回路报告450／40、预算摘要490，均保留实际用量且费用未知。观察脚本只读新合成任务metadata，凭据仅由正式App使用，未导出／重录。没有用该子集替代20条质量评阅。
+
+完整P0–P4仍PARTIAL：真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放；活动总结在途切语言、所有服务／参数／故障组合与20条质量样本未关闭。费用停止阈值、持久步骤、原图附件与稳定增量用量仍有工程缺口，见[剩余工程](technical/remaining-engineering-2026-11-26.md)及[下一轮原生复查](technical/native-ui-followup-2026-11-26.md)。旧master文档提交459559a的CI45780991896失败已定位到DesktopReviewScope并发增长测试；当前630ef83两次同源CI均通过，但旧失败及并发重现调查保留，不倒推已修复根因。
 
 ## 历史推进与当时资格
 

@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-26。当前公开及本机正式安装均为已公证alpha.24，实际About24、应用动作迁移／删除／重启与双语原生子集已确认；真实模型清单与调用保留alpha.21–23的分源资格，alpha.22未公开候选及FAIL保留；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-26。当前公开及本机正式安装均为已公证alpha.25，实际About25、Agent跨轮token阈值、双语原生子集／重启和真实OpenAI时间工具两轮用量已确认；模型清单及其他能力保留各源独立资格，alpha.22未公开候选与历史FAIL保留，完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -20,6 +20,8 @@
 | [AI 与自动化](technical/ai-and-automation.md) | Provider、快捷 AI、CLI、分析、Agent/MCP/ACP |
 | [Agent运行token阈值](technical/agent-run-token-budget.md) | 跨轮用量核实、冻结限制、输出cap和旧reader保护；费用阈值另行建设 |
 | [Agent预算实施与验收](implementation/agent-run-token-budget-2026-11-26.md) | 真实生产链路合成联调、失败保留和分别记录的原生／发行资格 |
+| [费用停止阈值初稿](technical/agent-estimated-cost-limit.md) | 原5.4剩余工程：Decimal精度、冻结费率、recorder终态及reader／清除设计，尚未实现 |
+| [下一轮原生复查](technical/native-ui-followup-2026-11-26.md) | 叶子视图语言依赖、冻结审批名称、工具栏／启动台尺寸和Review证据边界 |
 | [可选AI费率与调用快照](technical/ai-rate-snapshots.md) | 准确模型／服务、逐请求冻结、父子归因与独立本地分析 |
 | [AI费率与用量实现复查](implementation/ai-rate-snapshots-2026-11-25.md) | 定向回归、评审修补与独立记录的完整／原生／发行资格 |
 | [后续能力与AiBox设计参考](technical/capability-expansion.md) | P2–P4产品目标、模块拆分、实现合同与完整验收义务 |
