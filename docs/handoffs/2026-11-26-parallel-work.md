@@ -1,5 +1,7 @@
 # KeyDock 多Agent并行续接提示词
 
+下方为当时的调度输入。实际执行后的版本、回退及各项证据见[当前状态](../status.md)和[P0–P4 验收记录](../implementation/retention-shutdown-2026-11-26.md)。
+
 将下面内容交给新的主Agent执行。它是后续调度提示词，本次收口没有开启新一轮开发。
 
 ```text

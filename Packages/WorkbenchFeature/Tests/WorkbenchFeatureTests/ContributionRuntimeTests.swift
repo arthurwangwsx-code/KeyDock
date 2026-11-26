@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import Testing
 import CommandCore
 import ExecutionCore
@@ -34,6 +35,12 @@ import AutomationCore
             let source = try #require(plan.sources[BuiltinContributionID.calculator])
             let converted = try #require(try await source.provider.commands(matching:"10 km to mi").first)
             #expect(converted.title == (try store.calculate(.conversion("10 km to mi"))))
+            // Startup recovery may rebuild the same catalog between displaying a result and Return.
+            var catalogChanges = 0
+            let observation = store.$catalog.dropFirst().sink { _ in catalogChanges += 1 }
+            store.rebuildCatalog()
+            #expect(catalogChanges == 0)
+            defer { observation.cancel() }
             launcher.selectedID = item.id; launcher.execute()
             try await storeEventually { store.contributionActionTasks.isEmpty }
             #expect(writes == ["5"])
@@ -45,6 +52,16 @@ import AutomationCore
             #expect(store.setContributionEnabled(true,id:BuiltinContributionID.calculator))
             store.execute(item)
             #expect(writes == ["5"])
+            let syntheticWindow = CommandItem(id: "window.synthetic", title: "Synthetic window", kind: .window)
+            let beforeRefresh = catalogChanges
+            store.rebuildCatalog(windows: [syntheticWindow])
+            #expect(catalogChanges == beforeRefresh + 1)
+            store.rebuildCatalog()
+            #expect(catalogChanges == beforeRefresh + 1)
+            var renamed = syntheticWindow
+            renamed.title = "Renamed synthetic window"
+            store.rebuildCatalog(windows: [renamed])
+            #expect(catalogChanges == beforeRefresh + 2)
             let stats = try await fixture.server.stats(); #expect(stats["post_requests"] == 0)
         }
     }

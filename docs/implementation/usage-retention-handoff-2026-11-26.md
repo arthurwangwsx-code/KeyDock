@@ -1,5 +1,7 @@
 # 自动用量维护开发收口
 
+此页保留交接当时的分支与版本。后续已完成 alpha.28 发布、公证与 27 → 28 → 27 → 28 正式安装演练。当前源码、原生证据以及未通过项目见[验收总账](retention-shutdown-2026-11-26.md)。
+
 按用户要求在2026-11-26收口当前变更并交接。工作分支为`fix/usage-retention-budget-redaction`，从干净master `eb4b50694b17fef21b9c788d3af36d81dfe6f1ea`建立；当前增量未晋升master、未打新tag或替换正式App。公开及本机正式版本仍为alpha.27，代码源`e6c7b98aa3dfd563f957cdb7f6ef6048386a23fc`；该版本与前述master文档提交的CI已核实通过。
 
 ## 已落盘的实现

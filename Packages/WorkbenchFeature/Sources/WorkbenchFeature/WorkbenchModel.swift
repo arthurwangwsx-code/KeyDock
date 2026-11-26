@@ -460,7 +460,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             guard let self else { return }
             let windows = await desktop.windows()
             guard windowGeneration == current else { return }
-            catalog = applicationItems + windows + commandItems()
+            rebuildCatalog(windows: windows)
         }
     }
     private func commandItems() -> [CommandItem] {
@@ -491,7 +491,11 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         }
         return saved + ai + builtins + layouts + windowActions + appActions + additional + workflows + snippets + web + collections + desktopWorkspaces.map(desktopWorkspaceItem)
     }
-    func rebuildCatalog() { catalog = isDesktopReview ? commandItems() : catalog.filter { $0.kind == .window } + applicationItems + commandItems() }
+    func rebuildCatalog(windows: [CommandItem]? = nil) {
+        let next = isDesktopReview ? commandItems()
+            : applicationItems + (windows ?? catalog.filter { $0.kind == .window }) + commandItems()
+        if catalog != next { catalog = next }
+    }
     public func execute(_ item: CommandItem, caller: ExecutionCaller = .user) {
         guard !isShuttingDown else { launcherNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return }
         if isDesktopReview {
