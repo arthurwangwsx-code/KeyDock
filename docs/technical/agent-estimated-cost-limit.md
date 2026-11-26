@@ -13,3 +13,7 @@
 持久化须在编码前选定完整reader方案：新配置／导出／定义指纹保护新字段，未保存profile生成的费用事实也须有独立降级保护，不能仅靠配置版本。可复用Invocation数字摘要并统一清除，或给UsageReceipt增加显式reader声明；不能假设向无版本旧ledger加字段就不会被旧App忽略后重写。若复制费用数字到回执，清除／TTL必须同步抹除，保护真正在途worker而非已结束恢复来源。阈值和图关联可保留，重启不重定价或自动继续。
 
 P0证明包括：极小金额精确往返、达线／越线、去重／不同attempt同responseID；全部未知及算术失败；前置拒绝零HTTP；两个Provider终态顺序和多轮不封口；多工具批次停后零派发、cleanup取消／迟到审批；改价／删价／ABA；双run隔离；call成功但task暂停；清除／TTL／重启不复活金额；所有reader与安装回退失败保全。之后再做原生中英和真实服务子集。实现前把这些合同补入iSpec，不以本初稿替代已完成代码。
+
+2026-11-26只读方案补充（尚未实现）：持久化采用配置schema5及Invocation Envelope4路线，费用字段或保留的费用阈值存在即使用4，保护未保存profile；不向Envelope3添加会被旧decoder忽略的可选minReader字段。费用继续复用原ledger，不另造无版本reader。一个AIRateSnapshot同时进入运行合同与recorder，稳定依据排除frozenAt；成功模型终态之后的产品处理失败仍保留成功调用及实际已知费用。
+
+费用字段前先做清除／恢复围栏的确定性审计：静态发现旧receipt list可能在usage清除后经restoreHistorySnapshot回流，而该入口只校验history代次。尚未复现，不能认定唯一根因或已修。测试应先缓存已结束预算快照但不入tasks，完成清除后再按原history代次恢复；任务及图关联保留，消耗／轮数／金额仍unknown。读取前取得usage ticket，清除中取得或代次失配的ticket永久失效；不能在发布时补当前ticket重新授权旧快照。新鲜读取和真实新worker仍可发布新事实。清除保持阈值／策略／币种／稳定依据及恢复CAS，不重置在途meter，也不把已结束来源永久当活跃worker保护。

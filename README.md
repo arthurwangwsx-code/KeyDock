@@ -2,7 +2,7 @@
 
 面向 macOS 的原生快捷操作与 AI 工作台。用统一入口搜索应用和窗口、运行命令、处理剪贴板，并通过快捷键完成翻译、总结和可控的 Agent 任务。
 
-**当前阶段：P0–P4能力按增量实现，已公开签名公证的 [alpha.20 测试版](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.20)；完整日用验收尚未完成。** 本仓库独立于 AiBox，未迁入其源码、个人截图或历史数据。
+**当前阶段：P0–P4能力按增量实现，已公开并本机安装签名公证的 [alpha.26 测试版](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.26)；完整日用验收尚未完成。** 本仓库独立于 AiBox，未迁入其源码、个人截图或历史数据。
 
 安装包见 [GitHub Releases](https://github.com/arthurwangwsx-code/KeyDock/releases)：macOS arm64，Developer ID签名、App／DMG公证与装订。下载包、完整源SHA和摘要随Release提供；这是早期预览，已知限制见发行说明。
 
@@ -16,7 +16,9 @@
 
 AI 是核心能力域，模型账号和联网并非基础桌面操作的前提。
 
-alpha.20新增默认关闭的任务内容保留、独立内容库和明确的新尝试输入复用，并修补大文本玻璃界面与关闭审阅。具体资格见[发行证据](docs/implementation/alpha20-release-2026-11-26.md)，未完成工程和系统验收见[后续清单](docs/technical/remaining-engineering-2026-11-26.md)。
+支持[全局／场景／动作及Agent模型设置](docs/product/model-settings-guide.md)，包含官方推荐、服务模型清单、思考强度、协议和输出预算。alpha.26完善启动台自适应高度、双语标签刷新、冻结审批名称与可读参数、任务详情滚动和最小窗口约束；[实施记录](docs/implementation/native-ui-clarity-2026-11-26.md)分别保存失败、原生子集、测试与发行资格。
+
+历史alpha.20新增默认关闭的任务内容保留、独立内容库和明确的新尝试输入复用，并修补大文本玻璃界面与关闭审阅。具体资格见[发行证据](docs/implementation/alpha20-release-2026-11-26.md)，未完成工程和系统验收见[后续清单](docs/technical/remaining-engineering-2026-11-26.md)。
 
 设置页支持[脱敏设置摘要导出](docs/technical/settings-summary-export.md)，可预览准确JSON再保存。摘要排除自定义正文与连接／凭据，不能恢复应用，完整定义迁移另行建设。
 

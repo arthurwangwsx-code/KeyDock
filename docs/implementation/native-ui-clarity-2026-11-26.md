@@ -1,6 +1,6 @@
 # 原生界面清晰度与启动台密度
 
-本增量承接任务41，完整产品仍为PARTIAL。正式发行保持alpha.25，alpha.26尚在精确源资格复查；不将隔离Preview或定向绿测当作全部日用验收。
+本增量承接任务41，alpha.26已按下文精确源交付，完整产品仍为PARTIAL。前序探针保留各原始状态，不将隔离Preview或定向绿测当作全部日用验收。
 
 ## 改动
 
@@ -35,4 +35,12 @@ c222f94同源原生再次发现：参数已可见，但固定任务详情VStack�
 
 修补dirty优化Preview在独立域07739705实际通过820×560→1000×680→820×560。标题／审批按钮可见，参数选中original并滚到最终括号，配置改名后选区与旧合同保留；批准一次得到original、31token。任务尾部按钮可滚达；A底部→B桌面结果卡片→A回到顶部。中文深色／英文浅色／中文浅色、场景模型提示、空草稿菜单刷新、AI正文／输出和返回焦点保留、最小AI尾部均观察。进程24151正常退出0，私有viewport-evidence SHA256为0999b0a6350a6c4437bc752b7cf14373126a821cd5f0efb2740982dd3e744ce7。首张空AI页曾出现侧栏短暂上移，创建下一草稿后稳定恢复，保留为首帧后续项，不据此关闭完整视觉。
 
-精确源完整本机／CI、clean优化Preview、公证发布及正式安装证据待追加。不得用alpha.25资格覆盖本增量。
+alpha.26／build26已公开并替换正式App，代码／tag固定7a128eacc95e3d54db080a0ed843e2f3240cbda4。1075 Swift执行（1054声明）、156 Python、1035中英key及生产合成OCR双轮通过；本机check-summary文件SHA256为301d39182796d8e21ac2b36e61ca2c1997943b2ac0c64f5261c6fcf7e4eab415，规范化qualification摘要为ba382c07293f933dec653575f42812d14914c69f21e80f2c923bd9d923e3f8ab。全检measure c9399848-d44d-4b94-8f13-acf5601c15b7，receipt摘要2993f66537dce21cc833231057b75f660bc6af5b2948e0e76f8fae25a4a176c7。指定同源CI45808383620及公开资产审计45810747119均成功；旧失败及被新推送取代的CI不计通过。
+
+clean优化Preview同源实际完成最小／标准尺寸、中文深色审批／参数上下滚动、确认一次original输出31token、最小尾部可达、英文浅色用量标签及正文／用户滚动保留。进程29189正常退出0，独立根16548993的clean-candidate-evidence摘要797988188759a0b457b1499df0b308c8251beb6b88ae7a34d052bc51f9dec4bd。首张参数offset1仍保留后续复现，不能按手动回顶后的截图宣告首帧通过。
+
+冻结候选112444877503Z：App公证1da862f5-4dbd-4199-9f40-33a67584c337、DMG公证63ca3b89-6dc5-490b-888c-0847cedcf624均Accepted，装订／Gatekeeper通过。ZIP 3748923字节，SHA256 f35d655c63345b0e694e41329700165955d5607fadd8a191cba7a92a777992dd；DMG 4271687字节，SHA256 69ca8904be997ccf8a7e022ef1376555c2293fdb63ae60985e2e57890617e5e6。先draft、回下载验签／哈希再公开；发布measure 0fd3ce1e-b945-4be2-ac21-bd40def79145，receipt摘要309e308727f68a660bda0b011adf80f169ba29c84c1bf3e3fe0366c561c68618。
+
+正式安装事务eff5e341-56fb-49d6-b58f-abc483c55201完成，正常退出旧App后原子交换，alpha.25回退副本保留。实际About26确认，默认gpt-6.2-sol／low／4096、翻译gpt-6-luna／none配置保留，密钥字段留空且显示已保存；未修改API设置、读取凭据或追加真实模型生成。本轮UI是loopback合成联调，不覆盖alpha.25等原始真实服务资格。
+
+alpha.24历史原始App经ditto归档、还原全树比对及codesign验证后回收，保留最新完整25／26、alpha.22失败及回退／引用证据。私有retention receipt在.local/release-retention/native-clarity-7a128ea/receipt.json。共享存储门禁贯穿构建／测试／公证／安装／证据，日常200GB目标未因本轮宣告完成，不清理其他项目。完整产品／视觉／系统验收仍PARTIAL，5.4费用停止阈值、41.5不可覆盖调试记录和41.6旧ReviewScope诊断等继续开放。
