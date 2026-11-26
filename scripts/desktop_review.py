@@ -13,7 +13,7 @@ import time
 import uuid
 import release_delivery as delivery
 
-from keydock_common import ROOT, CONFIG, PipelineError, atomic_json, run, sha256, source_identity, validate_version
+from keydock_common import ROOT, CONFIG, PipelineError, atomic_json, run, sha256, source_identity, tree_digest, validate_version
 
 REVIEW_ID = "com.arthurwangwsx.KeyDock.desktopreview"
 FIXTURE_ID = REVIEW_ID + ".fixture"
@@ -132,11 +132,34 @@ def inspect_pair(pair):
     return manifest
 
 
+def archive_pair(stage):
+    if not PAIR.exists() or not any(PAIR.iterdir()): return
+    real_ancestors(PAIR)
+    original = tree_digest(PAIR)
+    history = PARENT / "pair-history" / str(uuid.uuid4())
+    private_directory(history, create=True)
+    archive = history / "pair.zip"
+    stage("review-retain-pair", ["/usr/bin/ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", PAIR, archive])
+    verification = history / "verify"; verification.mkdir(mode=0o700)
+    stage("review-retain-verify", ["/usr/bin/ditto", "-x", "-k", archive, verification])
+    restored = verification / PAIR.name
+    if tree_digest(restored) != original: raise PipelineError("Review archive failed full resource verification; original was preserved")
+    helper_hash = None
+    if HELPER.exists():
+        if HELPER.is_symlink() or not HELPER.is_file(): raise PipelineError("Review helper cannot be archived safely")
+        helper_hash = sha256(HELPER); shutil.copy2(HELPER, history / "KeyDockReviewLifecycle")
+        if sha256(history / "KeyDockReviewLifecycle") != helper_hash: raise PipelineError("Review helper archive mismatch")
+    durable_json(history / "retention.json", {"schemaVersion": 1, "originalPath": str(PAIR), "treeSHA256": original, "zipSHA256": sha256(archive), "helperSHA256": helper_hash, "restoredTreeMatched": True, "productAcceptance": False})
+    # 仅清理刚创建且已逐资源验证的还原scratch；原App和zip仍保留到后续替换。
+    shutil.rmtree(verification)
+
+
 def build_pair(stage):
     with launcher_lock():
         source = source_identity()
         # 独立helper只查询Review身份，绝不操作生产／Preview。
-        real_ancestors(PAIR); real_ancestors(HELPER.parent)
+        cache = ROOT / "build/pipeline/desktop-review/DerivedData"
+        real_ancestors(PAIR); real_ancestors(HELPER.parent); real_ancestors(cache)
         HELPER.parent.mkdir(parents=True, exist_ok=True)
         candidate_helper = HELPER.parent / (".KeyDockReviewLifecycle-" + str(uuid.uuid4()))
         stage("review-lifecycle", ["xcrun", "swiftc", "-parse-as-library", "-swift-version", "6", "-warnings-as-errors", "-target", "arm64-apple-macos14.0", ROOT / "Tools/KeyDockReviewLifecycle/main.swift", "-o", candidate_helper])
@@ -144,9 +167,9 @@ def build_pair(stage):
         for bid, path in paths:
             if run([candidate_helper, "probe", bid, path], capture=True).strip() != "[]": raise PipelineError("Close the existing review pair before rebuilding")
         if HELPER.is_symlink(): raise PipelineError("Review helper must not be a symlink")
+        archive_pair(stage)
         os.replace(candidate_helper, HELPER)
         stage("review-xcodegen", ["xcodegen", "generate", "--spec", ROOT / "project.yml"])
-        cache = ROOT / "build/pipeline/desktop-review/DerivedData"
         real_ancestors(cache)
         stage("review-build", ["xcrun", "xcodebuild", "-project", ROOT / "KeyDock.xcodeproj", "-scheme", "KeyDock", "-configuration", "ReleaseDesktopReview", "-jobs", "2", "-derivedDataPath", cache, "CODE_SIGNING_ALLOWED=NO", "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES", "MARKETING_VERSION=" + validate_version(CONFIG["version"]), "CURRENT_PROJECT_VERSION=" + CONFIG["buildNumber"], "build"])
         if PAIR.exists():

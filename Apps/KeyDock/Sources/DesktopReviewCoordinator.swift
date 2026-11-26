@@ -122,10 +122,12 @@ import KeyDockUI
         dismiss(restore: false)
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 600, height: 650), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+            window.contentMinSize = NSSize(width: 560, height: 590)
             window.title = AppL("Desktop review") + " — KeyDock"; window.isReleasedWhenClosed = false; window.delegate = self
             let controller = NSHostingController(rootView: DesktopReviewSettingsView(store: store) { [weak self] in self?.presentClipboard(activateTarget: true) })
             controller.sizingOptions = []; controller.sceneBridgingOptions = []
-            window.contentViewController = controller; window.center(); settings = window
+            window.contentViewController = controller
+            window.setContentSize(NSSize(width: 600, height: 650)); window.center(); settings = window
         }
         NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
     }
