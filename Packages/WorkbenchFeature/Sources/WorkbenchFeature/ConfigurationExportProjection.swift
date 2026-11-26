@@ -7,7 +7,7 @@ import MacAdapters
 enum ConfigurationExportProjection {
     static func make(source: ConfigurationExportSource, sections: Set<ConfigurationExportSection>, maximumBytes: Int = ConfigurationExportBudget.maximumBytes) throws -> FrozenConfigurationExport {
         guard !sections.isEmpty else { throw ConfigurationExportError.noSections }
-        guard source.configuration.schemaVersion == 1 else { throw ConfigurationExportError.invalidDefinition("configuration.schemaVersion") }
+        guard source.configuration.schemaVersion == 2 else { throw ConfigurationExportError.invalidDefinition("configuration.schemaVersion") }
         try Task.checkCancellation()
         var graph = ConfigurationExportGraph(source: source, sections: sections)
         try graph.budget.text(source.sourceVersion, maximum: 128)
@@ -108,12 +108,13 @@ enum ConfigurationExportProjection {
         }
         let actions = try c.aiActions.map { v -> ExportAIAction in
             let owner = "ai." + v.id.uuidString
+            try check(owner) { try v.modelOptions?.validate() }
             try text(v.name, owner: owner, maximum: 512, nonempty: true, graph: &graph)
             try graph.budget.text(v.prompt, maximum: 1_048_576); try graph.budget.text(v.modelOverride, maximum: 512)
             if let key = v.builtinKey { try graph.budget.text(key, maximum: 512) }
             try graph.aiService(owner: owner)
             return .init(id: v.id, name: v.name, builtinKey: v.builtinKey, prompt: v.prompt, input: v.input.rawValue, output: v.output.rawValue,
-                modelOverride: v.modelOverride)
+                modelOverride: v.modelOverride, scene: v.scene, modelOptions: v.modelOptions)
         }
         let agents = try c.agents.map { v -> ExportAgent in
             let owner = "agent." + v.id.uuidString
@@ -123,7 +124,7 @@ enum ConfigurationExportProjection {
             for id in v.allowedCommandIDs.sorted(by: { $0.uuidString < $1.uuidString }) { try graph.target(id, kind: .command, owner: owner) }
             for id in v.allowedMCPServerIDs.sorted(by: { $0.uuidString < $1.uuidString }) { try graph.target(id, kind: .mcp, owner: owner) }
             for name in v.allowedMCPToolNames.sorted() { try graph.mcpTool(name, allowedSources: v.allowedMCPServerIDs, owner: owner) }
-            return .init(id: v.id, version: v.version, name: v.name, instructions: v.instructions, modelOverride: v.modelOverride,
+            return .init(id: v.id, version: v.version, name: v.name, instructions: v.instructions, modelOverride: v.modelOverride, modelOptions: v.modelOptions,
                 allowedCommandIDs: v.allowedCommandIDs.sorted { $0.uuidString < $1.uuidString }, allowedMCPServerIDs: v.allowedMCPServerIDs.sorted { $0.uuidString < $1.uuidString },
                 allowedMCPToolNames: v.allowedMCPToolNames.sorted(), maxToolCalls: v.maxToolCalls, maxTurns: v.maxTurns, timeoutSeconds: v.timeoutSeconds)
         }
@@ -271,6 +272,8 @@ enum ConfigurationExportProjection {
             try graph.local(owner: "search-folder." + v.id.uuidString, kind: "folderSelection", reference: "Choose the folder again")
             return .init(id: v.id, name: v.name)
         }
-        return .init(aiService: .init(endpoint: c.endpoint, model: c.model, localHTTP: c.localHTTP, tokenLimitParameter: c.tokenLimitParameter), mcpServers: servers, searchFolders: folders, aiRates: rates)
+        try check("resources.aiService.modelSettings") { try c.aiModelSettings.validate() }
+        return .init(aiService: .init(endpoint: c.endpoint, model: c.model, localHTTP: c.localHTTP, tokenLimitParameter: c.tokenLimitParameter,
+            modelSettings: c.aiModelSettings, modelCatalogVersion: AIModelCatalog.version), mcpServers: servers, searchFolders: folders, aiRates: rates)
     }
 }

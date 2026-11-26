@@ -135,7 +135,7 @@ import AICore
         let frozen = try ConfigurationExportProjection.make(source: ConfigurationExportFixture.source(c), sections: [.resources])
         let root = try ConfigurationExportFixture.object(frozen), resources = try #require(root["resources"] as? [String: Any])
         let exported = try #require((resources["aiRates"] as? [[String: Any]])?.first)
-        #expect(resources["schemaVersion"] as? Int == 2 && frozen.definitionCount == 1)
+        #expect(resources["schemaVersion"] as? Int == 3 && frozen.definitionCount == 1)
         #expect(Set(exported.keys) == ["id", "revision", "endpointFingerprint", "model", "currency", "inputPerMillion", "outputPerMillion", "enabled", "unitTokens"])
         #expect((exported["model"] as? String)?.utf8.elementsEqual(c.aiRates[0].model.utf8) == true)
         #expect(!ExportDefinitionKind.rate.isCommand)

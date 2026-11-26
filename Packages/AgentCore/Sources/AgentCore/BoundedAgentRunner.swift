@@ -52,10 +52,18 @@ public struct BoundedAgentRunner: Sendable {
     }
     private func execute(messages: [AIMessage], allowedTools: Set<String>,
                          continuation: AsyncThrowingStream<AgentEvent, any Error>.Continuation) async throws {
+        let conversation = provider.makeConversation()
+        do {
+            try await executeTurns(messages: messages, allowedTools: allowedTools, conversation: conversation, continuation: continuation)
+            await conversation.close()
+        } catch { await conversation.close(); throw error }
+    }
+    private func executeTurns(messages: [AIMessage], allowedTools: Set<String>, conversation: any AIConversation,
+                              continuation: AsyncThrowingStream<AgentEvent, any Error>.Continuation) async throws {
         let available = await broker.definitions()
         guard allowedTools.isSubset(of: Set(available.map(\.name))) else { throw AIProviderError.unknownTool }
         let definitions = available.filter { allowedTools.contains($0.name) }
-        var history = messages
+        var input = AIConversationInput.initial(.init(messages: messages, tools: definitions))
         var toolCount = 0
         var outputBytes = 0
         for _ in 0..<maxTurns {
@@ -65,7 +73,7 @@ public struct BoundedAgentRunner: Sendable {
             var completed = false
             let unreportedAttemptID = UUID()
             var receivedUsage = false
-            let stream = provider.stream(.init(messages: history, tools: definitions))
+            let stream = await conversation.stream(input)
             for try await event in stream {
                 try Task.checkCancellation()
                 guard !completed else { throw AIProviderError.malformedEvent }
@@ -74,7 +82,10 @@ public struct BoundedAgentRunner: Sendable {
                     outputBytes += delta.utf8.count
                     guard outputBytes <= maxOutputBytes else { throw AIProviderError.outputLimit }
                     text += delta; continuation.yield(.text(delta))
-                case .toolCall(let call): calls.append(call)
+                case .toolCall(let call):
+                    outputBytes += call.id.utf8.count + call.name.utf8.count + call.arguments.utf8.count
+                    guard outputBytes <= maxOutputBytes else { throw AIProviderError.outputLimit }
+                    calls.append(call)
                 case .usage(let usage): receivedUsage = true; continuation.yield(.usage(usage))
                 case .completed: completed = true
                 }
@@ -86,7 +97,7 @@ public struct BoundedAgentRunner: Sendable {
             guard toolCount <= maxToolCalls, Set(calls.map(\.id)).count == calls.count else {
                 throw AIProviderError.toolBudgetExceeded
             }
-            history.append(.init(role: "assistant", content: text, toolCalls: calls))
+            var outputs: [AIToolOutput] = []
             for call in calls {
                 try Task.checkCancellation()
                 outputBytes += call.name.utf8.count + 4
@@ -97,8 +108,9 @@ public struct BoundedAgentRunner: Sendable {
                 outputBytes += result.utf8.count + 1
                 guard outputBytes <= maxOutputBytes else { throw AIProviderError.outputLimit }
                 continuation.yield(.toolFinished(id: call.id, result: result))
-                history.append(.init(role: "tool", content: result, toolCallID: call.id))
+                outputs.append(.init(callID: call.id, output: result))
             }
+            input = .toolOutputs(outputs)
         }
         throw AIProviderError.toolBudgetExceeded
     }

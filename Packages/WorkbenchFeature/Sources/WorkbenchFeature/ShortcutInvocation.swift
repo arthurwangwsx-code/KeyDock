@@ -1,8 +1,10 @@
 import CommandCore
+import Foundation
 
 /// 在按键回调收到时冻结；等待原选区期间的开关或定义变化不得升级为一次新调用。
 public struct ShortcutInvocation {
     let item: CommandItem
+    let configurationGeneration: UUID
 }
 
 extension WorkbenchModel {
@@ -21,11 +23,12 @@ extension WorkbenchModel {
         guard !isShuttingDown, let item = catalog.first(where:{$0.id == id}) else {
             launcherNoticeMessage = noticeKey("The shortcut target is no longer available"); return nil
         }
-        return .init(item:item)
+        return .init(item:item, configurationGeneration: configurationExportGeneration)
     }
     public func performCommand(_ invocation:ShortcutInvocation) {
         let frozen = invocation.item
-        guard !isShuttingDown, isCurrentCommandItem(frozen), let current = catalog.first(where:{$0.id == frozen.id}) else {
+        guard !isShuttingDown, invocation.configurationGeneration == configurationExportGeneration,
+              isCurrentCommandItem(frozen), let current = catalog.first(where:{$0.id == frozen.id}) else {
             launcherNoticeMessage = noticeKey("The shortcut target is no longer available"); return
         }
         execute(current,caller:.shortcut)

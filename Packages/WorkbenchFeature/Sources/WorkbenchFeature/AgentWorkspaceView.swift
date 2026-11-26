@@ -1,6 +1,7 @@
 import SwiftUI
 import AgentCore
 import KeyDockUI
+import AICore
 
 struct AgentWorkspaceView: View {
     @ObservedObject var store: WorkbenchModel
@@ -22,7 +23,11 @@ struct AgentWorkspaceView: View {
                 let saveState = session.agentProfileSaveState(in: store)
                 Label(saveState.title, systemImage: saveState.symbol).font(.caption).foregroundStyle(.secondary)
                 TextEditor(text:$session.agentProfile.instructions).font(.body).frame(minHeight:90).modifier(KDReadingSurface()).accessibilityLabel(L("Agent instructions"))
-                TextField(L("Model override (optional)"),text:$session.agentProfile.modelOverride)
+                DisclosureGroup(L("Model and reasoning overrides")) {
+                    AIModelSettingsFields(options: Binding(get: { session.agentProfile.modelOptions ?? .init(model: session.agentProfile.modelOverride) }, set: { session.agentProfile.modelOptions = $0; session.agentProfile.modelOverride = "" }),
+                        endpoint: store.configuration.endpoint, globalModel: store.configuration.model, settings: store.configuration.aiModelSettings,
+                        scene: .agent, localHTTP: store.configuration.localHTTP, language: store.configuration.language, requiresTools: true)
+                }
             }
             DisclosureGroup(L("Tools and budgets")) {
                 Label(L("Current time · read only"),systemImage:"clock")

@@ -75,6 +75,9 @@ public struct WorkspaceView: View {
                             Text(task.state).font(.system(size: 12)).foregroundStyle(.secondary)
                         }
                         HStack {
+                        if store.pendingCommandReviews.contains(where: { $0.id == task.id }) {
+                            Button(L("Review command draft")) { store.presentCommandReview(task.id) }
+                        }
                         if task.canCancel, store.agentRunDefinitions[task.id] != nil { Button(L("Pause")) { store.pauseAgent(task.id) } }
                         if task.canCancel { Button(L("Stop")) { store.cancelTask(task.id) } }
                         if !task.isRunning, task.runAttempt != nil { Button(L("Prepare new attempt")) { session.prepareAttempt(task.id, in: store) } }

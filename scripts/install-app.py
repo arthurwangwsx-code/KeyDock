@@ -14,9 +14,10 @@ import stat
 import sys
 import uuid
 
-from keydock_common import CONFIG, PipelineError, inspect_app, run, atomic_json, validate_data_compatibility, task_material_readers
+from keydock_common import CONFIG, PipelineError, inspect_app, run, atomic_json, validate_data_compatibility, task_material_readers, configuration_readers
 from invocation_compatibility import runtime_data_root, probe_versions, runtime_data_lease
 from task_material_compatibility import probe_task_materials
+from configuration_compatibility import probe_configuration
 
 ALLOWED_IDS = {"com.arthurwangwsx.KeyDock", "com.arthurwangwsx.KeyDock.preview"}
 IDENTITY_KEYS = ("bundle_id", "version", "release_version", "build_number", "profile", "commit",
@@ -82,9 +83,14 @@ def require_data_compatible(app, expected, resolver, guard=None):
     material_readers = task_material_readers(capability)
     if not set(materials["requiredVersions"]).issubset(material_readers):
         raise PipelineError("This App cannot read the current task material data. Apps and records were preserved; clear materials in a compatible version before rollback")
-    return {"schemaVersion": 2, "profile": facts["profile"], "runtimeDataRoot": str(root),
+    configuration_version = probe_configuration(root, guard)
+    config_readers = configuration_readers(capability)
+    if configuration_version is not None and configuration_version not in config_readers:
+        raise PipelineError("This App cannot read the current configuration. Apps and settings were preserved; use a compatible version")
+    return {"schemaVersion": 3, "profile": facts["profile"], "runtimeDataRoot": str(root),
             "readerVersions": readers, "envelopes": versions, "provisional": guard is None,
             "taskMaterialReaders": material_readers, "taskMaterials": materials,
+            "configurationReaders": config_readers, "configurationVersion": configuration_version,
             "scope": "default runtime domain; custom Preview TMPDIR domains are not discovered"}
 
 

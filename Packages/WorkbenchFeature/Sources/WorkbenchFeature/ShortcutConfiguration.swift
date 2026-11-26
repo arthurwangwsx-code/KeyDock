@@ -36,6 +36,7 @@ extension WorkbenchModel {
     }
     @discardableResult func commitShortcutConfiguration(_ next: AppConfiguration) -> Bool {
         if isDesktopReview { return commitDesktopReviewConfiguration(next) }
+        let next = preparedAIConfiguration(next)
         guard !isShuttingDown else { settingsNoticeMessage = noticeKey("KeyDock is quitting. No new action was started."); return false }
         let previous = configuration
         let changed = ShortcutPlan.entries(previous) != ShortcutPlan.entries(next)

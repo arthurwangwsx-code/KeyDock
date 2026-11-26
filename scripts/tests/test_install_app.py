@@ -131,6 +131,22 @@ class InstallAppTests(unittest.TestCase):
         installer.rollback(options)
         self.assertEqual(tree_digest(self.destination), tree_digest(old))
 
+    def test_model_configuration_blocks_old_reader_install_and_rollback_without_touching_data(self):
+        old = self.app("configuration-old", "synthetic old reader")
+        (old / "synthetic-capability.json").write_text(json.dumps({"schemaVersion":2,"invocationEnvelope":{"readVersions":[1,2],"writeVersions":[1,2]},"taskMaterial":{"readVersions":[1],"writeVersions":[1]}}))
+        installer.install(self.arguments(old, "config-first"))
+        modern = self.app("configuration-new", "synthetic new reader")
+        args = self.arguments(modern, "config-second"); record = installer.install(args)
+        path = self.data_root / "configuration.json"
+        original = b'{"schemaVersion":2,"aiModelSettings":{"synthetic":"unchanged"},"aiSettingsRevision":"00000000-0000-0000-0000-000000000001"}'
+        path.write_bytes(original); path.chmod(0o600)
+        rollback = SimpleNamespace(rollback=args.receipt, helper=self.helper, quit_running=False, dry_run=False)
+        with self.assertRaisesRegex(PipelineError, "current configuration"): installer.install(self.arguments(old, "config-declined"))
+        with self.assertRaisesRegex(PipelineError, "current configuration"): installer.rollback(rollback)
+        self.assertEqual(path.read_bytes(), original)
+        self.assertEqual(tree_digest(self.destination), tree_digest(modern))
+        self.assertEqual(tree_digest(Path(record["backup_path"])), tree_digest(old))
+
     def test_material_created_after_quiesce_is_rechecked_and_prevents_old_swap(self):
         import base64
         modern = self.app("material-quiesce-modern", "modern")

@@ -5,7 +5,7 @@ import AICore
 import ExecutionCore
 import AgentCore
 
-struct PreparedWorkflowAI: Sendable { let action: AIActionPreset; let provider: ChatCompletionsProvider }
+struct PreparedWorkflowAI: Sendable { let action: AIActionPreset; let provider: ResolvedAIProvider; let settings: FrozenAIExecutionSettings }
 struct PreparedWorkflowCommand: Sendable { let command:SavedCommand; let contract:FrozenCommandContribution }
 struct WorkflowAIUsage: Sendable {
     let id: UUID; let endpoint: URL; let model: String; let usage: AIUsageAccumulator; let outcome: String
@@ -67,7 +67,7 @@ actor WorkflowExecutionHost {
                 effect = .executeProcess; resource = try prepared.contract.fingerprint(bound)
             case .aiAction(let actionID):
                 guard let ai = actions[actionID] else { return .init(outcome:.failed) }
-                effect = .network; resource = ai.provider.configuration.endpoint.absoluteString+"|"+ai.provider.configuration.model+"|"+ai.action.prompt
+                effect = .network; resource = ai.settings.fingerprint+"|"+ai.action.prompt
             default: return .init(outcome:.failed)
             }
             let scope = ExecutionResourceScope.exact(namespace:"keydock.workflow-resource",identifier:SHA256.hash(data:Data(resource.utf8)).map{String(format:"%02x",$0)}.joined())

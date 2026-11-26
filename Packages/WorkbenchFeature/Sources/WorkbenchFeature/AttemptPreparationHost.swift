@@ -6,7 +6,7 @@ import AICore
 import MCPAdapters
 
 private struct AttemptDependencies: Encodable {
-    struct Provider: Encodable { let definitionID: UUID; let configuration: AIProviderConfiguration }
+    struct Provider: Encodable { let definitionID: UUID; let configuration: AIProviderConfiguration; let settingsFingerprint: String }
     let schemaVersion = 1
     var commands: [RunDefinitionReference] = []
     var actions: [RunDefinitionReference] = []
@@ -72,10 +72,11 @@ extension WorkbenchModel {
             let keys = value.environment.keys.sorted { $0.utf8.lexicographicallyPrecedes($1.utf8) }.joined(separator: ", ")
             previews.append(value.name + "\n" + args + "\n" + L("Working directory") + ": " + value.workingDirectory + "\n" + L("Environment overrides") + ": " + keys)
         }
-        func action(_ value: AIActionPreset) throws {
-            let service = try providerConfiguration(override: value.modelOverride)
+        func action(_ value: AIActionPreset, scene: AIScene? = nil) throws {
+            let settings = try resolveAISettings(action: value, scene: scene)
+            let service = settings.configuration
             dependencies.actions.append(try RunDefinitionFingerprint.reference(value))
-            dependencies.providers.append(.init(definitionID: value.id, configuration: service))
+            dependencies.providers.append(.init(definitionID: value.id, configuration: service, settingsFingerprint: settings.fingerprint))
             lines.append(.init(kind: .service, value: (service.endpoint.host ?? "") + service.endpoint.path + " · " + service.model))
             previews.append(value.displayName + "\n" + value.prompt)
         }
@@ -99,8 +100,9 @@ extension WorkbenchModel {
         case .agent(let value):
             try value.validate(); requiresInput = true
             guard value.allowedMCPToolNames.allSatisfy({ name in MCPToolReference.validName(name) && value.allowedMCPServerIDs.filter { MCPToolReference.references(name, sourceID: $0) }.count == 1 }) else { throw AttemptPreparationError.unavailable }
-            let service = try providerConfiguration(override: value.modelOverride)
-            dependencies.providers.append(.init(definitionID: value.id, configuration: service))
+            let settings = try resolveAISettings(scene: .agent, override: value.modelOptions ?? .init(), legacyModelOverride: value.modelOptions == nil ? value.modelOverride : "", requiresTools: true)
+            let service = settings.configuration
+            dependencies.providers.append(.init(definitionID: value.id, configuration: service, settingsFingerprint: settings.fingerprint))
             lines.append(.init(kind: .service, value: (service.endpoint.host ?? "") + service.endpoint.path + " · " + service.model))
             previews.append(value.name + "\n" + value.instructions)
             lines.append(.init(kind: .builtIn, value: L("Current time")))
@@ -138,7 +140,7 @@ extension WorkbenchModel {
             let commands = Set(value.steps.compactMap { if case .savedCommand(let id) = $0.operation { id } else { nil as UUID? } })
             let actions = Set(value.steps.compactMap { if case .aiAction(let id) = $0.operation { id } else { nil as UUID? } })
             for id in commands.sorted(by: { $0.uuidString < $1.uuidString }) { try command(uniqueCommand(id)) }
-            for id in actions.sorted(by: { $0.uuidString < $1.uuidString }) { try action(uniqueAction(id)) }
+            for id in actions.sorted(by: { $0.uuidString < $1.uuidString }) { try action(uniqueAction(id), scene: .workflow) }
             if !commands.isEmpty { dependencies.contribution = try FrozenCommandContribution(requireCommandContribution()) }
             var ordered: [String] = []
             for (index, step) in value.steps.enumerated() {

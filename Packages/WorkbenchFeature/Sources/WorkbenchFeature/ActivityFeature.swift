@@ -77,7 +77,7 @@ extension WorkbenchModel {
             let draft = AIDraftDocument(input:input,actionID:nil,target:nil,source:.manual)
             guard registerDraft(draft) else { return }
             let language = AIResponseLanguage(preference: configuration.language)
-            let action = AIActionPreset(name:L("Usage summary"),prompt:"Analyze only this aggregate KeyDock usage report. State the time range, partial coverage and evidence counts. Missing events are unknown. Suggest useful shortcuts or workflows without inventing activity or executing anything. Identify opaque command IDs only by their supplied IDs. " + language.finalResponseInstruction)
+            let action = AIActionPreset(name:L("Usage summary"),prompt:"Analyze only this aggregate KeyDock usage report. State the time range, partial coverage and evidence counts. Missing events are unknown. Suggest useful shortcuts or workflows without inventing activity or executing anything. Identify opaque command IDs only by their supplied IDs. " + language.finalResponseInstruction, scene: .activity)
             if let id = runAI(action:action,draft:draft) { onOpenWorkspace?(.tasks(id)) }
         } catch { workspaceNoticeMessage = noticeKey("Usage statistics could not be read") }
     }

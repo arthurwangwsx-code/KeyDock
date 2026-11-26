@@ -3,6 +3,7 @@ import CommandCore
 import ExecutionCore
 import MacAdapters
 import KeyDockUI
+import AICore
 
 public struct SettingsRootView: View {
     @ObservedObject var store: WorkbenchModel
@@ -32,7 +33,7 @@ public struct SettingsRootView: View {
             }.formStyle(.grouped)
         }.frame(minWidth: 740, minHeight: 530).environment(\.locale, KDLocalizer.locale)
             .sheet(item: $session.editedCommand, onDismiss: { session.editedCommandSourceRunID = nil; session.editedCommandExistingID = nil }) { command in CommandEditor(command: command, failureMessage: { store.settingsNoticeMessage }) { session.saveEditedCommand($0, in: store) } }
-            .sheet(item: $session.editedAction, onDismiss: { session.editedActionExistingID = nil }) { action in AIActionEditor(action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureMessage: { store.settingsNoticeMessage }) { session.saveEditedAction($0, in: store) } }
+            .sheet(item: $session.editedAction, onDismiss: { session.editedActionExistingID = nil }) { action in AIActionEditor(store: store, action: action, onRecording: { store.onShortcutRecordingChanged?($0) }, failureMessage: { store.settingsNoticeMessage }) { session.saveEditedAction($0, in: store) } }
             .sheet(item: $session.savedItemRemoval) { presentation in SavedItemRemovalView(store: store, session: session, presentation: presentation) }
             .sheet(item: $session.deletedToolPreferencesReview) { presentation in DeletedToolPreferencesView(store: store, session: session, presentation: presentation) }
             .sheet(item: $session.desktopWorkspaceEditor) { draft in DesktopWorkspaceEditorView(store: store, session: session, draft: draft) }
@@ -139,17 +140,17 @@ public struct SettingsRootView: View {
             }
         case .aiService:
             Section(L("Connection")) {
-                TextField(L("Full chat completions endpoint"), text: $session.endpoint)
-                TextField(L("Model name"), text: $session.modelName)
+                TextField(L("Full API endpoint"), text: $session.endpoint)
                 SecureField(session.keyStored && session.endpoint == store.configuration.endpoint ? L("Key stored · leave blank to keep") : L("API key"), text: $session.apiKey).disabled(!store.allowContextCapture)
                 Picker(L("Token limit parameter"), selection: $session.tokenParameter) { Text("max_completion_tokens").tag("max_completion_tokens"); Text("max_tokens").tag("max_tokens") }
                 Toggle(L("Allow HTTP for localhost only"), isOn: $session.localHTTP)
             }
+            AIServiceModelSections(store: store, session: session)
             Section {
                 Text(store.allowContextCapture ? L("Requests go directly to this endpoint. Input is sent only when an AI action runs. Keys are stored in Keychain, never in configuration or logs.") : L("Isolated preview: endpoints without keys can be tested. Use a regular build to store credentials.")).font(.caption).foregroundStyle(.secondary)
                 HStack {
                     Button(L("Save API configuration")) {
-                        if store.saveAPIConfiguration(endpoint: session.endpoint, modelName: session.modelName, localHTTP: session.localHTTP, tokenParameter: session.tokenParameter, apiKey: session.apiKey) { session.apiKey = ""; session.keyStored = store.credentialExists() }
+                        if store.saveAPIConfiguration(endpoint: session.endpoint, modelName: session.modelName, localHTTP: session.localHTTP, tokenParameter: session.tokenParameter, apiKey: session.apiKey, modelSettings: session.aiModelSettings) { session.apiKey = ""; session.keyStored = store.credentialExists() }
                     }.buttonStyle(.borderedProminent)
                     Spacer()
                     Button(L("Remove API key"), role: .destructive) { store.removeCredential(); session.keyStored = store.credentialExists() }.disabled(session.endpoint != store.configuration.endpoint || !session.keyStored)

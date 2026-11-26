@@ -114,7 +114,7 @@ struct ConfigurationExportProjectionTests {
         c.preferences.favorites = []; let command = SavedCommand(name: "Synthetic", executable: "/synthetic/missing")
         c.savedCommands = [command, command]
         #expect(throws: ConfigurationExportError.self) { try ConfigurationExportProjection.make(source: ConfigurationExportFixture.source(c), sections: [.definitions]) }
-        c.savedCommands = []; c.schemaVersion = 2
+        c.savedCommands = []; c.schemaVersion = 3
         #expect(throws: ConfigurationExportError.self) { try ConfigurationExportProjection.make(source: ConfigurationExportFixture.source(c), sections: [.preferences]) }
     }
     @Test func invalidWorkflowCLIBindingsAndEndpointStructuresFail() throws {

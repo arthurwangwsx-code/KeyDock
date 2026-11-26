@@ -43,7 +43,7 @@ public struct URLSessionAITransport: AIHTTPTransport {
                 session.invalidateAndCancel()
                 throw AIProviderError.malformedEvent
             }
-            let (body, continuation) = AsyncThrowingStream<Data, any Error>.makeStream()
+            let (body, continuation) = AsyncThrowingStream<Data, any Error>.makeStream(bufferingPolicy: .bufferingOldest(64))
             let task = Task {
                     defer { session.invalidateAndCancel() }
                     do {
@@ -56,7 +56,12 @@ public struct URLSessionAITransport: AIHTTPTransport {
                             buffer.append(byte)
                             // 每个事件的空行处交付，避免等待较大缓冲影响首 token。
                             if byte == 10 || buffer.count >= 4096 {
-                                continuation.yield(buffer)
+                                switch continuation.yield(buffer) {
+                                case .enqueued: break
+                                case .dropped: throw AIProviderError.outputLimit
+                                case .terminated: throw CancellationError()
+                                @unknown default: throw AIProviderError.outputLimit
+                                }
                                 buffer.removeAll(keepingCapacity: true)
                             }
                         }
@@ -167,8 +172,11 @@ public struct ChatCompletionsProvider: AIProvider {
 
     public func makeURLRequest(_ request: AIRequest) throws -> URLRequest {
         try configuration.validate()
-        guard !request.messages.isEmpty, request.messages.count <= 128,
-              (1...32_768).contains(request.maxTokens), request.tools.count <= 16,
+        try AIModelCatalog.validate(configuration, requiresTools: !request.tools.isEmpty)
+        let budget = request.maxTokens ?? configuration.maxOutputTokens
+        guard configuration.requestProtocol == .chatCompletions,
+              !request.messages.isEmpty, request.messages.count <= 128,
+              (1...32_768).contains(budget), budget <= configuration.maxOutputTokens, request.tools.count <= 16,
               !apiKey.contains("\n"), !apiKey.contains("\r") else { throw AIProviderError.invalidRequest }
         var messages: [JSONValue] = []
         for message in request.messages {
@@ -194,9 +202,10 @@ public struct ChatCompletionsProvider: AIProvider {
         var body: [String: JSONValue] = [
             "model": .string(configuration.model), "messages": .array(messages), "stream": .bool(true),
             "stream_options": .object(["include_usage": .bool(true)]),
-            configuration.tokenLimitParameter.rawValue: .number(Double(request.maxTokens)),
+            configuration.tokenLimitParameter.rawValue: .number(Double(budget)),
             "store": .bool(false)
         ]
+        if let effort = configuration.reasoningEffort { body["reasoning_effort"] = .string(effort) }
         if !request.tools.isEmpty {
             body["tools"] = .array(request.tools.map { tool in
                 .object(["type": .string("function"),

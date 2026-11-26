@@ -16,8 +16,9 @@ enum AITaskReceiptError: Error { case intentUnavailable }
 extension WorkbenchModel {
     @discardableResult func beginAIReceipt(id: UUID, kind: AITaskReceiptKind, authorization: ExecutionRequest,
                         runDefinition: RunDefinitionReference? = nil, attempt: AttemptExecutionContext? = nil,
-                        materialCapture: TaskMaterialCapture? = nil) async throws -> InvocationWorkerOwnership {
+                        materialCapture: TaskMaterialCapture? = nil, configurationFingerprint: String? = nil) async throws -> InvocationWorkerOwnership {
         try await beginOwnedReceipt(store: aiInvocationStore, id: id, name: kind.rawValue, authorization: authorization,
+                                    configurationFingerprint: configurationFingerprint,
                                     runDefinition: runDefinition, attempt: attempt, materialCapture: materialCapture)
     }
 

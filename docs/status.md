@@ -8,6 +8,8 @@
 
 用户已授权并配置真实OpenAI：alpha.20完成翻译／总结／CLI建议审阅／两条Agent工具／两步Workflow及用量的[合成基线](implementation/openai-live-baseline-2026-11-26.md)，10次调用实际1414／802 token。活动总结输出俄语FAIL，源码语言冻结回归已通过，新二进制真实复验待完成。新增[最新模型、默认／场景和思考设置](technical/ai-model-settings.md)合同；未把旧基线模型标为最新，也未声称全部AI验收完成。
 
+最新源码已接入九类场景及全局／定义模型和思考设置、共用原生控件、Responses多轮会话及配置schema2／安装reader门禁；43项最新协议定向、141项较广定向、142项Python和978条中英key通过。实际原生／最新模型、在线目录清单刷新、精确源完整检查／CI／发行仍待验收，见[本轮复查](implementation/ai-model-settings-2026-11-26.md)。按runID的CLI直接审阅已接线，不改变人工批准执行的边界。
+
 ## 历史推进与当时资格
 
 最新原生复查：干净`c48f461`优化Preview在保留玻璃背景时，1MiB上限的部分结果首次画面已显示Copy／Open in Workspace／Close draft；实际工作区入口、末尾滚动和明确结果-only保存通过，磁盘核验为1048576字节、partial=true，一次loopback POST且无凭据／工具请求。前序`83e06b4`另完成compact关闭审阅、⌘Return不重跑、取消保留、确认关闭及新空草稿子集。完整焦点／中英明暗／系统矩阵仍开放；最终同源完整检查与新CI／发行继续推进，正式App仍为alpha.19。详情与保留的FAIL见[本轮UI记录](implementation/task-material-ui-2026-11-26.md)。

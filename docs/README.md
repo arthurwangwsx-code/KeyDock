@@ -40,6 +40,7 @@
 | [桌面验收模型接线复查](implementation/desktop-review-model-2026-11-26.md) | 窄配置、存储生命周期、网络／任务旁路和108项定向；独立App接入仍开放 |
 | [真实OpenAI合成基线](implementation/openai-live-baseline-2026-11-26.md) | 10次实际调用、用量／估算、工具及Workflow和语言FAIL；无凭据进入工程 |
 | [模型目录与场景设置](technical/ai-model-settings.md) | 最新模型／协议能力、全局及场景覆盖、思考、冻结与配置兼容合同；实施中 |
+| [模型设置及Responses复查](implementation/ai-model-settings-2026-11-26.md) | 共用原生控件、逐入口冻结、三轮opaque续接、schema2／签名reader门禁及本地回归；原生／真实最新模型待验收 |
 | [桌面验收scope基础层复查](implementation/desktop-review-scope-2026-11-26.md) | 12项定向、物理路径误拒绝修复和只读评审；原生接入及真实插入仍开放 |
 | [冻结候选与公证恢复](technical/release-candidate-recovery.md) | 独立inode、不可变输入、持久索引、unknown不重投和同请求续查；新协议完整发行仍开放 |
 | [可选任务材料](technical/task-material-retention.md) | 默认关闭、准确输入／成功边界、手动保存／按需读取、出生身份与删除意图和旧reader门禁；任务35实施中 |

@@ -16,10 +16,9 @@ extension WorkbenchModel {
                 parts.append(try installedCommandContribution().fingerprint(value))
             case .aiAction(let id):
                 guard let value = configuration.aiActions.first(where:{$0.id == id}) else { throw ScheduleError.notFound }
-                guard let endpoint = URL(string:configuration.endpoint) else { throw ScheduleError.invalidDefinition }
-                try AIProviderConfiguration(endpoint:endpoint,model:value.modelOverride.isEmpty ? configuration.model:value.modelOverride,allowsLocalHTTP:configuration.localHTTP,tokenLimitParameter:TokenLimitParameter(rawValue:configuration.tokenLimitParameter) ?? .maxCompletionTokens).validate()
+                let settings = try resolveAISettings(action: value, scene: .workflow)
                 parts.append(String(decoding:try encoder.encode(value),as:UTF8.self))
-                parts.append(configuration.endpoint); parts.append(configuration.model); parts.append(String(configuration.localHTTP)); parts.append(configuration.tokenLimitParameter)
+                parts.append("ai-settings-v1|" + configuration.aiSettingsRevision.uuidString + "|" + settings.fingerprint)
             default: break
             }
         }

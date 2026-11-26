@@ -3,12 +3,13 @@ import CryptoKit
 import ExecutionCore
 import AgentCore
 import AutomationCore
+import AICore
 
 /// 恢复来源的专用v1投影。只返回摘要；正文、参数与环境仅在本次hash期间驻留内存。
 /// 不使用模型的默认Codable合同，避免新增字段或Set编码顺序悄悄改变历史身份。
 enum RunDefinitionFingerprint {
     private struct Envelope<Value: Encodable>: Encodable {
-        let hashSchemaVersion = 1
+        let hashSchemaVersion: Int
         let kind: String
         let definition: Value
     }
@@ -29,6 +30,8 @@ enum RunDefinitionFingerprint {
         let allowedCommandIDs: [UUID], allowedMCPServerIDs: [UUID], allowedMCPToolNames: [String]
         let maxToolCalls: Int, maxTurns: Int, timeoutSeconds: Int
     }
+    private struct ActionV2: Encodable { let legacy: Action; let scene: AIScene?; let modelOptions: AIModelOptions? }
+    private struct AgentV2: Encodable { let legacy: Agent; let modelOptions: AIModelOptions }
     private struct Workflow: Encodable {
         struct Step: Encodable {
             let id: UUID
@@ -63,6 +66,9 @@ enum RunDefinitionFingerprint {
         let projected = Action(id: value.id, name: value.name, builtinKey: value.builtinKey, prompt: value.prompt,
             input: value.input.rawValue, output: value.output.rawValue, modelOverride: value.modelOverride,
             shortcut: value.shortcut.map { .init(keyCode: $0.keyCode, modifiers: $0.modifiers) })
+        if value.modelOptions != nil || (value.scene != nil && value.scene != .text) {
+            return try reference(kind: .aiAction, id: value.id, definition: ActionV2(legacy: projected, scene: value.scene, modelOptions: value.modelOptions), projectionVersion: 2)
+        }
         return try reference(kind: .aiAction, id: value.id, definition: projected)
     }
     static func reference(_ value: AgentDefinition) throws -> RunDefinitionReference {
@@ -71,15 +77,18 @@ enum RunDefinitionFingerprint {
             allowedMCPServerIDs: value.allowedMCPServerIDs.sorted { $0.uuidString < $1.uuidString },
             allowedMCPToolNames: value.allowedMCPToolNames.sorted(by: utf8Less), maxToolCalls: value.maxToolCalls,
             maxTurns: value.maxTurns, timeoutSeconds: value.timeoutSeconds)
+        if let options = value.modelOptions {
+            return try reference(kind: .agent, id: value.id, version: value.version, definition: AgentV2(legacy: projected, modelOptions: options), projectionVersion: 2)
+        }
         return try reference(kind: .agent, id: value.id, version: value.version, definition: projected)
     }
     static func reference(_ value: WorkflowDefinition) throws -> RunDefinitionReference {
         try reference(kind: .workflow, id: value.id, version: value.version,
             definition: Workflow(id: value.id, name: value.name, version: value.version, steps: value.steps.map(Workflow.Step.init)))
     }
-    private static func reference<Value: Encodable>(kind: RecoverableRunKind, id: UUID, version: Int? = nil, definition: Value) throws -> RunDefinitionReference {
+    private static func reference<Value: Encodable>(kind: RecoverableRunKind, id: UUID, version: Int? = nil, definition: Value, projectionVersion: Int = 1) throws -> RunDefinitionReference {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-        let data = try encoder.encode(Envelope(kind: kind.rawValue, definition: definition))
+        let data = try encoder.encode(Envelope(hashSchemaVersion: projectionVersion, kind: kind.rawValue, definition: definition))
         let fingerprint = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
         let result = RunDefinitionReference(kind: kind, definitionID: id, definitionVersion: version, fingerprint: fingerprint)
         guard result.isValid else { throw InvocationStoreError.invalidMetadata }

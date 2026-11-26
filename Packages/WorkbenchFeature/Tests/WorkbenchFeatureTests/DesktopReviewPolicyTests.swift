@@ -127,13 +127,15 @@ private final class ReviewReadProbe: @unchecked Sendable {
     func malformedUnknownDuplicateOrFutureConfigurationIsRejected(_ raw: String) throws {
         #expect(throws: (any Error).self) { try DesktopReviewConfigurationCodec.load(Data(raw.utf8)) }
     }
-    @Test(arguments: ["launcher", "endpoint", "model", "http", "capture", "activity", "material", "agent", "command", "action", "workflow", "snippet", "search", "mcp", "favorite", "alias", "recent", "exclusion", "parameter", "otherShortcut", "invalidHotkey", "language", "appearance"])
+    @Test(arguments: ["launcher", "endpoint", "model", "modelSettings", "modelRevision", "http", "capture", "activity", "material", "agent", "command", "action", "workflow", "snippet", "search", "mcp", "favorite", "alias", "recent", "exclusion", "parameter", "otherShortcut", "invalidHotkey", "language", "appearance"])
     func forbiddenConfigurationNeverEncodes(_ field: String) throws {
         var c = DesktopReviewConfigurationCodec.baseline()
         switch field {
         case "launcher": c.launcherShortcut = .init()
         case "endpoint": c.endpoint = "https://synthetic.invalid/chat/completions"
         case "model": c.model = "synthetic"
+        case "modelSettings": c.aiModelSettings.defaults.reasoning = .high
+        case "modelRevision": c.aiSettingsRevision = UUID()
         case "http": c.localHTTP = true
         case "capture": c.clipboardEnabled = true
         case "activity": c.activityEnabled = true

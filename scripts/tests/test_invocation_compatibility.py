@@ -43,7 +43,7 @@ class CapabilityTests(unittest.TestCase):
             with self.subTest(versions=versions), self.assertRaises(PipelineError): validate_data_compatibility(value)
         modern = current_data_compatibility(); modern["taskMaterial"] = {"readVersions": [], "writeVersions": []}
         self.assertEqual(task_material_readers(modern), [])
-        for extra in ({"schemaVersion": 3}, {"unknown": 1}):
+        for extra in ({"schemaVersion": 4}, {"unknown": 1}):
             value = dict(current_data_compatibility(), **extra)
             with self.assertRaises(PipelineError): validate_data_compatibility(value)
 

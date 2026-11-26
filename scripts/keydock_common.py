@@ -20,17 +20,19 @@ class PipelineError(RuntimeError):
 
 
 def current_data_compatibility():
-    return {"schemaVersion": 2, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]},
-            "taskMaterial": {"readVersions": [1], "writeVersions": [1]}}
+    return {"schemaVersion": 3, "invocationEnvelope": {"readVersions": [1, 2], "writeVersions": [1, 2]},
+            "taskMaterial": {"readVersions": [1], "writeVersions": [1]},
+            "configuration": {"readVersions": [1, 2], "writeVersions": [2]}}
 
 
 def validate_data_compatibility(value):
-    if not isinstance(value, dict) or type(value.get("schemaVersion")) is not int or value["schemaVersion"] not in (1, 2):
+    if not isinstance(value, dict) or type(value.get("schemaVersion")) is not int or value["schemaVersion"] not in (1, 2, 3):
         raise PipelineError("Unsupported App data compatibility declaration")
-    expected = {"schemaVersion", "invocationEnvelope"} | ({"taskMaterial"} if value["schemaVersion"] == 2 else set())
+    expected = {"schemaVersion", "invocationEnvelope"} | ({"taskMaterial"} if value["schemaVersion"] >= 2 else set()) | ({"configuration"} if value["schemaVersion"] == 3 else set())
     if set(value) != expected: raise PipelineError("Unsupported App data compatibility declaration")
     result = {"schemaVersion": value["schemaVersion"], "invocationEnvelope": _reader_versions(value["invocationEnvelope"])}
-    if value["schemaVersion"] == 2: result["taskMaterial"] = _reader_versions(value["taskMaterial"], allow_empty=True)
+    if value["schemaVersion"] >= 2: result["taskMaterial"] = _reader_versions(value["taskMaterial"], allow_empty=True)
+    if value["schemaVersion"] == 3: result["configuration"] = _reader_versions(value["configuration"])
     return result
 
 
@@ -52,6 +54,11 @@ def _reader_versions(envelope, allow_empty=False):
 def task_material_readers(capability):
     value = validate_data_compatibility(capability)
     return value.get("taskMaterial", {}).get("readVersions", [])
+
+
+def configuration_readers(capability):
+    value = validate_data_compatibility(capability)
+    return value.get("configuration", {}).get("readVersions", [1])
 
 
 def app_data_compatibility(metadata, release_version):

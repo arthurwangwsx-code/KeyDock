@@ -83,7 +83,7 @@ public final class AIUsageRecorder: @unchecked Sendable {
             guard !sealed, workers.contains(worker), (try? configuration.validate()) != nil else { return nil }
             let id = UUID()
             guard order.count < 128 else { overflowed = true; return id }
-            let fingerprint = AIServiceIdentity.fingerprint(configuration.endpoint)
+            let fingerprint = AIServiceIdentity.fingerprint(configuration.serviceIdentityEndpoint)
             let rate = frozenRate.flatMap { $0.isValid(endpointFingerprint: fingerprint, model: configuration.model) ? $0 : nil }
             calls[id] = .init(attemptID: id, endpointFingerprint: fingerprint, model: configuration.model,
                               startedAt: date, outcome: .running, rate: rate, hasUnknownUsage: true)

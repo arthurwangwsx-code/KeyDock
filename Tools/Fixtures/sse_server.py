@@ -95,6 +95,22 @@ class Handler(BaseHTTPRequestHandler):
             path = urlsplit(self.path).path
             if path == "/stream":
                 self.stream()
+            elif path in ("/request-settings", "/responses-settings"):
+                request = json.loads(body)
+                selected = {key: request.get(key) for key in ("model", "reasoning_effort", "reasoning", "max_completion_tokens", "max_output_tokens", "store")}
+                text = json.dumps(selected, ensure_ascii=False, sort_keys=True)
+                if path == "/request-settings": self.complete_text(text, "synthetic-settings-response")
+                else:
+                    self.start_sse()
+                    item = {"type":"message","id":"msg_settings","role":"assistant","status":"completed","phase":"final_answer",
+                            "content":[{"type":"output_text","text":text,"annotations":[]}]}
+                    values = [("response.created", {"response":{"id":"resp_settings"}}),
+                              ("response.output_item.added", {"output_index":0,"item":item}),
+                              ("response.output_item.done", {"output_index":0,"item":item}),
+                              ("response.completed", {"response":{"id":"resp_settings","status":"completed","output":[item],"usage":{"input_tokens":7,"output_tokens":4}}})]
+                    for sequence, (kind, fields) in enumerate(values):
+                        self.wfile.write(event(dict(fields, type=kind, sequence_number=sequence)))
+                    self.wfile.flush()
             elif path == "/usage":
                 # 用量／费率归因用真实URLSession SSE但无人工逐字节延时；/stream继续专门覆盖跨字节解码。
                 self.complete_text("Synthetic usage result", "synthetic-usage-response")

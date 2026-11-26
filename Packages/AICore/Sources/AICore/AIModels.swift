@@ -47,14 +47,45 @@ public struct AIProviderConfiguration: Codable, Equatable, Sendable {
     public var allowsLocalHTTP: Bool
     public var tokenLimitParameter: TokenLimitParameter
     public var timeout: TimeInterval
+    public var requestProtocol: AIRequestProtocol
+    public var reasoningEffort: String?
+    public var maxOutputTokens: Int
+    public var serviceEndpoint: URL?
+    public var allowsUnverifiedReasoning: Bool
+    public var serviceIdentityEndpoint: URL { serviceEndpoint ?? endpoint }
 
     public init(endpoint: URL, model: String, allowsLocalHTTP: Bool = false,
-                tokenLimitParameter: TokenLimitParameter = .maxCompletionTokens, timeout: TimeInterval = 120) {
+                tokenLimitParameter: TokenLimitParameter = .maxCompletionTokens, timeout: TimeInterval = 120,
+                requestProtocol: AIRequestProtocol = .chatCompletions, reasoningEffort: String? = nil,
+                maxOutputTokens: Int = 2048, serviceEndpoint: URL? = nil, allowsUnverifiedReasoning: Bool = false) {
         self.endpoint = endpoint
         self.model = model
         self.allowsLocalHTTP = allowsLocalHTTP
         self.tokenLimitParameter = tokenLimitParameter
         self.timeout = timeout
+        self.requestProtocol = requestProtocol; self.reasoningEffort = reasoningEffort; self.maxOutputTokens = maxOutputTokens
+        self.serviceEndpoint = serviceEndpoint
+        self.allowsUnverifiedReasoning = allowsUnverifiedReasoning
+    }
+
+    private enum CodingKeys: String, CodingKey { case endpoint, model, allowsLocalHTTP, tokenLimitParameter, timeout, requestProtocol, reasoningEffort, maxOutputTokens, serviceEndpoint, allowsUnverifiedReasoning }
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(endpoint: try c.decode(URL.self, forKey: .endpoint), model: try c.decode(String.self, forKey: .model),
+            allowsLocalHTTP: try c.decodeIfPresent(Bool.self, forKey: .allowsLocalHTTP) ?? false,
+            tokenLimitParameter: try c.decodeIfPresent(TokenLimitParameter.self, forKey: .tokenLimitParameter) ?? .maxCompletionTokens,
+            timeout: try c.decodeIfPresent(TimeInterval.self, forKey: .timeout) ?? 120,
+            requestProtocol: try c.decodeIfPresent(AIRequestProtocol.self, forKey: .requestProtocol) ?? .chatCompletions,
+            reasoningEffort: try c.decodeIfPresent(String.self, forKey: .reasoningEffort),
+            maxOutputTokens: try c.decodeIfPresent(Int.self, forKey: .maxOutputTokens) ?? 2048,
+            serviceEndpoint: try c.decodeIfPresent(URL.self, forKey: .serviceEndpoint),
+            allowsUnverifiedReasoning: try c.decodeIfPresent(Bool.self, forKey: .allowsUnverifiedReasoning) ?? false)
+    }
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.endpoint == rhs.endpoint && lhs.model.utf8.elementsEqual(rhs.model.utf8) && lhs.allowsLocalHTTP == rhs.allowsLocalHTTP
+            && lhs.tokenLimitParameter == rhs.tokenLimitParameter && lhs.timeout == rhs.timeout && lhs.requestProtocol == rhs.requestProtocol
+            && lhs.reasoningEffort == rhs.reasoningEffort && lhs.maxOutputTokens == rhs.maxOutputTokens && lhs.serviceEndpoint == rhs.serviceEndpoint
+            && lhs.allowsUnverifiedReasoning == rhs.allowsUnverifiedReasoning
     }
 
     public func validate() throws {
@@ -64,7 +95,9 @@ public struct AIProviderConfiguration: Codable, Equatable, Sendable {
         guard scheme == "https" || (scheme == "http" && allowsLocalHTTP && loopback),
               !host.isEmpty, endpoint.user == nil, endpoint.password == nil, endpoint.fragment == nil,
               !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              model.utf8.count <= 256, timeout > 0, timeout <= 600 else {
+              model.utf8.count <= 256, !model.contains(where: { $0.isNewline || $0 == "\0" }),
+              timeout > 0, timeout <= 600, (1...32_768).contains(maxOutputTokens),
+              reasoningEffort.map({ AIReasoningSelection(rawValue: $0)?.wireValue != nil }) ?? true else {
             throw AIProviderError.invalidConfiguration
         }
     }
@@ -101,9 +134,9 @@ public struct AIToolDefinition: Codable, Equatable, Sendable {
 
 public struct AIRequest: Sendable {
     public var messages: [AIMessage]
-    public var maxTokens: Int
+    public var maxTokens: Int?
     public var tools: [AIToolDefinition]
-    public init(messages: [AIMessage], maxTokens: Int = 2048, tools: [AIToolDefinition] = []) {
+    public init(messages: [AIMessage], maxTokens: Int? = nil, tools: [AIToolDefinition] = []) {
         self.messages = messages; self.maxTokens = maxTokens; self.tools = tools
     }
 }
@@ -132,8 +165,12 @@ public enum AIEvent: Sendable {
 public protocol AIProvider: Sendable {
     var usageRecorder: AIUsageRecorder? { get }
     func stream(_ request: AIRequest) -> AsyncThrowingStream<AIEvent, any Error>
+    func makeConversation() -> any AIConversation
 }
-public extension AIProvider { var usageRecorder: AIUsageRecorder? { nil } }
+public extension AIProvider {
+    var usageRecorder: AIUsageRecorder? { nil }
+    func makeConversation() -> any AIConversation { ChatAIConversation(provider: self) }
+}
 
 /// 错误只含稳定类别；不能把服务端正文、prompt 或凭据拼入普通日志。
 public enum AIProviderError: Error, Equatable, Sendable {

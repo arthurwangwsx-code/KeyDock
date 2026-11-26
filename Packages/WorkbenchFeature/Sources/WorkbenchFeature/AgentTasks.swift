@@ -44,8 +44,9 @@ extension WorkbenchModel {
             guard Set(selected.map(\.id)) == definition.allowedCommandIDs else { throw AgentToolError.invalidDefinition }
             let commandContract: FrozenCommandContribution?
             if selected.isEmpty { commandContract = nil } else { commandContract = try FrozenCommandContribution(requireCommandContribution()) }
-            let service = try provider(override:definition.modelOverride)
-            let authorization = try authorizeHostAction(id:"agent."+definition.id.uuidString,operation:.runAgent,resource:service.configuration.endpoint.absoluteString+"|"+input,availableContext:[.explicitInput],modelOverride:definition.modelOverride,invocation:id)
+            let settings = try resolveAISettings(scene: .agent, override: definition.modelOptions ?? .init(), legacyModelOverride: definition.modelOptions == nil ? definition.modelOverride : "", requiresTools: true)
+            let service = try provider(settings: settings)
+            let authorization = try authorizeHostAction(id:"agent."+definition.id.uuidString,operation:.runAgent,resource:settings.fingerprint+"|"+input,availableContext:[.explicitInput],modelOverride:definition.modelOverride,invocation:id,aiSettings:settings)
             let sources = configuration.mcpServers.filter { definition.allowedMCPServerIDs.contains($0.id) && $0.enabled && !mcpSessionDisabled.contains($0.id) }
             guard Set(selected.map(\.id)) == definition.allowedCommandIDs, Set(sources.map(\.id)) == definition.allowedMCPServerIDs else { throw AgentToolError.invalidDefinition }
             let time = CurrentTimeTool()
@@ -55,7 +56,7 @@ extension WorkbenchModel {
             }
             let frozenTools = initialTools
             let draft = createDraft(input:input)
-            guard ownsDraft(draft), reserveExecution(id,draft:draft) else { return nil }
+            guard ownsDraft(draft), reserveExecution(id,draft:draft,aiConversation:service.configuration.requestProtocol == .responses) else { return nil }
             draft.latestRunID = id; agentRunDefinitions[id] = definition
             tasks.insert(RunningTaskItem(id:id,title:definition.name,state:.running,draftID:draft.id,modelName:service.configuration.model),at:0)
             AIInputOrigin(draft).apply(to: &tasks[0])
@@ -74,7 +75,7 @@ extension WorkbenchModel {
                 var owner: InvocationWorkerOwnership?
                 var broker: ScopedToolBroker?
                 do {
-                    owner = try await beginAIReceipt(id:id,kind:.agent,authorization:authorization,runDefinition:runDefinition,attempt:attempt,materialCapture:materialCapture); started = true
+                    owner = try await beginAIReceipt(id:id,kind:.agent,authorization:authorization,runDefinition:runDefinition,attempt:attempt,materialCapture:materialCapture,configurationFingerprint:settings.fingerprint); started = true
                     try Task.checkCancellation()
                     guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
                     let mcpTools = try await prepareMCPTools(definition,sources:sources,runID:id,attempt:attempt)
@@ -85,7 +86,7 @@ extension WorkbenchModel {
                     let routing = try ScopedToolBroker(runID:id,tools:tools,journal:agentToolStore) { [weak self] proposal in guard let self else { return false }; return try await self.requestApproval(proposal) }
                     broker = routing
                     let runner = BoundedAgentRunner(provider:service,broker:routing,maxToolCalls:definition.maxToolCalls,maxTurns:definition.maxTurns,wallTimeout:.seconds(definition.timeoutSeconds),maxOutputBytes:TaskTextLimits.outputBytes)
-                    for try await event in runner.run(messages:[.init(role:"system",content:definition.instructions),.init(role:"user",content:input)],allowedTools:Set(tools.map{$0.definition.name})) {
+                    for try await event in runner.run(messages:[.init(role:"system",content:definition.instructions + " " + AIResponseLanguage(preference:settings.outputLanguage).finalResponseInstruction),.init(role:"user",content:input)],allowedTools:Set(tools.map{$0.definition.name})) {
                         try Task.checkCancellation()
                         switch event {
                         case .text(let text): try appendAIOutput(id,text:text)

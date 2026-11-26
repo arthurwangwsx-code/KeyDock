@@ -5,6 +5,7 @@ import ExecutionCore
 import MacAdapters
 import AgentCore
 import AutomationCore
+import AICore
 
 /// 当前缓存目录作为真实 Provider 接入统一查询链路，不再在 UI 旁路调用 rank。
 private struct LauncherCatalogProvider: CommandProviding {
@@ -142,6 +143,8 @@ private struct LauncherCatalogProvider: CommandProviding {
     @Published public var keyStored = false
     @Published public var endpoint = ""
     @Published public var modelName = ""
+    @Published var aiModelSettings = AIModelSettings()
+    @Published var aiModelScene = AIScene.translation
     @Published public var localHTTP = false
     @Published public var tokenParameter = "max_completion_tokens"
     @Published public var shortcutQuery = ""
@@ -166,6 +169,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         panePreferenceKey = store.allowContextCapture ? "KeyDock.SettingsPane" : "KeyDock.Smoke.SettingsPane"
         pane = UserDefaults.standard.string(forKey: panePreferenceKey).flatMap(SettingsPane.init(rawValue:)) ?? .general
         endpoint = store.configuration.endpoint; modelName = store.configuration.model
+        aiModelSettings = store.configuration.aiModelSettings
         localHTTP = store.configuration.localHTTP; tokenParameter = store.configuration.tokenLimitParameter
     }
     public func beginNewCommand() {
@@ -178,8 +182,12 @@ private struct LauncherCatalogProvider: CommandProviding {
         editedActionExistingID = nil; editedAction = AIActionPreset(name: "", prompt: "")
     }
     @discardableResult func beginNextCommandReview(in store: WorkbenchModel) -> Bool {
+        guard let id = store.pendingCommandReviews.first?.id else { return false }
+        return beginCommandReview(id, in: store)
+    }
+    @discardableResult public func beginCommandReview(_ id: UUID, in store: WorkbenchModel) -> Bool {
         // 先确认呈现所有权，再消费待审队列；已有sheet时迟到按钮不得产生无人持有的active审阅。
-        guard canBeginSavedItemEditor, let review = store.takeNextCommandReview() else { return false }
+        guard canBeginSavedItemEditor, let review = store.takeCommandReview(id) else { return false }
         editedCommandExistingID = nil; editedCommandSourceRunID = review.id; editedCommand = review.command
         return true
     }

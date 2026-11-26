@@ -4,6 +4,7 @@ import Combine
 import KeyDockUI
 import ExecutionCore
 import MacAdapters
+import AICore
 
 struct CommandEditor: View {
     @Environment(\.dismiss) private var dismiss
@@ -50,6 +51,7 @@ struct CommandEditor: View {
 
 struct AIActionEditor: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var store: WorkbenchModel
     @State var action: AIActionPreset
     var onRecording: (Bool) -> Void = { _ in }
     var failureMessage: () -> LocalizedNotice = { .none }
@@ -58,6 +60,8 @@ struct AIActionEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L("AI action")).font(.title2.bold())
+            ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
             TextField(L("Name"), text: Binding(get: { action.displayName }, set: { if $0 != action.displayName { action.name = $0; action.builtinKey = nil } }))
             Picker(L("Input source"), selection: $action.input) {
                 Text(L("Selected text")).tag(AIInputSource.selection)
@@ -68,17 +72,26 @@ struct AIActionEditor: View {
                 Text(L("Show result")).tag(AIOutputMode.display)
                 Text(L("Copy result")).tag(AIOutputMode.copy)
             }
-            TextField(L("Model override (optional)"), text: $action.modelOverride)
+            Picker(L("AI scenario"), selection: Binding(get: { action.scene ?? .text }, set: { action.scene = $0 })) {
+                ForEach([AIScene.text, .translation, .summary, .commandExplanation], id: \.self) { Text($0.title).tag($0) }
+            }
+            DisclosureGroup(L("Model and reasoning overrides")) {
+                AIModelSettingsFields(options: Binding(get: { action.modelOptions ?? .init(model: action.modelOverride) }, set: { action.modelOptions = $0; action.modelOverride = "" }),
+                    endpoint: store.configuration.endpoint, globalModel: store.configuration.model, settings: store.configuration.aiModelSettings,
+                    scene: action.scene ?? .text, localHTTP: store.configuration.localHTTP, language: store.configuration.language)
+            }
             Text(L("Prompt")).font(.headline)
             TextEditor(text: $action.prompt).frame(height: 160).border(.quaternary).accessibilityLabel(L("Prompt"))
             HStack { Text(L("Shortcut")); HotkeyRecorder(binding: $action.shortcut, onRecording: onRecording); Spacer() }
             Text(L("This shortcut sends only the configured input to your selected API. Replacement is a separate action.")).font(.caption).foregroundStyle(.secondary)
+            }.padding(.trailing, 8)
+            }.frame(maxWidth: .infinity, maxHeight: .infinity)
             if !saveError.rendered().isEmpty { KDInlineNotice(saveError.rendered()) }
             HStack { Button(L("Cancel")) { dismiss() }.keyboardShortcut(.cancelAction); Spacer(); Button(L("Save action")) {
                 guard KDTextInputState.permitsCurrentAction else { return }
                 if onSave(action) { dismiss() } else { saveError = failureMessage() }
             }.keyboardShortcut(.return, modifiers: .command).buttonStyle(.borderedProminent).disabled(action.name.isEmpty || action.prompt.isEmpty) }
-        }.padding(24).frame(width: 560)
+        }.padding(24).frame(width: 560, height: 640)
     }
 }
 

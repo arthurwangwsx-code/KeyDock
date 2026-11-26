@@ -82,6 +82,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     var taskMaterialPermissionTask: Task<Void, Never>?
     @Published var taskMaterialPermissionChanging = false
     var executionReservations: Set<UUID> = []
+    var aiConversationReservations: Set<UUID> = []
     var visibleDraftReferences: [UUID: UUID] = [:]
     var visibleTaskReferences: [UUID: UUID] = [:]
     var draftOrder: [UUID] = []
@@ -111,6 +112,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     public var onAIAction: ((AIDraftDocument, ExecutionCaller) -> Void)?
     public var onCaptureRequested: (() -> Void)?
     public var onReviewCommand: ((SavedCommand) -> Void)?
+    public var onRequestCommandReview: ((UUID) -> Bool)?
     public var onLanguageChanged: (() -> Void)?
     public var onAppearanceChanged: (() -> Void)?
     /// 同步提交候选注册；失败必须保留旧方案，已保存方案恢复失败必须停用全部并报告状态。
@@ -287,7 +289,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         if let reviewConfiguration { configuration = reviewConfiguration }
         else if FileManager.default.fileExists(atPath: url.path) {
             let decoded = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: url))
-            guard decoded.schemaVersion == 1 else { throw CocoaError(.coderReadCorrupt) }
+            guard decoded.schemaVersion == 2 else { throw CocoaError(.coderReadCorrupt) }
             configuration = decoded
             statisticsEnabled = decoded.activityEnabled
         } else {
@@ -574,7 +576,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     /// 各窗口按自己的查询重读；不把整库正文发布到 MainActor。
     public func refreshClipboard() { clipboardRevision &+= 1 }
     public func requestAccessibility() { guard allowContextCapture || desktopReviewAvailable else { settingsNoticeMessage = noticeKey("Context capture is disabled in isolated smoke mode"); return }; desktop.requestAccessibility() }
-    public func saveAPIConfiguration(endpoint: String, modelName: String, localHTTP: Bool, tokenParameter: String, apiKey: String) -> Bool {
+    public func saveAPIConfiguration(endpoint: String, modelName: String, localHTTP: Bool, tokenParameter: String, apiKey: String, modelSettings: AIModelSettings? = nil) -> Bool {
         guard !isDesktopReview else { desktopReviewUnavailable(); return false }
         guard allowContextCapture || apiKey.isEmpty else {
             settingsNoticeMessage = noticeKey("API keys cannot be stored in this isolated preview. Use a regular build to save a key.")
@@ -582,9 +584,11 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         }
         do {
             guard let url = URL(string: endpoint.trimmingCharacters(in: .whitespacesAndNewlines)) else { throw AIProviderError.invalidConfiguration }
-            try AIProviderConfiguration(endpoint: url, model: modelName, allowsLocalHTTP: localHTTP).validate()
+            try AIProviderConfiguration(endpoint: url, model: modelName.isEmpty && modelSettings != nil ? "unconfigured-default" : modelName, allowsLocalHTTP: localHTTP).validate()
             var next = configuration
             next.endpoint = url.absoluteString; next.model = modelName; next.localHTTP = localHTTP; next.tokenLimitParameter = tokenParameter
+            if let modelSettings { try modelSettings.validate(); next.aiModelSettings = modelSettings }
+            next = preparedAIConfiguration(next)
             try persistAPIConfiguration(next, apiKey: apiKey)
             configuration = next; applyConfigurationEffects(); settingsNoticeMessage = noticeKey("API configuration saved"); return true
         } catch AIProviderError.invalidConfiguration { settingsNoticeMessage = noticeKey("Configure a valid API endpoint and model in Settings") }
@@ -602,6 +606,8 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         return commitSettingsConfiguration(next)
     }
     @discardableResult public func saveAction(_ action: AIActionPreset) -> Bool {
+        do { try action.modelOptions?.validate() }
+        catch { settingsNoticeMessage = noticeKey("Configure a valid API endpoint and model in Settings"); return false }
         var next = configuration
         if let i = next.aiActions.firstIndex(where: { $0.id == action.id }) { next.aiActions[i] = action } else { next.aiActions.append(action) }
         return commitShortcutConfiguration(next)

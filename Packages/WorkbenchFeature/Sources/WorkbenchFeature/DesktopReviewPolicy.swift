@@ -25,7 +25,8 @@ enum DesktopReviewConfigurationCodec {
     }
     static func validate(_ value: AppConfiguration) throws {
         let defaults = baseline()
-        guard value.schemaVersion == 1, ["system", "en", "zh-Hans"].contains(value.language),
+        guard value.schemaVersion == 2, value.aiModelSettings == defaults.aiModelSettings,
+              value.aiSettingsRevision == defaults.aiSettingsRevision, ["system", "en", "zh-Hans"].contains(value.language),
               ["system", "light", "dark"].contains(value.appearance), value.launcherShortcut == nil,
               Set(value.commandShortcuts.keys).isSubset(of: ["utility.clipboard"]),
               value.commandShortcuts.values.allSatisfy(\.isValid),

@@ -6,12 +6,17 @@ public struct SSEEventParser: Sendable {
     private var dataLines: [String] = []
     private var eventBytes = 0
     private var firstLine = true
-    public init() {}
+    private let maximumLineBytes: Int
+    private let maximumEventBytes: Int
+    public init(maximumLineBytes: Int = 262_144, maximumEventBytes: Int = 524_288) {
+        self.maximumLineBytes = max(1, min(2_097_152, maximumLineBytes))
+        self.maximumEventBytes = max(1, min(2_097_152, maximumEventBytes))
+    }
 
     public mutating func feed(_ byte: UInt8) throws -> String? {
         if byte != 10 {
             line.append(byte)
-            guard line.count <= 262_144 else { throw AIProviderError.outputLimit }
+            guard line.count <= maximumLineBytes else { throw AIProviderError.outputLimit }
             return nil
         }
         var bytes = line
@@ -35,7 +40,7 @@ public struct SSEEventParser: Sendable {
         var value = pieces.count == 2 ? String(pieces[1]) : ""
         if value.first == " " { value.removeFirst() }
         eventBytes += value.utf8.count
-        guard eventBytes <= 524_288 else { throw AIProviderError.outputLimit }
+        guard eventBytes <= maximumEventBytes else { throw AIProviderError.outputLimit }
         dataLines.append(value)
         return nil
     }

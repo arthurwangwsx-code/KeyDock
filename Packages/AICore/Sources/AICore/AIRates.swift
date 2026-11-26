@@ -40,7 +40,7 @@ public struct AIRateDefinition: Codable, Equatable, Identifiable, Sendable {
     }
     public static func snapshot(in definitions: [Self], configuration: AIProviderConfiguration, at date: Date = Date()) -> AIRateSnapshot? {
         guard definitions.count <= 64 else { return nil }
-        let matching = definitions.filter { $0.enabled && $0.endpointFingerprint == AIServiceIdentity.fingerprint(configuration.endpoint) && $0.model.utf8.elementsEqual(configuration.model.utf8) }
+        let matching = definitions.filter { $0.enabled && $0.endpointFingerprint == AIServiceIdentity.fingerprint(configuration.serviceIdentityEndpoint) && $0.model.utf8.elementsEqual(configuration.model.utf8) }
         guard matching.count == 1, matching[0].isValid else { return nil }
         return .init(rate: matching[0], frozenAt: date)
     }

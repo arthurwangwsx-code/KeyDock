@@ -12,6 +12,7 @@ import AutomationCore
     @Published var closed = false
     var appeared = false
     var startedTaskID: UUID?
+    var configurationGeneration: UUID?
     @Published var noticeMessage: LocalizedNotice = .none
     var notice: String { noticeMessage.rendered(maximumBytes: 8_192) }
     init(_ definition: WorkflowDefinition) { self.definition = definition }
@@ -47,6 +48,7 @@ extension WorkspaceSession {
         do { _ = try store.compileWorkflow(definition) }
         catch { store.workspaceNoticeMessage = noticeKey("Workflow could not start. Check its steps and AI configuration."); return false }
         workflowLaunch = WorkflowLaunchDraft(definition)
+        workflowLaunch?.configurationGeneration = store.configurationExportGeneration
         return true
     }
     func cancelWorkflowLaunch(_ id: UUID) {
@@ -64,14 +66,14 @@ extension WorkspaceSession {
         }
         do { _ = try store.compileWorkflow(current) }
         catch { launch.needsReview = true; launch.noticeMessage = noticeKey("Workflow could not start. Check its steps and AI configuration."); return false }
-        launch.reload(current); return true
+        launch.reload(current); launch.configurationGeneration = store.configurationExportGeneration; return true
     }
     @discardableResult func runWorkflowLaunch(_ id: UUID, in store: WorkbenchModel) -> Bool {
         guard canRunWorkflowLaunch(id, in: store), let launch = workflowLaunch else { return false }
         guard let current = store.configuration.workflows.first(where: { $0.id == launch.definition.id }) else {
             launch.needsReview = true; launch.noticeMessage = noticeKey("This saved workflow is no longer available."); return false
         }
-        guard current == launch.definition else {
+        guard current == launch.definition, launch.configurationGeneration == store.configurationExportGeneration else {
             launch.needsReview = true; launch.noticeMessage = noticeKey("The saved workflow changed. Reload it and review the steps before running."); return false
         }
         guard let taskID = store.runWorkflow(launch.definition, input: launch.input) else {

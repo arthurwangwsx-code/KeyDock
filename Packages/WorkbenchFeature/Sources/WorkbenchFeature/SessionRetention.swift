@@ -43,19 +43,21 @@ extension WorkbenchModel {
     }
 
     /// 整份输出在任何Published更新/窗口回调之前预留，避免同步重入绕过并发上限。
-    func reserveExecution(_ id: UUID, draft: AIDraftDocument? = nil, additionalBytes: Int = 0) -> Bool {
+    func reserveExecution(_ id: UUID, draft: AIDraftDocument? = nil, additionalBytes: Int = 0, aiConversation: Bool = false) -> Bool {
         guard !isDesktopReview else { desktopReviewUnavailable(); draft?.noticeMessage = workspaceNoticeMessage; return false }
         guard !isShuttingDown, !isClearingHistory, !mutatingSession,
               executionReservations.count < sessionLimits.activeTasks else { admissionNotice(draft); return false }
         executionReservations.insert(id)
+        if aiConversation { aiConversationReservations.insert(id) }
         guard makeSessionRoom(taskSlots: 1, additionalBytes: additionalBytes, protectingDraft: draft?.id) else {
-            executionReservations.remove(id); admissionNotice(draft); return false
+            executionReservations.remove(id); aiConversationReservations.remove(id); admissionNotice(draft); return false
         }
         return true
     }
     func finishExecutionReservation(_ id: UUID, owner: InvocationWorkerOwnership? = nil) {
         taskMaterialCaptures[id]?.finish()
         taskHandles[id] = nil; executionReservations.remove(id)
+        aiConversationReservations.remove(id)
         aiTaskIDs.remove(id); cancelledTaskIDs.remove(id)
         timedOutTaskIDs.remove(id); pausedAgentIDs.remove(id)
         let cli = invocationStore, ai = aiInvocationStore
@@ -102,6 +104,8 @@ extension WorkbenchModel {
     func retainedSessionBytes(excludingTasks taskIDs: Set<UUID> = [], excludingDrafts draftIDs: Set<UUID> = []) -> Int {
         // 为下一次面板上下文预留一个固定槽位，捕获完成不会绕过全局预算。
         var bytes = TaskTextLimits.inputBytes + 1_024 + retainedContextSlotBytes, snapshots: [ObjectIdentifier: TargetSnapshot] = [:]
+        // Responses每run为有序opaque历史、解析快照、wire及编码临时副本预留8MiB，实际drain后释放。
+        bytes += aiConversationReservations.count * 8_388_608
         bytes += taskMaterialBuffers.values.reduce(0) { $0 + $1.budgetedBytes }
         bytes += taskMaterialWriteReservations.values.reduce(0, +)
         // 库存最多200条，每个标题最多1024字节；固定预留，异步header发布不挤穿总文本预算。
@@ -165,11 +169,22 @@ extension WorkbenchModel {
         onReviewCommand?(command)
     }
     public func takeNextCommandReview() -> PendingCommandReview? {
-        guard !pendingCommandReviews.isEmpty else { return nil }
-        let review = pendingCommandReviews[0]
+        guard let id = pendingCommandReviews.first?.id else { return nil }
+        return takeCommandReview(id)
+    }
+    public func takeCommandReview(_ id: UUID) -> PendingCommandReview? {
+        guard !isShuttingDown, activeCommandReviews[id] == nil,
+              let index = pendingCommandReviews.firstIndex(where: { $0.id == id }) else { return nil }
+        let review = pendingCommandReviews[index]
         activeCommandReviews[review.id] = review
-        pendingCommandReviews.removeFirst()
+        pendingCommandReviews.remove(at: index)
         return review
+    }
+    public func presentCommandReview(_ id: UUID) {
+        guard !isShuttingDown, pendingCommandReviews.contains(where: { $0.id == id }) else { return }
+        if onRequestCommandReview?(id) != true {
+            workspaceNoticeMessage = noticeKey("Finish or cancel the current review before opening this command draft. Your draft was kept.")
+        }
     }
     public func finishCommandReview(_ id: UUID) { activeCommandReviews[id] = nil }
 }

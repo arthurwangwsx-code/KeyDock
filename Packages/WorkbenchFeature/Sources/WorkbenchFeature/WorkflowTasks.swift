@@ -88,7 +88,11 @@ extension WorkbenchModel {
             }
             let referencedAI = Set(definition.steps.compactMap { step -> UUID? in if case .aiAction(let id) = step.operation { id } else { nil } })
             var actions: [UUID:PreparedWorkflowAI] = [:]
-            for action in configuration.aiActions where referencedAI.contains(action.id) { actions[action.id] = PreparedWorkflowAI(action:action,provider:try provider(override:action.modelOverride)) }
+            for action in configuration.aiActions where referencedAI.contains(action.id) {
+                let settings = try resolveAISettings(action: action, scene: .workflow)
+                actions[action.id] = PreparedWorkflowAI(action:action,provider:try provider(settings: settings), settings: settings)
+            }
+            let modelFingerprint = objectFingerprint(actions.keys.sorted { $0.uuidString < $1.uuidString }.map { $0.uuidString + "|" + actions[$0]!.settings.fingerprint })
             let authorization: ExecutionRequest
             if let scheduleAuthorization {
                 guard !interaction, scheduleAuthorization.fingerprint == (try scheduleFingerprint(definition.id)) else { throw ScheduleError.revisionConflict }
@@ -98,7 +102,7 @@ extension WorkbenchModel {
                 try ExecutionPolicy.authorize(request:authorization,grant:grant)
             } else { authorization = try authorizeHostAction(id:"workflow."+definition.id.uuidString,operation:.navigate,resource:definition.id.uuidString+"|"+String(definition.version),invocation:id) }
             let draft = createDraft(input:input)
-            guard ownsDraft(draft), reserveExecution(id,draft:draft) else { return nil }
+            guard ownsDraft(draft), reserveExecution(id,draft:draft,aiConversation:actions.values.contains { $0.provider.configuration.requestProtocol == .responses }) else { return nil }
             tasks.insert(RunningTaskItem(id:id,title:definition.name,state:.running,draftID:draft.id),at:0)
             AIInputOrigin(draft).apply(to: &tasks[0])
             if scheduleAuthorization != nil { tasks[0].source = .scheduled }
@@ -115,7 +119,7 @@ extension WorkbenchModel {
                 var started = false
                 var owner: InvocationWorkerOwnership?
                 do {
-                    owner = try await beginAIReceipt(id:id,kind:.workflow,authorization:authorization,runDefinition:runDefinition,attempt:attempt,materialCapture:materialCapture); started = true
+                    owner = try await beginAIReceipt(id:id,kind:.workflow,authorization:authorization,runDefinition:runDefinition,attempt:attempt,materialCapture:materialCapture,configurationFingerprint:modelFingerprint); started = true
                     try Task.checkCancellation()
                     guard !isShuttingDown, !cancelledTaskIDs.contains(id) else { throw CancellationError() }
                     try attempt?.willDispatch(in: self)

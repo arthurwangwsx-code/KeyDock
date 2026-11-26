@@ -143,6 +143,11 @@ import Darwin
         }
         store.onDismiss = { [weak self] in self?.dismissLauncher(restore: $0) }
         store.onOpenSettings = { [weak self] in self?.openSettings($0) }
+        store.onRequestCommandReview = { [weak self] id in
+            guard let self else { return false }
+            self.openSettings(.commands)
+            return self.settingsSession.beginCommandReview(id, in: self.store)
+        }
         store.onOpenShortcutSettings = { [weak self] item in
             self?.settingsSession.focusShortcut(item); self?.openSettings(.shortcuts)
         }

@@ -21,15 +21,15 @@ extension WorkbenchModel {
     @discardableResult func authorizeHostAction(
         id: String, operation: HostOperation, resource: String,
         availableContext: Set<CommandContextRequirement> = [], modelOverride: String = "",
-        caller: ExecutionCaller = .user, invocation: UUID = UUID()
+        caller: ExecutionCaller = .user, invocation: UUID = UUID(), aiSettings: FrozenAIExecutionSettings? = nil
     ) throws -> ExecutionRequest {
         guard !isShuttingDown else { throw WorkbenchLifecycleError.shuttingDown }
         if isDesktopReview {
             guard desktopReviewAvailable, caller == .user || caller == .shortcut,
                   (id == "clipboard.copy" && operation == .copyText) || (id == "clipboard.insert" && operation == .pasteClipboard) else { throw DesktopReviewError.unavailable }
         }
-        let descriptor = try hostDescriptor(id: id, title: "KeyDock", operations: [operation], modelOverride: modelOverride)
-        let scope = ExecutionResourceScope.exact(namespace: "keydock.resource", identifier: fingerprint(resource))
+        let descriptor = try hostDescriptor(id: id, title: "KeyDock", operations: [operation], modelOverride: modelOverride, aiSettings: aiSettings)
+        let scope = ExecutionResourceScope.exact(namespace: "keydock.resource", identifier: fingerprint((aiSettings.map { "ai-settings-v1|" + $0.fingerprint + "|" } ?? "") + resource))
         let source = caller == .shortcut ? "shortcut." + fingerprint(id) : "interactive-ui"
         // 此处仅由真实用户入口创建授权，不采信模型 self-report 的批准或风险字段。
         return try HostDescriptorPolicy.authorize(
@@ -67,28 +67,29 @@ extension WorkbenchModel {
     }
 
     private func hostDescriptor(
-        id: String, title: String, keywords: [String] = [], operations: [HostOperation], modelOverride: String = ""
+        id: String, title: String, keywords: [String] = [], operations: [HostOperation], modelOverride: String = "", aiSettings: FrozenAIExecutionSettings? = nil
     ) throws -> CommandDescriptor {
         var availability: [HostOperation: CommandAvailability] = [:]
-        for operation in operations { availability[operation] = hostAvailability(for: operation, modelOverride: modelOverride) }
+        for operation in operations { availability[operation] = hostAvailability(for: operation, id: id, modelOverride: modelOverride, aiSettings: aiSettings) }
         return try HostActionCatalog.descriptor(
             id: "keydock.command." + fingerprint(id), title: title, keywords: keywords,
             operations: operations, actionAvailability: availability)
     }
 
-    private func hostAvailability(for operation: HostOperation, modelOverride: String) -> CommandAvailability {
+    private func hostAvailability(for operation: HostOperation, id: String, modelOverride: String, aiSettings: FrozenAIExecutionSettings?) -> CommandAvailability {
         switch operation {
         case .applyDesktopWorkspace, .activateWindow, .replaceSelection, .layoutWindow, .pasteClipboard, .cycleWindow, .minimizeWindow:
             return desktop.accessibilityGranted ? .available : .unavailable(reasonKey: "Accessibility permission is required")
         case .generateText, .proposeCommand, .runReadOnlyAgent, .runAgent:
-            guard let endpoint = URL(string: configuration.endpoint), !configuration.endpoint.isEmpty else {
-                return .unavailable(reasonKey: "Configure a valid API endpoint and model in Settings")
+            do {
+                if let aiSettings { try aiSettings.configuration.validate() }
+                else if let action = configuration.aiActions.first(where: { "ai." + $0.id.uuidString == id }) { _ = try resolveAISettings(action: action) }
+                else {
+                    let scene: AIScene = switch operation { case .proposeCommand: .commandProposal; case .runReadOnlyAgent: .readOnlyAgent; case .runAgent: .agent; default: .text }
+                    _ = try resolveAISettings(scene: scene, legacyModelOverride: modelOverride, requiresTools: operation == .runAgent || operation == .runReadOnlyAgent)
+                }
+                return .available
             }
-            let config = AIProviderConfiguration(endpoint: endpoint,
-                model: modelOverride.isEmpty ? configuration.model : modelOverride,
-                allowsLocalHTTP: configuration.localHTTP,
-                tokenLimitParameter: TokenLimitParameter(rawValue: configuration.tokenLimitParameter) ?? .maxCompletionTokens)
-            do { try config.validate(); return .available }
             catch { return .unavailable(reasonKey: "Configure a valid API endpoint and model in Settings") }
         default: return .available
         }

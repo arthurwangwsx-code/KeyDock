@@ -14304,6 +14304,758 @@
           }
         }
       }
+    },
+    "AI scenario": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI scenario"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 场景"
+          }
+        }
+      }
+    },
+    "API protocol": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API protocol"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API 协议"
+          }
+        }
+      }
+    },
+    "Agent profiles": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent profiles"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent 配置"
+          }
+        }
+      }
+    },
+    "Automatic protocol": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic protocol"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动选择协议"
+          }
+        }
+      }
+    },
+    "Catalog model · verify service support": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog model · verify service support"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目录模型 · 请确认服务支持"
+          }
+        }
+      }
+    },
+    "Catalog verified on": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog verified on"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模型目录核对日期"
+          }
+        }
+      }
+    },
+    "Choose a model": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a model"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择模型"
+          }
+        }
+      }
+    },
+    "Command explanation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command explanation"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令解释"
+          }
+        }
+      }
+    },
+    "Command proposals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command proposals"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令建议"
+          }
+        }
+      }
+    },
+    "Custom model capabilities are unverified. Model-default parameters remain available; no reasoning capability is assumed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom model capabilities are unverified. Model-default parameters remain available; no reasoning capability is assumed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义模型的能力尚未核验。可使用模型默认参数，应用不会假定它支持思考设置。"
+          }
+        }
+      }
+    },
+    "Custom model · capabilities unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom model · capabilities unknown"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义模型 · 能力未知"
+          }
+        }
+      }
+    },
+    "Declare OpenAI-compatible reasoning for unverified models": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declare OpenAI-compatible reasoning for unverified models"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "为未核验模型声明 OpenAI 兼容思考参数"
+          }
+        }
+      }
+    },
+    "Deprecated model": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deprecated model"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已弃用模型"
+          }
+        }
+      }
+    },
+    "Effective model": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effective model"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实际生效模型"
+          }
+        }
+      }
+    },
+    "Exact model ID": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact model ID"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "准确模型 ID"
+          }
+        }
+      }
+    },
+    "Explicit action or profile settings override the scenario. Each workflow AI step keeps its action override, then inherits Workflow AI steps.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explicit action or profile settings override the scenario. Each workflow AI step keeps its action override, then inherits Workflow AI steps."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "动作或 Agent 的显式设置优先于场景。工作流的每个 AI 步骤先使用动作覆盖，再继承“工作流 AI 步骤”场景。"
+          }
+        }
+      }
+    },
+    "Extra high reasoning": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra high reasoning"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超高思考强度"
+          }
+        }
+      }
+    },
+    "Full API endpoint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full API endpoint"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完整 API 端点"
+          }
+        }
+      }
+    },
+    "General text actions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General text actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "普通文本动作"
+          }
+        }
+      }
+    },
+    "Global AI defaults": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Global AI defaults"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全局 AI 默认设置"
+          }
+        }
+      }
+    },
+    "High reasoning": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High reasoning"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高思考强度"
+          }
+        }
+      }
+    },
+    "Inherit from parent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inherit from parent"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随上级设置"
+          }
+        }
+      }
+    },
+    "Low reasoning": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low reasoning"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低思考强度"
+          }
+        }
+      }
+    },
+    "Maximum output tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum output tokens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最大输出 token 数"
+          }
+        }
+      }
+    },
+    "Maximum reasoning": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum reasoning"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最高思考强度"
+          }
+        }
+      }
+    },
+    "Medium reasoning": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medium reasoning"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中等思考强度"
+          }
+        }
+      }
+    },
+    "Model and reasoning overrides": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model and reasoning overrides"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "单独设置模型与思考参数"
+          }
+        }
+      }
+    },
+    "Model default": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model default"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模型默认"
+          }
+        }
+      }
+    },
+    "Model default · omit parameter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model default · omit parameter"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模型默认 · 不发送参数"
+          }
+        }
+      }
+    },
+    "Model selection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model selection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可选模型"
+          }
+        }
+      }
+    },
+    "No reasoning · explicit none": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reasoning · explicit none"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭思考 · 显式发送 none"
+          }
+        }
+      }
+    },
+    "Open official model guidance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open official model guidance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看官方模型说明"
+          }
+        }
+      }
+    },
+    "Override output token limit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Override output token limit"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "单独设置输出 token 上限"
+          }
+        }
+      }
+    },
+    "Reasoning compatibility was declared manually for this service. Confirm the model and selected effort with your provider.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reasoning compatibility was declared manually for this service. Confirm the model and selected effort with your provider."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已为此服务手动声明思考参数兼容性。请向服务商确认模型及所选强度是否受支持。"
+          }
+        }
+      }
+    },
+    "Reasoning effort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reasoning effort"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "思考强度"
+          }
+        }
+      }
+    },
+    "Recommended model": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommended model"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推荐模型"
+          }
+        }
+      }
+    },
+    "Scenario defaults": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scenario defaults"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "各场景默认设置"
+          }
+        }
+      }
+    },
+    "Summarization": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarization"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文本总结"
+          }
+        }
+      }
+    },
+    "The output limit includes reasoning tokens. Higher effort can use the budget before a visible answer; KeyDock does not raise it automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The output limit includes reasoning tokens. Higher effort can use the budget before a visible answer; KeyDock does not raise it automatically."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输出上限包含思考 token。较高强度可能在生成可见答案前耗尽预算；KeyDock 不会自动增加上限。"
+          }
+        }
+      }
+    },
+    "These model settings cannot run. Check the endpoint, model, protocol, reasoning and token limit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These model settings cannot run. Check the endpoint, model, protocol, reasoning and token limit."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前模型设置无法运行。请检查端点、模型、协议、思考强度和 token 上限。"
+          }
+        }
+      }
+    },
+    "This model is deprecated. Your selection is preserved; choose a current model before its shutdown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This model is deprecated. Your selection is preserved; choose a current model before its shutdown."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此模型已弃用。应用会保留你的选择，请在服务停止前改用当前模型。"
+          }
+        }
+      }
+    },
+    "This model or service does not support the selected reasoning setting. Review AI model settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This model or service does not support the selected reasoning setting. Review AI model settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此模型或服务不支持所选思考设置，请检查 AI 模型设置。"
+          }
+        }
+      }
+    },
+    "This model requires Responses for tools. Review the protocol and reasoning settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This model requires Responses for tools. Review the protocol and reasoning settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此模型的工具调用需要 Responses，请检查协议与思考设置。"
+          }
+        }
+      }
+    },
+    "Translation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译"
+          }
+        }
+      }
+    },
+    "Workflow AI steps": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workflow AI steps"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作流 AI 步骤"
+          }
+        }
+      }
+    },
+    "Review command draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review command draft"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "审阅命令草稿"
+          }
+        }
+      }
+    },
+    "Finish or cancel the current review before opening this command draft. Your draft was kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish or cancel the current review before opening this command draft. Your draft was kept."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先完成或取消当前审阅，再打开这份命令草稿。草稿已保留。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

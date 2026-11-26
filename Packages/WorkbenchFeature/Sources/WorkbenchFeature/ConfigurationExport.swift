@@ -5,6 +5,7 @@ import AgentCore
 import AutomationCore
 import MacAdapters
 import MCPAdapters
+import AICore
 
 enum ConfigurationExportSection: String, CaseIterable, Sendable {
     case preferences, definitions, shortcuts, desktop, schedules, resources
@@ -104,11 +105,14 @@ struct ExportCommand: Encodable {
 struct ExportAIAction: Encodable {
     let id: UUID
     let name: String, builtinKey: String?, prompt: String, input: String, output: String, modelOverride: String
+    let scene: AIScene?
+    let modelOptions: AIModelOptions?
 }
 struct ExportAgent: Encodable {
     let id: UUID
     let version: Int
     let name: String, instructions: String, modelOverride: String
+    let modelOptions: AIModelOptions?
     let allowedCommandIDs: [UUID], allowedMCPServerIDs: [UUID]
     let allowedMCPToolNames: [String]
     let maxToolCalls: Int, maxTurns: Int, timeoutSeconds: Int
@@ -175,7 +179,13 @@ struct ExportScheduleTrigger: Encodable {
     let timeZoneID: String?
 }
 struct ExportSchedules: Encodable { let schemaVersion = 1; let definitions: [ExportSchedule] }
-struct ExportAIService: Encodable { let endpoint: String, model: String; let localHTTP: Bool; let tokenLimitParameter: String }
+struct ExportAIService: Encodable {
+    let endpoint: String, model: String
+    let localHTTP: Bool
+    let tokenLimitParameter: String
+    let modelSettings: AIModelSettings
+    let modelCatalogVersion: String
+}
 struct ExportStdio: Encodable {
     let executable: String, arguments: [String], workingDirectory: String
     let startupTimeoutSeconds: TimeInterval
@@ -200,7 +210,7 @@ struct ExportAIRate: Encodable {
     let unitTokens = 1_000_000
 }
 struct ExportResources: Encodable {
-    let schemaVersion = 2
+    let schemaVersion = 3
     let aiService: ExportAIService
     let mcpServers: [ExportMCPServer]
     let searchFolders: [ExportSearchFolder]

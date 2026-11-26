@@ -1,5 +1,6 @@
 import SwiftUI
 import KeyDockUI
+import AICore
 
 struct AIContentView: View {
     @ObservedObject var store: WorkbenchModel
@@ -11,8 +12,8 @@ struct AIContentView: View {
     @State private var closeIntent: AIDraftCloseIntent?
     private var action: AIActionPreset? { store.configuration.aiActions.first { $0.id == draft.actionID } }
     private var task: RunningTaskItem? { store.tasks.first { $0.id == draft.latestRunID } }
-    private var needsConfiguration: Bool { !store.hasValidAIConfiguration(modelOverride: action?.modelOverride ?? "") }
-    private var auxiliaryActionsConfigured: Bool { store.hasValidAIConfiguration() }
+    private var effectiveSettings: FrozenAIExecutionSettings? { action.flatMap { try? store.resolveAISettings(action: $0) } }
+    private var needsConfiguration: Bool { effectiveSettings == nil }
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 12 : 18) {
             heading
@@ -54,7 +55,7 @@ struct AIContentView: View {
         VStack(alignment: .leading, spacing: compact ? 12 : 18) {
             HStack(spacing: 6) {
                 Text(draft.inputSourceTitle)
-                Text("·"); Text(task?.modelName ?? (action?.modelOverride.isEmpty == false ? action!.modelOverride : (store.configuration.model.isEmpty ? L("No model configured") : store.configuration.model)))
+                Text("·"); Text(task?.modelName ?? effectiveSettings?.configuration.model ?? L("No model configured"))
             }.font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
             if store.isRemovedMCPSource(draft.inputProvenance) { Text(L("This MCP source was removed. The imported text is kept as a snapshot.")).font(.caption).foregroundStyle(.secondary) }
             if draft.isClosing { HStack { ProgressView().controlSize(.small); Text(L("Closing draft after its tasks finish…")).font(.caption) } }
@@ -72,8 +73,8 @@ struct AIContentView: View {
                     HStack {
                         Button(L("Use clipboard")) { store.useClipboardInput(draft) }
                         Button(L("Clear input")) { draft.clearInput() }.disabled(draft.input.isEmpty && draft.inputProvenance == nil)
-                        Button(L("Suggest CLI")) { store.performUserInputAction { store.generateCommandProposal(draft: draft) } }.disabled(!auxiliaryActionsConfigured)
-                        Button(L("Read-only agent")) { store.performUserInputAction { store.runReadOnlyAgent(draft: draft) } }.disabled(!auxiliaryActionsConfigured)
+                        Button(L("Suggest CLI")) { store.performUserInputAction { store.generateCommandProposal(draft: draft) } }.disabled((try? store.resolveAISettings(scene: .commandProposal)) == nil)
+                        Button(L("Read-only agent")) { store.performUserInputAction { store.runReadOnlyAgent(draft: draft) } }.disabled((try? store.resolveAISettings(scene: .readOnlyAgent, requiresTools: true)) == nil)
                         Spacer()
                     }.controlSize(.small)
                 }
@@ -82,6 +83,9 @@ struct AIContentView: View {
             if let task {
                 Text(L("Run input") + " · " + task.inputSourceTitle).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                 HStack { Text(task.state).font(.caption).foregroundStyle(.secondary); Spacer() }
+                if store.pendingCommandReviews.contains(where: { $0.id == task.id }) {
+                    Button(L("Review command draft")) { store.presentCommandReview(task.id) }
+                }
                 if let summary = task.aiUsageSummary { AIUsageStatusView(summary: summary, compact: compact) }
                 ReadOnlyTextPreview(text: task.output.isEmpty && task.isRunning ? L("Waiting for response…") : task.output,
                     accessibilityLabel: L("Task output"), pointSize: compact ? 13 : 14)
