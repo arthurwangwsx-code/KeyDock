@@ -1,6 +1,6 @@
 # 当前服务模型清单
 
-承接任务37.4；alpha.21的内置推荐目录及真实模型子集见[发行证据](../implementation/alpha21-release-2026-11-26.md)。本切片新增显式刷新，最终二进制／真实清单与发行分别验收。
+承接任务37.4；alpha.21的内置推荐目录及真实模型子集见[发行证据](../implementation/alpha21-release-2026-11-26.md)。本切片显式刷新已在alpha.23交付，最终二进制中英各连续3次真实清单及发行资格见[交付证据](../implementation/alpha23-release-2026-11-26.md)。
 
 依据[官方Models接口](https://developers.openai.com/api/reference/resources/models/methods/list)，GET清单不是能力或推荐证明。版本化官方推荐保持独立；未知ID不自动解锁思考／工具，不自动改变全局、场景或定义。当前选择即使未返回仍保留；ID使用UTF-8准确身份，NFC／NFD不合并。
 
@@ -13,3 +13,5 @@
 定向`ai-inventory-core-v2`通过24项声明测试，含参数化情况：准确Unicode、无key／新端点、取消／ABA／关闭／删key／shutdown实际drain、预算拒绝、零自动联网、配置及选择不变；真实loopback清单／空清单／302零跳转及64槽饱和非法尾块。只读评审发现的草稿key跨端点和尾块静默丢弃已修补，旧测量保留。最终共享选择器接线、完整本机／CI和原生真实刷新另记。
 
 首个干净源`d425092`的完整本机1000 Swift／142 Python／989 key、生产OCR及签名构建通过；[CI45756214368](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45756214368)失败于旧Responses取消测试在consumer结束后、实际worker屏障之前读取drain状态。原生AsyncStream消费者取消可以先结束，宿主实际先等待recorder.closeAndSnapshot再释放任务预算。测试现按同一屏障等待，再保留原drain／零Broker／cancelled用量与无opaque断言，不放宽时限或修改生产规则。该FAIL保留，公证未启动；修补后的完整同源资格另记。
+
+alpha.23对严格application/json按4096B合并、256槽即1MiB；SSE仍64槽逐行与尾块拒丢弃。延迟消费者的512-ID pretty JSON真实loopback及固定错误类别回归通过；1002 Swift／142 Python／994 key及同源CI、6次真实刷新、公证发行和安装分别通过。alpha.22原生错误类别未知，不回填唯一根因。

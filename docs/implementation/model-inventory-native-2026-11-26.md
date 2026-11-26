@@ -11,3 +11,5 @@
 私有观察根`.local/desktop/OpenAI-Inventory-Live-d1801a28-e42b-4c80-8f14-ce9ddd37b680`，receipt SHA256 `1772ec9db9940ac45a102fd52ca420666acb43e020a4e304fdcd21fee6ed6dcb`；测量exit0只说明观察记录成功，产品结果PARTIAL。sameApplicationInstance=false来自明确正常重启，不冒充同一PID。原alpha.21 receipt原字节保留，另加correction-v1。未记录凭据或个人内容。
 
 后续发现可复现的传输缺口：pretty JSON按换行消耗SSE的64槽，可能在未达正文上限前丢弃。alpha.23源码对严格application/json按4096B合并、256槽即1MiB；SSE保持64槽逐行及尾块检查。补充强制延迟消费的512-ID真实loopback和固定错误类别，仍为15秒／1MiB／512ID／4MiB工作预算及cancel→实际drain。不凭源码修补宣布真实故障已解决；新二进制实际刷新和发行另验。
+
+后续alpha.23已完成最终同源及中英6次真实刷新，选择保留、账本无新增模型请求，已公证发行并替换本机。完整证据见[alpha.23交付](alpha23-release-2026-11-26.md)；本文件的alpha.22 FAIL及当时未知错误原因保留。

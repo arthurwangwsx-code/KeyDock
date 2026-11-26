@@ -1,12 +1,12 @@
 # 当前状态总账
 
-公开发行仍为[alpha.21](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.21)，固定源5712546；本机现为已公证但未公开的alpha.22候选，源afa4192。alpha.22已通过1000 Swift／142 Python／989 key、生产OCR、同源CI和安装；原生真实清单两次返回103，随后两次失败，因而未晋升master、未建tag／公开。alpha.23正在修补JSON短行交付并完善错误分类，最终同源及原生验收另记。见[原生失败与更正](implementation/model-inventory-native-2026-11-26.md)。
+当前公开发行与正式本机安装均为[alpha.23](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.23)，固定源`3b0dfe2dbcabea16120b887d461e4f5aa4b5a8bb`。1002 Swift执行／142 Python／994中英key、生产合成OCR双轮、指定同源CI／优化Preview、公证装订／Gatekeeper、公开回下载和独立发行审计通过；About23实际已观察。详情见[发行与真实刷新证据](implementation/alpha23-release-2026-11-26.md)。alpha.22为保留的本地未公开候选，原生失败不删除，旧tag／资产不覆写。
 
-全局／九场景／定义模型覆盖、思考、预算及Responses已接实际执行。alpha.21完成12次真实OpenAI合成调用，2387／909 token（原1009为加总错误，逐行值未变）；翻译、总结、CLI审阅取消、两类Agent时间工具、Workflow及中英活动结果已观察。旧none判断只依据会话画面，后续重启实际仍继承low，不当作该参数wire证明。alpha.22重新明确保存、正常重启确认none，并完成55／26 token真实Luna翻译。原FAIL与receipt保留附更正；新模型费率未知，不虚构账单。
+模型设置已接入实际执行：全局、九类场景及动作／Agent逐字段覆盖，思考、预算和协议冻结。官方推荐目录与服务清单独立；正式alpha.23中英各连续3次真实刷新均返回103模型，选择不变，账本未增加模型调用。入口及继承规则见[使用说明](product/model-settings-guide.md)。
 
-当前feature/model-inventory的alpha.23源码让清单JSON按4096B合并、256槽有界交付；SSE仍64槽逐行／尾块拒丢弃，客户端仍15秒／1MiB／512ID与4MiB会话工作预算。清单仅点击后获取，不替换模型、不推断能力；错误固定分类，无服务正文或凭据。最终真实修复效果、同源CI、公证／公开与替换分别验收，不能把alpha.22部分成功当完成。
+真实OpenAI合成输入已覆盖翻译、总结、CLI精确审阅取消、两类Agent时间工具、Workflow及中英活动总结。分源合计23次、3856／1737 token，新模型费率未知，不虚构账单。alpha.21输出合计已由1009纠正为909；旧none界面判断不作wire证明，alpha.22明确保存／重启及55／26翻译后，alpha.23跨升级保留none。原俄语FAIL、CI取消测试竞态、alpha.22清单失败及所有更正见原始记录，不倒推唯一失败原因。
 
-完整P0–P4仍PARTIAL：独立桌面验收App／宿主、真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放。[剩余工程](technical/remaining-engineering-2026-11-26.md)继续推进。正式App安装／回退检查配置schema2 reader；历史副本保留不代表无条件回退。
+完整P0–P4仍PARTIAL：独立桌面验收App／宿主、真实插入与实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉分别开放；20条质量样本、在途切语言及所有服务／参数／故障组合未关闭。[剩余工程](technical/remaining-engineering-2026-11-26.md)继续推进。安装／回退检查配置schema2 reader；副本保留不代表无条件回退。
 
 ## 历史推进与当时资格
 
