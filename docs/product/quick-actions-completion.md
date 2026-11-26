@@ -18,8 +18,8 @@
 |---|---|---|
 | 剪贴板专用入口与键盘选择 | [Raycast Clipboard History](https://manual.raycast.com/clipboard-history)、[Alfred Clipboard](https://www.alfredapp.com/help/features/clipboard/)、[Maccy](https://github.com/p0deje/Maccy#usage)均有专用快捷入口；复制／粘贴默认方式不同，底栏必须明确动作 | 独立Panel／搜索／选择／预览／复制／插入在本轮实现；真实目标、IME与权限矩阵仍须验收 |
 | 固定、删除、采集隐私 | Raycast／Alfred／Maccy的固定、过滤、保留与暂停能力 | 复用现有有界SQLite、前置类型过滤、默认关闭、固定／清除；来源应用只能作轮询提示，不能保证识别所有后台敏感写者 |
-| 应用启动／激活与定制 | [Raycast Applications](https://manual.raycast.com/applications)提供应用alias／hotkey及前台行为设置 | 现有稳定应用身份、启动／激活、别名／收藏与绑定；增加分类发现，继续补前台隐藏／行为选择和实际交互验证 |
-| 窗口控制 | [Raycast Window Management](https://manual.raycast.com/window-management)提供可绑定的窗口命令 | 已有13项布局／恢复／跨屏；继续建设稳定窗口循环／最小化等，并验证多窗口、多屏和权限变化 |
+| 应用启动／激活与定制 | [Raycast Applications](https://manual.raycast.com/applications)提供应用alias／hotkey及前台行为设置 | 稳定应用身份、启动／激活、前台隐藏／显示／正常退出、行为选择、别名／收藏／绑定与分类已有实现；真实目标矩阵及命名动作删除引用一致性继续闭合 |
+| 窗口控制 | [Raycast Window Management](https://manual.raycast.com/window-management)提供可绑定的窗口命令 | 13项布局／恢复／跨屏、稳定上一／下一窗口及最小化已有实现；多窗口、多屏、权限变化和实体热键仍待实际验收 |
 | 文本片段与搜索／计算工具 | 参考既有13项固定revision开源登记和产品竞品矩阵 | 已有Snippet、选定目录搜索、计算／单位、URL动作及集合；继续补入口连贯性和自定义配置，不承诺隐藏键盘监听式展开 |
 | AI、Agent、MCP与工作流 | 继续既有完整产品方案和协议合同 | 自定义兼容API、动作／快捷键、Agent、MCP和调度已有代码及合成验证；真实API按用户决定待配置，模型质量与第三方兼容仍未关闭 |
 | 完整视觉与辅助功能 | 系统玻璃用于外壳，阅读正文保持清晰层级 | Launcher／Clipboard／Settings／Workspace需中英深浅色、IME、键盘、VoiceOver、Reduce Transparency／Motion、增加对比度和尺寸边界逐项验收 |

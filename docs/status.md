@@ -1,5 +1,11 @@
 # 当前状态总账
 
+当前正式安装与公开发行均为[alpha.20](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.20)，精确源`aa0edfc23f01476ebbc3befeef477da684382f0d`。920 Swift／137 Python／931 key、生产合成OCR双轮、指定同源CI、App／DMG新候选协议公证与装订／Gatekeeper、公开回下载及独立发行审计通过。已原子替换正式App，About实际显示alpha.20(20)，alpha.19回退副本已核验。见[发行证据](implementation/alpha20-release-2026-11-26.md)。
+
+完整产品仍PARTIAL：已观察的玻璃大结果／关闭审阅／材料保存等子集不替代真实插入、实体热键、AX／多屏／IME／VoiceOver、最低系统、长期驻留及完整视觉。API按用户决定稍后配置。[剩余工程](technical/remaining-engineering-2026-11-26.md)包括快捷操作验收入口、自定义一致性、Agent总预算、持久步骤、原图附件及稳定增量用量；完整P0–P4目标继续推进。
+
+## 历史推进与当时资格
+
 最新原生复查：干净`c48f461`优化Preview在保留玻璃背景时，1MiB上限的部分结果首次画面已显示Copy／Open in Workspace／Close draft；实际工作区入口、末尾滚动和明确结果-only保存通过，磁盘核验为1048576字节、partial=true，一次loopback POST且无凭据／工具请求。前序`83e06b4`另完成compact关闭审阅、⌘Return不重跑、取消保留、确认关闭及新空草稿子集。完整焦点／中英明暗／系统矩阵仍开放；最终同源完整检查与新CI／发行继续推进，正式App仍为alpha.19。详情与保留的FAIL见[本轮UI记录](implementation/task-material-ui-2026-11-26.md)。
 
 补充：干净`426b31b`的918 Swift／137 Python／931 key完整本机和同源CI45725802402均通过，正式签名构建也已完成；但同源优化Preview首次AI输出后再次观察到固定右侧按钮漏绘，点击关闭未呈现审阅而回到搜索，因此未晋升master、未创建tag／公证候选／发行或替换。正在稳定footer左右结构，并将compact关闭审阅移至Launcher根owner，直到原生实际dismiss才释放；修补后需重新检查。正式App仍是alpha.19。

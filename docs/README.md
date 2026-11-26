@@ -1,6 +1,6 @@
 # KeyDock 文档总览
 
-更新时间：2026-11-26。当前已有签名公证的公开alpha.19，并已替换本地常规App；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
+更新时间：2026-11-26。当前已有签名公证的公开alpha.20，并已替换本地常规App，实际About20已确认；完整真实验收未完成。事实来源顺序：用户最新决定 → AGENTS.md → 当前规格/技术方案 → 状态证据 → 外部调研快照。
 
 | 文档 | 用途 |
 |---|---|
@@ -34,10 +34,12 @@
 | [任务持久化与显式新尝试](technical/explicit-attempt-recovery.md) | 任务33：类型化Core、独立准备／四类新授权和安装数据版本门禁已接通，完整验收仍开放 |
 | [准备页与生产入口复查](implementation/explicit-attempt-ui-2026-11-26.md) | 真实进程／loopback／stdio故障围栏、原生修补、合成隔离及签名版本门禁 |
 | [alpha.19发行与安装证据](implementation/alpha19-release-2026-11-26.md) | 精确源、本机／同源CI、公证恢复、公开回下载与正式App身份；About19未观察 |
+| [alpha.20发行与安装证据](implementation/alpha20-release-2026-11-26.md) | 920 Swift／137 Python／931 key、同源CI、新候选协议真实App／DMG公证、公开审计、原子替换与About20 |
+| [剩余工程与系统验收](technical/remaining-engineering-2026-11-26.md) | 原目标的快捷操作验收入口、自定义一致性、Agent预算、持久步骤、原图与增量用量；实现与证明分开 |
 | [冻结候选与公证恢复](technical/release-candidate-recovery.md) | 独立inode、不可变输入、持久索引、unknown不重投和同请求续查；新协议完整发行仍开放 |
 | [可选任务材料](technical/task-material-retention.md) | 默认关闭、准确输入／成功边界、手动保存／按需读取、出生身份与删除意图和旧reader门禁；任务35实施中 |
 | [任务材料基础层复查](implementation/task-material-core-2026-11-26.md) | 固定FD／CAS／删除恢复、未来输入捕获与签名reader门禁；原生审阅及完整发行仍开放 |
-| [任务内容原生审阅与复用](implementation/task-material-ui-2026-11-26.md) | App维护／预算／独立内容库、逐项保存与新尝试输入票据；中文浅色／英文深色及重启子集，完整矩阵与发行仍开放 |
+| [任务内容原生审阅与复用](implementation/task-material-ui-2026-11-26.md) | App维护／预算／独立内容库、逐项保存与新尝试输入票据；alpha.20已发行，已观察子集与原FAIL分开，完整矩阵仍开放 |
 | [任务恢复Core复查](implementation/task-recovery-core-2026-11-26.md) | 原子新intent、旧回调围栏、保留预算、固定指纹与MCP流式合同；非App日用验收 |
 | [导入文本上下文](technical/imported-text-context.md) | 单槽来源、AI冻结、联合预算与清除；alpha.10候选 |
 | [导入来源实现复查](implementation/imported-text-context-2026-11-25.md) | 合成提取／MCP／AI隐私、失败接纳与原生观察边界 |
