@@ -133,8 +133,10 @@ public struct ChatCompletionsProvider: AIProvider {
                     } catch {
                         response.cancel(); await response.waitForCompletion(); throw error
                     }
-                    response.cancel(); await response.waitForCompletion()
                     outcome = .succeeded
+                    if let attempt { usageRecorder?.finishAttempt(attempt, outcome: outcome) }
+                    response.cancel(); await response.waitForCompletion()
+                    try Task.checkCancellation()
                     continuation.yield(.completed)
                     continuation.finish()
                 } catch {
@@ -175,7 +177,7 @@ public struct ChatCompletionsProvider: AIProvider {
                 }
             }
         }
-        try Task.checkCancellation()
+        if !decoder.isComplete { try Task.checkCancellation() }
         try decoder.finish()
     }
 

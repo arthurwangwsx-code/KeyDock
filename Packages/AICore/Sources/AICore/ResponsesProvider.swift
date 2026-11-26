@@ -248,12 +248,15 @@ actor ResponsesAIConversation: AIConversation {
                 if let usage = decoder.latestUsage { recorder?.observe(usage) }
                 response.cancel(); await response.waitForCompletion(); throw error
             }
+            // 提供方终态已核实；本地取消或会话历史超限仍保留这次调用的用量。
+            outcome = .succeeded
+            if let attempt { recorder?.finishAttempt(attempt, outcome: outcome) }
             response.cancel(); await response.waitForCompletion(); try Task.checkCancellation()
             guard !closed else { throw CancellationError() }
             history += decoder.outputItems.map(\.wire)
             guard try JSONEncoder().encode(history).count <= 1_048_576 else { throw AIProviderError.outputLimit }
             pending = Set(decoder.outputItems.compactMap(\.call).map(\.id))
-            outcome = .succeeded; continuation.yield(.completed); continuation.finish()
+            continuation.yield(.completed); continuation.finish()
         } catch {
             closed = true; history = []; request = nil
             if Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled { outcome = .cancelled }

@@ -79,6 +79,21 @@ private func provider(_ transport: any AIHTTPTransport, recorder: AIUsageRecorde
 }
 
 @Suite struct ResponsesTests {
+    @Test func localReplayBudgetFailurePreservesValidatedProviderSuccess() async throws {
+        let input = String(repeating: "i", count: 1_040_000)
+        let output = String(repeating: "o", count: 10_000)
+        let recorder = AIUsageRecorder()
+        let transport = ResponsesTransport([try turn([message(output)])])
+        let service = provider(transport, recorder: recorder)
+        await #expect(throws: AIProviderError.outputLimit) {
+            for try await _ in service.stream(.init(messages: [.init(role: "user", content: input)])) {}
+        }
+        let recorded = await recorder.closeAndSnapshot()
+        #expect(recorded.calls.count == 1 && recorded.calls.first?.outcome == .succeeded)
+        #expect(recorded.calls.first?.hasUnknownUsage == false)
+        #expect(recorded.calls.first?.usage?.inputTokens == 17 && recorded.calls.first?.usage?.outputTokens == 9)
+        #expect(await transport.bodies().count == 1)
+    }
     @Test func tokenThresholdStopsBeforeToolAndPreservesSuccessfulModelUsage() async throws {
         let transport = ResponsesTransport([try turn([reasoning("opaque-budget"), call()])])
         let broker = CountingBroker(), recorder = AIUsageRecorder()

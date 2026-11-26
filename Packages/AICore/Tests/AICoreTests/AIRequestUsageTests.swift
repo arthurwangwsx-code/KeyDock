@@ -28,6 +28,42 @@ private actor UsageMemoryTransport: AIHTTPTransport {
 }
 
 @Suite struct AIRequestUsageTests {
+    @Test(arguments: [AIRequestProtocol.chatCompletions, .responses], [false, true])
+    func validatedTerminalIsVisibleWhileTransportDrains(_ requestProtocol: AIRequestProtocol, cancelAfterTerminal: Bool) async throws {
+        let drain = UsageDrainGate(), recorder = AIUsageRecorder()
+        let responses = event(#"{"type":"response.created","sequence_number":0,"response":{"id":"synthetic"}}"#)
+            + event(#"{"type":"response.completed","sequence_number":1,"response":{"id":"synthetic","status":"completed","output":[],"usage":{"input_tokens":12,"output_tokens":3}}}"#)
+        let transport = UsageMemoryTransport([requestProtocol == .responses ? responses : complete], drain: drain)
+        let configuration = requestProtocol == .responses
+            ? AIProviderConfiguration(endpoint: URL(string: "https://api.openai.com/v1/responses")!, model: "gpt-6.2-sol", requestProtocol: .responses)
+            : AIProviderConfiguration(endpoint: URL(string: "https://example.com/synthetic")!, model: "synthetic-model")
+        let service = ResolvedAIProvider(configuration: configuration, apiKey: "", transport: transport, usageRecorder: recorder)
+        let stream = service.stream(request)
+        let consumer = Task {
+            var completed = 0
+            for try await event in stream { if case .completed = event { completed += 1 } }
+            return completed
+        }
+        do {
+            try await eventually { await drain.entered }
+            let recorded = try #require(recorder.snapshot().calls.first)
+            #expect(recorded.outcome == .succeeded && recorded.finishedAt != nil)
+            #expect(recorded.usage?.inputTokens == 12 && recorded.usage?.outputTokens == 3)
+            #expect(!recorded.hasUnknownUsage && !recorder.isClosed)
+            if cancelAfterTerminal {
+                consumer.cancel()
+                let terminal = await consumer.result
+                if case .success(let count) = terminal { #expect(count == 0) }
+            }
+            await drain.release()
+            if !cancelAfterTerminal { #expect(try await consumer.value == 1) }
+            #expect(await recorder.closeAndSnapshot().calls == [recorded])
+        } catch {
+            consumer.cancel()
+            await drain.release()
+            throw error
+        }
+    }
     @Test func invalidAndSealedRequestsNeverReachTransport() async throws {
         let transport = UsageMemoryTransport([complete]), recorder = AIUsageRecorder()
         let service = provider(transport, recorder: recorder)
