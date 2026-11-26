@@ -140,7 +140,19 @@ extension WorkbenchModel {
             invalidatedUsageRuns.insert(id); tasks[index].aiUsageSummary = .unknown
         }
         invalidateWorkflowUsage(invalidated, revision: report.revision)
-        if !report.isComplete { workspaceNoticeMessage = noticeKey("Some AI usage records could not be maintained. Review or clear usage history in Privacy settings.") }
+        let deferred = noticeKey("Usage records still in use will be cleared when their tasks finish. If KeyDock quits unexpectedly, clear usage again.")
+        if report.isComplete {
+            if report.hasFinalInventory, workspaceNoticeMessage == noticeKey("Usage maintenance is waiting for running tasks to finish.") {
+                workspaceNoticeMessage = .none
+            }
+            if report.trigger == .manual || report.trigger == .daily, settingsNoticeMessage == deferred {
+                settingsNoticeMessage = noticeKey("AI usage history cleared. Running requests may create new records when they finish.")
+            }
+        } else if report.onlyDeferred {
+            workspaceNoticeMessage = noticeKey("Usage maintenance is waiting for running tasks to finish.")
+        } else {
+            workspaceNoticeMessage = noticeKey("Some AI usage records could not be maintained. Review or clear usage history in Privacy settings.")
+        }
     }
 
     public func clearAIUsageHistory() async {
@@ -159,21 +171,28 @@ extension WorkbenchModel {
         }
         guard !isShuttingDown, usageHistoryGeneration == generation else { return }
         lastUsageClearRevision = max(lastUsageClearRevision, report.revision)
-        if report.didReadDirectory {
-            invalidateWorkflowUsage(report.removedIDs, revision: report.revision, remaining: report.remainingIDs)
-            for index in tasks.indices where candidates.contains(tasks[index].id) && !report.remainingIDs.contains(tasks[index].id) {
+        let removed = report.removedIDs.union(report.uncertainRemovedIDs)
+        if report.hasFinalInventory || !removed.isEmpty {
+            invalidateWorkflowUsage(removed, revision: report.revision, remaining: report.hasFinalInventory ? report.remainingIDs : nil)
+            for index in tasks.indices where candidates.contains(tasks[index].id) {
                 let id = tasks[index].id
-                guard report.removedIDs.contains(id) || !executionReservations.contains(id) else { continue }
-                if report.removedIDs.contains(id) {
+                if removed.contains(id) {
                     guard usageSummaryRevisions[id, default: 0] <= report.revision else { continue }
-                } else { guard usageSummaryGenerations[id, default: 0] < generation else { continue } }
+                } else {
+                    guard report.hasFinalInventory, !report.remainingIDs.contains(id), !executionReservations.contains(id),
+                          usageSummaryGenerations[id, default: 0] < generation else { continue }
+                }
                 tasks[index].aiUsageSummary = .unknown; usageSummaryGenerations[id] = generation
                 invalidatedUsageRuns.insert(id)
             }
         }
-        settingsNoticeMessage = report.isComplete
-            ? noticeKey("AI usage history cleared. Running requests may create new records when they finish.")
-            : noticeKey("AI usage history was only partly cleared. Some records remain; check permissions and try again.")
+        if report.onlyDeferred {
+            settingsNoticeMessage = noticeKey("Usage records still in use will be cleared when their tasks finish. If KeyDock quits unexpectedly, clear usage again.")
+        } else if report.isComplete {
+            settingsNoticeMessage = noticeKey("AI usage history cleared. Running requests may create new records when they finish.")
+        } else {
+            settingsNoticeMessage = noticeKey("AI usage history was only partly cleared. Some records remain; check permissions and try again.")
+        }
         invalidateUsageAnalysis()
     }
 }

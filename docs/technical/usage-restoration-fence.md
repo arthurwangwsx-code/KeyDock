@@ -14,6 +14,8 @@
 
 ## 自动维护的下一切片
 
+候选先剥离预算，正常关停等待 owner 释放及早已入队的写入，最后一次维护仅重试留存候选并执行常规保留策略。最终目录盘点失败时，不从缺席集合推断删除。异常退出后的显式延后意图需要重新发起，同一 UUID 的新文件不继承旧意图。见[退出、重启与失败事务](../implementation/retention-shutdown-2026-11-26.md)。
+
 alpha.27基线的只读审计确认，维护回调只清显示摘要，不清预算回执；actor到MainActor的异步报告也不能独自保护缓存快照。42.4的主要路径已在`fix/usage-retention-budget-redaction`实现并通过本机回归，尚未进入正式发行；关闭／重启等剩余边界和最终资格见[收口记录](../implementation/usage-retention-handoff-2026-11-26.md)。以下是该切片合同，不补算已发行行为。
 
 优先评估“候选预算先持久剥离、再删ledger”的两阶段顺序：只处理绑定的候选ID，当前live owner延后且仍计入容量；Core失败则不删ledger，unlink失败则保守unknown并报告部分完成。不改变阈值、策略、RunAttempt或执行授权。该顺序避免进程中断后留下已删ledger与旧预算；若改用删后清，必须另有持久待清记录和启动恢复。

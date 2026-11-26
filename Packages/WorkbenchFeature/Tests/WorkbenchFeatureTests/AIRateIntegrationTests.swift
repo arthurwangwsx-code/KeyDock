@@ -146,6 +146,35 @@ private actor UsageRestoreReadProbe {
             #expect(WorkflowUsageAggregation.summary(family.recorded, running: false) == live)
         }
     }
+    @Test func automaticExpiryBetweenWorkflowRequestsPreservesOnlyTheFreshLeaf() async throws {
+        try await withStoreHTTPFixture(path: "usage") { fixture in
+            let store = fixture.store
+            let flow = WorkflowDefinition(name: "Synthetic retention between requests", steps: [
+                .init(operation: .aiAction(fixture.action.id)), .init(operation: .manualInput, input: .previousOutput),
+                .init(operation: .aiAction(fixture.action.id), input: .previousOutput)])
+            let id = try #require(store.runWorkflow(flow, input: "Synthetic text"))
+            try await storeEventually { store.pendingWorkflowInputs.contains { $0.runID == id } }
+            let old = try #require(store.workflowAIUsage[id]?.children.keys.first)
+            let file = fixture.directory.appendingPathComponent("usage/" + old.uuidString + ".json")
+            var leaf = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+            leaf["recordedAt"] = Date().addingTimeInterval(-91 * 86_400).timeIntervalSinceReferenceDate
+            try JSONSerialization.data(withJSONObject: leaf).write(to: file, options: .atomic)
+            let report = await store.usageMetadataStore.maintain()
+            #expect(report.isComplete && report.removedIDs == [old])
+            #expect(store.tasks.first { $0.id == id }?.aiUsageSummary == .unknown)
+            let input = try #require(store.pendingWorkflowInputs.first { $0.runID == id })
+            store.resolveWorkflowInput(input.id, value: "Synthetic continuation")
+            try await fixture.drain(id)
+            let index = try JSONDecoder().decode(WorkflowUsageIndex.self, from: fixture.usageData(id))
+            #expect(index.children.count == 1 && index.children.first?.childRunID != old && index.hasIncompleteRecords)
+            let disk = try await store.usageMetadataStore.readWorkflowUsage(id: id)
+            let summary = WorkflowUsageAggregation.summary(disk.recorded, running: false)
+            #expect(summary.reportedInputTokens == 12 && summary.reportedOutputTokens == 5)
+            #expect(store.tasks.first { $0.id == id }?.aiUsageSummary == summary)
+            #expect(try await fixture.server.stats()["post_requests"] == 2)
+        }
+    }
+
     @Test func emptyCompletedIndexIsDistinctFromOldMissingOrInvalidIndex() async throws {
         try await withWorkflowIntegrationFixture { fixture in
             let id = try #require(fixture.store.runWorkflow(.init(name: "Synthetic local transform", steps: [.init(operation: .transform(.trim))]), input: " Synthetic "))

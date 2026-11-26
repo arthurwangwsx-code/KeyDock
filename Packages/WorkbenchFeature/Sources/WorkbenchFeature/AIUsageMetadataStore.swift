@@ -16,7 +16,7 @@ enum AIUsageStorageProblem: Sendable, Equatable {
     case directoryUnavailable, enumerationFailed, capacityExceeded, storeClosed, maintenanceSuperseded
     case malformedRecord(UUID), oversizedRecord(UUID), unsafeEntry(UUID)
     case readFailed(UUID), deletionFailed(UUID), writeFailed(UUID), expiredIncomingRecord(UUID)
-    case budgetRedactionFailed(UUID?), changedCandidate(UUID), deletionUncertain(UUID)
+    case budgetRedactionFailed(UUID?), changedCandidate(UUID), deletionUncertain(UUID), duplicateRecordID(UUID)
 }
 
 struct AIUsageMaintenanceReport: Sendable {
@@ -34,10 +34,12 @@ struct AIUsageMaintenanceReport: Sendable {
     var remainingBytes: UInt64 = 0
     var ignoredEntryCount = 0
     var didReadDirectory = false
+    var hasFinalInventory = false
     /// 最多保留64个问题详情，总问题数不截断。
     var problems: [AIUsageStorageProblem] = []
     var problemCount = 0
     var isComplete: Bool { didReadDirectory && problemCount == 0 && deferredIDs.isEmpty && uncertainRemovedIDs.isEmpty }
+    var onlyDeferred: Bool { didReadDirectory && problemCount == 0 && !deferredIDs.isEmpty && uncertainRemovedIDs.isEmpty }
 
     fileprivate mutating func add(_ problem: AIUsageStorageProblem, id: UUID? = nil) {
         if problems.count < 64 { problems.append(problem) }
@@ -74,6 +76,7 @@ actor AIUsageMetadataStore {
     private let removeEntry: RemoveEntry
     private let prepareRemoval: PrepareRemoval
     private let syncDirectory: SyncDirectory
+    private let beforeFinalInventory: @Sendable (AIUsageMaintenanceTrigger) throws -> Void
     private var dailyTask: Task<Void, Never>?
     private var scheduleGeneration: UInt64 = 0
     private var mutationActive = false
@@ -84,6 +87,7 @@ actor AIUsageMetadataStore {
     private var pendingDirectory: (dev_t, ino_t)?
     private var pendingBudgetTickets: [UUID: InvocationUsageClearTicket] = [:]
     private var isClosed = false
+    private var isClosing = false
 
     init(directory: URL, policy: AIUsageRetentionPolicy = .init(),
          clock: @escaping @Sendable () -> Date = { Date() },
@@ -93,6 +97,7 @@ actor AIUsageMetadataStore {
              guard unlinkat(descriptor, name, 0) == 0 else { throw POSIXFailure.operation }
          },
          prepareRemoval: @escaping PrepareRemoval = { ids, _, _ in .init(approvedIDs: ids) },
+         beforeFinalInventory: @escaping @Sendable (AIUsageMaintenanceTrigger) throws -> Void = { _ in },
          syncDirectory: @escaping SyncDirectory = { descriptor in
              guard fsync(descriptor) == 0 else { throw POSIXFailure.operation }
          }) {
@@ -106,6 +111,7 @@ actor AIUsageMetadataStore {
         self.reportHandler = reportHandler
         self.removeEntry = removeEntry
         self.prepareRemoval = prepareRemoval; self.syncDirectory = syncDirectory
+        self.beforeFinalInventory = beforeFinalInventory
     }
 
     deinit { dailyTask?.cancel() }
@@ -115,6 +121,7 @@ actor AIUsageMetadataStore {
     func setReportHandler(_ handler: @escaping ReportHandler) { reportHandler = handler }
 
     @discardableResult func start() async -> AIUsageMaintenanceReport {
+        guard !isClosing else { return closedReport(.startup) }
         let requestedSchedule = scheduleGeneration
         await enterMutation(); defer { leaveMutation() }
         guard !isClosed else { return closedReport(.startup) }
@@ -144,27 +151,35 @@ actor AIUsageMetadataStore {
     }
 
     @discardableResult func maintain() async -> AIUsageMaintenanceReport {
+        guard !isClosing else { return closedReport(.manual) }
         await enterMutation(); defer { leaveMutation() }
         guard !isClosed else { return closedReport(.manual) }
         return await deliver(await performMaintenance(trigger: .manual))
     }
 
     @discardableResult func clear() async -> AIUsageMaintenanceReport {
+        guard !isClosing else { return closedReport(.clear) }
         await enterMutation(); defer { leaveMutation() }
         guard !isClosed else { return closedReport(.clear) }
         return await deliver(await performMaintenance(trigger: .clear))
     }
 
     func retryDeferredMaintenance() async {
-        guard !isClosed else { return }
-        guard !pendingClearEntries.isEmpty || !pendingUnlinks.isEmpty || !pendingBudgetTickets.isEmpty || hasDeferredMaintenance else { return }
+        guard !isClosing, needsRetry else { return }
         _ = await maintain()
+    }
+
+    private var needsRetry: Bool {
+        !pendingClearEntries.isEmpty || !pendingUnlinks.isEmpty || !pendingBudgetTickets.isEmpty || hasDeferredMaintenance
     }
 
     /// worker终态已等待后才关闭；跨actor维护和排队旧请求全部越过同一屏障。
     func close() async {
-        stop(); isClosed = true
-        await enterMutation(); leaveMutation()
+        stop(); isClosing = true
+        await enterMutation(); defer { leaveMutation() }
+        guard !isClosed else { return }
+        if needsRetry { _ = await deliver(await performMaintenance(trigger: .manual)) }
+        isClosed = true
     }
     private func closedReport(_ trigger: AIUsageMaintenanceTrigger) -> AIUsageMaintenanceReport {
         var report = AIUsageMaintenanceReport(trigger: trigger); report.add(.storeClosed); return report
@@ -185,7 +200,8 @@ actor AIUsageMetadataStore {
     }
     private func deliver(_ input: AIUsageMaintenanceReport) async -> AIUsageMaintenanceReport {
         var report = input; report.revision = revisionFence.advance()
-        hasDeferredMaintenance = !report.deferredIDs.isEmpty
+        if !report.deferredIDs.isEmpty { hasDeferredMaintenance = true }
+        else if report.hasFinalInventory { hasDeferredMaintenance = false }
         await reportHandler(report)
         return report
     }
@@ -256,6 +272,7 @@ actor AIUsageMetadataStore {
 
     /// 保存前先验证，按包含新记录的投影预算逐出旧记录，容量无法满足时拒绝写入。
     func save(id: UUID, data: Data) async -> AIUsageMetadataWriteResult {
+        guard !isClosing else { return .init(stored: false, report: closedReport(.afterSave)) }
         await enterMutation(); defer { leaveMutation() }
         guard !isClosed else { return .init(stored: false, report: closedReport(.afterSave)) }
         var report = AIUsageMaintenanceReport(trigger: .afterSave)
@@ -331,7 +348,7 @@ actor AIUsageMetadataStore {
             }
             guard let descriptor else {
                 if !pendingUnlinks.isEmpty { report.add(.directoryUnavailable) }
-                report.didReadDirectory = true
+                report.hasFinalInventory = true
                 return report
             }
             if trigger == .clear {
@@ -344,9 +361,11 @@ actor AIUsageMetadataStore {
                 _ = await makeRoom(descriptor, entries: &entries, reservation: nil, report: &report)
             }
             synchronizeRemovals(descriptor, report: &report)
+            try beforeFinalInventory(trigger)
             entries = try scan(descriptor, report: &report)
             reconcilePendingClear(entries)
             finalize(entries, report: &report)
+            report.hasFinalInventory = true
         } catch { report.add(report.didReadDirectory ? .enumerationFailed : .directoryUnavailable) }
         return report
     }
@@ -416,6 +435,7 @@ actor AIUsageMetadataStore {
         guard let stream = fdopendir(cursor) else { Darwin.close(cursor); throw POSIXFailure.operation }
         defer { closedir(stream) }
         var entries: [Entry] = []
+        var seen: Set<UUID> = []
         errno = 0
         while let item = readdir(stream) {
             let name = withUnsafePointer(to: item.pointee.d_name) {
@@ -423,6 +443,10 @@ actor AIUsageMetadataStore {
             }
             if name != "." && name != ".." {
                 if let id = managedID(name) {
+                    guard seen.insert(id).inserted else {
+                        report.add(.duplicateRecordID(id), id: id)
+                        throw POSIXFailure.operation
+                    }
                     if let entry = inspect(descriptor, name: name, id: id) { entries.append(entry) }
                     else if errno != ENOENT {
                         report.add(.readFailed(id), id: id)

@@ -53,7 +53,7 @@ Release构建前后还比较资格与当前OS build／Swift／完整Xcode及SDK�
 
 alpha.24配置reader为[1,2,3]、writer为[3]；旧包副本即使验签成功，也不能在配置升级到3后无条件回退。配置probe包含null待迁移状态，安装／回退在替换前拒绝不兼容reader，原数据保留。
 
-普通隔离Preview的`native-review`应显式复用同一owned fixture并用进程回执确认正常退出；不要对已退出App再调用会选择／启动App的UI入口来“证明退出”。alpha.24复查在退出后AX读取序列中观察到额外默认Preview启动，已正常收口且不纳入资格，未唯一归因底层机制。当前复用root的`review-process.json`更新为最新运行，重启前应保留当次观察；逐次不可覆盖的运行回执仍列入后续调试工程。独立DesktopReview继续使用其独立launch receipt及窄scope，不能将普通Preview当作等价权限入口。
+普通隔离 Preview 通过 `native-review --fixture` 复用合成数据。每次启动生成独立的 `run-<UUID>` 目录，保存启动意图、实际 PID、包摘要、退出结果及该次进程日志。根目录的 `review-process.json` 供既有调用方查看最近运行。退出以进程回执为准。alpha.24 的 AX 观察曾使默认 Preview 额外启动，已正常收口并保留原记录。签名 DesktopReview 另有独立的启动回执与权限范围。
 
 各阶段均显式传入`--no-parallel`，因为CLI帮助中的默认值未让Swift Testing顶层套件串行。集成夹具的合成进程startup／cleanup含同步poll／usleep，并发时会延迟另一套件的SSE消费，导致五秒drain时限误触发。明确串行后日志按套件顺序执行；应用任务的五秒drain、输出上限、真实进程／网络和全部断言保留。隔离Python合成服务使用`-I -S`，准备就绪预算20秒，不占用应用任务断言的时间。
 

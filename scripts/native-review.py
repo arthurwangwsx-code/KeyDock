@@ -47,6 +47,12 @@ def open_private_log(root):
     return os.fdopen(descriptor, "ab")
 
 
+def new_observation(root):
+    observation = root / ("run-" + str(uuid.uuid4()))
+    observation.mkdir(mode=0o700, exist_ok=False)
+    return observation
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--app", type=Path, required=True)
@@ -72,13 +78,20 @@ def main():
     record = {"schemaVersion": 1, "state": "running", "app": str(app), "bundleSHA256": facts["bundle_sha256"],
               "commit": facts["commit"], "sourceDirty": facts["source_dirty"], "fixture": str(root),
               "dataDirectory": str(root / "KeyDock-Smoke"), "syntheticOnly": True, "pid": None}
-    receipt = root / "review-process.json"
-    with open_private_log(root) as output:
+    observation = new_observation(root)
+    receipt = observation / "review-process.json"
+    record.update(observation=str(observation), state="launching")
+    atomic_json(observation / "launch.json", record)
+    with open_private_log(observation) as output:
         child = subprocess.Popen([str(executable), "--review-fixture-root", str(root)], stdout=output, stderr=subprocess.STDOUT)
-        record["pid"] = child.pid; atomic_json(receipt, record)
+        record.update(pid=child.pid, state="running")
+        atomic_json(observation / "started.json", record)
+        atomic_json(receipt, record)
+        atomic_json(root / "review-process.json", record)
         print(str(receipt), flush=True)
         code = child.wait()
     record.update(state="exited", exitCode=code); atomic_json(receipt, record)
+    atomic_json(root / "review-process.json", record)
     raise SystemExit(code)
 
 

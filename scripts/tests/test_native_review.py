@@ -27,6 +27,17 @@ class NativeReviewTests(unittest.TestCase):
         with review.open_private_log(self.root) as output: output.write(b"synthetic")
         self.assertEqual((self.root / "process.log").read_bytes(), b"synthetic")
 
+    def test_restart_separates_process_evidence_in_the_same_fixture(self):
+        first = review.new_observation(self.root)
+        with review.open_private_log(first) as stream:
+            stream.write(b"first synthetic run")
+        second = review.new_observation(self.root)
+        with review.open_private_log(second) as stream:
+            stream.write(b"second synthetic run")
+        self.assertNotEqual(first, second)
+        self.assertEqual((first / "process.log").read_bytes(), b"first synthetic run")
+        self.assertEqual((second / "process.log").read_bytes(), b"second synthetic run")
+
     def test_wrong_name_mode_marker_and_outside_are_refused_before_writes(self):
         self.root.chmod(0o755)
         with self.assertRaises(PipelineError): review.validate_fixture(self.root, self.parent)

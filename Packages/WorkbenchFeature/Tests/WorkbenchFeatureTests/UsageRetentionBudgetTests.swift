@@ -241,6 +241,60 @@ extension UsageRetentionBudgetTests {
         }
     }
 
+    @Test func normalShutdownFinishesDeferredClearWithoutDeletingLaterFacts() async throws {
+        try await withBudgetRetentionFixture { fixture in
+            let store = fixture.store
+            let held = try await seedRetentionBudget(fixture, release: false)
+            let orphan = try await seedRetentionBudget(fixture, release: false)
+            let file = try putRetentionRecord(fixture, held.id, at: Date())
+            let partial = await store.usageMetadataStore.clear()
+            #expect(!partial.isComplete && partial.deferredIDs == [held.id, orphan.id])
+            let fresh = try await seedRetentionBudget(fixture)
+            let freshFile = try putRetentionRecord(fixture, fresh.id, at: Date())
+            store.shutdown()
+            store.finishExecutionReservation(held.id, owner: held)
+            store.finishExecutionReservation(orphan.id, owner: orphan)
+            await store.shutdownAndWait()
+            let rows = await store.aiInvocationStore.list()
+            #expect(!FileManager.default.fileExists(atPath: file.path))
+            for id in [held.id, orphan.id] {
+                let row = try #require(rows.first { $0.id == id })
+                #expect(row.runTokenBudget?.maximumTokens == 100 && row.runTokenBudget?.knownTokens == nil)
+            }
+            #expect(FileManager.default.fileExists(atPath: freshFile.path))
+            #expect(rows.first { $0.id == fresh.id }?.runTokenBudget?.knownTokens == 31)
+        }
+    }
+
+    @Test func finalInventoryFailurePreservesUnconfirmedWorkflowDependency() async throws {
+        let kept = UUID(), removed = UUID(), parent = UUID()
+        var options = AIUsageStorageDependencies()
+        options.beforeFinalInventory = { if $0 == .clear { throw POSIXError(.EIO) } }
+        options.removeEntry = { fd, name in
+            guard name != kept.uuidString + ".json", unlinkat(fd, name, 0) == 0 else { throw POSIXError(.EIO) }
+        }
+        try await withBudgetRetentionFixture(options) { fixture in
+            let store = fixture.store
+            for id in [kept, removed, parent] {
+                // 模拟已发布的worker事实；历史恢复还会异步读取ledger，属于另一个测试边界。
+                var task = RunningTaskItem(id: id, title: "Synthetic task", state: .completed, output: "",
+                                           startedAt: Date(), finishedAt: Date())
+                task.aiUsageSummary = .init(state: .reported, reportedInputTokens: 20, reportedOutputTokens: 11)
+                store.tasks.append(task)
+            }
+            _ = try putRetentionRecord(fixture, kept, at: Date())
+            _ = try putRetentionRecord(fixture, removed, at: Date())
+            store.workflowUsageDependencies[parent] = [kept: 0]
+            #expect(store.tasks.first { $0.id == kept }?.aiUsageSummary?.reportedInputTokens == 20)
+            await store.clearAIUsageHistory()
+            #expect(store.tasks.first { $0.id == removed }?.aiUsageSummary == .unknown)
+            #expect(store.tasks.first { $0.id == kept }?.aiUsageSummary?.reportedInputTokens == 20)
+            #expect(store.tasks.first { $0.id == parent }?.aiUsageSummary?.reportedInputTokens == 20)
+            #expect(await store.usageMetadataStore.read(id: kept).data != nil)
+            #expect(await store.usageMetadataStore.read(id: removed).data == nil)
+        }
+    }
+
     @Test(arguments: [InvocationPersistencePoint.beforeWrite, .afterRename])
     func coreFailureDoesNotUnlinkAndRetryConfirmsDurability(_ point: InvocationPersistencePoint) async throws {
         let fault = RetentionIOFault()
@@ -348,6 +402,36 @@ extension UsageRetentionBudgetTests {
             try await fixture.eventually { store.tasks.first { $0.id == owner.id }?.runTokenBudget?.knownTokens == nil }
             let final = try #require(await store.aiInvocationStore.list().first { $0.id == owner.id })
             #expect(final.runAttempt == original.runAttempt && final.runTokenBudget?.maximumTokens == 100)
+        }
+    }
+
+    @Test func closeDrainsAlreadyAdmittedSaveAndRefusesSubsequentSave() async throws {
+        try await withBudgetRetentionFixture { fixture in
+            let pause = RetentionPause(), directory = fixture.directory.appendingPathComponent("closing")
+            let metadata = AIUsageMetadataStore(directory: directory, reportHandler: { report in
+                if report.trigger == .manual { await pause.waitIfArmed() }
+            })
+            await pause.arm()
+            let active = Task { await metadata.maintain() }
+            var saving: Task<AIUsageMetadataWriteResult, Never>?
+            var closing: Task<Void, Never>?
+            do {
+                try await fixture.eventually { await pause.entered }
+                let admitted = UUID(), late = UUID()
+                let data = try retentionRecord(admitted, at: Date())
+                saving = Task { await metadata.save(id: admitted, data: data) }
+                try await fixture.eventually { await metadata.pendingMutationCount == 1 }
+                closing = Task { await metadata.close() }
+                try await fixture.eventually { await metadata.pendingMutationCount == 2 }
+                let rejected = await metadata.save(id: late, data: try retentionRecord(late, at: Date()))
+                #expect(!rejected.stored && rejected.report.problems.contains(.storeClosed))
+                await pause.release()
+                _ = await active.value
+                #expect(await saving?.value.stored == true)
+                await closing?.value
+                #expect(try Data(contentsOf: directory.appendingPathComponent(admitted.uuidString + ".json")) == data)
+                #expect(!FileManager.default.fileExists(atPath: directory.appendingPathComponent(late.uuidString + ".json").path))
+            } catch { await pause.release(); _ = await active.value; _ = await saving?.value; await closing?.value; throw error }
         }
     }
 

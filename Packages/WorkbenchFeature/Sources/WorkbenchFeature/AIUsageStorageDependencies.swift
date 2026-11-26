@@ -15,12 +15,13 @@ struct AIUsageStorageDependencies: Sendable {
     }
     var beforePrepare: @Sendable (Set<UUID>, Bool) async -> Void = { _, _ in }
     var beforeReport: @Sendable (AIUsageMaintenanceReport) async -> Void = { _ in }
+    var beforeFinalInventory: @Sendable (AIUsageMaintenanceTrigger) throws -> Void = { _ in }
 
     func makeStore(directory: URL, budgetStore: InvocationStore) -> AIUsageMetadataStore {
         AIUsageMetadataStore(directory: directory, policy: policy, clock: clock, dailyInterval: dailyInterval,
             removeEntry: removeEntry, prepareRemoval: { ids, all, tickets in
                 await beforePrepare(ids, all)
                 return try await budgetStore.prepareUsageRemoval(for: ids, clearingAllRecorded: all, retrying: tickets)
-            }, syncDirectory: syncDirectory)
+            }, beforeFinalInventory: beforeFinalInventory, syncDirectory: syncDirectory)
     }
 }

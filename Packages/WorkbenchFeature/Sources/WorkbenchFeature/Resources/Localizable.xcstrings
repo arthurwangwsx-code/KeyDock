@@ -1,6 +1,28 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Usage records still in use will be cleared when their tasks finish. If KeyDock quits unexpectedly, clear usage again.": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Usage records still in use will be cleared when their tasks finish. If KeyDock quits unexpectedly, clear usage again."}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "仍在使用的用量记录将在任务结束后清除。如果 KeyDock 意外退出，请再次清除用量。"}}
+      }
+    },
+    "Usage maintenance is waiting for running tasks to finish.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage maintenance is waiting for running tasks to finish."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用量维护正在等待运行中的任务结束。"
+          }
+        }
+      }
+    },
     "A collection can contain up to 32 actions.": {
       "localizations": {
         "en": {

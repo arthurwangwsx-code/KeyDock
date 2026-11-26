@@ -199,6 +199,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     let configurationDirectoryIdentity: PrivateDirectoryIdentity?
     var inputCommitAllowed: @MainActor () -> Bool = { KDTextInputState.permitsCurrentAction }
     var taskHandles: [UUID: Task<Void, Never>] = [:]
+    var ownerReleaseTasks: [UUID: Task<Void, Never>] = [:]
     var aiTaskIDs: Set<UUID> = []
     var cancelledTaskIDs: Set<UUID> = []
     var resultTargets: [UUID: TargetSnapshot] = [:]
@@ -438,6 +439,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
         let clients = Array(mcpClients.values) + mcpRunClients.values.flatMap{$0}
         for client in clients { await client.invalidate() }
         mcpClients.removeAll(); mcpRunClients.removeAll(); mcpRunScopes.removeAll()
+        for release in Array(ownerReleaseTasks.values) { await release.value }
         await usageMetadataStore.close()
         let materialReads = Array(taskMaterialReadOperations.values), materialWrites = Array(taskMaterialSaveOperations.values)
         for operation in materialReads { _ = try? await operation.value }

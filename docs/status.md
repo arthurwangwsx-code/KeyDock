@@ -1,5 +1,7 @@
 # 当前状态总账
 
+本轮自动清理在正常退出时的回归已复现并修补。实际发布身份、用量与 Workflow 边界、桌面热键及视觉待验项分别登记在[关停与完整目标验收记录](implementation/retention-shutdown-2026-11-26.md)。
+
 当前公开发行与正式本机安装均为[alpha.27](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.27)，固定代码源`e6c7b98aa3dfd563f957cdb7f6ef6048386a23fc`。1080 Swift执行／156 Python／1035中英key、生产合成OCR双轮、同源CI45816057630、clean优化Preview、公证／装订／Gatekeeper、公开回下载及独立发行审计45818353644通过。正式About27已实际观察，默认Sol low／4096与翻译Luna none配置保留；凭据未读取或重录。本轮未追加真实模型生成，前序真实API资格保持原版本边界。
 
 清除用量与旧回执晚发布的确定性RED已修补，失效票据剥离数字、保留阈值及恢复身份；真实失败组EIO交错和清除后的新事实均留证。原生只证明清除后恢复显示与新值对照，不宣称已捕获GUI启动竞态或执行GUI清除按钮；自动TTL／数量／字节维护仍属42.4。[实施记录](implementation/usage-restoration-fence-2026-11-26.md)与[技术合同](technical/usage-restoration-fence.md)区分这些边界。
