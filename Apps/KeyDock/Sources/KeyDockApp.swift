@@ -496,14 +496,20 @@ import Darwin
         let belongs = key === workspace || key.sheetParent === workspace || workspace.attachedSheet.map { key === $0 || key.sheetParent === $0 } == true
         return belongs && (workspaceSession.hasPendingOrDismissingModal || workspace.attachedSheet != nil)
     }
+    private var blockingReviewOwnsKeyboard: Bool {
+        if workspaceSheetOwnsKeyboard { return true }
+        guard let launcher, let key = NSApp.keyWindow else { return false }
+        let belongs = key === launcher || key.sheetParent === launcher || launcher.attachedSheet.map { key === $0 || key.sheetParent === $0 } == true
+        return belongs && (launcherSession.ownsDraftCloseReview || launcher.attachedSheet != nil)
+    }
     private var keyboardDraft: AIDraftDocument? {
-        guard !workspaceSheetOwnsKeyboard, let keyWindow = NSApp.keyWindow else { return nil }
+        guard !blockingReviewOwnsKeyboard, let keyWindow = NSApp.keyWindow else { return nil }
         if keyWindow === workspace, workspaceSession.page == .ai { return workspaceSession.draft }
         if keyWindow === launcher { return launcherSession.draft }
         return nil
     }
     private var keyboardCancellationID: UUID? {
-        guard !workspaceSheetOwnsKeyboard, let keyWindow = NSApp.keyWindow else { return nil }
+        guard !blockingReviewOwnsKeyboard, let keyWindow = NSApp.keyWindow else { return nil }
         let id: UUID?
         if keyWindow === workspace, workspaceSession.page == .tasks { id = workspaceSession.selectedTaskID }
         else { id = keyboardDraft?.latestRunID }
@@ -516,7 +522,7 @@ import Darwin
         }
         if menuItem.action == #selector(runCurrentAction) {
             // 模态输入拥有键盘；不能让主窗口的快捷键运行被遮住的编辑稿。
-            if workspaceSheetOwnsKeyboard || !store.canCommitCurrentInput { return false }
+            if blockingReviewOwnsKeyboard || !store.canCommitCurrentInput { return false }
             if NSApp.keyWindow === clipboardPanel {
                 let alternate = clipboardSession.preferences.primaryAction.alternate
                 menuItem.title = alternate == .copy ? AppL("Copy clipboard selection") : AppL("Insert clipboard selection")
@@ -641,11 +647,14 @@ import Darwin
     @objc private func openClipboardAction() { presentClipboard() }
     @objc private func openSettingsAction() { openSettings(settingsSession.pane) }
     @objc private func openWorkspaceAction() { openWorkspace() }
-    @objc private func newAITaskAction() { workspaceSession.createDraft(in: store); openWorkspace() }
+    @objc private func newAITaskAction() {
+        guard !blockingReviewOwnsKeyboard else { return }
+        workspaceSession.createDraft(in: store); openWorkspace()
+    }
     @objc private func newCommandAction() { settingsSession.beginNewCommand() }
     @objc private func newAIAction() { settingsSession.beginNewAction() }
     @objc private func runCurrentAction() {
-        guard store.canCommitCurrentInput, !workspaceSheetOwnsKeyboard else { return }
+        guard store.canCommitCurrentInput, !blockingReviewOwnsKeyboard else { return }
         if NSApp.keyWindow === clipboardPanel { clipboardSession.commitAlternate() }
         else if NSApp.keyWindow === workspace, workspaceSession.page == .agent { runAgentAction() }
         else if NSApp.keyWindow === workspace, workspaceSession.page == .workflows { runWorkflowAction() }
