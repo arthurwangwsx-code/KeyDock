@@ -72,3 +72,9 @@ AI／范围大文本及保存失败／取消／清除的完整原生矩阵，以
 干净`4945204`优化Preview复查：紧凑动作区在原生鼠标激活／重绘后实际可见；初始动态截图差异保留，未声称完整首帧或焦点矩阵通过。一次坐标操作返回启动台，但旧草稿仍在AI drafts中，因此没有将其当作已确认关闭。通过明确草稿入口在工作区打开关闭审阅，Cancel后原输入及输入焦点恢复；保留结果审阅明确显示partial，默认全未选，手动只保存结果后正常退出。服务统计仍为一次POST、无Authorization及工具请求。
 
 同轮发现未选择任务（selectedTaskID=nil）时，任务空详情会使侧栏顶部及首个Failed行移出视口；选择一个仍可见旧任务后恢复。后续为整个taskContent的HSplitView绑定实际viewport，保留nil和真正零任务分支，不通过自动选首行掩盖；需重新原生验证。该轮生命周期exit0不覆盖这一布局FAIL，原生证据保留在`KeyDock-Review-db5da902-11d2-4137-a81e-09c73f9b5b8b`。
+
+后置核验`task-material-large-ai-proof-v1`通过，receipt SHA256 `2ec0dcaf3bbd5430666caeebb0387cd15e8acc80d5c2e637b84bad1f30bea67b`：保存正文恰为1048576个合成x字节，partial=true，仅visibleResult被保存，出生key对应这次failed AI回执；两份旧回执逐字段未变，无CLI／工具回执，control idle。材料文件SHA256为`35fd0bb2bc0d9ad42bbc2316ba1773ccf49d35f20441ce8adff464e2a196791f`。一次POST／无Authorization是已结束的loopback运行统计，非真实外部API资格。
+
+干净`e630243258da9427f3e0a09ff8f2b23290b2a16b`优化Preview（App SHA256 `bf22d99056e05ead4ecd93c84189a672397321fc5dfdaf7abe82b9aad0c8629a`）在原owned域重启，先进入AI工作台再选择Tasks，以保留nil selection。英文深色侧栏顶部／首个Failed行实际保持可见，点击首行可选择。只在已退出的合成域将当前动作prompt设为900000个Z；没有重启loopback server。新尝试审阅显示定义已变，原生只读范围可滚动至末尾，输入为空／Start停用；取消返回原任务并正常⌘Q退出。该轮`task-material-large-scope-native-v1` receipt SHA256 `68f5dde1cf3df89b429d2fc59cf010d484c9d6a6d89bf8b1d00e005258724aa7`。
+
+同一优化App在全新owned域`KeyDock-Review-da2fd2f1-f287-4c7a-8489-8100b3eea58c`完成中文浅色真正零任务及原生扩大窗口观察，侧栏与空状态仍在视口内，正常退出；`task-empty-zero-native-v1` receipt SHA256 `86852d866956b45ff8787d7daeee06fa9cde1335bc403c039271453f37e94df7`。后置`task-material-large-scope-proof-v1`确认原域仍为三份AI回执、旧两份逐字段不变、无新增尝试或CLI／工具回执，已保存partial正文摘要不变；新域三个回执namespace均为零。proof receipt SHA256 `f159689aa42af2d3cdbf23e82228347f168f52368c61ee0fb2c3320432709ce0`。这些是布局／长范围／取消／重启子集，未关闭compact首帧／焦点、完整中英明暗／VoiceOver／IME／多屏／物理热键及最终源发行资格。
