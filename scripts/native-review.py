@@ -57,6 +57,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--app", type=Path, required=True)
     parser.add_argument("--fixture", type=Path, help="Reuse an existing owned synthetic review root for restart checks")
+    parser.add_argument("--task-views", nargs=2, type=uuid.UUID, metavar=("FIRST", "SECOND"),
+                        help="Render these two tasks inside the owned Preview workspace")
     args = parser.parse_args()
     app = args.app.expanduser().resolve(strict=True)
     facts = inspect_app(app)
@@ -83,7 +85,10 @@ def main():
     record.update(observation=str(observation), state="launching")
     atomic_json(observation / "launch.json", record)
     with open_private_log(observation) as output:
-        child = subprocess.Popen([str(executable), "--review-fixture-root", str(root)], stdout=output, stderr=subprocess.STDOUT)
+        command = [str(executable), "--review-fixture-root", str(root)]
+        if args.task_views:
+            command += ["--review-task-views", *(str(task) for task in args.task_views)]
+        child = subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT)
         record.update(pid=child.pid, state="running")
         atomic_json(observation / "started.json", record)
         atomic_json(receipt, record)

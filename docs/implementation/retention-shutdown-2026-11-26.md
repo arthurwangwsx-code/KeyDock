@@ -14,6 +14,8 @@
 
 普通 Preview 启动按 UUID 新建观察目录，保留 launch、started、退出回执与本次日志。同一合成数据目录可以复用；根级 review-process.json 指向最近运行。旧运行按各自目录核验。
 
+`f1f7b61` 的干净完整检查为 1,098 Swift、157 Python、1,037 中英键及两轮生产 OCR，精确源[核心 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45830315173)及优化 Preview 通过。实际 Preview 启动持久化了过期项的未知预算，保留新项的 31 token，进程正常退出。桌面观察器无法选择菜单栏 accessory 进程。为取得可复查的中英文图像，隔离 Preview 支持在已验证的合成 fixture 上执行 `scripts/native-review.py --task-views <first-uuid> <second-uuid>`，打开真正的工作区并绘制其自身内容。用户屏幕合成效果、实际键盘输入、VoiceOver 和外部应用观察另外验收。
+
 ## 后续 P0–P4 验收总账
 
 定向回归 `da1cf767-a556-4969-8e00-38b726f0cf35` 通过 59 项执行，回执摘要 `fd9be8cdf6565875644a6cfe92f90a639144cb7c80791a44726223d7a0694aa5`。合成 HTTP Workflow 的最后一份索引为一个新叶、两次 POST，显示保留 12 输入／5 输出 token。在候选 alpha.28 上另行记录干净全量、CI、优化 Preview 及真正进程重启。

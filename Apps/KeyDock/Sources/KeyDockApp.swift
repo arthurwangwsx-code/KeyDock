@@ -54,6 +54,12 @@ import Combine
             let store = try WorkbenchModel(dataDirectory: directory, allowContextCapture: !smoke)
             let windows = WindowCoordinator(store: store, safeSmoke: smoke)
             coordinator = windows; windows.start()
+            #if KEYDOCK_PREVIEW
+            if smoke, ProcessInfo.processInfo.arguments.contains("--review-fixture-root"),
+               ProcessInfo.processInfo.arguments.contains("--review-task-views") {
+                windows.reviewTaskViews(in: directory)
+            }
+            #endif
             // 仅隔离Preview可用：使用明确的合成夹具做界面验收，不启用系统采集。
             if smoke && ProcessInfo.processInfo.arguments.contains("--demo-clipboard") {
                 windows.loadClipboardDemo()
@@ -698,6 +704,48 @@ import Combine
         }
         NSApp.mainMenu = main
     }
+    #if KEYDOCK_PREVIEW
+    /// 只绘制当前合成域中本应用自己的工作区内容，不采集屏幕、其他窗口或外部输入。
+    func reviewTaskViews(in directory: URL) {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard safeSmoke, visualReview.allowsChanges, directory.lastPathComponent == "KeyDock-Smoke",
+              arguments.filter({ $0 == "--review-task-views" }).count == 1,
+              let flag = arguments.firstIndex(of: "--review-task-views"), flag + 2 < arguments.count,
+              let first = UUID(uuidString: arguments[flag + 1]), let second = UUID(uuidString: arguments[flag + 2]),
+              first != second else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let deadline = ContinuousClock.now + .seconds(15)
+            while !store.isShuttingDown && ![first, second].allSatisfy({ id in store.tasks.contains { $0.id == id } }) {
+                guard ContinuousClock.now < deadline else { return }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            guard !store.isShuttingDown else { return }
+            let output = directory.deletingLastPathComponent().appendingPathComponent("task-views-" + UUID().uuidString)
+            do {
+                try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+                for id in [first, second] {
+                    openWorkspace(.tasks(id))
+                    // 等待真实窗口呈现并让 SwiftUI 完成本次选中变化的布局。
+                    try await Task.sleep(for: .milliseconds(500))
+                    guard !store.isShuttingDown, let window = workspace, window.isVisible,
+                          workspaceSession.selectedTaskID == id, let view = window.contentView,
+                          view.bounds.width > 0, view.bounds.height > 0 else { return }
+                    view.layoutSubtreeIfNeeded()
+                    window.displayIfNeeded()
+                    guard let pixels = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
+                    view.cacheDisplay(in: view.bounds, to: pixels)
+                    guard let data = pixels.representation(using: .png, properties: [:]) else { return }
+                    try data.write(to: output.appendingPathComponent(id.uuidString + ".png"), options: .withoutOverwriting)
+                }
+                print("KEYDOCK_REVIEW_TASK_VIEWS " + output.lastPathComponent)
+            } catch {
+                print("KEYDOCK_REVIEW_TASK_VIEWS_FAILED")
+            }
+        }
+    }
+    #endif
+
     @objc private func resizeReviewWorkspace(_ sender: NSMenuItem) {
         guard safeSmoke, visualReview.allowsChanges, let window = workspace, window.isVisible, sender.tag == 0 || sender.tag == 1 else { return }
         window.setContentSize(sender.tag == 0 ? KDTokens.workspaceMinimumSize : KDTokens.workspaceDefaultSize)
