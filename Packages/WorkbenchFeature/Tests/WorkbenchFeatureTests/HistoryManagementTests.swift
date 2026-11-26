@@ -102,13 +102,14 @@ import ExecutionCore
             try await fixture.drain(id)
             #expect(fixture.store.tasks.first { $0.id == id }?.aiUsageSummary?.state == .reported)
             let oldUsageGeneration = fixture.store.usageHistoryGeneration
+            let oldUsageRead = fixture.store.captureUsageRestoreRead()
             let previous = try #require(fixture.store.tasks.first { $0.id == id }?.aiUsageSummary)
             await fixture.store.clearAIUsageHistory()
             #expect(!FileManager.default.fileExists(atPath: fixture.directory.appendingPathComponent("usage/" + id.uuidString + ".json").path))
             #expect(fixture.store.tasks.first { $0.id == id }?.aiUsageSummary == .unknown)
             let index = try #require(fixture.store.tasks.firstIndex { $0.id == id })
             fixture.store.tasks[index].restoredFromReceipt = true
-            fixture.store.applyRestoredAIUsage(previous, id: id, historyGeneration: fixture.store.historyGeneration, usageGeneration: oldUsageGeneration)
+            fixture.store.applyRestoredAIUsage(previous, id: id, historyGeneration: fixture.store.historyGeneration, usageGeneration: oldUsageGeneration, usageRead: oldUsageRead)
             #expect(fixture.store.tasks[index].aiUsageSummary == .unknown)
             #expect(!fixture.store.settingsNotice.isEmpty)
             // 用量清除与任务正文、配置分离。
@@ -138,6 +139,7 @@ import ExecutionCore
             try await fixture.drain(id)
             let index = try #require(fixture.store.tasks.firstIndex { $0.id == id })
             let previous = try #require(fixture.store.tasks[index].aiUsageSummary)
+            let oldUsageRead = fixture.store.captureUsageRestoreRead()
             let file = fixture.directory.appendingPathComponent("usage/" + id.uuidString + ".json")
             var json = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
             json["recordedAt"] = Date().addingTimeInterval(-91 * 86_400).timeIntervalSinceReferenceDate
@@ -146,7 +148,7 @@ import ExecutionCore
             #expect(report.removedIDs == [id])
             try await storeEventually { fixture.store.tasks[index].aiUsageSummary == .unknown }
             fixture.store.tasks[index].restoredFromReceipt = true
-            fixture.store.applyRestoredAIUsage(previous, id: id, historyGeneration: fixture.store.historyGeneration, usageGeneration: fixture.store.usageHistoryGeneration)
+            fixture.store.applyRestoredAIUsage(previous, id: id, historyGeneration: fixture.store.historyGeneration, usageGeneration: fixture.store.usageHistoryGeneration, usageRead: oldUsageRead)
             #expect(fixture.store.tasks[index].aiUsageSummary == .unknown)
         }
     }

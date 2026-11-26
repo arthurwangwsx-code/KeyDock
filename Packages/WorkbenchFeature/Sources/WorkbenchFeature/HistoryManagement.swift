@@ -8,7 +8,7 @@ extension WorkbenchModel {
             return parents.contains(id)
         }.map(\.id))
     }
-    func restoreHistorySnapshot(cli: [InvocationReceipt], ai: [InvocationReceipt], generation: UInt64) {
+    func restoreHistorySnapshot(cli: [InvocationReceipt], ai: [InvocationReceipt], generation: UInt64, usageRead: UsageRestoreReadTicket? = nil) {
         guard !isDesktopReview else { return }
         guard !isShuttingDown, !isClearingHistory, historyGeneration == generation else { return }
         let aiIDs = Set(ai.map(\.id))
@@ -23,7 +23,7 @@ extension WorkbenchModel {
         for receipt in merged.prefix(sessionLimits.tasks) {
             // 恢复读取与清理会await；旧快照不能覆盖本进程随后确认的结果。
             guard !tasks.contains(where: { $0.id == receipt.id }) else { continue }
-            if aiIDs.contains(receipt.id) { restoreAIReceipt(receipt) } else {
+            if aiIDs.contains(receipt.id) { restoreAIReceipt(receipt, usageRead: usageRead) } else {
                 restoreReceipt(receipt)
                 if let report = DesktopWorkspaceRunResult.recover(parent: receipt, children: cli), let index = tasks.firstIndex(where: { $0.id == receipt.id }) {
                     tasks[index].titleKey = "Desktop workspace"
@@ -78,6 +78,7 @@ extension WorkbenchModel {
         let activeDrafts = Set(tasks.filter { protected.contains($0.id) }.compactMap(\.draftID))
         let idleDrafts = Dictionary(uniqueKeysWithValues: drafts.values.filter { !activeDrafts.contains($0.id) }.map { ($0.id, $0.revision) })
         defer { isClearingHistory = false }
+        let usageRead = captureUsageRestoreRead()
         let cliSnapshot = await invocationStore.list(), aiSnapshot = await aiInvocationStore.list()
         // 显式确认清除可覆盖尚未发布到UI的旧恢复记录；当前进程lease不受ack影响。
         await invocationStore.acknowledgeRecovery(); await aiInvocationStore.acknowledgeRecovery()
@@ -105,7 +106,7 @@ extension WorkbenchModel {
         isClearingHistory = false
         // 失败组若尚未显示过，仍展示其保留记录；不把清除失败伪装为空历史。
         restoreHistorySnapshot(cli: cliSnapshot.filter { cli.remainingIDs.contains($0.id) },
-            ai: aiSnapshot.filter { ai.remainingIDs.contains($0.id) }, generation: generation)
+            ai: aiSnapshot.filter { ai.remainingIDs.contains($0.id) }, generation: generation, usageRead: usageRead)
         let remainingCandidates = cliIDs.intersection(cli.remainingIDs).union(aiIDs.intersection(ai.remainingIDs))
         if cli.failure != nil || ai.failure != nil || tools.failure != nil || !remainingCandidates.isEmpty {
             settingsNoticeMessage = noticeKey("History was only partly cleared. Some tasks are still finishing or records could not be removed. Try again later.")

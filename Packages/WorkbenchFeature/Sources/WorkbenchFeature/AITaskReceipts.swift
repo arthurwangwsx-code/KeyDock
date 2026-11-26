@@ -51,7 +51,7 @@ extension WorkbenchModel {
         }
     }
 
-    func restoreAIReceipt(_ receipt: InvocationReceipt) {
+    func restoreAIReceipt(_ receipt: InvocationReceipt, usageRead: UsageRestoreReadTicket? = nil) {
         guard !isDesktopReview else { return }
         // 启动读取与用户新建任务可能交错；当前进程已有任务不能被恢复列表重复插入。
         guard !tasks.contains(where: { $0.id == receipt.id }) else { return }
@@ -66,7 +66,11 @@ extension WorkbenchModel {
         task.receiptIsAI = true
         task.runAttempt = receipt.runAttempt
         if let budget = receipt.runTokenBudget {
-            task.runTokenBudget = budget.status == .awaitingUsage ? .init(maximumTokens: budget.maximumTokens, knownTokens: budget.knownTokens, completedTurns: budget.completedTurns, status: .usageUnavailable) : budget
+            if !acceptsUsageRestoreRead(usageRead) {
+                task.runTokenBudget = .init(maximumTokens: budget.maximumTokens, knownTokens: nil, completedTurns: 0, status: .usageUnavailable)
+            } else {
+                task.runTokenBudget = budget.status == .awaitingUsage ? .init(maximumTokens: budget.maximumTokens, knownTokens: budget.knownTokens, completedTurns: budget.completedTurns, status: .usageUnavailable) : budget
+            }
         }
         if receipt.message == "ai.paused.tokens" { task.runTokenPauseReason = .thresholdReached; task.noticeMessage = agentTokenPauseNotice(.thresholdReached) }
         if receipt.message == "ai.paused.usage" { task.runTokenPauseReason = .usageUnavailable; task.noticeMessage = agentTokenPauseNotice(.usageUnavailable) }

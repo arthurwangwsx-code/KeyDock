@@ -144,14 +144,15 @@ extension WorkbenchModel {
     @discardableResult func loadRestoredWorkflowUsage(_ id: UUID,
         reader: (@Sendable () async throws -> WorkflowUsageRead)? = nil) -> Task<Void, Never> {
         let history = historyGeneration, usage = usageHistoryGeneration, metadata = usageMetadataStore
+        let usageRead = captureUsageRestoreRead()
         return Task { [weak self] in
             for _ in 0..<3 {
-                guard let self, canAcceptRestoredUsage(id, history: history, usage: usage) else { return }
+                guard let self, canAcceptRestoredUsage(id, history: history, usage: usage, usageRead: usageRead) else { return }
                 let read: WorkflowUsageRead
                 do { read = if let reader { try await reader() } else { try await metadata.readWorkflowUsage(id: id) } }
                 catch { return }
                 let summary = await Task.detached(priority: .utility) { WorkflowUsageAggregation.summary(read.recorded, running: false) }.value
-                guard canAcceptRestoredUsage(id, history: history, usage: usage) else { return }
+                guard canAcceptRestoredUsage(id, history: history, usage: usage, usageRead: usageRead) else { return }
                 guard metadata.revisionFence.current == read.revision else { continue }
                 guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
                 workflowUsageDependencies[id] = Dictionary(uniqueKeysWithValues: read.links.map { ($0.childRunID, read.revision) })

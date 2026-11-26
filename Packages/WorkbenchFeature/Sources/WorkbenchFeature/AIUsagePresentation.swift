@@ -158,27 +158,28 @@ extension WorkbenchModel {
     @discardableResult func loadRestoredAIUsage(_ id: UUID, interrupted: Bool,
         reader: (@Sendable () async -> AIUsageMetadataReadResult)? = nil) -> Task<Void, Never> {
         let generation = historyGeneration, usageGeneration = usageHistoryGeneration
+        let usageRead = captureUsageRestoreRead()
         let metadata = usageMetadataStore
         return Task { [weak self] in
             // 无关记录写入也会推进全局代次；有界重读保留有效历史，同时不放松清除/TTL围栏。
             for _ in 0..<3 {
-                guard let self, canAcceptRestoredUsage(id, history: generation, usage: usageGeneration) else { return }
+                guard let self, canAcceptRestoredUsage(id, history: generation, usage: usageGeneration, usageRead: usageRead) else { return }
                 let read = if let reader { await reader() } else { await metadata.read(id: id) }
                 let summary = await Task.detached(priority: .utility) { AIUsageLedgerReader.summary(data: read.data, runID: id, interrupted: interrupted) }.value
-                guard canAcceptRestoredUsage(id, history: generation, usage: usageGeneration) else { return }
+                guard canAcceptRestoredUsage(id, history: generation, usage: usageGeneration, usageRead: usageRead) else { return }
                 guard metadata.revisionFence.current == read.revision else { continue }
-                applyRestoredAIUsage(summary, id: id, historyGeneration: generation, usageGeneration: usageGeneration, metadataRevision: read.revision)
+                applyRestoredAIUsage(summary, id: id, historyGeneration: generation, usageGeneration: usageGeneration, metadataRevision: read.revision, usageRead: usageRead)
                 return
             }
         }
     }
-    func canAcceptRestoredUsage(_ id: UUID, history: UInt64, usage: UInt64) -> Bool {
-        !isDesktopReview && !isShuttingDown && historyGeneration == history && usageHistoryGeneration == usage && !invalidatedUsageRuns.contains(id) &&
+    func canAcceptRestoredUsage(_ id: UUID, history: UInt64, usage: UInt64, usageRead: UsageRestoreReadTicket) -> Bool {
+        acceptsUsageRestoreRead(usageRead) && historyGeneration == history && usageHistoryGeneration == usage && !invalidatedUsageRuns.contains(id) &&
         tasks.contains { $0.id == id && $0.restoredFromReceipt }
     }
-    func applyRestoredAIUsage(_ summary: AIUsageSummary, id: UUID, historyGeneration: UInt64, usageGeneration: UInt64, metadataRevision: UInt64? = nil) {
+    func applyRestoredAIUsage(_ summary: AIUsageSummary, id: UUID, historyGeneration: UInt64, usageGeneration: UInt64, metadataRevision: UInt64? = nil, usageRead: UsageRestoreReadTicket? = nil) {
         guard !isDesktopReview else { return }
-        guard !isShuttingDown, self.historyGeneration == historyGeneration, usageHistoryGeneration == usageGeneration, !invalidatedUsageRuns.contains(id),
+        guard acceptsUsageRestoreRead(usageRead), self.historyGeneration == historyGeneration, usageHistoryGeneration == usageGeneration, !invalidatedUsageRuns.contains(id),
               metadataRevision == nil || metadataRevision == usageMetadataStore.revisionFence.current,
               let index = tasks.firstIndex(where: { $0.id == id }), tasks[index].restoredFromReceipt else { return }
         tasks[index].aiUsageSummary = summary; usageSummaryGenerations[id] = usageGeneration; usageSummaryRevisions[id] = metadataRevision ?? 0

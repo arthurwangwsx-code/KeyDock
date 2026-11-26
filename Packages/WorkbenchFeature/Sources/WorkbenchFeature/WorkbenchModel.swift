@@ -97,6 +97,7 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
     var mutatingSession = false
     var historyGeneration: UInt64 = 0
     var usageHistoryGeneration: UInt64 = 0
+    let usageRestoreReadFence = UsageRestoreReadFence()
     var usageSummaryGenerations: [UUID: UInt64] = [:]
     var usageSummaryRevisions: [UUID: UInt64] = [:]
     var invalidatedUsageRuns: Set<UUID> = []
@@ -362,11 +363,12 @@ enum WorkbenchLifecycleError: Error { case shuttingDown }
             }
             guard !isShuttingDown else { return }
             await usageMetadataStore.start()
+            let usageRead = captureUsageRestoreRead()
             let cli = await invocationStore.list()
             guard !isShuttingDown, historyGeneration == restoreGeneration else { return }
             let ai = await aiInvocationStore.list()
             guard !isShuttingDown, historyGeneration == restoreGeneration else { return }
-            restoreHistorySnapshot(cli: cli, ai: ai, generation: restoreGeneration)
+            restoreHistorySnapshot(cli: cli, ai: ai, generation: restoreGeneration, usageRead: usageRead)
             await invocationStore.acknowledgeRecovery(); await aiInvocationStore.acknowledgeRecovery()
             await agentToolStore.acknowledgeRecovery()
             await maintainTaskHistory()
