@@ -156,6 +156,14 @@ def require_swift_tests(log):
         raise PipelineError("Swift test stage ran no cases; check its selector and log: " + str(log))
 
 
+def require_app_icon(app, info):
+    """Xcode 自动生成的 plist 可能丢弃图标字段；在签名前核对实际包及资源字节。"""
+    resource = Path(app) / "Contents/Resources/AppIcon.icns"
+    original = ROOT / "Apps/KeyDock/Resources/AppIcon.icns"
+    if info.get("CFBundleIconFile") != "AppIcon.icns" or not resource.is_file() or resource.is_symlink() or sha256(resource) != sha256(original):
+        raise PipelineError("Built App is missing the declared KeyDock icon or its bytes differ from source")
+
+
 def build(profile="preview", configuration=None, allow_dirty=False, identity=None):
     if profile not in ("release", "preview"):
         raise PipelineError("Use the independent desktop-review-build pipeline for local Review pairs")
@@ -203,6 +211,7 @@ def build(profile="preview", configuration=None, allow_dirty=False, identity=Non
     info_path = app / "Contents/Info.plist"
     with info_path.open("rb") as stream:
         info = plistlib.load(stream)
+    require_app_icon(app, info)
     info.update(KeyDockSafeSmoke=profile == "preview", KeyDockGitCommit=source["commit"], KeyDockReleaseVersion=CONFIG["version"])
     with info_path.open("wb") as stream:
         plistlib.dump(info, stream, fmt=plistlib.FMT_BINARY)

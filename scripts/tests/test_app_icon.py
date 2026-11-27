@@ -1,7 +1,14 @@
 """原生 AppIcon 必须随正式及 Preview 的共同资源编入应用。"""
 import struct
+import plistlib
+import sys
+import tempfile
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import keydock
+from keydock_common import PipelineError
 
 
 class AppIconTests(unittest.TestCase):
@@ -24,4 +31,16 @@ class AppIconTests(unittest.TestCase):
         self.assertIn((1024, 1024), dimensions)
         self.assertIn((512, 512), dimensions)
         self.assertIn((256, 256), dimensions)
-        self.assertIn("INFOPLIST_KEY_CFBundleIconFile: AppIcon.icns", (root / "project.yml").read_text())
+        self.assertIn("INFOPLIST_FILE: Apps/KeyDock/Info.plist", (root / "project.yml").read_text())
+        self.assertEqual(plistlib.loads((root / "Apps/KeyDock/Info.plist").read_bytes())["CFBundleIconFile"], "AppIcon.icns")
+
+    def test_built_bundle_needs_exact_icon_metadata_and_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            app = Path(directory) / "Synthetic.app"
+            resource = app / "Contents/Resources/AppIcon.icns"
+            resource.parent.mkdir(parents=True)
+            resource.write_bytes((keydock.ROOT / "Apps/KeyDock/Resources/AppIcon.icns").read_bytes())
+            with self.assertRaises(PipelineError): keydock.require_app_icon(app, {})
+            keydock.require_app_icon(app, {"CFBundleIconFile": "AppIcon.icns"})
+            resource.write_bytes(b"wrong icon")
+            with self.assertRaises(PipelineError): keydock.require_app_icon(app, {"CFBundleIconFile": "AppIcon.icns"})
