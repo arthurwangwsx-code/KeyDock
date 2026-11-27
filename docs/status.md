@@ -1,5 +1,7 @@
 # 当前状态总账
 
+2026-11-27：[alpha.30，build 30](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.30) 已通过本机 make ship 实际公开，固定干净源码 `315b499d959cb0297a1d35e81216eee926b88c1c`。新增应用图标、构建图标元数据门禁及 OpenAI 快速配置。1,109 次 Swift、168 项 Python、1,054 个中英键、两轮生产 OCR、同源 Core CI、App/DMG 公证与回下载核验通过。正式本机安装仍为 alpha.28，原生设置点击与真实账号生成验收未完成；iSpec 46.1/46.2 已收口，46.3 保留开放。[交付证据](implementation/alpha30-release-2026-11-27.md)。
+
 2026-11-27：[alpha.29，build 29](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.29) 已通过本机 `make ship` 实际公开为预发行版，固定干净源码 `12dbf2b1699c5197d6909d377dcd751db9423f21`。1,103 次 Swift 执行、166 项 Python、1,037 个中英键、两轮生产 OCR、指定[同源 core CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45956865727)通过。Developer ID、App／DMG 公证及装订／Gatekeeper、四项资产上传、公开前后回下载和[独立发行审计](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45960343004)均通过。正式本机安装仍为 alpha.28（本次未请求安装），产品完整验收仍 PARTIAL。[一键发行证据](implementation/alpha29-release-2026-11-27.md)记录本次实际链路，任务45.1–45.2收口。
 
 直接窗口布局与最小化已合入 `master`，生产代码 `d125202`。同应用 A→B 的受控竞态修复后零写入；干净源码 1,103 次 Swift、157 项 Python、1,037 个中英键、两轮系统 OCR、优化 Preview 两个真实进程及[同源 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45851482288)通过。两个进程验证了旧／新用量恢复。真实窗口切换和实体键的资格继续开放，安装版本仍为下述 alpha.28。

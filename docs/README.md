@@ -1,9 +1,11 @@
 # KeyDock 文档总览
 
-更新时间为 2026-11-27。当前公开版本为已公证的 alpha.29（29），正式本机安装仍为 alpha.28（28）。[alpha.29 一键发行证据](implementation/alpha29-release-2026-11-27.md)记录真实本机打包、公证、GitHub 公开上传及回下载审计；[自动清理、重启和发行记录](implementation/retention-shutdown-2026-11-26.md)保留前序原生界面、正式回退和完整目标缺口。此前版本的真实模型、视觉和设备验收保留各自边界。
+更新时间为 2026-11-27。当前公开版本为已公证的 alpha.30（30），正式本机安装仍为 alpha.28（28）。[alpha.30 交付证据](implementation/alpha30-release-2026-11-27.md)记录应用图标、AI 快速设置、本机回归和真实发行；[alpha.29 一键发行证据](implementation/alpha29-release-2026-11-27.md)记录前序流水线与审计；[自动清理、重启和发行记录](implementation/retention-shutdown-2026-11-26.md)保留前序原生界面、正式回退和完整目标缺口。此前版本的真实模型、视觉和设备验收保留各自边界。
 
 | 文档 | 用途 |
 |---|---|
+| [alpha.30 交付证据](implementation/alpha30-release-2026-11-27.md) | 实际包图标、AI 快速配置、同源回归与公开发行 |
+| [AI 服务快速配置与应用图标](technical/ai-service-quick-setup.md) | 预设、模型目录与密钥隔离的交互合同 |
 | [alpha.29 一键发行证据](implementation/alpha29-release-2026-11-27.md) | 本机全量资格、同源CI、签名公证、四项公开资产及独立发行审计 |
 | [当前开发收口与多Agent续接](handoffs/2026-11-26-parallel-work.md) | 单写者约束、三位只读Agent分工、剩余完整目标与资格边界 |
 | [自动维护开发收口](implementation/usage-retention-handoff-2026-11-26.md) | 43 实现的历史开发快照、1094本机执行及待补证边界 |
