@@ -1,10 +1,12 @@
 # 当前状态总账
 
+2026-11-27：[alpha.29，build 29](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.29) 已通过本机 `make ship` 实际公开为预发行版，固定干净源码 `12dbf2b1699c5197d6909d377dcd751db9423f21`。1,103 次 Swift 执行、166 项 Python、1,037 个中英键、两轮生产 OCR、指定[同源 core CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45956865727)通过。Developer ID、App／DMG 公证及装订／Gatekeeper、四项资产上传、公开前后回下载和[独立发行审计](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45960343004)均通过。正式本机安装仍为 alpha.28（本次未请求安装），产品完整验收仍 PARTIAL。[一键发行证据](implementation/alpha29-release-2026-11-27.md)记录本次实际链路，任务45.1–45.2收口。
+
 直接窗口布局与最小化已合入 `master`，生产代码 `d125202`。同应用 A→B 的受控竞态修复后零写入；干净源码 1,103 次 Swift、157 项 Python、1,037 个中英键、两轮系统 OCR、优化 Preview 两个真实进程及[同源 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45851482288)通过。两个进程验证了旧／新用量恢复。真实窗口切换和实体键的资格继续开放，安装版本仍为下述 alpha.28。
 
 发行后的开发已验证提供方成功用量、剪贴板查询失败重试、模型上限继承和启动台重复目录发布。模型与启动台修复源 `299a240` 已通过[同源 CI](https://github.com/arthurwangwsx-code/KeyDock/actions/runs/45847402118)、干净本机全量、两轮系统 OCR 和优化 Preview。签名 A/B/C 合成接收窗口初始计数均为零；实际插入、实体快捷键、具体窗口切换及权限撤销仍须分别验证。见[发行后的分项记录](implementation/retention-shutdown-2026-11-26.md)及[费用前置回归](technical/agent-estimated-cost-limit.md)。
 
-当前公开预发布与 `/Applications/KeyDock.app` 均为 [alpha.28，build 28](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.28)，固定源 `6490bc51d00b45c47e0450c90b8f25f5c508c5b6`。1,098 次 Swift、157 项 Python、1,037 个中英键、两轮生产 OCR、同源双 CI、优化 Preview 及两次原生启动通过。App 与 DMG 已公证，公开资产已回下载；正式安装实测 27 → 28 → 27 → 28。详见[本轮证据和 P0–P4 验收总账](implementation/retention-shutdown-2026-11-26.md)。
+前序公开预发布 [alpha.28，build 28](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.28) 仍为 `/Applications/KeyDock.app` 的正式本机安装版本，固定源 `6490bc51d00b45c47e0450c90b8f25f5c508c5b6`。1,098 次 Swift、157 项 Python、1,037 个中英键、两轮生产 OCR、同源双 CI、优化 Preview 及两次原生启动通过。App 与 DMG 已公证，公开资产已回下载；正式安装实测 27 → 28 → 27 → 28。详见[本轮证据和 P0–P4 验收总账](implementation/retention-shutdown-2026-11-26.md)。
 
 上一版公开发行与正式本机安装均为[alpha.27](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.27)，固定代码源`e6c7b98aa3dfd563f957cdb7f6ef6048386a23fc`。1080 Swift执行／156 Python／1035中英key、生产合成OCR双轮、同源CI45816057630、clean优化Preview、公证／装订／Gatekeeper、公开回下载及独立发行审计45818353644通过。正式About27已实际观察，默认Sol low／4096与翻译Luna none配置保留；凭据未读取或重录。本轮未追加真实模型生成，前序真实API资格保持原版本边界。
 
