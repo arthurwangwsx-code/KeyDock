@@ -30,11 +30,12 @@
 
 ## 工程流水线
 
-- 个人Mac遵循共享存储合同：日常目标200 GB，硬底线120 GiB；检查`/Users/ai/project/_workspace/tools/build_storage.py status`的活跃预算与buildHeadroomGiB。构建／测试／导出／安装／证据整段通过其`run --source-root <canonical> --expected-gib N -- COMMAND ARG`，不以绝对编译器路径、伪预算或移除活跃租约绕过拒绝。
+- 个人Mac遵循共享存储合同：日常目标至少300 GB（优先350 GB），硬底线120 GiB；检查`/Users/ai/project/_workspace/tools/build_storage.py status`的活跃预算与buildHeadroomGiB。构建／测试／导出／安装／证据整段通过其`run --source-root <canonical> --expected-gib N -- COMMAND ARG`，不以绝对编译器路径、伪预算或移除活跃租约绕过拒绝。
 - `scripts/keydock.py`在共享工具存在时自动包裹完整CLI流程，嵌套仍由共享工具核验和复用租约；通用原生命令在外层显式包裹。KeyDock当前为admission-only，不自动登记或扩大清理范围；固定SDK／配置缓存复用，保留最新两份完整原始发行及被引用失败证据，空间治理不作为产品验收。
 - 统一入口 `python3 scripts/keydock.py`／Makefile；版本、架构、bundleID、签名team与源仓库在 release/config.json。
 - `make debug` 构建并安装独立KeyDock Preview；其bundleID与数据／权限能力和正式应用分离。调试流程不读真实剪贴板／凭据。
 - `KEYDOCK_NOTARY_PROFILE=<已有profile> make release` 执行检查、干净提交的Release构建、Developer ID签名、App/DMG公证装订、Gatekeeper与摘要。凭据留在钥匙串，禁止导出私钥到工程或日志。
 - `make install` 使用同卷原子交换；核对bundleID/team/资源摘要，精确路径请求正常退出，保留旧App与回退receipt。未知进程、symlink、目标漂移或退出失败时停止，不force kill、不改TCC或quarantine。
 - `make publish` 仅消费已验证资产、已推送master可达的精确tag；先draft、回下载验签／验哈希再公开prerelease，不覆盖不同字节的既有资产。
+- 后续正式发布默认 `make ship-plan` 后 `KEYDOCK_NOTARY_PROFILE=<已有profile> make ship`：已审查干净master必须与GitHub一致，版本/build与发行说明先提交；本机完成检查／Release构建／签名／公证／打包，GitHub仅执行同源core检查与资产审计，不默认构建Preview。只在本地包验证后创建／推送精确tag；重试复用同源候选，失败不覆盖旧资产。安装另行 `make install` 或显式 `ship --install`。
 - 当前用户已要求整个KeyDock应用源码开源、Release本地打包上传和安装替换自动化。目标根据已选项目名及已核对GitHub账号为arthurwangwsx-code/KeyDock；不得扩大到其他仓库或私人数据。

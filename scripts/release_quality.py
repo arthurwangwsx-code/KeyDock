@@ -8,6 +8,7 @@ from pathlib import Path
 import platform
 import re
 import subprocess
+import time
 
 from keydock_common import CONFIG, ROOT, PipelineError, atomic_json, run, sha256
 
@@ -185,6 +186,22 @@ def core_ci(source, selected=None):
     facts = {key: result.get(key) for key in ("id", "head_sha", "path", "event", "status", "conclusion", "html_url")}
     validate_ci(facts, source)
     return facts
+
+
+def wait_for_core_ci(source, timeout=600, interval=10):
+    """等待同SHA的最新push core检查；失败立即停止，不自动重跑云端。"""
+    deadline = time.monotonic() + timeout
+    while True:
+        payload = json.loads(run(["gh", "api", "repos/" + CONFIG["repository"] + "/actions/runs?head_sha=" + source["commit"] + "&event=push&per_page=20"], capture=True))
+        matches = [item for item in payload["workflow_runs"] if item.get("path") == ".github/workflows/ci.yml" and item.get("head_sha") == source["commit"] and item.get("event") == "push"]
+        latest = max(matches, key=lambda item: item["id"], default=None)
+        if latest and latest.get("status") == "completed":
+            return core_ci(source, latest["id"])
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise PipelineError("Same-source core CI is not complete; rerun ship to resume without rebuilding")
+        print("Waiting for same-source core CI (no cloud packaging)...", flush=True)
+        time.sleep(min(interval, remaining))
 
 
 def validate_ci(facts, source):

@@ -4,7 +4,7 @@
 
 2026-11-25个人Mac补充：统一CLI在共享`build_storage.py`存在时自动包裹整个命令，包括release内的检查／构建／导出／安装／上传及回执；已持有外层租约时仍经共享工具验证后复用。可用`PERSONAL_BUILD_STORAGE_TOOL`指定治理器，显式配置缺失时失败，不转未包裹编译器。其他开源开发机及CI未部署此个人工具时保留原工程容量检查。
 
-通用Swift／iSpec原生命令须在整段外层使用`python3 /Users/ai/project/_workspace/tools/build_storage.py run --source-root <canonical> --expected-gib N -- COMMAND ARG`。日常目标200 GB、物理硬底线120 GiB，按status的活跃预留和buildHeadroomGiB准入；当前KeyDock为admission-only，不自动扩大清理白名单。复用固定缓存，保留最新两份完整原始发行和引用中的失败证据，结束记录源身份／退出状态／证据位置并仅收尾任务自有scratch。空间治理与产品验收分别报告。
+通用Swift／iSpec原生命令须在整段外层使用`python3 /Users/ai/project/_workspace/tools/build_storage.py run --source-root <canonical> --expected-gib N -- COMMAND ARG`。日常目标至少300 GB（优先350 GB）、物理硬底线120 GiB，按status的活跃预留和buildHeadroomGiB准入；当前KeyDock为admission-only，不自动扩大清理白名单。复用固定缓存，保留最新两份完整原始发行和引用中的失败证据，结束记录源身份／退出状态／证据位置并仅收尾任务自有scratch。空间治理与产品验收分别报告。
 
 ```mermaid
 flowchart LR
@@ -35,11 +35,13 @@ flowchart LR
 | `make install` | 核验当前版本包的ZIP／DMG同源同字节App后安装至 `/Applications/KeyDock.app`，保留旧App与回退凭据 |
 | `make rollback RECEIPT=<receipt.json>` | 核对当前包／备份，正常退出目标后回退 |
 | `make publish` | 核对源／master可达性／tag，补齐draft，回下载通过后公开 |
+| `make ship-plan` | 只读检查master、远端、版本tag与发行说明，预览本机发布步骤 |
+| `KEYDOCK_NOTARY_PROFILE=<profile> make ship` | 一次执行本机检查／签名公证打包、精确tag、draft回下载验证与公开后复核；默认不安装 |
 | `make verify-release` | 下载当前版本，核对摘要、tag、实际签名／公证与Gatekeeper |
 
 check与build要求工程所在卷至少2GiB可用空间，doctor的buildStorage返回实际值与准备状态。容量不足时在编译前失败，check仍记录失败attempt；不会自动删除缓存、修改源码或复用该次失败为发行资格。临时调试缓存只能在确认无本工程活动构建后按准确目录清理，保留发行资产、回退包和验证证据。
 
-`python3 scripts/keydock.py release --install --publish`可组合正式流程。首次开源先建立并核对仓库、受控fast-forward并推送master与tag；发布入口不会隐式创建tag或修改分支。每步退出码、耗时和日志留在忽略的 `.local/pipeline/<run>/`；package／publish可独立重试。已存在版本只复用相同源和摘要；签名时间戳会使重复构建字节不同，不承诺逐位可复现。
+2026-11-27：默认 `make ship-plan`、`KEYDOCK_NOTARY_PROFILE=<profile> make ship`。先在受控分支更新版本/build和说明、完成检查及评审后fast-forward master并推送；ship只接受干净且与远端master完全一致的源，校验origin读写目标，拒绝旧版tag复用。复用当前合格的本机检查、等待同源core CI（最多10分钟，失败不自动重跑）；如最新本机检查失败或资格过期，显式重新 `make check` 后再试。已有冻结候选/完整DIST直接恢复验证，不重复archive；无候选才新建本机Release包。包验证通过后才创建/推送精确tag，再上传draft并回下载；发布后复核本地与远端manifest一致。`ship --install` 显式在公开验证通过后安装；默认不替换用户App。每次ship在 `.local/pipeline/<run>/ship.json` 记录最后完成阶段。分步 `release`、`package`、`publish` 保留（publish不隐式创建tag）。已存在版本只复用相同源和摘要；签名时间戳使重复构建字节不同，不承诺逐位可复现。
 
 公证／打包中断按[冻结候选与公证恢复](release-candidate-recovery.md)处理。`.local/release-delivery`和被引用candidate是协议状态，不能当可重建缓存清理；package默认继续原候选，unknown无ID不自动重投。已Accept的输入不修改，装订在独立副本进行。
 
@@ -85,8 +87,8 @@ alpha.19候选增加签名BuildInfo／manifest数据能力声明与安装／回�
 
 正式App嵌入干净完整SHA、版本/build、profile、架构与工具链。签名和公证仅引用系统已有身份／Keychain profile。App公证Accepted后装订，ZIP取装订后的App；DMG另行签名、公证和装订。最终摘要完成后，只上传ZIP、DMG、release-manifest.json与SHA256SUMS.txt；已有不同字节的资产不clobber。Release说明保留物理交互、最低系统、真实模型等未验项。
 
-CI使用GitHub官方 [`xcode-27` arm64 image](https://github.com/actions/runner-images)，显式选择Xcode27.2；runner目前为public preview，实际远端结果单独记录。PR/master保持contents: read，运行共用check与隔离Preview构建；签名凭据留在本机。公开后release-audit工作流再次下载并验签／验摘要。Actions固定经核对的完整commit SHA。[文档工作流](../../.github/workflows/docs.yml)继续快速反馈。
+CI使用GitHub官方 [`xcode-27` arm64 image](https://github.com/actions/runner-images)，显式选择Xcode27.2；runner目前为public preview，实际远端结果单独记录。PR/master保持contents: read，运行共用core check（Swift测试编译仍保留），不再运行额外Xcode Preview构建或上传Preview ZIP。签名、公证、正式资产全部在本机生成；公开后release-audit再次下载并验签／验摘要。Actions固定经核对的完整commit SHA。[文档工作流](../../.github/workflows/docs.yml)继续快速反馈。
 
 参考 [Apple命令行公证](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow)和[GitHub Release CLI](https://cli.github.com/manual/gh_release_create)。工程思路参考本机DevSpace的来源绑定、公证、摘要与回下载；使用KeyDock自己的源码仓与身份配置。
 
-原生CI成功和失败均保留该VM上的合成验证日志7天；失败摘要优先输出具体测试错误，再保留末尾上下文。日志artifact与隔离Preview各自独立，公开Release使用固定四项资产清单。
+原生CI成功和失败均保留该VM上的合成验证日志7天；失败摘要优先输出具体测试错误，再保留末尾上下文。公开Release使用本机固定四项资产清单，云端日志不作为安装包发布。

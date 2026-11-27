@@ -2,7 +2,7 @@
 
 面向 macOS 的原生快捷操作与 AI 工作台。用统一入口搜索应用和窗口、运行命令、处理剪贴板，并通过快捷键完成翻译、总结和可控的 Agent 任务。
 
-**当前阶段：P0–P4能力按增量实现，已公开并本机安装签名公证的 [alpha.27 测试版](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.27)；完整日用验收尚未完成。** 本仓库独立于 AiBox，未迁入其源码、个人截图或历史数据。
+**当前阶段：P0–P4能力按增量实现，已公开并本机安装签名公证的 [alpha.28 测试版](https://github.com/arthurwangwsx-code/KeyDock/releases/tag/v0.1.0-alpha.28)；完整日用验收尚未完成。** 本仓库独立于 AiBox，未迁入其源码、个人截图或历史数据。
 
 安装包见 [GitHub Releases](https://github.com/arthurwangwsx-code/KeyDock/releases)：macOS arm64，Developer ID签名、App／DMG公证与装订。下载包、完整源SHA和摘要随Release提供；这是早期预览，已知限制见发行说明。
 
@@ -46,10 +46,11 @@ AI 是核心能力域，模型账号和联网并非基础桌面操作的前提�
 make doctor
 make check
 make debug
-# 在已审查、已提交的源码上构建签名公证包：
-KEYDOCK_NOTARY_PROFILE=<已有profile> make release
+# 在已审查、已提交且同步 GitHub 的 master 上发布新版本：
+make ship-plan
+KEYDOCK_NOTARY_PROFILE=<已有profile> make ship
+# 可选：安装已验证的正式包
 make install
-make publish
 ```
 
 需要 Xcode、XcodeGen，当前构建使用 Xcode 27.2 / Xcode Swift 6.4.2；`xcrun` 可避开 PATH 中另一套不兼容工具链。最低目标 macOS 14 尚待真实最低系统验证。API 端点/模型由用户配置，密钥在设置页写入 Keychain；尚未进行真实外部模型验收。

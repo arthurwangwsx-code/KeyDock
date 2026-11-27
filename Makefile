@@ -1,4 +1,4 @@
-.PHONY: doctor check build debug desktop-fixture desktop-review-build desktop-review desktop-review-status desktop-review-stop performance mcp-interop-prepare mcp-interop package release publish verify-release install rollback
+.PHONY: doctor check build debug desktop-fixture desktop-review-build desktop-review desktop-review-status desktop-review-stop performance mcp-interop-prepare mcp-interop package release publish ship ship-plan verify-release install rollback
 doctor:
 	python3 scripts/keydock.py doctor
 check:
@@ -29,6 +29,10 @@ release:
 	python3 scripts/keydock.py release
 publish:
 	python3 scripts/keydock.py publish
+ship:
+	python3 scripts/keydock.py ship
+ship-plan:
+	python3 scripts/keydock.py ship --plan
 verify-release:
 	python3 scripts/keydock.py verify-release
 install:

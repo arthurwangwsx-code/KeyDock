@@ -500,10 +500,12 @@ def unpack_release(directory, destination):
     return app
 
 
-def verify_remote(repository, tag):
+def verify_remote(repository, tag, expected_manifest=None):
     with tempfile.TemporaryDirectory(prefix="keydock-release-check-") as temporary:
         run(["gh", "release", "download", tag, "--repo", repository, "--dir", temporary])
         manifest = verify_assets(temporary)
+        if expected_manifest is not None and manifest != expected_manifest:
+            raise PipelineError("Remote release differs from the verified local package")
         if manifest["tag"] != tag:
             raise PipelineError("Remote release tag does not match the downloaded manifest")
         expected = run(["git", "rev-parse", tag + "^{commit}"], capture=True).strip()
@@ -586,7 +588,7 @@ def publish():
     if existing.returncode == 0:
         info = json.loads(existing.stdout)
         if not info["isDraft"]:
-            verify_remote(repo, tag)
+            verify_remote(repo, tag, manifest)
             print(info["url"])
             return
         remote_info = json.loads(run(["gh", "api", "repos/" + repo + "/releases/tags/" + tag], capture=True))
@@ -607,15 +609,93 @@ def publish():
         if "-" in CONFIG["version"]:
             command += ["--prerelease"]
         run(command + sorted(DIST.iterdir()))
-    verify_remote(repo, tag)
+    verify_remote(repo, tag, manifest)
     if source_identity() != identity:
         raise PipelineError("Source changed before publication; the verified draft was preserved")
     if quality.digest(quality.require_local(identity)) != manifest["qualificationSHA256"]:
         raise PipelineError("Native qualification is no longer current; the draft was preserved")
     quality.core_ci(identity, manifest["coreCI"]["id"])
     run(["gh", "release", "edit", tag, "--repo", repo, "--draft=false", "--latest=false", "--prerelease=" + ("true" if "-" in CONFIG["version"] else "false")])
-    verify_remote(repo, tag)
+    verify_remote(repo, tag, manifest)
     print(run(["gh", "release", "view", tag, "--repo", repo, "--json", "url", "--jq", ".url"], capture=True).strip())
+
+
+def ship_preflight():
+    """只读核对正式发布源；不隐式提交、合并、推送master或改写tag。"""
+    identity = source_identity()
+    if run(["git", "branch", "--show-current"], capture=True).strip() != "master":
+        raise PipelineError("Ship requires reviewed master")
+    repo = CONFIG["repository"]
+    for args in (["git", "remote", "get-url", "origin"], ["git", "remote", "get-url", "--push", "origin"]):
+        origin = run(args, capture=True).strip().removesuffix(".git")
+        if origin not in ("https://github.com/" + repo, "git@github.com:" + repo):
+            raise PipelineError("origin fetch/push URL must match the configured release repository")
+    validate_version(CONFIG["version"])
+    tag = "v" + CONFIG["version"]
+    ref = "refs/tags/" + tag
+    if not (ROOT / "docs/releases" / (tag + ".md")).is_file():
+        raise PipelineError("Commit release notes before shipping")
+    remote = run(["git", "ls-remote", "origin", "refs/heads/master", ref, ref + "^{}"], capture=True)
+    refs = {line.split()[1]: line.split()[0] for line in remote.splitlines()}
+    if refs.get("refs/heads/master") != identity["commit"]:
+        raise PipelineError("Ship requires local HEAD to equal GitHub master; review and synchronize source first")
+    remote_tag = refs.get(ref + "^{}", refs.get(ref))
+    local = subprocess.run(["git", "rev-parse", "--verify", "--quiet", ref + "^{commit}"], cwd=ROOT, capture_output=True, text=True)
+    if local.returncode not in (0, 1):
+        raise PipelineError("Cannot resolve local release tag")
+    local_tag = local.stdout.strip() if local.returncode == 0 else None
+    if any(value is not None and value != identity["commit"] for value in (local_tag, remote_tag)):
+        raise PipelineError("Version already belongs to a different source; bump version/build and add release notes")
+    return identity, tag, local_tag, remote_tag
+
+
+def prepare_local_release(identity, profile=None):
+    """复用同源、本机、最新PASS；已冻结候选直接恢复，不再重复构建。"""
+    registry = ROOT / ".local/release-delivery/candidates" / (CONFIG["version"] + ".json")
+    if not DIST.exists() and not profile:
+        raise PipelineError("Set KEYDOCK_NOTARY_PROFILE or --notary-profile to an existing Keychain profile")
+    if not quality.receipt_path(identity["commit"]).exists():
+        check()
+    else:
+        # 失败／过期资格不能自动被旧PASS掩盖；显式 make check 后再恢复。
+        quality.require_local(identity, current_host=not DIST.exists())
+    quality.require_local(identity)
+    quality.wait_for_core_ci(identity)
+    if source_identity() != identity:
+        raise PipelineError("Source changed before packaging")
+    if DIST.exists() or registry.exists():
+        return package(profile=profile)
+    return package(build("release"), profile=profile)
+
+
+def ship(profile=None, install_after=False, plan=False):
+    identity, tag, local_tag, remote_tag = ship_preflight()
+    result = {"source": identity, "tag": tag, "repository": CONFIG["repository"],
+              "localTag": local_tag, "remoteTag": remote_tag, "assets": str(DIST)}
+    if plan:
+        print(json.dumps({**result, "plan": ["native-check", "same-source-core-ci", "local-package", "exact-tag", "draft-verify-publish", "remote-verify"] + (["install"] if install_after else [])}, indent=2))
+        return
+    receipt = RUN_DIR / "ship.json"
+    def record(step):
+        atomic_json(receipt, {**result, "stage": step})
+    record("preflight")
+    prepare_local_release(identity, profile or os.environ.get("KEYDOCK_NOTARY_PROFILE"))
+    record("local-package-verified")
+    current, current_tag, local_tag, remote_tag = ship_preflight()
+    if current != identity or current_tag != tag:
+        raise PipelineError("Source changed before tagging")
+    if local_tag is None:
+        run(["git", "tag", tag, identity["commit"]])
+    if remote_tag is None:
+        ref = "refs/tags/" + tag
+        run(["git", "push", "origin", ref + ":" + ref])
+    record("tag-pushed")
+    publish()
+    record("published-and-verified")
+    if install_after:
+        install_release()
+        record("installed")
+    print("Ship receipt: " + str(receipt))
 
 
 def install(app, destination=None, quit_running=False, dry_run=False, receipt=None):
@@ -712,6 +792,8 @@ def main():
     p = sub.add_parser("prepare-mcp-interop"); p.add_argument("--python", type=Path, required=True); p.add_argument("--output", type=Path, required=True)
     p = sub.add_parser("mcp-interop"); p.add_argument("--environment", type=Path, required=True); p.add_argument("--run-name", required=True); p.add_argument("--scenario", choices=["time", "sdk-lifecycle"], default="time")
     p = sub.add_parser("release"); p.add_argument("--publish", action="store_true"); p.add_argument("--install", action="store_true")
+    p = sub.add_parser("ship", help="Package locally and publish the exact GitHub master source")
+    p.add_argument("--notary-profile"); p.add_argument("--install", action="store_true"); p.add_argument("--plan", action="store_true")
     args = parser.parse_args()
     if args.command == "doctor":
         print(json.dumps({"source": source_identity(False), "platform": platform.system(), "architecture": platform.machine(), "version": CONFIG["version"],
@@ -774,14 +856,14 @@ def main():
     elif args.command == "debug":
         path = install(build("preview", allow_dirty=True), quit_running=True)
         if not args.no_launch: run(["/usr/bin/open", "-a", path])
+    elif args.command == "ship": ship(args.notary_profile, args.install, args.plan)
     elif args.command == "release":
         check()
-        if not DIST.exists(): package(build("release"))
+        registry = ROOT / ".local/release-delivery/candidates" / (CONFIG["version"] + ".json")
+        if not DIST.exists() and not registry.exists(): package(build("release"))
         else: package()
-        if args.install:
-            with tempfile.TemporaryDirectory(prefix="keydock-install-release-") as temporary:
-                install(unpack_release(DIST, temporary), quit_running=True)
         if args.publish: publish()
+        if args.install: install_release()
 
 
 def run_cli():
