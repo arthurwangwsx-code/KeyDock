@@ -1,4 +1,4 @@
-.PHONY: doctor check build debug desktop-fixture desktop-review-build desktop-review desktop-review-status desktop-review-stop performance mcp-interop-prepare mcp-interop package release publish ship ship-plan verify-release install rollback
+.PHONY: doctor check build debug app-icon desktop-fixture desktop-review-build desktop-review desktop-review-status desktop-review-stop performance mcp-interop-prepare mcp-interop package release publish ship ship-plan verify-release install rollback
 doctor:
 	python3 scripts/keydock.py doctor
 check:
@@ -9,6 +9,8 @@ build:
 	python3 scripts/keydock.py build --profile preview --allow-dirty
 debug:
 	python3 scripts/keydock.py debug
+app-icon:
+	bash scripts/generate-app-icon.sh
 desktop-fixture:
 	python3 scripts/keydock.py desktop-fixture
 desktop-review-build:

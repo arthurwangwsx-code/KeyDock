@@ -1,6 +1,114 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Check the connection or advanced model settings before saving.": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Check the connection or advanced model settings before saving."}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "保存前请检查连接或高级模型设置。"}}
+      }
+    },
+    "AI service setup": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "AI service setup"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "AI 服务快速设置"}}
+      }
+    },
+    "Connect your AI service": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Connect your AI service"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "连接你的 AI 服务"}}
+      }
+    },
+    "Choose a service, enter its API key, then load and choose a model.": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Choose a service, enter its API key, then load and choose a model."}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "选择服务商，输入 API 密钥，再获取并选择模型。"}}
+      }
+    },
+    "AI service": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "AI service"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "AI 服务商"}}
+      }
+    },
+    "Custom compatible service": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Custom compatible service"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "自定义兼容服务"}}
+      }
+    },
+    "Get an OpenAI API key": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Get an OpenAI API key"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "获取 OpenAI API 密钥"}}
+      }
+    },
+    "Enter API key": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Enter API key"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "输入 API 密钥"}}
+      }
+    },
+    "API key saved in Keychain": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "API key saved in Keychain"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "API 密钥已保存在钥匙串"}}
+      }
+    },
+    "Connect & load models": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Connect & load models"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "连接并获取模型"}}
+      }
+    },
+    "Model loading checks access to the model list, not generation. Your key is stored only when you save.": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Model loading checks access to the model list, not generation. Your key is stored only when you save."}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "获取模型用于检查清单访问权限，不代表生成调用已验证；仅在点击保存时存储密钥。"}}
+      }
+    },
+    "Default model": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Default model"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "默认模型"}}
+      }
+    },
+    "Search models": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Search models"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "搜索模型"}}
+      }
+    },
+    "Official recommendations are dated. Load the model list to see the models available to your account.": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Official recommendations are dated. Load the model list to see the models available to your account."}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "官方推荐目录有核对日期；获取模型后可查看当前账号返回的模型。"}}
+      }
+    },
+    "Enter model ID manually": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Enter model ID manually"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "手动输入模型 ID"}}
+      }
+    },
+    "Selected model is listed by this account": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Selected model is listed by this account"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "此模型在当前账号返回的清单中"}}
+      }
+    },
+    "Selected model is not in the current list; its availability is unverified.": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Selected model is not in the current list; its availability is unverified."}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "所选模型不在当前清单中，实际可用性尚未验证。"}}
+      }
+    },
+    "Advanced model and connection settings": {
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Advanced model and connection settings"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "高级模型与连接设置"}}
+      }
+    },
     "Usage records still in use will be cleared when their tasks finish. If KeyDock quits unexpectedly, clear usage again.": {
       "localizations": {
         "en": {"stringUnit": {"state": "translated", "value": "Usage records still in use will be cleared when their tasks finish. If KeyDock quits unexpectedly, clear usage again."}},

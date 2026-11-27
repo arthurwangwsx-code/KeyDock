@@ -13,6 +13,7 @@ public struct SettingsRootView: View {
     @State private var confirmTaskClear = false
     @State private var confirmUsageClear = false
     @State private var confirmMaterialClear = false
+    @State private var showAIRates = false
     public init(store: WorkbenchModel, session: SettingsSession) { self.store = store; self.session = session }
     public var body: some View {
         NavigationSplitView {
@@ -140,26 +141,12 @@ public struct SettingsRootView: View {
                 }
             }
         case .aiService:
-            Section(L("Connection")) {
-                TextField(L("Full API endpoint"), text: $session.endpoint)
-                SecureField(session.keyStored && session.endpoint == store.configuration.endpoint ? L("Key stored · leave blank to keep") : L("API key"), text: $session.apiKey).disabled(!store.allowContextCapture)
-                Picker(L("Token limit parameter"), selection: $session.tokenParameter) { Text("max_completion_tokens").tag("max_completion_tokens"); Text("max_tokens").tag("max_tokens") }
-                Toggle(L("Allow HTTP for localhost only"), isOn: $session.localHTTP)
-            }
+            AIServiceQuickSetupSections(store: store, session: session)
             AIServiceModelSections(store: store, session: session)
             Section {
-                Text(store.allowContextCapture ? L("Requests go directly to this endpoint. Input is sent only when an AI action runs. Keys are stored in Keychain, never in configuration or logs.") : L("Isolated preview: endpoints without keys can be tested. Use a regular build to store credentials.")).font(.caption).foregroundStyle(.secondary)
-                HStack {
-                    Button(L("Save API configuration")) {
-                        if store.saveAPIConfiguration(endpoint: session.endpoint, modelName: session.modelName, localHTTP: session.localHTTP, tokenParameter: session.tokenParameter, apiKey: session.apiKey, modelSettings: session.aiModelSettings) { session.apiKey = ""; session.keyStored = store.credentialExists() }
-                        session.apiSaveNotice = store.settingsNoticeMessage
-                    }.buttonStyle(.borderedProminent)
-                    Spacer()
-                    Button(L("Remove API key"), role: .destructive) { store.removeCredential(); session.keyStored = store.credentialExists() }.disabled(session.endpoint != store.configuration.endpoint || !session.keyStored)
-                }
-                if !session.apiSaveNotice.rendered().isEmpty { KDInlineNotice(session.apiSaveNotice.rendered()) }
+                Toggle(L("Optional model rates"), isOn: $showAIRates)
             }
-            AIRateSettingsSection(store: store, session: session)
+            if showAIRates { AIRateSettingsSection(store: store, session: session) }
         case .aiActions:
             Section(L("Reusable AI actions")) {
                 ForEach(store.configuration.aiActions) { action in

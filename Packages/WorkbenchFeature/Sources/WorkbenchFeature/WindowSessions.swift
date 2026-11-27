@@ -188,6 +188,7 @@ private struct LauncherCatalogProvider: CommandProviding {
         endpoint = store.configuration.endpoint; modelName = store.configuration.model
         aiModelSettings = store.configuration.aiModelSettings
         localHTTP = store.configuration.localHTTP; tokenParameter = store.configuration.tokenLimitParameter
+        prepareInitialAIService()
         modelInventorySubscription = store.$modelInventoryEpoch.dropFirst().sink { [weak self] _ in self?.invalidateModelInventory() }
     }
     public func beginNewCommand() {

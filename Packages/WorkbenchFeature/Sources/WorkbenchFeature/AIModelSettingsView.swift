@@ -45,6 +45,7 @@ struct AIModelSettingsFields: View {
     var language = "system"
     var requiresTools = false
     var inventoryModels: [AIModelID] = []
+    var showsModelSelection = true
     private var modelSelection: Binding<AIModelID> {
         Binding(get: { AIModelID(options.model) }, set: { options.model = $0.value })
     }
@@ -106,6 +107,7 @@ struct AIModelSettingsFields: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if showsModelSelection {
             Picker(L("Model selection"), selection: modelSelection) {
                 Text(isGlobal ? L("Choose a model") : L("Inherit from parent")).tag(AIModelID(""))
                 ForEach(AIModelCatalog.models) { model in
@@ -120,6 +122,7 @@ struct AIModelSettingsFields: View {
             }.accessibilityLabel(contextTitle + " · " + L("Model selection"))
             TextField(L("Exact model ID"), text: $options.model)
                 .textFieldStyle(.roundedBorder).accessibilityLabel(contextTitle + " · " + L("Exact model ID"))
+            }
             Picker(L("API protocol"), selection: $options.requestProtocol) {
                 if !isGlobal { Text(L("Inherit from parent")).tag(AIProtocolSelection.inherit) }
                 Text(L("Automatic protocol")).tag(AIProtocolSelection.automatic)
@@ -156,30 +159,22 @@ struct AIModelSettingsFields: View {
 struct AIServiceModelSections: View {
     @ObservedObject var store: WorkbenchModel
     @ObservedObject var session: SettingsSession
+    @State private var showAdvanced = false
+    @State private var showScenarios = false
     private var globalOptions: Binding<AIModelOptions> {
         Binding(get: { var value = session.aiModelSettings.defaults; value.model = session.modelName; return value }, set: { value in
             session.modelName = value.model; var defaults = value; defaults.model = ""; session.aiModelSettings.defaults = defaults
         })
     }
     var body: some View {
-        Section(L("Models listed by this service")) {
-            HStack {
-                Button(L("Refresh model list")) { session.refreshModelInventory(in: store) }.disabled(session.modelInventoryBusy || store.isDesktopReview)
-                if session.modelInventoryBusy {
-                    ProgressView().controlSize(.small)
-                    Button(L("Cancel refresh")) { session.invalidateModelInventory(clear: false) }
-                }
+        Section {
+            DisclosureGroup(L("Advanced model and connection settings"), isExpanded: $showAdvanced) {
+            Picker(L("Token limit parameter"), selection: $session.tokenParameter) {
+                Text("max_completion_tokens").tag("max_completion_tokens"); Text("max_tokens").tag("max_tokens")
             }
-            Text(L("Refresh sends only a model-list request to this service. It does not change selections, verify model capabilities or update official recommendations.")).font(.caption).foregroundStyle(.secondary)
-            if let inventory = session.modelInventory {
-                HStack {
-                    Text(L("Models returned") + ": " + String(inventory.models.count))
-                    Text(inventory.fetchedAt, format: .dateTime.year().month().day().hour().minute().second())
-                }.font(.caption).foregroundStyle(.secondary)
+            if AIServicePreset.identify(session.endpoint) == .compatible {
+                Toggle(L("Allow HTTP for localhost only"), isOn: $session.localHTTP)
             }
-            if !session.modelInventoryNotice.rendered().isEmpty { KDInlineNotice(session.modelInventoryNotice.rendered()) }
-        }
-        Section(L("Global AI defaults")) {
             Toggle(L("Declare OpenAI-compatible reasoning for unverified models"), isOn: Binding(get: {
                 URL(string: session.endpoint).map { session.aiModelSettings.declaredReasoning(for: $0) } ?? false
             }, set: { enabled in
@@ -189,11 +184,14 @@ struct AIServiceModelSections: View {
             }))
             AIModelSettingsFields(options: globalOptions, endpoint: session.endpoint, globalModel: session.modelName,
                 settings: session.aiModelSettings, scene: .text, isGlobal: true, localHTTP: session.localHTTP, language: store.configuration.language,
-                inventoryModels: session.modelInventory?.models ?? [])
+                inventoryModels: session.modelInventory?.models ?? [], showsModelSelection: false)
             Text(L("Catalog verified on") + ": " + AIModelCatalog.verifiedOn).font(.caption).foregroundStyle(.secondary)
             Link(L("Open official model guidance"), destination: AIModelCatalog.sourceURL)
+            Text(L("Requests go directly to this endpoint. Input is sent only when an AI action runs. Keys are stored in Keychain, never in configuration or logs.")).font(.caption).foregroundStyle(.secondary)
+            }
         }
-        Section(L("Scenario defaults")) {
+        Section {
+            DisclosureGroup(L("Scenario defaults"), isExpanded: $showScenarios) {
             Picker(L("AI scenario"), selection: $session.aiModelScene) {
                 ForEach(AIScene.allCases, id: \.self) { Text($0.title).tag($0) }
             }
@@ -204,6 +202,7 @@ struct AIServiceModelSections: View {
                 requiresTools: session.aiModelScene == .agent || session.aiModelScene == .readOnlyAgent,
                 inventoryModels: session.modelInventory?.models ?? [])
             Text(L("Explicit action or profile settings override the scenario. Each workflow AI step keeps its action override, then inherits Workflow AI steps.")).font(.caption).foregroundStyle(.secondary)
+            }
         }
     }
 }

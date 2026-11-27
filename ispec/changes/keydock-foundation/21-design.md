@@ -17,6 +17,7 @@
 - CLI executable/argv 与 shell/PTY 明确分开；窗口身份不能仅用 PID；查询采用 generation 防止陈旧结果覆盖。
 - references 只登记 URL/revision/license，不 vendor 参考仓；AiBox portable 核心只作为后续抽取候选。
 - 本机一键发行 `ship` 固定干净且同步远端的master和新版本，复用同源资格/冻结候选；包通过后才推精确tag和draft，回下载一致后公开。保留独立core CI（无云端Preview包），安装显式请求。[流水线](../../../docs/technical/release-pipeline.md)
+- AI 快速配置复用现有模型解析器、显式 GET /models 及 Keychain 保存事务，预设只改变草稿；应用图标采用可再生成的多尺寸 ICNS。[方案](../../../docs/technical/ai-service-quick-setup.md)
 
 完整决策、合同、时序和状态机见 [架构](../../../docs/technical/architecture.md)、[AI 与自动化](../../../docs/technical/ai-and-automation.md)、[数据与权限](../../../docs/technical/data-and-permissions.md)。
 

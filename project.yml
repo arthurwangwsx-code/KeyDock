@@ -38,6 +38,7 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_CFBundleDisplayName: KeyDock
+        INFOPLIST_KEY_CFBundleIconFile: AppIcon.icns
         INFOPLIST_KEY_NSAppleEventsUsageDescription: Control explicitly selected applications and open selected commands in Terminal.
         MARKETING_VERSION: '0.1.0'
         CURRENT_PROJECT_VERSION: '1'
